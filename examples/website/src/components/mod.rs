@@ -1,9 +1,10 @@
 //! Shared layout components: top nav, sidebar, aside footer, and glow wrapper.
 
-use hikari_icons::{get, MdiIcon};
 use std::cell::Cell;
+
+use hikari_icons::{MdiIcon, get};
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{get_bounding_client_rect, set_style, svg::SafeSvg, DomHandle, VElement, VNode, el, txt};
+use tairitsu_vdom::{DomHandle, VElement, VNode, el, get_bounding_client_rect, set_style, svg::SafeSvg, txt};
 
 use crate::i18n::{self, Language};
 

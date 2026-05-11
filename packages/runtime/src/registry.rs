@@ -154,7 +154,10 @@ mod tests {
         let result = reg.register_image("test:v1", wasm);
         if result.is_ok() {
             let img = reg.get_image("test:v1");
-            assert!(img.is_some(), "image should be retrievable after registration");
+            assert!(
+                img.is_some(),
+                "image should be retrievable after registration"
+            );
 
             let missing = reg.get_image("nonexistent");
             assert!(missing.is_none());
@@ -209,7 +212,10 @@ mod tests {
 
         if reg.register_image("removeme", wasm).is_ok() {
             let removed = reg.remove_image("removeme");
-            assert!(removed.is_some(), "remove_image should return the removed image");
+            assert!(
+                removed.is_some(),
+                "remove_image should return the removed image"
+            );
 
             let gone = reg.get_image("removeme");
             assert!(gone.is_none(), "image should be gone after removal");

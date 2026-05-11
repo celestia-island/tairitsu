@@ -2,6 +2,8 @@
 pub mod batch_ops;
 #[cfg(feature = "browser")]
 pub mod browser;
+#[cfg(all(feature = "router", feature = "wit-bindings", target_family = "wasm"))]
+pub mod client_router;
 #[cfg(feature = "wit-bindings")]
 pub mod handle_cache;
 #[cfg(feature = "i18n")]
@@ -40,6 +42,3 @@ pub use wit_platform::prevent_event_default;
 pub use wit_platform::{
     WitElement, WitEvent, WitPlatform, get_pathname, push_state, replace_state,
 };
-
-#[cfg(all(feature = "router", feature = "wit-bindings", target_family = "wasm"))]
-pub mod client_router;

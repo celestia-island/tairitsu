@@ -272,7 +272,13 @@ fn process_class_names(scss: &str, hash: &str, class_map: &mut HashMap<String, S
                 current_class.clear();
                 in_class_context = false;
                 result.push(ch);
-            } else if ch.is_whitespace() || ch == '{' || ch == ',' || ch == '>' || ch == '+' || ch == ':' {
+            } else if ch.is_whitespace()
+                || ch == '{'
+                || ch == ','
+                || ch == '>'
+                || ch == '+'
+                || ch == ':'
+            {
                 if !current_class.is_empty() {
                     let hashed_class = format!("{}_{}", current_class, hash);
                     class_map.insert(current_class.clone(), hashed_class.clone());

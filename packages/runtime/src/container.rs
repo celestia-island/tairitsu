@@ -825,7 +825,10 @@ mod tests {
         assert_eq!(val.unwrap(), "hello");
 
         let mut instance = instance;
-        instance.downcast_mut::<String>().unwrap().push_str(" world");
+        instance
+            .downcast_mut::<String>()
+            .unwrap()
+            .push_str(" world");
         assert_eq!(instance.downcast_ref::<String>().unwrap(), "hello world");
     }
 

@@ -11,11 +11,9 @@
 //! component bootstrap via [`register_wit_functions`] and
 //! [`register_dom_functions`].
 
-use std::any::Any;
-use std::sync::Mutex;
+use std::{any::Any, sync::Mutex};
 
-use crate::platform::DomRect;
-use crate::vnode::AnyElementRef;
+use crate::{platform::DomRect, vnode::AnyElementRef};
 
 // ---------------------------------------------------------------------------
 // DomHandle

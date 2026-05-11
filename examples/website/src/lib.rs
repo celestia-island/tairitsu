@@ -11,13 +11,10 @@ use anyhow::Result;
 
 pub use app::App;
 use tracing::{error, info};
-
 #[cfg(target_family = "wasm")]
 use tairitsu_web::WitPlatform;
-
 #[cfg(target_family = "wasm")]
 use tairitsu_web::wit_platform::wasm_impl::bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id;
-
 #[cfg(target_family = "wasm")]
 use tairitsu_web::wit_platform::WitElement;
 

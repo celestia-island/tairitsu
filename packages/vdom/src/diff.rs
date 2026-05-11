@@ -576,7 +576,9 @@ mod tests {
         let patches = diff(Some(&old), &new);
 
         assert!(
-            !patches.iter().any(|p| matches!(p, Patch::UpdateStyle { .. })),
+            !patches
+                .iter()
+                .any(|p| matches!(p, Patch::UpdateStyle { .. })),
             "no UpdateStyle when styles are identical"
         );
     }
@@ -610,7 +612,9 @@ mod tests {
         let patches = diff(Some(&old), &new);
 
         assert!(
-            !patches.iter().any(|p| matches!(p, Patch::UpdateClass { .. })),
+            !patches
+                .iter()
+                .any(|p| matches!(p, Patch::UpdateClass { .. })),
             "no UpdateClass when classes are identical"
         );
     }
@@ -665,10 +669,7 @@ mod tests {
 
     #[test]
     fn test_diff_children_replace_all() {
-        let old = vec![
-            VNode::Text(VText::new("a")),
-            VNode::Text(VText::new("b")),
-        ];
+        let old = vec![VNode::Text(VText::new("a")), VNode::Text(VText::new("b"))];
         let new = vec![
             VNode::Element(VElement::new("span")),
             VNode::Element(VElement::new("div")),
@@ -690,15 +691,27 @@ mod tests {
         assert!(updates.contains(&1));
 
         for p in &patches {
-            if let Patch::UpdateChild { index, patches: child_patches } = p {
-                assert!(!child_patches.is_empty(), "child {} should have patches", index);
+            if let Patch::UpdateChild {
+                index,
+                patches: child_patches,
+            } = p
+            {
+                assert!(
+                    !child_patches.is_empty(),
+                    "child {} should have patches",
+                    index
+                );
                 match index {
                     0 => assert!(
-                        child_patches.iter().any(|cp| matches!(cp, Patch::ReplaceNode { .. })),
+                        child_patches
+                            .iter()
+                            .any(|cp| matches!(cp, Patch::ReplaceNode { .. })),
                         "text->element should be ReplaceNode"
                     ),
                     1 => assert!(
-                        child_patches.iter().any(|cp| matches!(cp, Patch::ReplaceNode { .. })),
+                        child_patches
+                            .iter()
+                            .any(|cp| matches!(cp, Patch::ReplaceNode { .. })),
                         "text->element should be ReplaceNode"
                     ),
                     _ => {}

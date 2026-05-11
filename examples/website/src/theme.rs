@@ -1,7 +1,7 @@
 //! Theme integration — uses hikari's palette system to inject CSS variables.
 
 use hikari_components::{ComponentPalette, Style, ThemePalette};
-use hikari_palette::{get_palette, Tairitsu};
+use hikari_palette::{Tairitsu, get_palette};
 
 pub fn get_theme_style(theme_name: &str) -> Style {
     let palette = get_palette(theme_name).unwrap_or_else(Tairitsu::palette);

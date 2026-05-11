@@ -1,5 +1,4 @@
-use std::thread;
-use std::time::Duration;
+use std::{thread, time::Duration};
 
 fn wait_ms(ms: u64) {
     thread::sleep(Duration::from_millis(ms));
