@@ -1,6 +1,4 @@
-use std::cell::RefCell;
-use std::fmt;
-use std::io::Write;
+use std::{cell::RefCell, fmt, io::Write};
 
 use tracing_subscriber::layer::SubscriberExt;
 

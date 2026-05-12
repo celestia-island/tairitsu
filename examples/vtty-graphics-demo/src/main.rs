@@ -1,6 +1,7 @@
 use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
-use image::{ImageBuffer, Rgba};
 use std::io::Write;
+
+use image::{ImageBuffer, Rgba};
 
 fn generate_logo() -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     let w = 48u32;
@@ -37,14 +38,19 @@ fn generate_logo() -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 
 fn emit_kitty_png(img: &ImageBuffer<Rgba<u8>, Vec<u8>>, stdout: &mut std::io::Stdout) {
     let mut png_data = Vec::new();
-    img.write_to(&mut std::io::Cursor::new(&mut png_data), image::ImageFormat::Png)
-        .unwrap();
+    img.write_to(
+        &mut std::io::Cursor::new(&mut png_data),
+        image::ImageFormat::Png,
+    )
+    .unwrap();
     let b64 = BASE64.encode(&png_data);
 
     let control = "f=100,a=T,c=16,r=12";
     let chunk_size = 4096;
 
-    let chunks: Vec<&str> = b64.as_bytes().chunks(chunk_size)
+    let chunks: Vec<&str> = b64
+        .as_bytes()
+        .chunks(chunk_size)
         .map(|c| std::str::from_utf8(c).unwrap())
         .collect();
 
@@ -68,7 +74,9 @@ fn main() {
 
     print!("\x1b[38;5;166m╭──────────────────────────────────────╮\x1b[0m\r\n");
     print!("\x1b[38;5;166m│                                      │\x1b[0m\r\n");
-    print!("\x1b[38;5;166m│   \x1b[38;5;231mTairitsu\x1b[0m\x1b[38;5;166m VTty Graphics Test     │\x1b[0m\r\n");
+    print!(
+        "\x1b[38;5;166m│   \x1b[38;5;231mTairitsu\x1b[0m\x1b[38;5;166m VTty Graphics Test     │\x1b[0m\r\n"
+    );
     print!("\x1b[38;5;166m│                                      │\x1b[0m\r\n");
     print!("\x1b[38;5;166m├──────────────────────────────────────┤\x1b[0m\r\n");
     print!("\x1b[38;5;166m│                                      │\x1b[0m\r\n");
@@ -78,9 +86,15 @@ fn main() {
 
     print!("\r\n");
     print!("\x1b[38;5;166m│                                      │\x1b[0m\r\n");
-    print!("\x1b[38;5;166m│   \x1b[38;5;37m✓ Kitty Graphics Protocol (PNG)  \x1b[0m\x1b[38;5;166m│\x1b[0m\r\n");
-    print!("\x1b[38;5;166m│   \x1b[38;5;37m✓ Sixel DCS decoder            \x1b[0m\x1b[38;5;166m│\x1b[0m\r\n");
-    print!("\x1b[38;5;166m│   \x1b[38;5;37m✓ OSC 1337 (iTerm2) support      \x1b[0m\x1b[38;5;166m│\x1b[0m\r\n");
+    print!(
+        "\x1b[38;5;166m│   \x1b[38;5;37m✓ Kitty Graphics Protocol (PNG)  \x1b[0m\x1b[38;5;166m│\x1b[0m\r\n"
+    );
+    print!(
+        "\x1b[38;5;166m│   \x1b[38;5;37m✓ Sixel DCS decoder            \x1b[0m\x1b[38;5;166m│\x1b[0m\r\n"
+    );
+    print!(
+        "\x1b[38;5;166m│   \x1b[38;5;37m✓ OSC 1337 (iTerm2) support      \x1b[0m\x1b[38;5;166m│\x1b[0m\r\n"
+    );
     print!("\x1b[38;5;166m│                                      │\x1b[0m\r\n");
     print!("\x1b[38;5;166m╰──────────────────────────────────────╯\x1b[0m\r\n");
 

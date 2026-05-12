@@ -1,18 +1,18 @@
-use std::sync::Arc;
+#[cfg(feature = "vtty")]
+mod vtty;
 
 use anyhow::Result;
+use serde::Deserialize;
+use serde_json::json;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
 use rmcp::{
     ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
     handler::server::wrapper::Parameters, model::*, service::RequestContext, tool, tool_handler,
     tool_router,
 };
 use schemars::JsonSchema;
-use serde::Deserialize;
-use serde_json::json;
-use tokio::sync::RwLock;
-
-#[cfg(feature = "vtty")]
-mod vtty;
 
 struct Server {
     base_url: Arc<RwLock<String>>,
@@ -677,8 +677,8 @@ impl Server {
         let secs = args.seconds.unwrap_or(5.0);
         let pattern = args.pattern.unwrap_or_default();
         if !pattern.is_empty() {
-            let deadline = std::time::Instant::now()
-                + std::time::Duration::from_secs_f64(secs.min(1800.0));
+            let deadline =
+                std::time::Instant::now() + std::time::Duration::from_secs_f64(secs.min(1800.0));
             let mut found = false;
             while std::time::Instant::now() < deadline {
                 let alive = {
@@ -917,9 +917,7 @@ mod daemon {
             }
             v
         };
-        if let Some((_port, debug_port, _)) =
-            try_read_ready_port_from_candidates(&priority_dirs)
-        {
+        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&priority_dirs) {
             if let Some(dp) = debug_port {
                 return Ok(format!("http://localhost:{dp}"));
             }
@@ -929,9 +927,7 @@ mod daemon {
         }
 
         let searched = search_project_roots_fallback();
-        if let Some((_port, debug_port, _)) =
-            try_read_ready_port_from_candidates(&searched)
-        {
+        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&searched) {
             if let Some(dp) = debug_port {
                 return Ok(format!("http://localhost:{dp}"));
             }

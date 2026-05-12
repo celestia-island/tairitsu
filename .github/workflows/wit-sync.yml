@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: target/tairitsu-wit
-          key: wit-${{ github.run_id }}
+          key: wit-${{ hashFiles('scripts/fetch_webidl.py', 'scripts/gen_wit_from_webidl.py') }}
           restore-keys: |
             wit-
 

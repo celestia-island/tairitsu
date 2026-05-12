@@ -2,12 +2,12 @@ name: Format
 on:
   pull_request:
     paths:
-      - '.github/workflows/clippy.yml'
+      - '.github/workflows/fmt.yml'
       - 'packages/**/*'
       - 'examples/**/*'
       - 'Cargo.toml'
   push:
-    branches: [master]
+    branches: [master, dev]
 
 jobs:
   format:

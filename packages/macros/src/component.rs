@@ -183,19 +183,18 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
 
     // Create the function
     let original_fn = if uses_existing_props {
-        // Use the existing Props type
         let props_type = existing_props_name.unwrap();
         quote! {
             #[allow(non_snake_case)]
             #[allow(unused_braces)]
             #[allow(unused_mut)]
             #[allow(unused_variables)]
+            #[allow(clippy::needless_update)]
             #fn_vis fn #fn_name(props: #props_type) #fn_return {
                 #fn_block
             }
         }
     } else {
-        // Generate proper let bindings for each prop
         let prop_bindings: Vec<_> = prop_names
             .iter()
             .zip(prop_has_defaults.iter())
@@ -213,6 +212,7 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
             #[allow(unused_braces)]
             #[allow(unused_mut)]
             #[allow(unused_variables)]
+            #[allow(clippy::needless_update)]
             #fn_vis fn #fn_name(props: #props_name) #fn_return {
                 #(#prop_bindings)*
                 #fn_block
