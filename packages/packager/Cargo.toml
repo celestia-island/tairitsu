@@ -107,5 +107,6 @@ windows-sys = { version = "0.59", features = [
   "Win32_System_Console",
   "Win32_System_Threading",
   "Win32_System_Memory",
+  "Win32_System_Diagnostics_ToolHelp",
 ] }
 libc = { version = "0.2", optional = true }

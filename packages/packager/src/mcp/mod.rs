@@ -48,7 +48,12 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
     eprintln!(
         "{{\"jsonrpc\":\"2.0\",\"method\":\"notifications/diagnostic\",\"params\":{{\"status\":\"starting\",\"pid\":{},\"ppid\":{},\"features\":\"{}\"}}}}",
         std::process::id(),
-        std::os::unix::process::parent_id(),
+        {
+            #[cfg(unix)]
+            { std::os::unix::process::parent_id() }
+            #[cfg(windows)]
+            { get_ppid_windows() }
+        },
         if cfg!(feature = "vtty") {
             "vtty,browser"
         } else {
@@ -1300,5 +1305,35 @@ fn map_key_name(key: &str) -> String {
         "PageDown" | "pagedown" => "PageDown".to_string(),
         "Space" | "space" => "Space".to_string(),
         _ => key.to_string(),
+    }
+}
+
+#[cfg(windows)]
+fn get_ppid_windows() -> u32 {
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::*;
+    use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
+
+    let pid = std::process::id();
+    unsafe {
+        let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snap == INVALID_HANDLE_VALUE {
+            return 0;
+        }
+        let mut entry: PROCESSENTRY32 = std::mem::zeroed();
+        entry.dwSize = std::mem::size_of::<PROCESSENTRY32>() as u32;
+        if Process32First(snap, &mut entry) != 0 {
+            loop {
+                if entry.th32ProcessID == pid {
+                    let ppid = entry.th32ParentProcessID;
+                    CloseHandle(snap);
+                    return ppid;
+                }
+                if Process32Next(snap, &mut entry) == 0 {
+                    break;
+                }
+            }
+        }
+        CloseHandle(snap);
+        0
     }
 }
