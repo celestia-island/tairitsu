@@ -34,10 +34,23 @@ pub trait Platform: Sized + 'static {
     fn get_bounding_client_rect(&self, element: &Self::Element) -> DomRect;
     fn inner_width(&self) -> i32;
     fn inner_height(&self) -> i32;
+
+    /// Schedule a one-shot callback after `ms` milliseconds.
+    ///
+    /// Returns a timer ID that can be passed to [`clear_timeout`](Platform::clear_timeout).
     fn set_timeout(&self, callback: Box<dyn FnOnce()>, ms: i32) -> i32;
+    /// Cancel a pending timeout by its ID.
     fn clear_timeout(&self, id: i32);
+
+    /// Schedule a recurring callback every `ms` milliseconds.
+    ///
+    /// The callback is invoked repeatedly until [`clear_interval`](Platform::clear_interval)
+    /// is called with the returned timer ID. Unlike `set_timeout`, the
+    /// callback is `FnMut` because it may be called many times.
     fn set_interval(&self, callback: Box<dyn FnMut()>, ms: i32) -> i32;
+    /// Cancel a pending interval by its ID.
     fn clear_interval(&self, id: i32);
+
     fn request_animation_frame(&self, callback: Box<dyn FnOnce(f64)>) -> u32;
     fn cancel_animation_frame(&self, id: u32);
 

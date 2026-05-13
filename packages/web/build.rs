@@ -21,6 +21,15 @@ fn main() {
     resolve_wit_path(&manifest_dir);
 }
 
+/// Locate the composed WIT directory and generate `wit_bindings_generated.rs` in
+/// `$OUT_DIR`. The generated file contains a `wit_bindgen::generate!` invocation
+/// with the correct absolute path, so it works both in the monorepo and when
+/// `tairitsu-web` is consumed from crates.io.
+///
+/// Resolution order:
+/// 1. `DEP_TAIRITSU_BROWSER_WORLDS_WIT_COMPOSED_DIR` (set by `tairitsu-browser-worlds` build.rs
+///    via `cargo:wit_composed_dir` — available when `links = "tairitsu-browser-worlds"` is set)
+/// 2. Monorepo fallback: `../browser-worlds/wit/composed` (for in-tree development)
 fn resolve_wit_path(manifest_dir: &PathBuf) {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap_or_else(|_| ".".to_string()));
 

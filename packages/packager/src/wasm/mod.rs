@@ -448,6 +448,13 @@ fn build_wasm_component(
     Ok(wasm_path)
 }
 
+/// Resolve the browser-glue runtime bundle (`dist/runtime.js`).
+///
+/// Search order:
+/// 1. `TAIRITSU_RUNTIME_BUNDLE` environment variable (absolute or relative path)
+/// 2. Monorepo-relative paths (for in-tree development)
+/// 3. [`DEP_TAIRITSU_BROWSER_WORLDS_WIT_DIR`] auto-discovery (for crates.io users)
+/// 4. `node_modules/` paths (for npm-installed `tairitsu-browser-glue`)
 fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<String> {
     if let Ok(env_path) = std::env::var("TAIRITSU_RUNTIME_BUNDLE") {
         let path = std::path::Path::new(&env_path);
