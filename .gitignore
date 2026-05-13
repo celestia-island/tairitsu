@@ -46,7 +46,8 @@ Thumbs.db
 .mcp.json
 .playwright-mcp/
 
-# Keep sub-project package.json files (root package.json is gitignored)
+# Keep package.json files for npm workspace management
+!package.json
 !packages/npm/*/package.json
 !packages/browser-glue/package.json
 
