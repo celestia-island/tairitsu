@@ -314,10 +314,14 @@ impl<P: Platform> Scheduler<P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::platform::{element::ElementHandle, event::EventHandle};
+    use crate::platform::{
+        CanvasOps, ClipboardOps, ContentEditableOps, DomOps, FileOps, GeoOps, IdbOps, LayoutOps,
+        MediaOps, MediaQueryOps, ObserverOps, QueryOps, ScrollOps, TimerOps,
+        element::ElementHandle,
+        event::EventHandle,
+    };
     use std::any::Any;
 
-    // Mock platform for testing
     struct MockPlatform;
 
     #[derive(Clone)]
@@ -338,7 +342,7 @@ mod tests {
         }
     }
 
-    impl Platform for MockPlatform {
+    impl DomOps for MockPlatform {
         type Element = MockElement;
         type Event = MockEvent;
 
@@ -362,6 +366,53 @@ mod tests {
         ) {
         }
         fn remove_event_listener(&self, _element: &Self::Element, _event: &str) {}
+        fn get_attribute(&self, _element: &Self::Element, _name: &str) -> Option<String> {
+            None
+        }
+        fn class_list_add(&self, _element: &Self::Element, _tokens: &[&str]) {}
+        fn class_list_remove(&self, _element: &Self::Element, _tokens: &[&str]) {}
+        fn class_list_contains(&self, _element: &Self::Element, _token: &str) -> bool {
+            false
+        }
+        fn first_child(&self, _element: &Self::Element) -> Option<Self::Element> {
+            None
+        }
+        fn insert_before(
+            &self,
+            _parent: &Self::Element,
+            _new_node: &Self::Element,
+            _reference_node: Option<&Self::Element>,
+        ) {
+        }
+        fn query_selector_on(
+            &self,
+            _element: &Self::Element,
+            _selector: &str,
+        ) -> Option<Self::Element> {
+            None
+        }
+        fn get_inner_html(&self, _element: &Self::Element) -> String {
+            String::new()
+        }
+        fn set_inner_html(&self, _element: &Self::Element, _html: String) {}
+    }
+
+    impl TimerOps for MockPlatform {
+        fn set_timeout(&self, _callback: Box<dyn FnOnce()>, _ms: i32) -> i32 {
+            0
+        }
+        fn clear_timeout(&self, _id: i32) {}
+        fn set_interval(&self, _callback: Box<dyn FnMut()>, _ms: i32) -> i32 {
+            0
+        }
+        fn clear_interval(&self, _id: i32) {}
+        fn request_animation_frame(&self, _callback: Box<dyn FnOnce(f64)>) -> u32 {
+            0
+        }
+        fn cancel_animation_frame(&self, _id: u32) {}
+    }
+
+    impl LayoutOps for MockPlatform {
         fn get_bounding_client_rect(&self, _element: &Self::Element) -> crate::DomRect {
             crate::DomRect {
                 x: 0.0,
@@ -376,37 +427,22 @@ mod tests {
         fn inner_height(&self) -> i32 {
             0
         }
-        fn set_timeout(&self, _callback: Box<dyn FnOnce()>, _ms: i32) -> i32 {
+        fn get_element_scroll_top(&self, _element: &Self::Element) -> f64 {
+            0.0
+        }
+        fn set_element_scroll_top(&self, _element: &Self::Element, _value: f64) {}
+        fn get_element_scroll_height(&self, _element: &Self::Element) -> i32 {
             0
         }
-        fn clear_timeout(&self, _id: i32) {}
-        fn set_interval(&self, _callback: Box<dyn FnMut()>, _ms: i32) -> i32 {
+        fn get_element_client_height(&self, _element: &Self::Element) -> i32 {
             0
         }
-        fn clear_interval(&self, _id: i32) {}
-        fn request_animation_frame(&self, _callback: Box<dyn FnOnce(f64)>) -> u32 {
+        fn get_element_client_width(&self, _element: &Self::Element) -> i32 {
             0
         }
-        fn cancel_animation_frame(&self, _id: u32) {}
-        fn get_canvas_context(
-            &self,
-            _element: &Self::Element,
-            _context_type: &str,
-        ) -> Option<crate::CanvasContext> {
-            None
-        }
-        fn canvas_set_fill_style(&self, _ctx: crate::CanvasContext, _color: &str) {}
-        fn canvas_fill_rect(&self, _ctx: crate::CanvasContext, _x: f64, _y: f64, _w: f64, _h: f64) {
-        }
-        fn canvas_clear_rect(
-            &self,
-            _ctx: crate::CanvasContext,
-            _x: f64,
-            _y: f64,
-            _w: f64,
-            _h: f64,
-        ) {
-        }
+    }
+
+    impl ObserverOps for MockPlatform {
         fn create_resize_observer(
             &self,
             _callback: Box<dyn FnMut(Vec<crate::ResizeObserverEntry>)>,
@@ -430,6 +466,9 @@ mod tests {
         ) {
         }
         fn disconnect_mutation(&self, _observer: u64) {}
+    }
+
+    impl MediaQueryOps for MockPlatform {
         fn match_media(&self, _query: &str) -> u64 {
             0
         }
@@ -447,6 +486,73 @@ mod tests {
             0
         }
         fn media_query_list_remove_listener(&self, _list: u64, _listener_id: u64) {}
+    }
+
+    impl ClipboardOps for MockPlatform {
+        fn copy_to_clipboard(&self, _text: &str) -> bool {
+            false
+        }
+        fn read_clipboard(&self) -> Option<String> {
+            None
+        }
+        fn clipboard_write_text_async(
+            &self,
+            _text: &str,
+            on_complete: Box<dyn FnOnce(Result<(), String>)>,
+        ) {
+            on_complete(Ok(()));
+        }
+        fn clipboard_read_text_async(&self, on_complete: Box<dyn FnOnce(Result<String, String>)>) {
+            on_complete(Err("clipboard not available in mock".to_string()));
+        }
+    }
+
+    impl ContentEditableOps for MockPlatform {
+        fn get_contenteditable_state(
+            &self,
+            _element: &Self::Element,
+        ) -> Option<crate::ContentEditableState> {
+            None
+        }
+        fn exec_command(&self, _command: &str, _value: Option<&str>) -> bool {
+            false
+        }
+        fn get_selection_start(&self, _element: &Self::Element) -> Option<u32> {
+            None
+        }
+        fn get_selection_end(&self, _element: &Self::Element) -> Option<u32> {
+            None
+        }
+        fn set_content_editable(&self, _element: &Self::Element, _editable: bool) {}
+    }
+
+    impl ScrollOps for MockPlatform {
+        fn get_scroll_y(&self) -> f64 {
+            0.0
+        }
+        fn scroll_to(&self, _top: f64, _behavior: &str) {}
+        fn on_scroll(&self, _callback: Box<dyn FnMut(f64, f64)>) {}
+        fn on_resize(&self, _callback: Box<dyn FnMut(i32, i32)>) {}
+        fn prefers_dark_mode(&self) -> bool {
+            false
+        }
+        fn request_fullscreen(&self, _element: &Self::Element) {}
+        fn get_scroll_top_from_point(&self, _x: i32, _y: i32) -> f64 {
+            0.0
+        }
+        fn get_scroll_top_by_selector(&self, _selector: &str) -> f64 {
+            0.0
+        }
+        fn get_target_element_from_event(
+            &self,
+            _client_x: i32,
+            _client_y: i32,
+        ) -> Option<Self::Element> {
+            None
+        }
+    }
+
+    impl QueryOps for MockPlatform {
         fn get_element_by_id(&self, _id: &str) -> Option<Self::Element> {
             None
         }
@@ -466,31 +572,6 @@ mod tests {
         ) -> Option<Self::Element> {
             None
         }
-        fn get_scroll_y(&self) -> f64 {
-            0.0
-        }
-        fn scroll_to(&self, _top: f64, _behavior: &str) {}
-        fn on_scroll(&self, _callback: Box<dyn FnMut(f64, f64)>) {}
-        fn on_resize(&self, _callback: Box<dyn FnMut(i32, i32)>) {}
-        fn copy_to_clipboard(&self, _text: &str) -> bool {
-            false
-        }
-        fn read_clipboard(&self) -> Option<String> {
-            None
-        }
-        fn clipboard_write_text_async(
-            &self,
-            _text: &str,
-            on_complete: Box<dyn FnOnce(Result<(), String>)>,
-        ) {
-            on_complete(Ok(()));
-        }
-        fn clipboard_read_text_async(&self, on_complete: Box<dyn FnOnce(Result<String, String>)>) {
-            on_complete(Err("clipboard not available in mock".to_string()));
-        }
-        fn prefers_dark_mode(&self) -> bool {
-            false
-        }
         fn get_element_rect_by_id(&self, _id: &str) -> Option<crate::DomRect> {
             None
         }
@@ -501,121 +582,28 @@ mod tests {
         ) -> Option<crate::DomRect> {
             None
         }
-        fn request_fullscreen(&self, _element: &Self::Element) {}
+    }
 
-        fn get_contenteditable_state(
+    impl CanvasOps for MockPlatform {
+        fn get_canvas_context(
             &self,
             _element: &Self::Element,
-        ) -> Option<crate::ContentEditableState> {
+            _context_type: &str,
+        ) -> Option<crate::CanvasContext> {
             None
         }
-
-        fn exec_command(&self, _command: &str, _value: Option<&str>) -> bool {
-            false
+        fn canvas_set_fill_style(&self, _ctx: crate::CanvasContext, _color: &str) {}
+        fn canvas_fill_rect(&self, _ctx: crate::CanvasContext, _x: f64, _y: f64, _w: f64, _h: f64) {
         }
-
-        fn get_selection_start(&self, _element: &Self::Element) -> Option<u32> {
-            None
-        }
-
-        fn get_selection_end(&self, _element: &Self::Element) -> Option<u32> {
-            None
-        }
-
-        fn set_content_editable(&self, _element: &Self::Element, _editable: bool) {}
-
-        fn get_inner_html(&self, _element: &Self::Element) -> String {
-            String::new()
-        }
-
-        fn set_inner_html(&self, _element: &Self::Element, _html: String) {}
-
-        fn get_element_scroll_top(&self, _element: &Self::Element) -> f64 {
-            0.0
-        }
-
-        fn set_element_scroll_top(&self, _element: &Self::Element, _value: f64) {}
-
-        fn get_element_scroll_height(&self, _element: &Self::Element) -> i32 {
-            0
-        }
-
-        fn get_element_client_height(&self, _element: &Self::Element) -> i32 {
-            0
-        }
-
-        fn get_element_client_width(&self, _element: &Self::Element) -> i32 {
-            0
-        }
-
-        fn get_attribute(&self, _element: &Self::Element, _name: &str) -> Option<String> {
-            None
-        }
-
-        fn class_list_add(&self, _element: &Self::Element, _tokens: &[&str]) {}
-        fn class_list_remove(&self, _element: &Self::Element, _tokens: &[&str]) {}
-        fn class_list_contains(&self, _element: &Self::Element, _token: &str) -> bool {
-            false
-        }
-
-        fn first_child(&self, _element: &Self::Element) -> Option<Self::Element> {
-            None
-        }
-
-        fn insert_before(
+        fn canvas_clear_rect(
             &self,
-            _parent: &Self::Element,
-            _new_node: &Self::Element,
-            _reference_node: Option<&Self::Element>,
+            _ctx: crate::CanvasContext,
+            _x: f64,
+            _y: f64,
+            _w: f64,
+            _h: f64,
         ) {
         }
-
-        fn query_selector_on(
-            &self,
-            _element: &Self::Element,
-            _selector: &str,
-        ) -> Option<Self::Element> {
-            None
-        }
-
-        fn video_play(&self, _element: &Self::Element) {}
-
-        fn video_pause(&self, _element: &Self::Element) {}
-
-        fn video_get_current_time(&self, _element: &Self::Element) -> f64 {
-            0.0
-        }
-
-        fn video_get_duration(&self, _element: &Self::Element) -> f64 {
-            0.0
-        }
-
-        fn video_seek(&self, _element: &Self::Element, _time: f64) {}
-
-        fn video_set_muted(&self, _element: &Self::Element, _muted: bool) {}
-
-        fn video_set_volume(&self, _element: &Self::Element, _volume: f64) {}
-
-        fn create_audio_context(&self) -> u64 {
-            0
-        }
-
-        fn create_analyser_node(&self, _audio_context: u64) -> u64 {
-            0
-        }
-
-        fn create_media_element_source(&self, _audio_context: u64, _element: u64) -> u64 {
-            0
-        }
-
-        fn analyser_node_get_frequency_data(&self, _analyser: u64) -> Vec<f32> {
-            vec![]
-        }
-
-        fn analyser_node_get_time_domain_data(&self, _analyser: u64) -> Vec<f32> {
-            vec![]
-        }
-
         fn draw_qrcode_on_canvas_by_id(
             &self,
             _canvas_id: &str,
@@ -626,23 +614,38 @@ mod tests {
         ) -> bool {
             false
         }
+    }
 
-        fn get_scroll_top_from_point(&self, _x: i32, _y: i32) -> f64 {
+    impl MediaOps for MockPlatform {
+        fn video_play(&self, _element: &Self::Element) {}
+        fn video_pause(&self, _element: &Self::Element) {}
+        fn video_get_current_time(&self, _element: &Self::Element) -> f64 {
             0.0
         }
-
-        fn get_scroll_top_by_selector(&self, _selector: &str) -> f64 {
+        fn video_get_duration(&self, _element: &Self::Element) -> f64 {
             0.0
         }
-
-        fn get_target_element_from_event(
-            &self,
-            _client_x: i32,
-            _client_y: i32,
-        ) -> Option<Self::Element> {
-            None
+        fn video_seek(&self, _element: &Self::Element, _time: f64) {}
+        fn video_set_muted(&self, _element: &Self::Element, _muted: bool) {}
+        fn video_set_volume(&self, _element: &Self::Element, _volume: f64) {}
+        fn create_audio_context(&self) -> u64 {
+            0
         }
+        fn create_analyser_node(&self, _audio_context: u64) -> u64 {
+            0
+        }
+        fn create_media_element_source(&self, _audio_context: u64, _element: u64) -> u64 {
+            0
+        }
+        fn analyser_node_get_frequency_data(&self, _analyser: u64) -> Vec<f32> {
+            vec![]
+        }
+        fn analyser_node_get_time_domain_data(&self, _analyser: u64) -> Vec<f32> {
+            vec![]
+        }
+    }
 
+    impl GeoOps for MockPlatform {
         fn get_current_position(
             &self,
             _on_success: Box<dyn FnOnce(crate::GeoPosition)>,
@@ -656,7 +659,9 @@ mod tests {
                 message: "geolocation not available in mock".to_string(),
             });
         }
+    }
 
+    impl FileOps for MockPlatform {
         fn file_reader_sync_read_as_text(
             &self,
             _blob: u64,
@@ -664,11 +669,9 @@ mod tests {
         ) -> Result<String, String> {
             Err("file reader not available in mock".to_string())
         }
-
         fn file_reader_sync_read_as_array_buffer(&self, _blob: u64) -> Result<Vec<u8>, String> {
             Err("file reader not available in mock".to_string())
         }
-
         fn file_reader_read_as_text(
             &self,
             _blob: u64,
@@ -677,7 +680,6 @@ mod tests {
         ) {
             on_complete(Err("file reader not available in mock".to_string()));
         }
-
         fn file_reader_read_as_array_buffer(
             &self,
             _blob: u64,
@@ -685,7 +687,9 @@ mod tests {
         ) {
             on_complete(Err("file reader not available in mock".to_string()));
         }
+    }
 
+    impl IdbOps for MockPlatform {
         fn idb_open(
             &self,
             _name: &str,
@@ -695,7 +699,6 @@ mod tests {
             on_complete(Err("indexeddb not available in mock".to_string()));
             0
         }
-
         fn idb_put(
             &self,
             _db: u64,
@@ -706,7 +709,6 @@ mod tests {
         ) {
             on_complete(Err("indexeddb not available in mock".to_string()));
         }
-
         fn idb_get(
             &self,
             _db: u64,
@@ -716,7 +718,6 @@ mod tests {
         ) {
             on_complete(Err("indexeddb not available in mock".to_string()));
         }
-
         fn idb_delete(
             &self,
             _db: u64,
@@ -726,7 +727,6 @@ mod tests {
         ) {
             on_complete(Err("indexeddb not available in mock".to_string()));
         }
-
         fn idb_get_all(
             &self,
             _db: u64,
@@ -735,7 +735,6 @@ mod tests {
         ) {
             on_complete(Err("indexeddb not available in mock".to_string()));
         }
-
         fn idb_clear(
             &self,
             _db: u64,

@@ -270,7 +270,9 @@ pub mod wasm_impl {
 
     use tairitsu_vdom::{
         CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent,
-        KeyboardEvent, MouseEvent, Platform, VNode,
+        KeyboardEvent, Platform, VNode,
+        CanvasOps, ClipboardOps, ContentEditableOps, DomOps, FileOps, GeoOps, IdbOps, LayoutOps,
+        MediaOps, MediaQueryOps, ObserverOps, QueryOps, ScrollOps, TimerOps,
     };
 
     use super::{WitElement, WitEvent, WitPlatform};
@@ -965,7 +967,7 @@ pub mod wasm_impl {
 
     // -- Platform trait implementation ------------------------------------
 
-    impl Platform for WitPlatform {
+    impl DomOps for WitPlatform {
         type Element = WitElement;
         type Event = WitEvent;
 
@@ -1103,26 +1105,69 @@ pub mod wasm_impl {
             }
         }
 
-        fn get_bounding_client_rect(&self, element: &Self::Element) -> DomRect {
-            let rect = bindings::tairitsu_browser::full::element::get_bounding_client_rect(
-                element.as_raw(),
+        fn get_inner_html(&self, element: &Self::Element) -> String {
+            bindings::tairitsu_browser::full::element::get_inner_html(element.as_raw())
+        }
+
+        fn set_inner_html(&self, element: &Self::Element, html: String) {
+            bindings::tairitsu_browser::full::element::set_inner_html(element.as_raw(), &html);
+        }
+
+        fn get_attribute(&self, element: &Self::Element, name: &str) -> Option<String> {
+            bindings::tairitsu_browser::full::element::get_attribute(element.as_raw(), name)
+        }
+
+        fn class_list_add(&self, element: &Self::Element, tokens: &[&str]) {
+            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
+            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
+            bindings::tairitsu_browser::full::dom_token_list::add(list, &wit_tokens);
+        }
+
+        fn class_list_remove(&self, element: &Self::Element, tokens: &[&str]) {
+            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
+            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
+            bindings::tairitsu_browser::full::dom_token_list::remove(list, &wit_tokens);
+        }
+
+        fn class_list_contains(&self, element: &Self::Element, token: &str) -> bool {
+            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
+            bindings::tairitsu_browser::full::dom_token_list::contains(list, token)
+        }
+
+        fn first_child(&self, element: &Self::Element) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::node::get_first_child(element.as_raw())
+                .map(WitElement::from_raw)
+        }
+
+        fn insert_before(
+            &self,
+            parent: &Self::Element,
+            new_node: &Self::Element,
+            reference_node: Option<&Self::Element>,
+        ) {
+            let ref_handle = reference_node.map(|r| r.as_raw());
+            let _ = bindings::tairitsu_browser::full::node::insert_before(
+                parent.as_raw(),
+                new_node.as_raw(),
+                ref_handle,
             );
-            DomRect {
-                x: rect.x,
-                y: rect.y,
-                width: rect.width,
-                height: rect.height,
-            }
         }
 
-        fn inner_width(&self) -> i32 {
-            bindings::tairitsu_browser::full::window::get_inner_width()
+        fn query_selector_on(
+            &self,
+            element: &Self::Element,
+            selector: &str,
+        ) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::parent_node::query_selector(
+                element.as_raw(),
+                selector,
+            )
+            .map(WitElement::from_raw)
         }
 
-        fn inner_height(&self) -> i32 {
-            bindings::tairitsu_browser::full::window::get_inner_height()
-        }
+    }
 
+    impl TimerOps for WitPlatform {
         fn set_timeout(&self, callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
             let callback_id = next_callback_id();
             TIMEOUT_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
@@ -1153,30 +1198,52 @@ pub mod wasm_impl {
             bindings::tairitsu_browser::full::platform_helpers::cancel_animation_frame(id)
         }
 
-        fn get_canvas_context(
-            &self,
-            element: &Self::Element,
-            context_type: &str,
-        ) -> Option<CanvasContext> {
-            bindings::tairitsu_browser::full::html_canvas_element::get_context(
+    }
+
+    impl LayoutOps for WitPlatform {
+        fn get_bounding_client_rect(&self, element: &Self::Element) -> DomRect {
+            let rect = bindings::tairitsu_browser::full::element::get_bounding_client_rect(
                 element.as_raw(),
-                context_type,
-                None,
-            )
+            );
+            DomRect {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+            }
         }
 
-        fn canvas_set_fill_style(&self, ctx: CanvasContext, color: &str) {
-            bindings::tairitsu_browser::full::canvas_fill_stroke_styles::set_fill_style(ctx, color)
+        fn inner_width(&self) -> i32 {
+            bindings::tairitsu_browser::full::window::get_inner_width()
         }
 
-        fn canvas_fill_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
-            bindings::tairitsu_browser::full::canvas_rect::fill_rect(ctx, x, y, w, h)
+        fn inner_height(&self) -> i32 {
+            bindings::tairitsu_browser::full::window::get_inner_height()
         }
 
-        fn canvas_clear_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
-            bindings::tairitsu_browser::full::canvas_rect::clear_rect(ctx, x, y, w, h)
+        fn get_element_scroll_top(&self, element: &Self::Element) -> f64 {
+            bindings::tairitsu_browser::full::element::get_scroll_top(element.as_raw())
         }
 
+        fn set_element_scroll_top(&self, element: &Self::Element, value: f64) {
+            bindings::tairitsu_browser::full::element::set_scroll_top(element.as_raw(), value);
+        }
+
+        fn get_element_scroll_height(&self, element: &Self::Element) -> i32 {
+            bindings::tairitsu_browser::full::element::get_scroll_height(element.as_raw())
+        }
+
+        fn get_element_client_height(&self, element: &Self::Element) -> i32 {
+            bindings::tairitsu_browser::full::element::get_client_height(element.as_raw())
+        }
+
+        fn get_element_client_width(&self, element: &Self::Element) -> i32 {
+            bindings::tairitsu_browser::full::element::get_client_width(element.as_raw())
+        }
+
+    }
+
+    impl ObserverOps for WitPlatform {
         fn create_resize_observer(
             &self,
             callback: Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>,
@@ -1233,6 +1300,9 @@ pub mod wasm_impl {
             bindings::tairitsu_browser::full::mutation_observer::disconnect(observer);
         }
 
+    }
+
+    impl MediaQueryOps for WitPlatform {
         fn match_media(&self, query: &str) -> u64 {
             bindings::tairitsu_browser::full::window::match_media(query)
         }
@@ -1263,57 +1333,9 @@ pub mod wasm_impl {
             );
         }
 
-        fn get_element_by_id(&self, id: &str) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::platform_helpers::get_element_by_id(id)
-                .map(WitElement::from_raw)
-        }
+    }
 
-        fn query_selector(&self, selector: &str) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::platform_helpers::query_selector(selector)
-                .map(WitElement::from_raw)
-        }
-
-        fn query_selector_all(&self, selector: &str) -> Vec<Self::Element> {
-            bindings::tairitsu_browser::full::platform_helpers::query_selector_all(selector)
-                .into_iter()
-                .map(WitElement::from_raw)
-                .collect()
-        }
-
-        fn element_from_point(&self, x: i32, y: i32) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::document::element_from_point(x as f64, y as f64)
-                .map(WitElement::from_raw)
-        }
-
-        fn element_closest(
-            &self,
-            element: &Self::Element,
-            selector: &str,
-        ) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::element::closest(element.as_raw(), selector)
-                .map(WitElement::from_raw)
-        }
-
-        fn get_scroll_y(&self) -> f64 {
-            bindings::tairitsu_browser::full::window::get_scroll_y()
-        }
-
-        fn scroll_to(&self, top: f64, behavior: &str) {
-            bindings::tairitsu_browser::full::platform_helpers::scroll_to(top, behavior)
-        }
-
-        fn on_scroll(&self, callback: Box<dyn FnMut(f64, f64)>) {
-            let callback_id = next_callback_id();
-            SCROLL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
-            bindings::tairitsu_browser::full::platform_helpers::on_scroll(callback_id);
-        }
-
-        fn on_resize(&self, callback: Box<dyn FnMut(i32, i32)>) {
-            let callback_id = next_callback_id();
-            WINDOW_RESIZE_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
-            bindings::tairitsu_browser::full::platform_helpers::on_resize_callback(callback_id);
-        }
-
+    impl ClipboardOps for WitPlatform {
         fn copy_to_clipboard(&self, text: &str) -> bool {
             bindings::tairitsu_browser::full::platform_helpers::copy_to_clipboard(text)
         }
@@ -1350,45 +1372,9 @@ pub mod wasm_impl {
             });
         }
 
-        fn prefers_dark_mode(&self) -> bool {
-            bindings::tairitsu_browser::full::platform_helpers::prefers_dark_mode()
-        }
+    }
 
-        fn get_element_rect_by_id(&self, id: &str) -> Option<DomRect> {
-            bindings::tairitsu_browser::full::platform_helpers::get_element_rect_by_id(id).map(
-                |rect| DomRect {
-                    x: rect.x,
-                    y: rect.y,
-                    width: rect.width,
-                    height: rect.height,
-                },
-            )
-        }
-
-        fn get_bounding_rect_by_class(
-            &self,
-            class_name: &str,
-            element: &Self::Element,
-        ) -> Option<DomRect> {
-            bindings::tairitsu_browser::full::platform_helpers::get_bounding_rect_by_class(
-                class_name,
-                element.as_raw(),
-            )
-            .map(|rect| DomRect {
-                x: rect.x,
-                y: rect.y,
-                width: rect.width,
-                height: rect.height,
-            })
-        }
-
-        fn request_fullscreen(&self, element: &Self::Element) {
-            let _ = bindings::tairitsu_browser::full::element::request_fullscreen(
-                element.as_raw(),
-                None,
-            );
-        }
-
+    impl ContentEditableOps for WitPlatform {
         fn get_contenteditable_state(
             &self,
             element: &Self::Element,
@@ -1423,86 +1409,170 @@ pub mod wasm_impl {
             );
         }
 
-        fn get_inner_html(&self, element: &Self::Element) -> String {
-            bindings::tairitsu_browser::full::element::get_inner_html(element.as_raw())
+    }
+
+    impl ScrollOps for WitPlatform {
+        fn get_scroll_y(&self) -> f64 {
+            bindings::tairitsu_browser::full::window::get_scroll_y()
         }
 
-        fn set_inner_html(&self, element: &Self::Element, html: String) {
-            bindings::tairitsu_browser::full::element::set_inner_html(element.as_raw(), &html);
+        fn scroll_to(&self, top: f64, behavior: &str) {
+            bindings::tairitsu_browser::full::platform_helpers::scroll_to(top, behavior)
         }
 
-        fn get_element_scroll_top(&self, element: &Self::Element) -> f64 {
-            bindings::tairitsu_browser::full::element::get_scroll_top(element.as_raw())
+        fn on_scroll(&self, callback: Box<dyn FnMut(f64, f64)>) {
+            let callback_id = next_callback_id();
+            SCROLL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::on_scroll(callback_id);
         }
 
-        fn set_element_scroll_top(&self, element: &Self::Element, value: f64) {
-            bindings::tairitsu_browser::full::element::set_scroll_top(element.as_raw(), value);
+        fn on_resize(&self, callback: Box<dyn FnMut(i32, i32)>) {
+            let callback_id = next_callback_id();
+            WINDOW_RESIZE_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::on_resize_callback(callback_id);
         }
 
-        fn get_element_scroll_height(&self, element: &Self::Element) -> i32 {
-            bindings::tairitsu_browser::full::element::get_scroll_height(element.as_raw())
+        fn prefers_dark_mode(&self) -> bool {
+            bindings::tairitsu_browser::full::platform_helpers::prefers_dark_mode()
         }
 
-        fn get_element_client_height(&self, element: &Self::Element) -> i32 {
-            bindings::tairitsu_browser::full::element::get_client_height(element.as_raw())
-        }
-
-        fn get_element_client_width(&self, element: &Self::Element) -> i32 {
-            bindings::tairitsu_browser::full::element::get_client_width(element.as_raw())
-        }
-
-        fn get_attribute(&self, element: &Self::Element, name: &str) -> Option<String> {
-            bindings::tairitsu_browser::full::element::get_attribute(element.as_raw(), name)
-        }
-
-        fn class_list_add(&self, element: &Self::Element, tokens: &[&str]) {
-            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
-            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
-            bindings::tairitsu_browser::full::dom_token_list::add(list, &wit_tokens);
-        }
-
-        fn class_list_remove(&self, element: &Self::Element, tokens: &[&str]) {
-            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
-            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
-            bindings::tairitsu_browser::full::dom_token_list::remove(list, &wit_tokens);
-        }
-
-        fn class_list_contains(&self, element: &Self::Element, token: &str) -> bool {
-            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
-            bindings::tairitsu_browser::full::dom_token_list::contains(list, token)
-        }
-
-        fn first_child(&self, element: &Self::Element) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::node::get_first_child(element.as_raw())
-                .map(WitElement::from_raw)
-        }
-
-        fn insert_before(
-            &self,
-            parent: &Self::Element,
-            new_node: &Self::Element,
-            reference_node: Option<&Self::Element>,
-        ) {
-            let ref_handle = reference_node.map(|r| r.as_raw());
-            let _ = bindings::tairitsu_browser::full::node::insert_before(
-                parent.as_raw(),
-                new_node.as_raw(),
-                ref_handle,
+        fn request_fullscreen(&self, element: &Self::Element) {
+            let _ = bindings::tairitsu_browser::full::element::request_fullscreen(
+                element.as_raw(),
+                None,
             );
         }
 
-        fn query_selector_on(
+        fn get_scroll_top_from_point(&self, x: i32, y: i32) -> f64 {
+            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_from_point(x, y)
+        }
+
+        fn get_scroll_top_by_selector(&self, selector: &str) -> f64 {
+            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_by_selector(selector)
+        }
+
+        fn get_target_element_from_event(
             &self,
-            element: &Self::Element,
-            selector: &str,
+            client_x: i32,
+            client_y: i32,
         ) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::parent_node::query_selector(
-                element.as_raw(),
-                selector,
+            bindings::tairitsu_browser::full::document::element_from_point(
+                client_x as f64,
+                client_y as f64,
             )
             .map(WitElement::from_raw)
         }
 
+    }
+
+    impl QueryOps for WitPlatform {
+        fn get_element_by_id(&self, id: &str) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::get_element_by_id(id)
+                .map(WitElement::from_raw)
+        }
+
+        fn query_selector(&self, selector: &str) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::query_selector(selector)
+                .map(WitElement::from_raw)
+        }
+
+        fn query_selector_all(&self, selector: &str) -> Vec<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::query_selector_all(selector)
+                .into_iter()
+                .map(WitElement::from_raw)
+                .collect()
+        }
+
+        fn element_from_point(&self, x: i32, y: i32) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::document::element_from_point(x as f64, y as f64)
+                .map(WitElement::from_raw)
+        }
+
+        fn element_closest(
+            &self,
+            element: &Self::Element,
+            selector: &str,
+        ) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::element::closest(element.as_raw(), selector)
+                .map(WitElement::from_raw)
+        }
+
+        fn get_element_rect_by_id(&self, id: &str) -> Option<DomRect> {
+            bindings::tairitsu_browser::full::platform_helpers::get_element_rect_by_id(id).map(
+                |rect| DomRect {
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                },
+            )
+        }
+
+        fn get_bounding_rect_by_class(
+            &self,
+            class_name: &str,
+            element: &Self::Element,
+        ) -> Option<DomRect> {
+            bindings::tairitsu_browser::full::platform_helpers::get_bounding_rect_by_class(
+                class_name,
+                element.as_raw(),
+            )
+            .map(|rect| DomRect {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+            })
+        }
+
+    }
+
+    impl CanvasOps for WitPlatform {
+        fn get_canvas_context(
+            &self,
+            element: &Self::Element,
+            context_type: &str,
+        ) -> Option<CanvasContext> {
+            bindings::tairitsu_browser::full::html_canvas_element::get_context(
+                element.as_raw(),
+                context_type,
+                None,
+            )
+        }
+
+        fn canvas_set_fill_style(&self, ctx: CanvasContext, color: &str) {
+            bindings::tairitsu_browser::full::canvas_fill_stroke_styles::set_fill_style(ctx, color)
+        }
+
+        fn canvas_fill_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
+            bindings::tairitsu_browser::full::canvas_rect::fill_rect(ctx, x, y, w, h)
+        }
+
+        fn canvas_clear_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
+            bindings::tairitsu_browser::full::canvas_rect::clear_rect(ctx, x, y, w, h)
+        }
+
+        fn draw_qrcode_on_canvas_by_id(
+            &self,
+            canvas_id: &str,
+            matrix: &[Vec<bool>],
+            modules: u64,
+            color: &str,
+            background: &str,
+        ) -> bool {
+            let wit_matrix: Vec<Vec<bool>> = matrix.to_vec();
+            bindings::tairitsu_browser::full::platform_helpers::draw_qrcode_on_canvas_by_id(
+                canvas_id,
+                &wit_matrix,
+                modules,
+                color,
+                background,
+            )
+        }
+
+    }
+
+    impl MediaOps for WitPlatform {
         fn video_play(&self, element: &Self::Element) {
             let _ = bindings::tairitsu_browser::full::html_media_element::play(element.as_raw());
         }
@@ -1567,44 +1637,9 @@ pub mod wasm_impl {
             )
         }
 
-        fn draw_qrcode_on_canvas_by_id(
-            &self,
-            canvas_id: &str,
-            matrix: &[Vec<bool>],
-            modules: u64,
-            color: &str,
-            background: &str,
-        ) -> bool {
-            let wit_matrix: Vec<Vec<bool>> = matrix.to_vec();
-            bindings::tairitsu_browser::full::platform_helpers::draw_qrcode_on_canvas_by_id(
-                canvas_id,
-                &wit_matrix,
-                modules,
-                color,
-                background,
-            )
-        }
+    }
 
-        fn get_scroll_top_from_point(&self, x: i32, y: i32) -> f64 {
-            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_from_point(x, y)
-        }
-
-        fn get_scroll_top_by_selector(&self, selector: &str) -> f64 {
-            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_by_selector(selector)
-        }
-
-        fn get_target_element_from_event(
-            &self,
-            client_x: i32,
-            client_y: i32,
-        ) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::document::element_from_point(
-                client_x as f64,
-                client_y as f64,
-            )
-            .map(WitElement::from_raw)
-        }
-
+    impl GeoOps for WitPlatform {
         fn get_current_position(
             &self,
             on_success: Box<dyn FnOnce(tairitsu_vdom::GeoPosition)>,
@@ -1636,6 +1671,9 @@ pub mod wasm_impl {
             );
         }
 
+    }
+
+    impl FileOps for WitPlatform {
         fn file_reader_sync_read_as_text(
             &self,
             blob: u64,
@@ -1687,6 +1725,9 @@ pub mod wasm_impl {
             );
         }
 
+    }
+
+    impl IdbOps for WitPlatform {
         fn idb_open(
             &self,
             name: &str,
@@ -1829,7 +1870,9 @@ pub mod wasm_impl {
                 callback_id,
             );
         }
+
     }
+
 
     pub(super) fn mount_vnode_to_app(platform: &WitPlatform, vnode: VNode) -> Result<()> {
         let doc_handle: u64 = 0;

@@ -8,7 +8,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use tairitsu_vdom::{
-    Platform, Signal,
+    DomOps, Platform, Signal,
     scheduler::Scheduler,
     vnode::{VElement, VNode},
 };
@@ -30,7 +30,7 @@ impl MockPlatform {
     }
 }
 
-impl Platform for MockPlatform {
+impl DomOps for MockPlatform {
     type Element = MockElement;
     type Event = MockEvent;
 
@@ -91,6 +91,64 @@ impl Platform for MockPlatform {
         ));
     }
 
+    fn get_attribute(&self, _element: &Self::Element, _name: &str) -> Option<String> {
+        None
+    }
+    fn class_list_add(&self, _element: &Self::Element, _tokens: &[&str]) {}
+    fn class_list_remove(&self, _element: &Self::Element, _tokens: &[&str]) {}
+    fn class_list_contains(&self, _element: &Self::Element, _token: &str) -> bool {
+        false
+    }
+    fn first_child(&self, _element: &Self::Element) -> Option<Self::Element> {
+        None
+    }
+    fn insert_before(
+        &self,
+        _parent: &Self::Element,
+        _new_node: &Self::Element,
+        _reference_node: Option<&Self::Element>,
+    ) {
+    }
+    fn query_selector_on(
+        &self,
+        _element: &Self::Element,
+        _selector: &str,
+    ) -> Option<Self::Element> {
+        None
+    }
+
+    fn get_inner_html(&self, _element: &Self::Element) -> String {
+        String::new()
+    }
+
+    fn set_inner_html(&self, _element: &Self::Element, _html: String) {}
+}
+
+impl tairitsu_vdom::TimerOps for MockPlatform {
+    fn set_timeout(&self, _callback: Box<dyn FnOnce()>, _ms: i32) -> i32 {
+        0
+    }
+
+    fn clear_timeout(&self, _id: i32) {}
+
+    fn set_interval(&self, _callback: Box<dyn FnMut()>, _ms: i32) -> i32 {
+        0
+    }
+
+    fn clear_interval(&self, _id: i32) {}
+
+    fn request_animation_frame(&self, callback: Box<dyn FnOnce(f64)>) -> u32 {
+        self.log("request_animation_frame");
+        callback(0.0);
+        1
+    }
+
+    fn cancel_animation_frame(&self, _id: u32) {
+        self.log("cancel_animation_frame");
+    }
+}
+
+impl tairitsu_vdom::LayoutOps for MockPlatform {
     fn get_bounding_client_rect(&self, _element: &Self::Element) -> tairitsu_vdom::DomRect {
         tairitsu_vdom::DomRect {
             x: 0.0,
@@ -108,29 +166,189 @@ impl Platform for MockPlatform {
         600
     }
 
-    fn set_timeout(&self, _callback: Box<dyn FnOnce()>, _ms: i32) -> i32 {
+    fn get_element_scroll_top(&self, _element: &Self::Element) -> f64 {
+        0.0
+    }
+
+    fn set_element_scroll_top(&self, _element: &Self::Element, _value: f64) {}
+
+    fn get_element_scroll_height(&self, _element: &Self::Element) -> i32 {
+        0
+    }
+    fn get_element_client_height(&self, _element: &Self::Element) -> i32 {
+        0
+    }
+    fn get_element_client_width(&self, _element: &Self::Element) -> i32 {
+        0
+    }
+}
+
+impl tairitsu_vdom::ObserverOps for MockPlatform {
+    fn create_resize_observer(
+        &self,
+        _callback: Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>,
+    ) -> u64 {
         0
     }
 
-    fn clear_timeout(&self, _id: i32) {}
+    fn observe_resize(&self, _observer: u64, _element: &Self::Element) {}
 
-    fn set_interval(&self, _callback: Box<dyn FnMut()>, _ms: i32) -> i32 {
+    fn unobserve_resize(&self, _observer: u64, _element: &Self::Element) {}
+
+    fn disconnect_resize(&self, _observer: u64) {}
+
+    fn create_mutation_observer(
+        &self,
+        _callback: Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>,
+    ) -> u64 {
         0
     }
 
-    fn clear_interval(&self, _id: i32) {}
-
-    fn request_animation_frame(&self, callback: Box<dyn FnOnce(f64)>) -> u32 {
-        self.log("request_animation_frame");
-        // Simulate immediate execution for testing
-        callback(0.0);
-        1
+    fn observe_mutations(
+        &self,
+        _observer: u64,
+        _element: &Self::Element,
+        _options: Option<tairitsu_vdom::MutationObserverInit>,
+    ) {
     }
 
-    fn cancel_animation_frame(&self, _id: u32) {
-        self.log("cancel_animation_frame");
+    fn disconnect_mutation(&self, _observer: u64) {}
+}
+
+impl tairitsu_vdom::MediaQueryOps for MockPlatform {
+    fn match_media(&self, _query: &str) -> u64 {
+        0
     }
 
+    fn media_query_list_get_media(&self, _list: u64) -> String {
+        String::new()
+    }
+
+    fn media_query_list_get_matches(&self, _list: u64) -> bool {
+        false
+    }
+
+    fn media_query_list_add_listener(&self, _list: u64, _callback: Box<dyn FnMut(bool)>) -> u64 {
+        0
+    }
+
+    fn media_query_list_remove_listener(&self, _list: u64, _listener_id: u64) {}
+}
+
+impl tairitsu_vdom::ClipboardOps for MockPlatform {
+    fn copy_to_clipboard(&self, _text: &str) -> bool {
+        false
+    }
+
+    fn read_clipboard(&self) -> Option<String> {
+        None
+    }
+
+    fn clipboard_write_text_async(
+        &self,
+        _text: &str,
+        on_complete: Box<dyn FnOnce(Result<(), String>)>,
+    ) {
+        on_complete(Ok(()));
+    }
+
+    fn clipboard_read_text_async(&self, on_complete: Box<dyn FnOnce(Result<String, String>)>) {
+        on_complete(Err("clipboard not available in mock".to_string()));
+    }
+}
+
+impl tairitsu_vdom::ContentEditableOps for MockPlatform {
+    fn get_contenteditable_state(
+        &self,
+        _element: &Self::Element,
+    ) -> Option<tairitsu_vdom::ContentEditableState> {
+        None
+    }
+
+    fn exec_command(&self, _command: &str, _value: Option<&str>) -> bool {
+        false
+    }
+
+    fn get_selection_start(&self, _element: &Self::Element) -> Option<u32> {
+        None
+    }
+
+    fn get_selection_end(&self, _element: &Self::Element) -> Option<u32> {
+        None
+    }
+
+    fn set_content_editable(&self, _element: &Self::Element, _editable: bool) {}
+}
+
+impl tairitsu_vdom::ScrollOps for MockPlatform {
+    fn get_scroll_y(&self) -> f64 {
+        0.0
+    }
+
+    fn scroll_to(&self, _top: f64, _behavior: &str) {}
+
+    fn on_scroll(&self, _callback: Box<dyn FnMut(f64, f64)>) {}
+
+    fn on_resize(&self, _callback: Box<dyn FnMut(i32, i32)>) {}
+
+    fn prefers_dark_mode(&self) -> bool {
+        false
+    }
+
+    fn request_fullscreen(&self, _element: &Self::Element) {}
+
+    fn get_scroll_top_from_point(&self, _x: i32, _y: i32) -> f64 {
+        0.0
+    }
+
+    fn get_scroll_top_by_selector(&self, _selector: &str) -> f64 {
+        0.0
+    }
+
+    fn get_target_element_from_event(
+        &self,
+        _client_x: i32,
+        _client_y: i32,
+    ) -> Option<Self::Element> {
+        None
+    }
+}
+
+impl tairitsu_vdom::QueryOps for MockPlatform {
+    fn get_element_by_id(&self, _id: &str) -> Option<Self::Element> {
+        None
+    }
+
+    fn query_selector(&self, _selector: &str) -> Option<Self::Element> {
+        None
+    }
+
+    fn query_selector_all(&self, _selector: &str) -> Vec<Self::Element> {
+        vec![]
+    }
+
+    fn element_from_point(&self, _x: i32, _y: i32) -> Option<Self::Element> {
+        None
+    }
+
+    fn element_closest(&self, _element: &Self::Element, _selector: &str) -> Option<Self::Element> {
+        None
+    }
+
+    fn get_element_rect_by_id(&self, _id: &str) -> Option<tairitsu_vdom::DomRect> {
+        None
+    }
+
+    fn get_bounding_rect_by_class(
+        &self,
+        _class_name: &str,
+        _element: &Self::Element,
+    ) -> Option<tairitsu_vdom::DomRect> {
+        None
+    }
+}
+
+impl tairitsu_vdom::CanvasOps for MockPlatform {
     fn get_canvas_context(
         &self,
         _element: &Self::Element,
@@ -161,190 +379,19 @@ impl Platform for MockPlatform {
     ) {
     }
 
-    fn create_resize_observer(
+    fn draw_qrcode_on_canvas_by_id(
         &self,
-        _callback: Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>,
-    ) -> u64 {
-        0
-    }
-
-    fn observe_resize(&self, _observer: u64, _element: &Self::Element) {}
-
-    fn unobserve_resize(&self, _observer: u64, _element: &Self::Element) {}
-
-    fn disconnect_resize(&self, _observer: u64) {}
-
-    fn create_mutation_observer(
-        &self,
-        _callback: Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>,
-    ) -> u64 {
-        0
-    }
-
-    fn observe_mutations(
-        &self,
-        _observer: u64,
-        _element: &Self::Element,
-        _options: Option<tairitsu_vdom::MutationObserverInit>,
-    ) {
-    }
-
-    fn disconnect_mutation(&self, _observer: u64) {}
-
-    fn match_media(&self, _query: &str) -> u64 {
-        0
-    }
-
-    fn media_query_list_get_media(&self, _list: u64) -> String {
-        String::new()
-    }
-
-    fn media_query_list_get_matches(&self, _list: u64) -> bool {
+        _canvas_id: &str,
+        _matrix: &[Vec<bool>],
+        _modules: u64,
+        _color: &str,
+        _background: &str,
+    ) -> bool {
         false
     }
+}
 
-    fn media_query_list_add_listener(&self, _list: u64, _callback: Box<dyn FnMut(bool)>) -> u64 {
-        0
-    }
-
-    fn media_query_list_remove_listener(&self, _list: u64, _listener_id: u64) {}
-
-    fn get_element_by_id(&self, _id: &str) -> Option<Self::Element> {
-        None
-    }
-
-    fn query_selector(&self, _selector: &str) -> Option<Self::Element> {
-        None
-    }
-
-    fn query_selector_all(&self, _selector: &str) -> Vec<Self::Element> {
-        vec![]
-    }
-
-    fn element_from_point(&self, _x: i32, _y: i32) -> Option<Self::Element> {
-        None
-    }
-
-    fn element_closest(&self, _element: &Self::Element, _selector: &str) -> Option<Self::Element> {
-        None
-    }
-
-    fn get_scroll_y(&self) -> f64 {
-        0.0
-    }
-
-    fn scroll_to(&self, _top: f64, _behavior: &str) {}
-
-    fn on_scroll(&self, _callback: Box<dyn FnMut(f64, f64)>) {}
-
-    fn on_resize(&self, _callback: Box<dyn FnMut(i32, i32)>) {}
-
-    fn copy_to_clipboard(&self, _text: &str) -> bool {
-        false
-    }
-
-    fn read_clipboard(&self) -> Option<String> {
-        None
-    }
-
-    fn clipboard_write_text_async(
-        &self,
-        _text: &str,
-        on_complete: Box<dyn FnOnce(Result<(), String>)>,
-    ) {
-        on_complete(Ok(()));
-    }
-
-    fn clipboard_read_text_async(&self, on_complete: Box<dyn FnOnce(Result<String, String>)>) {
-        on_complete(Err("clipboard not available in mock".to_string()));
-    }
-
-    fn prefers_dark_mode(&self) -> bool {
-        false
-    }
-
-    fn get_element_rect_by_id(&self, _id: &str) -> Option<tairitsu_vdom::DomRect> {
-        None
-    }
-
-    fn get_bounding_rect_by_class(
-        &self,
-        _class_name: &str,
-        _element: &Self::Element,
-    ) -> Option<tairitsu_vdom::DomRect> {
-        None
-    }
-
-    fn request_fullscreen(&self, _element: &Self::Element) {}
-
-    fn get_contenteditable_state(
-        &self,
-        _element: &Self::Element,
-    ) -> Option<tairitsu_vdom::ContentEditableState> {
-        None
-    }
-
-    fn exec_command(&self, _command: &str, _value: Option<&str>) -> bool {
-        false
-    }
-
-    fn get_selection_start(&self, _element: &Self::Element) -> Option<u32> {
-        None
-    }
-
-    fn get_selection_end(&self, _element: &Self::Element) -> Option<u32> {
-        None
-    }
-
-    fn set_content_editable(&self, _element: &Self::Element, _editable: bool) {}
-
-    fn get_inner_html(&self, _element: &Self::Element) -> String {
-        String::new()
-    }
-
-    fn set_inner_html(&self, _element: &Self::Element, _html: String) {}
-
-    fn get_element_scroll_top(&self, _element: &Self::Element) -> f64 {
-        0.0
-    }
-
-    fn set_element_scroll_top(&self, _element: &Self::Element, _value: f64) {}
-
-    fn get_element_scroll_height(&self, _element: &Self::Element) -> i32 {
-        0
-    }
-    fn get_element_client_height(&self, _element: &Self::Element) -> i32 {
-        0
-    }
-    fn get_element_client_width(&self, _element: &Self::Element) -> i32 {
-        0
-    }
-    fn get_attribute(&self, _element: &Self::Element, _name: &str) -> Option<String> {
-        None
-    }
-    fn class_list_add(&self, _element: &Self::Element, _tokens: &[&str]) {}
-    fn class_list_remove(&self, _element: &Self::Element, _tokens: &[&str]) {}
-    fn class_list_contains(&self, _element: &Self::Element, _token: &str) -> bool {
-        false
-    }
-    fn first_child(&self, _element: &Self::Element) -> Option<Self::Element> {
-        None
-    }
-    fn insert_before(
-        &self,
-        _parent: &Self::Element,
-        _new_node: &Self::Element,
-        _reference_node: Option<&Self::Element>,
-    ) {
-    }
-    fn query_selector_on(
-        &self,
-        _element: &Self::Element,
-        _selector: &str,
-    ) -> Option<Self::Element> {
-        None
-    }
-
+impl tairitsu_vdom::MediaOps for MockPlatform {
     fn video_play(&self, _element: &Self::Element) {}
 
     fn video_pause(&self, _element: &Self::Element) {}
@@ -382,34 +429,9 @@ impl Platform for MockPlatform {
     fn analyser_node_get_time_domain_data(&self, _analyser: u64) -> Vec<f32> {
         vec![]
     }
+}
 
-    fn draw_qrcode_on_canvas_by_id(
-        &self,
-        _canvas_id: &str,
-        _matrix: &[Vec<bool>],
-        _modules: u64,
-        _color: &str,
-        _background: &str,
-    ) -> bool {
-        false
-    }
-
-    fn get_scroll_top_from_point(&self, _x: i32, _y: i32) -> f64 {
-        0.0
-    }
-
-    fn get_scroll_top_by_selector(&self, _selector: &str) -> f64 {
-        0.0
-    }
-
-    fn get_target_element_from_event(
-        &self,
-        _client_x: i32,
-        _client_y: i32,
-    ) -> Option<Self::Element> {
-        None
-    }
-
+impl tairitsu_vdom::GeoOps for MockPlatform {
     fn get_current_position(
         &self,
         _on_success: Box<dyn FnOnce(tairitsu_vdom::GeoPosition)>,
@@ -423,7 +445,9 @@ impl Platform for MockPlatform {
             message: "geolocation not available in mock".to_string(),
         });
     }
+}
 
+impl tairitsu_vdom::FileOps for MockPlatform {
     fn file_reader_sync_read_as_text(
         &self,
         _blob: u64,
@@ -452,7 +476,9 @@ impl Platform for MockPlatform {
     ) {
         on_complete(Err("file reader not available in mock".to_string()));
     }
+}
 
+impl tairitsu_vdom::IdbOps for MockPlatform {
     fn idb_open(
         &self,
         _name: &str,

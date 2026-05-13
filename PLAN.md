@@ -36,44 +36,39 @@
 
 添加 `with_css_var(name, value)` 方法，自动补 `--` 前缀，免去手动构建 Style。
 
+### ✅ T-6: Platform Trait 拆分 (2026-05-14)
+
+将 65+ 方法的 `Platform` trait 拆分为 14 个子 trait：
+- **DomOps** (base): `Element`/`Event` 关联类型 + DOM 操作
+- **TimerOps**: `set_timeout`/`set_interval`/`request_animation_frame`
+- **LayoutOps**: `get_bounding_client_rect`/`inner_width`/`scroll_*`
+- **ObserverOps**: ResizeObserver/MutationObserver
+- **MediaQueryOps**: `match_media`/`media_query_list_*`
+- **ClipboardOps**: `copy_to_clipboard`/`clipboard_*_async`
+- **ContentEditableOps**: `exec_command`/`get_selection_*`
+- **ScrollOps**: `scroll_to`/`on_scroll`/`on_resize`/`prefers_dark_mode`
+- **QueryOps**: `get_element_by_id`/`query_selector`/`element_from_point`
+- **CanvasOps**: Canvas 2D context 操作
+- **MediaOps**: Video/Audio 播放与分析
+- **GeoOps**: 地理位置
+- **FileOps**: FileReader
+- **IdbOps**: IndexedDB
+
+`Platform` 保持为 super-trait + blanket impl，完全向后兼容。需要 `Element` 的子 trait 继承 `DomOps`。
+
 ---
 
 ## 待办（按优先级）
 
 ### P1 — 高优先级
 
-（T-1b 和 T-3 已完成）
-
-### P2 — 中优先级
-- 更安全，适合在事件 handler / 全局状态中使用
-
-当前 `use_signal()` 绑定到 component_id。`Signal::new()` 可以独立创建但不触发 re-render。
-
-方案：
-```rust
-// 方案 A: 全局 ReactiveStore
-let store = ReactiveStore::new();
-store.set("key", value);
-
-// 方案 B: Signal::new_standalone() 自动 flush
-let signal = Signal::new_standalone(initial);
-signal.set(new_value); // 自动 mark_dirty + flush_render
-```
+（T-1b、T-3、T-6 已完成）
 
 ### P2 — 中优先级
 
 #### T-5: 统一 Reactive 系统
 - `runtime.rs`（signal-based）和 `scheduler.rs`（rAF-based）职责重叠
 - 统一为一个 scheduler，消除维护负担
-
-#### T-6: Platform Trait 拆分
-当前 ~70 个 required method 导致 mock/testing 困难。
-```rust
-trait DomOps { create_element, append_child, set_attribute, ... }
-trait TimerOps { set_timeout, set_interval, ... }
-trait LayoutOps { get_bounding_client_rect, inner_width, ... }
-trait Platform: DomOps + TimerOps + LayoutOps + ...
-```
 
 #### T-7: 事件监听器选项
 当前 `use_capture` 硬编码 `false`。需要：
