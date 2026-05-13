@@ -114,6 +114,12 @@ impl Platform for MockPlatform {
 
     fn clear_timeout(&self, _id: i32) {}
 
+    fn set_interval(&self, _callback: Box<dyn FnMut()>, _ms: i32) -> i32 {
+        0
+    }
+
+    fn clear_interval(&self, _id: i32) {}
+
     fn request_animation_frame(&self, callback: Box<dyn FnOnce(f64)>) -> u32 {
         self.log("request_animation_frame");
         // Simulate immediate execution for testing

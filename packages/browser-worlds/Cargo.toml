@@ -6,8 +6,9 @@ description = "WIT world definitions for browser/W3C APIs (DOM, Events, Fetch, C
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+links = "tairitsu-browser-worlds"
 
-include = ["src/**/*", "wit/**/*", "Cargo.toml", "README.md"]
+include = ["src/**/*", "wit/**/*", "Cargo.toml", "README.md", "build.rs"]
 
 [dependencies]
 anyhow = "^1"

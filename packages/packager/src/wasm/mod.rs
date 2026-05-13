@@ -449,6 +449,23 @@ fn build_wasm_component(
 }
 
 fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<String> {
+    if let Ok(env_path) = std::env::var("TAIRITSU_RUNTIME_BUNDLE") {
+        let path = std::path::Path::new(&env_path);
+        if path.exists() {
+            return std::fs::read_to_string(path).map_err(|e| {
+                crate::TairitsuPackagerError::BuildError(format!(
+                    "Failed to read browser-glue runtime bundle from env override {}: {}",
+                    path.display(),
+                    e
+                ))
+            });
+        }
+        eprintln!(
+            "[tairitsu] Warning: TAIRITSU_RUNTIME_BUNDLE={} does not exist, falling back to default search",
+            path.display()
+        );
+    }
+
     let candidates: &[&str] = &[
         "../../../tairitsu/packages/browser-glue/dist/runtime.js",
         "../../packages/browser-glue/dist/runtime.js",
@@ -468,8 +485,47 @@ fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<
             });
         }
     }
+
+    if let Ok(bw_dir) = std::env::var("DEP_TAIRITSU_BROWSER_WORLDS_WIT_DIR") {
+        let glue_path = std::path::Path::new(&bw_dir)
+            .parent()
+            .and_then(|p| p.parent())
+            .map(|p| p.join("browser-glue/dist/runtime.js"));
+        if let Some(glue_path) = glue_path {
+            if glue_path.exists() {
+                return std::fs::read_to_string(&glue_path).map_err(|e| {
+                    crate::TairitsuPackagerError::BuildError(format!(
+                        "Failed to read browser-glue runtime bundle {}: {}",
+                        glue_path.display(),
+                        e
+                    ))
+                });
+            }
+        }
+    }
+
+    let node_modules_candidates: &[&str] = &[
+        "node_modules/tairitsu-browser-glue/dist/runtime.js",
+        "node_modules/@tairitsu/browser-glue/dist/runtime.js",
+        "../node_modules/tairitsu-browser-glue/dist/runtime.js",
+    ];
+    for candidate in node_modules_candidates {
+        let path = manifest_dir.join(candidate);
+        if path.exists() {
+            return std::fs::read_to_string(&path).map_err(|e| {
+                crate::TairitsuPackagerError::BuildError(format!(
+                    "Failed to read browser-glue runtime bundle {}: {}",
+                    path.display(),
+                    e
+                ))
+            });
+        }
+    }
+
     Err(crate::TairitsuPackagerError::BuildError(
-        "browser-glue runtime bundle (dist/runtime.js) not found in any candidate path".to_string(),
+        "browser-glue runtime bundle (dist/runtime.js) not found. \
+         Set TAIRITSU_RUNTIME_BUNDLE env var to the path of runtime.js, \
+         or ensure browser-glue is built (run `npm run build` in packages/browser-glue).".to_string(),
     ))
 }
 

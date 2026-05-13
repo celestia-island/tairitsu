@@ -341,11 +341,14 @@ pub mod wasm_impl {
     type GeoCallback =
         Box<dyn FnOnce(Result<tairitsu_vdom::GeoPosition, tairitsu_vdom::GeoPositionError>)>;
 
+    type IntervalCallback = Box<dyn FnMut()>;
+
     thread_local! {
         static EVENT_CALLBACKS: RefCell<EventCallbackMap> = RefCell::new(HashMap::new());
         static ELEMENT_LISTENERS: RefCell<HashMap<(u64, String), u64>>
             = RefCell::new(HashMap::new());
         static TIMEOUT_CALLBACKS: RefCell<HashMap<u64, TimeoutCallback>> = RefCell::new(HashMap::new());
+        static INTERVAL_CALLBACKS: RefCell<HashMap<u64, IntervalCallback>> = RefCell::new(HashMap::new());
         pub static ANIMATION_CALLBACKS: RefCell<HashMap<u64, AnimationCallback>> = RefCell::new(HashMap::new());
         static RESIZE_OBSERVER_CALLBACKS: RefCell<HashMap<u64, ResizeObserverCallback>> = RefCell::new(HashMap::new());
         static MUTATION_OBSERVER_CALLBACKS: RefCell<HashMap<u64, MutationObserverCallback>> = RefCell::new(HashMap::new());
@@ -371,10 +374,7 @@ pub mod wasm_impl {
     pub mod bindings {
         use super::BrowserComponent;
 
-        wit_bindgen::generate!({
-            path: "../browser-worlds/wit/composed",
-            world: "browser-full",
-        });
+        include!(concat!(env!("OUT_DIR"), "/wit_bindings_generated.rs"));
 
         export!(BrowserComponent);
     }
@@ -579,6 +579,15 @@ pub mod wasm_impl {
                     if let Some(cb) = callback {
                         cb();
                     }
+                }
+            });
+        }
+
+        fn on_interval(callback_id: u64) {
+            INTERVAL_CALLBACKS.with(|m| {
+                let mut callbacks = m.borrow_mut();
+                if let Some(callback) = callbacks.get_mut(&callback_id) {
+                    callback();
                 }
             });
         }
@@ -1122,6 +1131,16 @@ pub mod wasm_impl {
 
         fn clear_timeout(&self, id: i32) {
             bindings::tairitsu_browser::full::platform_helpers::clear_timeout(id)
+        }
+
+        fn set_interval(&self, callback: Box<dyn FnMut()>, ms: i32) -> i32 {
+            let callback_id = next_callback_id();
+            INTERVAL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::set_interval(callback_id, ms)
+        }
+
+        fn clear_interval(&self, id: i32) {
+            bindings::tairitsu_browser::full::platform_helpers::clear_interval(id)
         }
 
         fn request_animation_frame(&self, callback: Box<dyn FnOnce(f64)>) -> u32 {

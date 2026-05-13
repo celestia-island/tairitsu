@@ -47,9 +47,10 @@ interface event-callbacks {
     on-generic-event: func(listener-id: listener-id, event: event-handle, event-type: string);
 }
 
-/// Timer callback - host delivers timeout events.
+/// Timer callback - host delivers timeout and interval events.
 interface timer-callbacks {
     on-timeout: func(callback-id: u64);
+    on-interval: func(callback-id: u64);
 }
 
 /// Animation callback - host delivers animation frame events.

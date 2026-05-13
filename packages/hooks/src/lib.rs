@@ -4,6 +4,7 @@ pub mod context;
 pub mod dom_ref;
 pub mod effect;
 pub mod element_ref;
+pub mod interval;
 pub mod memo;
 pub mod ref_;
 pub mod signal;
@@ -23,6 +24,7 @@ pub use element_ref::{ElementRef, use_element_ref};
 
 // Dioxus compatibility alias
 pub use effect::use_effect;
+pub use interval::{IntervalHandle, use_interval};
 pub use memo::{Memo, use_memo, use_memo_with, use_memo_with_deps};
 pub use provide_context as use_context_provider;
 pub use ref_::{UseRef, use_ref};

@@ -18,7 +18,7 @@ pub fn init_project(name: &str) -> crate::Result<()> {
     pb.set_message(t.cli.init_writing_cargo.as_str());
     let cargo_toml = format!(
         r#"[package]
-name = "{}"
+name = "{name}"
 version = "0.1.0"
 edition = "2021"
 
@@ -29,15 +29,22 @@ crate-type = ["cdylib", "rlib"]
 tairitsu-web = {{ version = "0.1", features = ["wit-bindings"] }}
 
 [package.metadata.tairitsu]
-app-name = "{}"
+app-name = "{name}"
 
 [package.metadata.tairitsu.build]
 target = "component"
 
 [package.metadata.tairitsu.dev]
 port = 3000
+
+[profile.dev-wasm]
+inherits = "release"
+lto = true
+opt-level = 'z'
+codegen-units = 1
+panic = "abort"
 "#,
-        name, name
+        name = name
     );
     std::fs::write(format!("{}/Cargo.toml", name), cargo_toml)?;
 
@@ -46,11 +53,11 @@ port = 3000
 
 #[export_name = "tairitsu_component_bootstrap"]
 pub extern "C" fn bootstrap() {
-    WitPlatform::mount(|| {
-        tairitsu_web::vdom::VNode::element("div", vec![], vec![
-            tairitsu_web::vdom::VNode::text("Hello, Tairitsu!"),
-        ])
-    });
+    let platform = WitPlatform::new().expect("Failed to create WitPlatform");
+    let app = tairitsu_web::vdom::VNode::element("div", vec![], vec![
+        tairitsu_web::vdom::VNode::text("Hello, Tairitsu!"),
+    ]);
+    platform.mount_vnode_to_app(app).expect("Failed to mount");
 }
 "#;
     std::fs::write(format!("{}/src/lib.rs", name), lib_rs)?;
