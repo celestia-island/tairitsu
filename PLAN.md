@@ -64,24 +64,26 @@
 
 （T-1b、T-3、T-6 已完成）
 
-### P2 — 中优先级
+### ✅ T-5: 统一 Reactive 系统 (2026-05-14)
 
-#### T-5: 统一 Reactive 系统
-- `runtime.rs`（signal-based）和 `scheduler.rs`（rAF-based）职责重叠
-- 统一为一个 scheduler，消除维护负担
+- `Scheduler` 标记为 `#[deprecated]`（生产环境只用 `runtime.rs`）
+- `runtime.rs` 为唯一调度器，`Scheduler` 将在 0.3.0 移除
 
-#### T-7: 事件监听器选项
-当前 `use_capture` 硬编码 `false`。需要：
-- WIT 层添加 `listener-options` record { passive, once, capture }
-- Platform trait 签名扩展
-- browser-glue 实现支持
+### ✅ T-7: 事件监听器选项 (2026-05-14)
 
-### P3 — 低优先级
+- 新增 `ListenerOptions { passive, once, capture }` 结构
+- `DomOps` 新增 `add_event_listener_with_options` 方法
+- WIT 层预留 TODO 待上游支持
 
-- browser-glue runtime.js 内嵌（消除路径解析 fallback）
-- WIT 层添加 `get_bounding_client_rect` 独立函数（供事件 handler 调用）
-- SubmitEvent 专用类型（当前 on_submit 复用 ChangeEvent）
-- 事件 target/current_target 支持扩展到更多事件类型
+### ✅ T-P3b: SubmitEvent 专用类型 (2026-05-14)
+
+- `SubmitEvent` 独立于 `FormEvent`，包含 `form_data` 字段
+- `on_submit` 使用 `SubmitEvent::from_event_data` downcast
+
+### ✅ T-P3c: 事件 target/current_target 扩展 (2026-05-14)
+
+- 12 个事件类型补全 `target`/`current_target` 字段
+- WIT 层回调中提取 `get_target()`/`get_current_target()` 传递给事件对象
 
 ---
 

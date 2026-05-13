@@ -472,6 +472,8 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::MouseEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
+            let target =
+                bindings::tairitsu_browser::full::event::get_target(event_handle);
             let current_target =
                 bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
@@ -493,6 +495,7 @@ pub mod wasm_impl {
                     .alt_key(data.alt_key)
                     .meta_key(data.meta_key)
                     .event_handle(wit_handle)
+                    .target(target.unwrap_or(0))
                     .current_target(current_target.unwrap_or(0)),
             );
             dispatch_event(listener_id, "mouse", event);
@@ -504,6 +507,10 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::KeyboardEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
+            let target =
+                bindings::tairitsu_browser::full::event::get_target(event_handle);
+            let current_target =
+                bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
                 KeyboardEvent::new()
                     .key(data.key)
@@ -514,7 +521,9 @@ pub mod wasm_impl {
                     .alt_key(data.alt_key)
                     .meta_key(data.meta_key)
                     .repeat(data.repeat)
-                    .event_handle(wit_handle),
+                    .event_handle(wit_handle)
+                    .target(target.unwrap_or(0))
+                    .current_target(current_target.unwrap_or(0)),
             );
             dispatch_event(listener_id, "keyboard", event);
         }
@@ -525,7 +534,16 @@ pub mod wasm_impl {
             _data: bindings::exports::tairitsu_browser::full::event_callbacks::FocusEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let event: Box<dyn EventData> = Box::new(FocusEvent::new().event_handle(wit_handle));
+            let target =
+                bindings::tairitsu_browser::full::event::get_target(event_handle);
+            let current_target =
+                bindings::tairitsu_browser::full::event::get_current_target(event_handle);
+            let event: Box<dyn EventData> = Box::new(
+                FocusEvent::new()
+                    .event_handle(wit_handle)
+                    .target(target.unwrap_or(0))
+                    .current_target(current_target.unwrap_or(0)),
+            );
             dispatch_event(listener_id, "focus", event);
         }
 
@@ -535,10 +553,16 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::InputEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
+            let target =
+                bindings::tairitsu_browser::full::event::get_target(event_handle);
+            let current_target =
+                bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
                 InputEvent::new()
                     .data(data.data.unwrap_or_default())
-                    .event_handle(wit_handle),
+                    .event_handle(wit_handle)
+                    .target(target.unwrap_or(0))
+                    .current_target(current_target.unwrap_or(0)),
             );
             dispatch_event(listener_id, "input", event);
         }
@@ -551,10 +575,16 @@ pub mod wasm_impl {
 
         fn on_generic_event(listener_id: u64, event_handle: u64, event_type: String) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
+            let target =
+                bindings::tairitsu_browser::full::event::get_target(event_handle);
+            let current_target =
+                bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
                 GenericEvent::new()
                     .event_type(&event_type)
-                    .event_handle(wit_handle),
+                    .event_handle(wit_handle)
+                    .target(target.unwrap_or(0))
+                    .current_target(current_target.unwrap_or(0)),
             );
             dispatch_event(listener_id, &event_type, event);
         }
@@ -1103,6 +1133,37 @@ pub mod wasm_impl {
                     element.as_raw()
                 ));
             }
+        }
+
+        fn add_event_listener_with_options(
+            &self,
+            element: &Self::Element,
+            event: &str,
+            handler: Box<dyn FnMut(Box<dyn EventData>)>,
+            _options: tairitsu_vdom::ListenerOptions,
+        ) {
+            // TODO: pass options to WIT when supported
+            let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
+                element.as_raw(),
+                event,
+                false,
+            )
+            .unwrap_or_else(|e| {
+                log_error(&format!("add_event_listener failed: {}", e));
+                0
+            });
+
+            EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, handler));
+
+            ELEMENT_LISTENERS.with(|m| {
+                m.borrow_mut()
+                    .insert((element.as_raw(), event.to_string()), listener_id);
+            });
+
+            log_info(&format!(
+                "Added event listener with options: event={}, listener_id={}",
+                event, listener_id
+            ));
         }
 
         fn get_inner_html(&self, element: &Self::Element) -> String {

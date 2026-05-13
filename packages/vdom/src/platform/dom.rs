@@ -1,6 +1,13 @@
 use super::{ElementHandle, EventHandle};
 use crate::EventData;
 
+#[derive(Clone, Debug, Default)]
+pub struct ListenerOptions {
+    pub passive: bool,
+    pub once: bool,
+    pub capture: bool,
+}
+
 pub trait DomOps: Sized + 'static {
     type Element: ElementHandle;
     type Event: EventHandle;
@@ -20,6 +27,13 @@ pub trait DomOps: Sized + 'static {
         handler: Box<dyn FnMut(Box<dyn EventData>)>,
     );
     fn remove_event_listener(&self, element: &Self::Element, event: &str);
+    fn add_event_listener_with_options(
+        &self,
+        element: &Self::Element,
+        event: &str,
+        handler: Box<dyn FnMut(Box<dyn EventData>)>,
+        options: ListenerOptions,
+    );
 
     fn get_attribute(&self, element: &Self::Element, name: &str) -> Option<String>;
     fn class_list_add(&self, element: &Self::Element, tokens: &[&str]);

@@ -17,6 +17,7 @@ use crate::{VNode, platform::Platform};
 static NEXT_SCHEDULER_ID: AtomicUsize = AtomicUsize::new(1);
 
 /// Scheduler ID type
+#[deprecated(since = "0.2.0", note = "Use runtime::mark_dirty/flush_render instead. Scheduler will be removed in a future version.")]
 pub type SchedulerId = usize;
 
 /// Component state tracked by the scheduler
@@ -29,6 +30,7 @@ struct ComponentState {
 }
 
 /// Inner state of the scheduler
+#[allow(deprecated)]
 struct SchedulerInner<P: Platform> {
     /// Scheduler ID
     id: SchedulerId,
@@ -58,12 +60,15 @@ impl<P: Platform> SchedulerInner<P> {
 ///
 /// The scheduler tracks component states, batches re-render requests,
 /// and applies patches efficiently using requestAnimationFrame.
+#[deprecated(since = "0.2.0", note = "Use runtime::mark_dirty/flush_render instead. Scheduler will be removed in a future version.")]
 pub struct Scheduler<P: Platform> {
     inner: Rc<RefCell<SchedulerInner<P>>>,
 }
 
+#[allow(deprecated)]
 impl<P: Platform> Scheduler<P> {
     /// Create a new scheduler with the given platform.
+    #[allow(deprecated)]
     pub fn new(platform: Rc<RefCell<P>>) -> Self {
         let inner = Rc::new(RefCell::new(SchedulerInner::new(platform)));
         Self { inner }
@@ -366,6 +371,14 @@ mod tests {
         ) {
         }
         fn remove_event_listener(&self, _element: &Self::Element, _event: &str) {}
+        fn add_event_listener_with_options(
+            &self,
+            _element: &Self::Element,
+            _event: &str,
+            _handler: Box<dyn FnMut(Box<dyn crate::EventData>)>,
+            _options: crate::platform::ListenerOptions,
+        ) {
+        }
         fn get_attribute(&self, _element: &Self::Element, _name: &str) -> Option<String> {
             None
         }

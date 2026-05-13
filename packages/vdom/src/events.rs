@@ -956,6 +956,7 @@ pub type MouseData = MouseEvent;
 pub struct WheelEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    pub current_target: Option<u64>,
     /// Horizontal scroll amount (pixels)
     pub delta_x: f64,
     /// Vertical scroll amount (pixels)
@@ -993,6 +994,7 @@ impl WheelEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             delta_x: 0.0,
             delta_y: 0.0,
             delta_z: 0.0,
@@ -1168,6 +1170,7 @@ impl Default for TouchPoint {
 pub struct TouchEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    pub current_target: Option<u64>,
     /// All active touch points
     pub touches: Vec<TouchPoint>,
     /// Touch points that have changed since the last event
@@ -1189,6 +1192,7 @@ impl TouchEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             touches: Vec::new(),
             changed_touches: Vec::new(),
             target_touches: Vec::new(),
@@ -1199,6 +1203,11 @@ impl TouchEvent {
 
     pub fn target(mut self, target: u64) -> Self {
         self.target = Some(target);
+        self
+    }
+
+    pub fn current_target(mut self, current_target: u64) -> Self {
+        self.current_target = Some(current_target);
         self
     }
 
@@ -1302,6 +1311,8 @@ impl std::str::FromStr for PointerType {
 pub struct PointerEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    /// The currentTarget — the element the listener is bound to.
+    pub current_target: Option<u64>,
     /// Unique pointer ID for this active pointer
     pub pointer_id: i32,
     /// Pointer type (mouse, pen, touch)
@@ -1367,6 +1378,7 @@ impl PointerEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             pointer_id: 0,
             pointer_type: PointerType::Mouse,
             is_primary: false,
@@ -1399,6 +1411,11 @@ impl PointerEvent {
 
     pub fn target(mut self, target: u64) -> Self {
         self.target = Some(target);
+        self
+    }
+
+    pub fn current_target(mut self, current_target: u64) -> Self {
+        self.current_target = Some(current_target);
         self
     }
 
@@ -1577,6 +1594,8 @@ impl Default for PointerEvent {
 pub struct TransitionEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    /// The currentTarget — the element the listener is bound to.
+    pub current_target: Option<u64>,
     /// The name of the CSS property that completed transitioning
     pub property_name: String,
     /// The number of seconds the transition took
@@ -1596,6 +1615,7 @@ impl TransitionEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             property_name: String::new(),
             elapsed_time: 0.0,
             pseudo_element: String::new(),
@@ -1605,6 +1625,11 @@ impl TransitionEvent {
 
     pub fn target(mut self, target: u64) -> Self {
         self.target = Some(target);
+        self
+    }
+
+    pub fn current_target(mut self, current_target: u64) -> Self {
+        self.current_target = Some(current_target);
         self
     }
 
@@ -1666,6 +1691,8 @@ impl Default for TransitionEvent {
 pub struct AnimationEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    /// The currentTarget — the element the listener is bound to.
+    pub current_target: Option<u64>,
     /// The name of the animation
     pub animation_name: String,
     /// The name of the pseudo-element that was animating
@@ -1687,6 +1714,7 @@ impl AnimationEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             animation_name: String::new(),
             pseudo_element: String::new(),
             elapsed_time: 0.0,
@@ -1697,6 +1725,11 @@ impl AnimationEvent {
 
     pub fn target(mut self, target: u64) -> Self {
         self.target = Some(target);
+        self
+    }
+
+    pub fn current_target(mut self, current_target: u64) -> Self {
+        self.current_target = Some(current_target);
         self
     }
 

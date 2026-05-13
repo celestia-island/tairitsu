@@ -19,6 +19,7 @@ pub mod timer;
 pub use element::ElementHandle;
 pub use event::EventHandle;
 pub use dom::DomOps;
+pub use dom::ListenerOptions;
 pub use timer::TimerOps;
 pub use layout::LayoutOps;
 pub use observer::ObserverOps;

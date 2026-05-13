@@ -19,14 +19,14 @@ pub use dom_ops::{
 pub use events::{
     AnimationEvent, ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle,
     FileData, FocusEvent, FormData, FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent,
-    MouseData, MouseEvent, PointerEvent, PointerType, TouchEvent, TouchPoint, TransitionEvent,
-    WheelEvent,
+    MouseData, MouseEvent, PointerEvent, PointerType, TouchEvent, TouchPoint,
+    TransitionEvent, WheelEvent,
 };
 pub use patch::Patch;
 pub use platform::{
     CanvasContext, CanvasOps, ClipboardOps, ContentEditableState, ContentEditableOps, DomOps,
     DomRect, ElementHandle, EventHandle, FileOps, GeoOps, GeoPosition, GeoPositionError,
-    IdbOps, LayoutOps, MediaOps, MediaQueryOps, MutationObserverInit, MutationRecord, ObserverOps,
+    IdbOps, LayoutOps, ListenerOptions, MediaOps, MediaQueryOps, MutationObserverInit, MutationRecord, ObserverOps,
     Platform, QueryOps, ResizeObserverEntry, ResizeObserverSize, ScrollOps, TimerOps,
 };
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};

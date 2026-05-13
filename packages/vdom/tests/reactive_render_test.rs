@@ -13,6 +13,7 @@ use tairitsu_vdom::{
     vnode::{VElement, VNode},
 };
 
+#[allow(deprecated)]
 // Mock platform for testing
 struct MockPlatform {
     render_log: Rc<RefCell<Vec<String>>>,
@@ -89,6 +90,16 @@ impl DomOps for MockPlatform {
             "remove_event_listener({}, {})",
             element.tag, event
         ));
+    }
+
+    fn add_event_listener_with_options(
+        &self,
+        element: &Self::Element,
+        event: &str,
+        _handler: Box<dyn FnMut(Box<dyn tairitsu_vdom::EventData>)>,
+        _options: tairitsu_vdom::ListenerOptions,
+    ) {
+        self.log(&format!("add_event_listener_with_options({}, {})", element.tag, event));
     }
 
     fn get_attribute(&self, _element: &Self::Element, _name: &str) -> Option<String> {

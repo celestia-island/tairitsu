@@ -185,6 +185,15 @@ impl DomOps for MockPlatform {
 
     fn remove_event_listener(&self, _element: &Self::Element, _event: &str) {}
 
+    fn add_event_listener_with_options(
+        &self,
+        _element: &Self::Element,
+        _event: &str,
+        _handler: Box<dyn FnMut(Box<dyn EventData>)>,
+        _options: tairitsu_vdom::ListenerOptions,
+    ) {
+    }
+
     fn get_attribute(&self, element: &MockElement, name: &str) -> Option<String> {
         self.element_attributes
             .borrow()
