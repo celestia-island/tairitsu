@@ -321,6 +321,312 @@ impl VElement {
         self
     }
 
+    pub fn on_click(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("click", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dblclick(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("dblclick", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mousedown(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("mousedown", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mouseup(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("mouseup", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mousemove(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("mousemove", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mouseenter(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("mouseenter", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mouseleave(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("mouseleave", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_keydown(self, mut handler: impl FnMut(crate::events::KeyboardEvent) + 'static) -> Self {
+        self.on_event("keydown", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::KeyboardEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_keyup(self, mut handler: impl FnMut(crate::events::KeyboardEvent) + 'static) -> Self {
+        self.on_event("keyup", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::KeyboardEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_keypress(self, mut handler: impl FnMut(crate::events::KeyboardEvent) + 'static) -> Self {
+        self.on_event("keypress", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::KeyboardEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_input(self, mut handler: impl FnMut(crate::events::InputEvent) + 'static) -> Self {
+        self.on_event("input", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::InputEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_change(self, mut handler: impl FnMut(crate::events::ChangeEvent) + 'static) -> Self {
+        self.on_event("change", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::ChangeEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_focus(self, mut handler: impl FnMut(crate::events::FocusEvent) + 'static) -> Self {
+        self.on_event("focus", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::FocusEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_blur(self, mut handler: impl FnMut(crate::events::FocusEvent) + 'static) -> Self {
+        self.on_event("blur", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::FocusEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_submit(self, mut handler: impl FnMut(crate::events::ChangeEvent) + 'static) -> Self {
+        self.on_event("submit", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::ChangeEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_wheel(self, mut handler: impl FnMut(crate::events::WheelEvent) + 'static) -> Self {
+        self.on_event("wheel", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::WheelEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dragstart(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("dragstart", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dragend(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("dragend", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dragover(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("dragover", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dragleave(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("dragleave", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_drop(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("drop", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_touchstart(self, mut handler: impl FnMut(crate::events::TouchEvent) + 'static) -> Self {
+        self.on_event("touchstart", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TouchEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_touchmove(self, mut handler: impl FnMut(crate::events::TouchEvent) + 'static) -> Self {
+        self.on_event("touchmove", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TouchEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_touchend(self, mut handler: impl FnMut(crate::events::TouchEvent) + 'static) -> Self {
+        self.on_event("touchend", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TouchEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_touchcancel(self, mut handler: impl FnMut(crate::events::TouchEvent) + 'static) -> Self {
+        self.on_event("touchcancel", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TouchEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerdown(self, mut handler: impl FnMut(crate::events::PointerEvent) + 'static) -> Self {
+        self.on_event("pointerdown", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerup(self, mut handler: impl FnMut(crate::events::PointerEvent) + 'static) -> Self {
+        self.on_event("pointerup", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointermove(self, mut handler: impl FnMut(crate::events::PointerEvent) + 'static) -> Self {
+        self.on_event("pointermove", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerenter(self, mut handler: impl FnMut(crate::events::PointerEvent) + 'static) -> Self {
+        self.on_event("pointerenter", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerleave(self, mut handler: impl FnMut(crate::events::PointerEvent) + 'static) -> Self {
+        self.on_event("pointerleave", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerover(self, mut handler: impl FnMut(crate::events::PointerEvent) + 'static) -> Self {
+        self.on_event("pointerover", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerout(self, mut handler: impl FnMut(crate::events::PointerEvent) + 'static) -> Self {
+        self.on_event("pointerout", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_transitionend(self, mut handler: impl FnMut(crate::events::TransitionEvent) + 'static) -> Self {
+        self.on_event("transitionend", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TransitionEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_animationstart(self, mut handler: impl FnMut(crate::events::AnimationEvent) + 'static) -> Self {
+        self.on_event("animationstart", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::AnimationEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_animationend(self, mut handler: impl FnMut(crate::events::AnimationEvent) + 'static) -> Self {
+        self.on_event("animationend", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::AnimationEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_animationiteration(self, mut handler: impl FnMut(crate::events::AnimationEvent) + 'static) -> Self {
+        self.on_event("animationiteration", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::AnimationEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_scroll(self, mut handler: impl FnMut(crate::events::GenericEvent) + 'static) -> Self {
+        self.on_event("scroll", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::GenericEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn with_css_var(mut self, name: &str, value: &str) -> Self {
+        let var_name = if name.starts_with("--") {
+            name.to_string()
+        } else {
+            format!("--{}", name)
+        };
+        self.style.css_variables.push((var_name, value.to_string()));
+        self
+    }
+
     /// Set inner HTML directly (dangerously, equivalent to dangerouslySetInnerHTML)
     pub fn inner_html(mut self, html: impl Into<String>) -> Self {
         self.inner_html = Some(html.into());
