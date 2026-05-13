@@ -1,4 +1,4 @@
-use tairitsu_vdom::{Classes, Signal, Style, runtime};
+use tairitsu_vdom::{Classes, Signal, Style, VNode, runtime};
 
 /// Creates a new Signal with the given initial value.
 /// Takes a closure that returns the initial value (Dioxus-compatible API).
@@ -13,6 +13,16 @@ pub fn use_signal<T: Clone + 'static, F: FnOnce() -> T>(initial: F) -> ReactiveS
     });
 
     ReactiveSignal {
+        signal,
+        component_id,
+    }
+}
+
+pub fn use_standalone_signal<T: Clone + 'static>(initial: T) -> StandaloneSignal<T> {
+    let signal = Signal::new(initial);
+    let component_id = runtime::use_component(|| VNode::empty());
+
+    StandaloneSignal {
         signal,
         component_id,
     }
@@ -49,6 +59,34 @@ impl<T: Clone + 'static> ReactiveSignal<T> {
     }
 
     /// Dioxus compatibility alias for write()
+    pub fn write(&self) -> std::cell::RefMut<'_, T> {
+        self.signal.write()
+    }
+}
+
+pub struct StandaloneSignal<T> {
+    signal: Signal<T>,
+    component_id: runtime::ComponentId,
+}
+
+impl<T: Clone + 'static> StandaloneSignal<T> {
+    pub fn get(&self) -> T {
+        self.signal.get()
+    }
+
+    pub fn set(&self, value: T) {
+        self.signal.set(value);
+        runtime::request_rerender(Some(self.component_id));
+    }
+
+    pub fn inner(&self) -> &Signal<T> {
+        &self.signal
+    }
+
+    pub fn read(&self) -> T {
+        self.get()
+    }
+
     pub fn write(&self) -> std::cell::RefMut<'_, T> {
         self.signal.write()
     }

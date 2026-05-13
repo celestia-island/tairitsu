@@ -28,7 +28,7 @@ pub use interval::{IntervalHandle, use_interval};
 pub use memo::{Memo, use_memo, use_memo_with, use_memo_with_deps};
 pub use provide_context as use_context_provider;
 pub use ref_::{UseRef, use_ref};
-pub use signal::{ReactiveSignal, use_signal};
+pub use signal::{ReactiveSignal, StandaloneSignal, use_signal, use_standalone_signal};
 pub use state::use_state;
 pub use state_machine::{
     ButtonStateMachine, InteractionCallback, InteractionEvent, InteractionState,

@@ -42,16 +42,10 @@
 
 ### P1 — 高优先级
 
-#### T-1b: 补全剩余事件类型化方法
-- `on_wheel` → `WheelEvent`
-- `on_dragstart` / `on_dragend` / `on_dragover` / `on_dragleave` / `on_drop` → `DragEvent`
-- `on_touchstart` / `on_touchmove` / `on_touchend` / `on_touchcancel` → `TouchEvent`
-- `on_pointerdown` / `on_pointerup` / `on_pointermove` / `on_pointerenter` / `on_pointerleave` / `on_pointerover` / `on_pointerout` → `PointerEvent`
-- `on_transitionend` → `TransitionEvent`
-- `on_animationstart` / `on_animationend` / `on_animationiteration` → `AnimationEvent`
-- `on_scroll` → generic (无专用类型)
+（T-1b 和 T-3 已完成）
 
-#### T-3: 允许 Signal 在组件外创建并触发重渲染
+### P2 — 中优先级
+- 更安全，适合在事件 handler / 全局状态中使用
 
 当前 `use_signal()` 绑定到 component_id。`Signal::new()` 可以独立创建但不触发 re-render。
 
