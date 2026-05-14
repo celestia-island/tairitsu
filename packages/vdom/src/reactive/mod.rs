@@ -18,6 +18,22 @@ fn refcell_ptr<T>(refcell: &Rc<RefCell<T>>) -> usize {
     refcell.as_ref() as *const RefCell<T> as usize
 }
 
+/// A reactive value container that tracks reads and notifies subscribers on writes.
+///
+/// Signals are the foundation of Tairitsu's reactivity system. When `.get()` is
+/// called inside a [`create_effect`] closure, the signal is automatically tracked
+/// as a dependency. When `.set()` is called later, the effect re-runs.
+///
+/// # Example
+///
+/// ```no_run
+/// use tairitsu_vdom::Signal;
+///
+/// let count = Signal::new(0);
+/// assert_eq!(count.get(), 0);
+/// count.set(1);
+/// assert_eq!(count.get(), 1);
+/// ```
 #[derive(Clone)]
 pub struct Signal<T> {
     inner: Rc<RefCell<SignalInner<T>>>,
@@ -37,6 +53,11 @@ struct SignalInner<T> {
 }
 
 impl<T: Clone + 'static> Signal<T> {
+    /// Create a new signal with the given initial value.
+    ///
+    /// ```no_run
+    /// let name = tairitsu_vdom::Signal::new("Alice".to_string());
+    /// ```
     pub fn new(value: T) -> Self {
         Self {
             inner: Rc::new(RefCell::new(SignalInner {
@@ -46,6 +67,8 @@ impl<T: Clone + 'static> Signal<T> {
         }
     }
 
+    /// Read the current value. If called inside [`create_effect`], this signal
+    /// is automatically tracked as a dependency.
     pub fn get(&self) -> T {
         let signal_ptr = refcell_ptr(&self.inner);
         crate::runtime::track_signal(signal_ptr);
@@ -62,6 +85,8 @@ impl<T: Clone + 'static> Signal<T> {
         self.inner.borrow().value.clone()
     }
 
+    /// Write a new value and notify all subscribers. If not inside a [`batch`],
+    /// subscribers are called synchronously.
     pub fn set(&self, value: T) {
         let signal_ptr = refcell_ptr(&self.inner);
 
@@ -102,20 +127,46 @@ impl<T: Clone + 'static> Signal<T> {
     }
 }
 
+/// A handle to a reactive effect created by [`create_effect`].
+///
+/// Drop this handle to allow the effect to be cleaned up, or call [`stop()`](EffectHandle::stop)
+/// to deactivate the effect without dropping it.
 pub struct EffectHandle {
     stopped: Rc<Cell<bool>>,
 }
 
 impl EffectHandle {
+    /// Stop the effect. It will no longer re-run when tracked signals change.
     pub fn stop(&self) {
         self.stopped.set(true);
     }
 
+    /// Returns `true` if the effect has been stopped.
     pub fn is_stopped(&self) -> bool {
         self.stopped.get()
     }
 }
 
+/// Create a reactive effect that auto-tracks signal dependencies.
+///
+/// The closure runs immediately. Any [`Signal::get()`] calls inside the closure
+/// register the signal as a dependency. When a dependency changes, the closure
+/// re-runs and dependencies are re-tracked.
+///
+/// # Example
+///
+/// ```no_run
+/// use tairitsu_vdom::{Signal, create_effect};
+///
+/// let count = Signal::new(0);
+/// let count_clone = count.clone();
+///
+/// create_effect(move || {
+///     println!("count = {}", count_clone.get());
+/// });
+///
+/// count.set(1); // prints "count = 1"
+/// ```
 pub fn create_effect<F>(f: F) -> EffectHandle
 where
     F: FnMut() + 'static,
@@ -188,6 +239,24 @@ pub fn take_dependencies() -> Vec<DependencyEntry> {
     DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect())
 }
 
+/// Batch multiple signal writes into a single update. Subscribers are deferred
+/// until the closure returns, then all pending updates are flushed at once.
+///
+/// # Example
+///
+/// ```no_run
+/// use tairitsu_vdom::{Signal, batch};
+///
+/// let a = Signal::new(1);
+/// let b = Signal::new(2);
+///
+/// batch(|| {
+///     a.set(10);
+///     b.set(20);
+///     // subscribers not yet called
+/// });
+/// // subscribers called once now
+/// ```
 pub fn batch<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,

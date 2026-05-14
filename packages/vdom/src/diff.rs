@@ -809,4 +809,206 @@ mod tests {
         let patches = diff(Some(&old), &new);
         assert!(patches.is_empty());
     }
+
+    #[test]
+    fn test_diff_fragment_children() {
+        let old = VNode::Fragment(vec![
+            VNode::Text(VText::new("a")),
+            VNode::Text(VText::new("b")),
+        ]);
+        let new = VNode::Fragment(vec![
+            VNode::Text(VText::new("a")),
+            VNode::Text(VText::new("c")),
+        ]);
+
+        let patches = diff(Some(&old), &new);
+        assert!(!patches.is_empty());
+        match &patches[0] {
+            Patch::UpdateChild { index: 1, .. } => {}
+            other => panic!("Expected UpdateChild at index 1, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_diff_fragment_grow() {
+        let old = VNode::Fragment(vec![VNode::Text(VText::new("a"))]);
+        let new = VNode::Fragment(vec![
+            VNode::Text(VText::new("a")),
+            VNode::Text(VText::new("b")),
+        ]);
+
+        let patches = diff(Some(&old), &new);
+        assert!(!patches.is_empty());
+        assert!(patches
+            .iter()
+            .any(|p| matches!(p, Patch::InsertChild { index: 1, .. })));
+    }
+
+    #[test]
+    fn test_diff_fragment_shrink() {
+        let old = VNode::Fragment(vec![
+            VNode::Text(VText::new("a")),
+            VNode::Text(VText::new("b")),
+        ]);
+        let new = VNode::Fragment(vec![VNode::Text(VText::new("a"))]);
+
+        let patches = diff(Some(&old), &new);
+        assert!(!patches.is_empty());
+        assert!(patches
+            .iter()
+            .any(|p| matches!(p, Patch::RemoveChild { index: 1 })));
+    }
+
+    #[test]
+    fn test_diff_css_variable_change() {
+        let old =
+            VNode::Element(VElement::new("div").style(Style::new().add_custom("--color", "red")));
+        let new = VNode::Element(
+            VElement::new("div").style(
+                Style::new()
+                    .add_custom("--color", "blue")
+                    .add("color", "var(--color)"),
+            ),
+        );
+
+        let patches = diff(Some(&old), &new);
+        assert!(
+            !patches.is_empty(),
+            "Style with different static_styles should produce patches"
+        );
+    }
+
+    #[test]
+    fn test_diff_event_handler_change_produces_update() {
+        let old = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
+        let new = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
+
+        let patches = diff(Some(&old), &new);
+        assert!(
+            patches
+                .iter()
+                .any(|p| matches!(p, Patch::UpdateEvent { .. })),
+            "Re-registered event should produce UpdateEvent"
+        );
+    }
+
+    #[test]
+    fn test_diff_event_handler_add() {
+        let old = VNode::Element(VElement::new("button"));
+        let new = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
+
+        let patches = diff(Some(&old), &new);
+        assert!(patches.iter().any(|p| matches!(p, Patch::AddEvent { .. })));
+    }
+
+    #[test]
+    fn test_diff_event_handler_remove() {
+        let old = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
+        let new = VNode::Element(VElement::new("button"));
+
+        let patches = diff(Some(&old), &new);
+        assert!(patches
+            .iter()
+            .any(|p| matches!(p, Patch::RemoveEvent { .. })));
+    }
+
+    #[test]
+    fn test_diff_event_handler_change() {
+        let old = VNode::Element(
+            VElement::new("button")
+                .on_event("click", |_| {})
+                .on_event("mouseover", |_| {}),
+        );
+        let new = VNode::Element(
+            VElement::new("button")
+                .on_event("click", |_| {})
+                .on_event("mouseout", |_| {}),
+        );
+
+        let patches = diff(Some(&old), &new);
+        assert!(patches
+            .iter()
+            .any(|p| matches!(p, Patch::RemoveEvent { .. })));
+        assert!(patches.iter().any(|p| matches!(p, Patch::AddEvent { .. })));
+    }
+
+    #[test]
+    fn test_diff_event_handler_unchanged_produces_update() {
+        let old = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
+        let new = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
+
+        let patches = diff(Some(&old), &new);
+        assert!(
+            patches
+                .iter()
+                .any(|p| matches!(p, Patch::UpdateEvent { .. })),
+            "Same event key produces UpdateEvent (handlers are not compared by value)"
+        );
+    }
+
+    #[test]
+    fn test_diff_nested_element_children() {
+        let old = VNode::Element(VElement::new("div").child(VNode::Element(
+            VElement::new("span").child(VNode::Text(VText::new("old"))),
+        )));
+        let new = VNode::Element(VElement::new("div").child(VNode::Element(
+            VElement::new("span").child(VNode::Text(VText::new("new"))),
+        )));
+
+        let patches = diff(Some(&old), &new);
+        assert!(!patches.is_empty());
+        match &patches[0] {
+            Patch::UpdateChild { index: 0, patches } => {
+                assert!(patches
+                    .iter()
+                    .any(|p| matches!(p, Patch::UpdateChild { .. })));
+            }
+            other => panic!("Expected UpdateChild at index 0, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_diff_keyed_with_same_keys_different_order() {
+        let old = VNode::Element(VElement::new("ul").children(vec![
+            VNode::Element(VElement::new("li").key("a").child(VNode::Text(VText::new("A")))),
+            VNode::Element(VElement::new("li").key("b").child(VNode::Text(VText::new("B")))),
+            VNode::Element(VElement::new("li").key("c").child(VNode::Text(VText::new("C")))),
+        ]));
+        let new = VNode::Element(VElement::new("ul").children(vec![
+            VNode::Element(VElement::new("li").key("c").child(VNode::Text(VText::new("C")))),
+            VNode::Element(VElement::new("li").key("a").child(VNode::Text(VText::new("A")))),
+            VNode::Element(VElement::new("li").key("b").child(VNode::Text(VText::new("B")))),
+        ]));
+
+        let patches = diff(Some(&old), &new);
+        assert!(!patches.is_empty(), "Keyed reorder should produce patches");
+        assert!(
+            patches
+                .iter()
+                .any(|p| matches!(p, Patch::RemoveChild { .. }))
+                || patches
+                    .iter()
+                    .any(|p| matches!(p, Patch::InsertChild { .. })),
+            "Keyed reorder should produce Remove/Insert patches"
+        );
+    }
+
+    #[test]
+    fn test_diff_empty_fragment_to_children() {
+        let old = VNode::Fragment(vec![]);
+        let new = VNode::Fragment(vec![VNode::Text(VText::new("hello"))]);
+
+        let patches = diff(Some(&old), &new);
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(&patches[0], Patch::InsertChild { index: 0, .. }));
+    }
+
+    #[test]
+    fn test_diff_none_to_element() {
+        let new = VNode::Element(VElement::new("div"));
+
+        let patches = diff(None, &new);
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(&patches[0], Patch::CreateNode { .. }));
+    }
 }

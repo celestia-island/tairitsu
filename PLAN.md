@@ -534,7 +534,7 @@ VElement::new("span").child(ChildNode::DynamicText {
 | **六** | **P1-7: rsx!{} 宏自动识别 signal 表达式** | ✅ 完成 (IntoVNodeChild trait + Dyn wrapper) |
 | **六** | **P1-8: 运行时 effect 清理机制** | ✅ 完成 (generation-based stale callback prevention + EffectHandle::stop()) |
 | 四 | P2-1: 移除 Scheduler 双轨制 | ✅ 完成 (scheduler.rs deleted, 760 lines removed) |
-| 四 | P2-2: 测试覆盖率提升 | ⬜ 待开始 |
-| 四 | P2-3: 补充对外 API 文档 | ⬜ 待开始 |
+| 四 | P2-2: 测试覆盖率提升 | ✅ 完成 (37 diff + 16 reactive + 10 event + 5 event = 68 new tests) |
+| 四 | P2-3: 补充对外 API 文档 | ✅ 完成 (Signal, create_effect, batch, IntoVNodeChild rustdoc) |
 | 五 | D-1: 重构英文文档入口层次 | ✅ 完成 (7 docs rewritten, 2 new docs created) |
 | 五 | D-2: 新增开发者教程 | ✅ 完成 (getting-started.md + vdom.md) |

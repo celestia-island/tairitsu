@@ -1018,6 +1018,13 @@ fn is_void_element(tag: &str) -> bool {
     )
 }
 
+/// Trait for types that can be converted into a [`VNode`] child.
+///
+/// Implemented for `VNode`, `String`, `&str`, `&String`, and `Signal<T>`.
+/// When a `Signal<T>` is used, it automatically creates a [`DynamicText`] node
+/// that updates the DOM directly when the signal changes — no full re-render needed.
+///
+/// The `rsx!` macro uses this trait automatically for `{expr}` children.
 pub trait IntoVNodeChild {
     fn into_vnode_child(self) -> VNode;
 }
