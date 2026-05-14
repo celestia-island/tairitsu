@@ -219,7 +219,7 @@ pub fn derive_wit_command(input: TokenStream) -> TokenStream {
     };
 
     let expanded = quote! {
-        impl tairitsu_core::wit_registry::WitCommand for #name {
+        impl tairitsu::wit_registry::WitCommand for #name {
             type Response = #response_type;
 
             fn command_name(&self) -> &'static str {
@@ -337,7 +337,7 @@ pub fn wit_interface(input: TokenStream) -> TokenStream {
             #(#response_variants),*
         }
 
-        impl tairitsu_core::wit_registry::WitCommand for #commands_enum_name {
+        impl tairitsu::wit_registry::WitCommand for #commands_enum_name {
             type Response = #response_enum_name;
 
             fn command_name(&self) -> &'static str {
@@ -504,8 +504,8 @@ pub fn wit_guest_impl(input: TokenStream) -> TokenStream {
                 Ok(format!("Processed: {}", input))
             }
 
-            pub fn get_info() -> tairitsu_core::wit_helper::GuestInfo {
-                tairitsu_core::wit_helper::GuestInfo {
+            pub fn get_info() -> tairitsu::wit_helper::GuestInfo {
+                tairitsu::wit_helper::GuestInfo {
                     name: "tairitsu-guest".to_string(),
                     version: "0.1.0".to_string(),
                     features: vec!["wit-native".to_string()],
@@ -632,7 +632,7 @@ pub fn register_host(input: TokenStream) -> TokenStream {
 /// # Example
 /// ```ignore
 /// use tairitsu_macros::Tool;
-/// use tairitsu_core::json::Tool;
+/// use tairitsu::json::Tool;
 ///
 /// #[derive(Tool)]
 /// struct MyTool {
@@ -654,7 +654,7 @@ pub fn derive_as_tool(input: TokenStream) -> TokenStream {
     let tool_name = extract_tool_name(&input.attrs, &name.to_string());
 
     let expanded = quote! {
-        impl tairitsu_core::json::Tool for #name {
+        impl tairitsu::json::Tool for #name {
             fn invoke_json(&self, json: &str) -> anyhow::Result<String> {
                 // Delegate to the struct's invoke_json method
                 self.invoke_json(json)

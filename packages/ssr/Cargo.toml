@@ -8,7 +8,7 @@ repository.workspace = true
 description = "Server-Side Rendering engine for Tairitsu WASM components"
 
 [dependencies]
-tairitsu-core = { workspace = true }
+tairitsu = { workspace = true }
 tairitsu-vdom = { workspace = true }
 tairitsu-hooks = { workspace = true, optional = true }
 tairitsu-browser-worlds = { workspace = true }

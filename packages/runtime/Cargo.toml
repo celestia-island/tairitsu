@@ -1,5 +1,5 @@
 [package]
-name = "tairitsu-core"
+name = "tairitsu"
 version.workspace = true
 edition.workspace = true
 publish = true

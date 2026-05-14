@@ -111,7 +111,7 @@ impl WasiView for SsrHostState {
     }
 }
 
-impl tairitsu_core::container::HostStateImpl for SsrHostState {
+impl tairitsu::container::HostStateImpl for SsrHostState {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }

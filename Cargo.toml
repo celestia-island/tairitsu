@@ -57,7 +57,7 @@ tokio = { version = "^1", default-features = false, features = [
     "time",
     "signal",
 ] }
-tairitsu-core = { version = "0.5.0", path = "packages/runtime" }
+tairitsu = { version = "0.5.0", path = "packages/runtime" }
 tairitsu-macros = { version = "0.5.0", path = "packages/macros" }
 tairitsu-vdom = { version = "0.5.0", path = "packages/vdom" }
 tairitsu-hooks = { version = "0.5.0", path = "packages/hooks" }

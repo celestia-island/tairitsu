@@ -39,8 +39,8 @@ pub mod guest {
     }
 
     /// Get guest information
-    pub fn get_info() -> tairitsu_core::GuestInfo {
-        tairitsu_core::GuestInfo::new("tairitsu-macro-guest", "0.1.0")
+    pub fn get_info() -> tairitsu::GuestInfo {
+        tairitsu::GuestInfo::new("tairitsu-macro-guest", "0.1.0")
             .with_feature("wit-native-macro")
     }
 }

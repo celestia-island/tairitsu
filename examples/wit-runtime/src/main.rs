@@ -115,8 +115,8 @@ fn main() -> Result<()> {
 fn test_function_detection(
     _loader: &WitLoader,
     _world: &str,
-    exports: &[tairitsu_core::FunctionInfo],
-    imports: &[tairitsu_core::FunctionInfo],
+    exports: &[tairitsu::FunctionInfo],
+    imports: &[tairitsu::FunctionInfo],
 ) -> Result<()> {
     // Test exported functions
     let expected_exports = vec![

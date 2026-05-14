@@ -18,7 +18,7 @@ jobs:
           TAG="${{ steps.tag.outputs.version }}"
           FAIL=0
           PACKAGES=(
-            "tairitsu-core:packages/runtime"
+            "tairitsu:packages/runtime"
             "tairitsu-macros:packages/macros"
             "tairitsu-browser-worlds:packages/browser-worlds"
             "tairitsu-vdom:packages/vdom"
@@ -77,7 +77,7 @@ jobs:
       - run: cargo publish -p tairitsu-macros                  --allow-dirty -v
       - run: cargo publish -p tairitsu-browser-worlds          --allow-dirty -v
       - run: cargo publish -p tairitsu-vdom                    --allow-dirty -v
-      - run: cargo publish -p tairitsu-core                    --allow-dirty -v
+      - run: cargo publish -p tairitsu                       --allow-dirty -v
       - run: cargo publish -p tairitsu-style                   --allow-dirty -v
       - run: cargo publish -p tairitsu-hooks                   --allow-dirty -v
       - run: cargo publish -p tairitsu-browser-wit-resolver    --allow-dirty -v
