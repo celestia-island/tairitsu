@@ -4,65 +4,67 @@ pub trait EventData: Any {
     fn as_any(&self) -> &dyn Any;
 }
 
-/// Type alias for boxed event data, commonly used in event handlers.
-/// This provides a simpler type name for `Box<dyn EventData>`.
 pub type Event = Box<dyn EventData>;
 
-/// Handle to an event that can be used for prevent_default/stop_propagation.
-/// The handle is stored and passed to browser-glue via WIT bindings.
+type EventControlFn = fn(u64);
+
+static mut PREVENT_DEFAULT_FN: Option<EventControlFn> = None;
+static mut STOP_PROPAGATION_FN: Option<EventControlFn> = None;
+
+pub fn register_event_control_functions(
+    prevent_default: EventControlFn,
+    stop_propagation: EventControlFn,
+) {
+    unsafe {
+        PREVENT_DEFAULT_FN = Some(prevent_default);
+        STOP_PROPAGATION_FN = Some(stop_propagation);
+    }
+}
+
+fn call_prevent_default(handle: u64) {
+    unsafe {
+        if let Some(f) = PREVENT_DEFAULT_FN {
+            f(handle);
+        }
+    }
+}
+
+fn call_stop_propagation(handle: u64) {
+    unsafe {
+        if let Some(f) = STOP_PROPAGATION_FN {
+            f(handle);
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct EventWitHandle {
     handle: Option<u64>,
 }
 
 impl EventWitHandle {
-    /// Create a new event handle from a WIT handle.
     pub fn from_wit(handle: u64) -> Self {
         Self {
             handle: Some(handle),
         }
     }
 
-    /// Create a placeholder handle (for non-WIT builds).
     pub fn placeholder() -> Self {
         Self { handle: None }
     }
 
-    /// Call prevent_default on this event.
     pub fn prevent_default(&self) {
         if let Some(handle) = self.handle {
-            // This will be linked via WIT bindings in browser-glue
-            unsafe {
-                // The actual implementation is provided by browser-glue
-                // These are weak symbols that will be resolved at link time
-                unsafe extern "C" {
-                    fn tairitsu_prevent_default(event_handle: u64);
-                }
-                tairitsu_prevent_default(handle);
-            }
+            call_prevent_default(handle);
         }
     }
 
-    /// Call stop_propagation on this event.
     pub fn stop_propagation(&self) {
         if let Some(handle) = self.handle {
-            unsafe {
-                unsafe extern "C" {
-                    fn tairitsu_stop_propagation(event_handle: u64);
-                }
-                tairitsu_stop_propagation(handle);
-            }
+            call_stop_propagation(handle);
         }
     }
 }
-
-#[cfg(not(target_arch = "wasm32"))]
-#[unsafe(no_mangle)]
-pub extern "C" fn tairitsu_prevent_default(_event_handle: u64) {}
-
-#[cfg(not(target_arch = "wasm32"))]
-#[unsafe(no_mangle)]
-pub extern "C" fn tairitsu_stop_propagation(_event_handle: u64) {}
 
 impl Default for EventWitHandle {
     fn default() -> Self {

@@ -32,10 +32,18 @@ use crate::WitElement;
 /// ```
 #[cfg(feature = "wit-bindings")]
 pub fn init_runtime(root_element: WitElement) {
-    // Store the root element for patch application
     let root_ref: Rc<RefCell<WitElement>> = Rc::new(RefCell::new(root_element));
 
-    // Set up the schedule callback for requestAnimationFrame
+    #[cfg(target_family = "wasm")]
+    {
+        tairitsu_vdom::events::register_event_control_functions(
+            crate::wit_platform::prevent_event_default,
+            |handle| {
+                crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::event_target::stop_propagation(handle);
+            },
+        );
+    }
+
     tairitsu_vdom::runtime::set_schedule_callback({
         move |callback: Box<dyn FnOnce()>| {
             // Use the WIT bindings directly for requestAnimationFrame
