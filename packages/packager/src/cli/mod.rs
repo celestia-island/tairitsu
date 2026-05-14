@@ -134,7 +134,13 @@ enum Commands {
         port: Option<u16>,
     },
 
-    /// Initialize a new Tairitsu project
+    /// Create a new Tairitsu project (alias for init)
+    New {
+        /// Project name
+        name: String,
+    },
+
+    /// Initialize a new Tairitsu project in current directory
     Init {
         /// Project name
         #[arg(short, long)]
@@ -703,6 +709,10 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             let _port = port;
             crate::log_fail!("{}", t.cli.preview_not_implemented);
             std::process::exit(1);
+        }
+        Some(Commands::New { name }) => {
+            crate::log_info!("{}", t.cli.init_starting);
+            crate::utils::init_project(&name)?;
         }
         Some(Commands::Init { name }) => {
             crate::log_info!("{}", t.cli.init_starting);
