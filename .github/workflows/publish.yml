@@ -1,11 +1,12 @@
-name: Publish crates.io
+name: Publish
+
 on:
   push:
     tags: [v*]
 
 jobs:
-  verify-versions:
-    name: Verify version consistency
+  verify:
+    name: Verify versions
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,13 +15,13 @@ jobs:
         run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
       - name: Check all publishable packages match tag
         run: |
-          TAG_VERSION="${{ steps.tag.outputs.version }}"
+          TAG="${{ steps.tag.outputs.version }}"
           FAIL=0
           PACKAGES=(
+            "tairitsu-core:packages/runtime"
             "tairitsu-macros:packages/macros"
             "tairitsu-browser-worlds:packages/browser-worlds"
             "tairitsu-vdom:packages/vdom"
-            "tairitsu:packages/runtime"
             "tairitsu-style:packages/style"
             "tairitsu-hooks:packages/hooks"
             "tairitsu-browser-wit-resolver:packages/browser-wit-resolver"
@@ -32,60 +33,79 @@ jobs:
           for ENTRY in "${PACKAGES[@]}"; do
             PKG="${ENTRY%%:*}"
             DIR="${ENTRY##*:}"
-            CARGO_TOML="$DIR/Cargo.toml"
-            if [ ! -f "$CARGO_TOML" ]; then
-              echo "::error::$CARGO_TOML not found"
+            TOML="$DIR/Cargo.toml"
+            if [ ! -f "$TOML" ]; then
+              echo "::error::$TOML not found"
               FAIL=1
               continue
             fi
-            VER=$(grep -oP '^version\s*=\s*"\K[^"]+' "$CARGO_TOML" 2>/dev/null || true)
+            VER=$(grep -oP '^version\s*=\s*"\K[^"]+' "$TOML" 2>/dev/null || true)
             if [ -z "$VER" ]; then
-              VER=$(grep -oP 'version\.workspace\s*=\s*true' "$CARGO_TOML" >/dev/null 2>&1 && echo "workspace" || echo "MISSING")
+              VER=$(grep -q 'version\.workspace\s*=\s*true' "$TOML" && echo "workspace" || echo "MISSING")
             fi
             if [ "$VER" = "workspace" ]; then
               ROOT_VER=$(grep -oP '^version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
-              echo "::notice::$PKG uses workspace version ($ROOT_VER) — OK"
-            elif [ "$VER" = "$TAG_VERSION" ]; then
-              echo "::notice::$PKG version ($VER) matches tag — OK"
+              echo "::notice::$PKG uses workspace version ($ROOT_VER)"
+            elif [ "$VER" = "$TAG" ]; then
+              echo "::notice::$PKG version ($VER) matches tag"
             else
-              echo "::error::$PKG version ($VER) != tag ($TAG_VERSION) in $CARGO_TOML"
+              echo "::error::$PKG version ($VER) != tag ($TAG) in $TOML"
               FAIL=1
             fi
           done
           ROOT_VER=$(grep -oP '^version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
-          if [ "$ROOT_VER" != "$TAG_VERSION" ]; then
-            echo "::error::workspace.package version ($ROOT_VER) != tag ($TAG_VERSION)"
+          if [ "$ROOT_VER" != "$TAG" ]; then
+            echo "::error::workspace.package version ($ROOT_VER) != tag ($TAG)"
             FAIL=1
           fi
-          if [ "$FAIL" -ne 0 ]; then
-            echo "::error::Version mismatch detected."
-            exit 1
-          fi
-          echo "All versions match tag v$TAG_VERSION"
+          [ "$FAIL" -eq 0 ] || exit 1
+          echo "All versions match v$TAG"
 
-  publish:
+  publish-crates:
     name: Publish to crates.io
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: verify-versions
-
+    needs: verify
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - run: rustc --version && cargo --version
       - run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
 
-      - run: cargo check -p tairitsu-macros 2>&1
-      - run: cargo publish -p tairitsu-macros         --allow-dirty -v
-      - run: cargo publish -p tairitsu-browser-worlds  --allow-dirty -v
-      - run: cargo publish -p tairitsu-vdom            --allow-dirty -v
-      - run: cargo publish -p tairitsu                  --allow-dirty -v
-      - run: cargo publish -p tairitsu-style            --allow-dirty -v
-      - run: cargo publish -p tairitsu-hooks            --allow-dirty -v
-      - run: cargo publish -p tairitsu-browser-wit-resolver --allow-dirty -v
-      - run: cargo publish -p tairitsu-ssr              --allow-dirty -v
-      - run: cargo publish -p tairitsu-packager         --allow-dirty -v
-      - run: cargo publish -p tairitsu-web              --allow-dirty -v
-      - run: cargo publish -p tairitsu-mcp              --allow-dirty -v
+      # Publish in dependency order
+      - run: cargo publish -p tairitsu-macros                  --allow-dirty -v
+      - run: cargo publish -p tairitsu-browser-worlds          --allow-dirty -v
+      - run: cargo publish -p tairitsu-vdom                    --allow-dirty -v
+      - run: cargo publish -p tairitsu-core                    --allow-dirty -v
+      - run: cargo publish -p tairitsu-style                   --allow-dirty -v
+      - run: cargo publish -p tairitsu-hooks                   --allow-dirty -v
+      - run: cargo publish -p tairitsu-browser-wit-resolver    --allow-dirty -v
+      - run: cargo publish -p tairitsu-ssr                     --allow-dirty -v
+      - run: cargo publish -p tairitsu-packager                --allow-dirty -v
+      - run: cargo publish -p tairitsu-web                     --allow-dirty -v
+      - run: cargo publish -p tairitsu-mcp                     --allow-dirty -v
+
+  publish-npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install esbuild
+        run: npm install -g esbuild
+
+      - name: Build glue packages
+        run: python3 scripts/build_npm_glue_packages.py
+
+      - name: Publish
+        run: |
+          cd packages/npm/celestia-tairitsu-web-glue
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
