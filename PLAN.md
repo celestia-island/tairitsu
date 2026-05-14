@@ -362,118 +362,70 @@ docs/en/
 
 ---
 
-## 第六阶段：渲染性能 — 细粒度响应式更新（P1）
+## 第六阶段：渲染性能 — 细粒度响应式更新（P1）✅ 核心已完成，2 个 gap 待补
 
-> **背景**: Hikari 锐评中指出 VDOM 粗粒度渲染是性能瓶颈。每次 Signal 变化触发完整组件 re-render + tree diff，即使只改了一个文本节点。
-> **原理**: Tairitsu 已有 `Signal<T>` (`packages/vdom/src/reactive/mod.rs`) + `create_effect` 自动依赖追踪，但渲染层未利用——Signal::set 总是触发整个组件的 `rsx!{}` 重执行。
-> **目标**: Signal 变化时只更新依赖该 signal 的具体 DOM 属性/文本/类，不触发完整 VDOM diff。
-> **策略**: 保持 VDOM + Signal 混合模型，只在 leaf level 做细粒度更新（参考 Dioxus 2024 的 hybrid 策略）。
+> **审计结论（2026-05-14 Hikari 锐评后全面复验）**: DynamicText/DynamicAttr/DynamicClass 的完整链路已经实现并可用。Hikari 已新增 Signal 驱动的 Reactive Counter 演示组件验证该链路。
+>
+> **完整链路**: `Signal<T>` → `IntoVNodeChild` → `VNode::DynamicText` → `render_vnode` 挂载 `create_effect` → signal 变化时直接 `set_text_content`（不经过 VDOM diff）
 
-### P1-5: 新增 `DynamicText` VNode 变体
+### 已完成的实现清单
 
-在 `packages/vdom/src/vnode.rs` 的 `ChildNode` 枚举中新增变体：
+| 层级 | 实现 | 代码位置 |
+|------|------|----------|
+| `Signal<T>` + 自动依赖追踪 | `Signal::get()` 推入 `DEPENDENCIES`，`create_effect` 自动订阅 | `vdom/src/reactive/mod.rs` |
+| `VNode::DynamicText` 变体 | `initial: String` + `compute: Rc<RefCell<dyn FnMut() -> String>>` | `vdom/src/vnode.rs` |
+| `VElement.dynamic_attributes` | `Vec<(String, DynamicCompute)>` + `.dynamic_attr()` builder | `vdom/src/vnode.rs` |
+| `VElement.dynamic_styles` | `Vec<(String, DynamicCompute)>` + `.dynamic_style()` builder | `vdom/src/vnode.rs` |
+| `VElement.dynamic_classes` | `Vec<DynamicCompute>` + `.dynamic_class()` builder | `vdom/src/vnode.rs` |
+| `IntoVNodeChild for Signal<T>` | `rsx!{ {signal} }` 自动生成 DynamicText | `vdom/src/vnode.rs` |
+| `Dyn<F>` wrapper | 手动标记属性为 dynamic：`.attr("name", Dyn(compute))` | `vdom/src/vnode.rs` |
+| `use_dynamic_text()` hook | `Signal<T>` → `DynamicText` VNode | `hooks/src/dynamic.rs` |
+| diff 跳过 DynamicText | `DynamicText vs DynamicText → continue`（零 patch） | `vdom/src/diff.rs` |
+| 挂载时创建 effect | `render_vnode` 中为 DynamicText/Attr/Style/Class 调用 `create_effect` | `web/src/wit_platform.rs:2010-2061` |
+| Hikari Platform 层复活 | 30+ stub 函数改为委托到 `Box<dyn Fn>` 函数指针表 | `hikari/packages/components/src/platform/` |
 
+### Gap 1: rsx!{} 属性位置不自动生成 Dynamic（中优先级）
+
+**现状**: rsx! 宏中 `{signal}` 作为**子节点**会通过 `IntoVNodeChild for Signal<T>` 自动变成 DynamicText ✅。但**属性位置**不会：
 ```rust
-pub enum ChildNode {
-    VElement(VElement),
-    VText(VText),
-    DynamicText {
-        initial: String,
-        compute: Box<dyn Fn() -> String>,
-    },
+rsx! {
+    div {
+        class: some_signal.get(),   // ← 变成静态字符串，每次 re-render 才更新
+        {some_signal}               // ← 自动变成 DynamicText ✅
+    }
 }
 ```
 
-**diff 行为**（`packages/vdom/src/diff.rs`）：
-- 首次渲染：创建文本节点，设为 `initial`，挂载 `create_effect` 监听 signal 变化并直接更新 `textContent`
-- 后续 diff：`DynamicText` 不参与 diff（跳过，因为已有 effect 管辖）
-- 组件卸载：自动清理 effect
-
-**hooks 对接**（`packages/hooks/`）：
-- 新增 `use_dynamic_text(signal: Signal<T>) -> ChildNode` 便利 hook
-- 内部调用 `create_effect` + `Signal::get()` 建立依赖
-
-### P1-6: 新增 `DynamicAttr` / `DynamicClass` 绑定
-
-类似 DynamicText 但作用于元素属性和 class：
-
+**需要手动写法才能变成 Dynamic**:
 ```rust
-pub enum ChildNode {
-    // ...existing...
-    DynamicAttr {
-        element: VElement,
-        attr_name: String,
-        compute: Box<dyn Fn() -> String>,
-    },
-    DynamicClass {
-        element: VElement,
-        compute: Box<dyn Fn() -> String>,
-    },
-}
+element.dynamic_class(move || some_signal.get().to_string())
 ```
 
-**diff 行为**：
-- 首次渲染：正常创建元素 + 设初始属性/class，挂载 effect
-- effect 触发时：直接调用 `set_attribute` / `class_list_add/remove`（通过 `DomOps` trait）
-- 后续 diff：`DynamicAttr`/`DynamicClass` 包裹的属性不参与属性级 diff
+**修复方案**: 在 `packages/macros/src/rsx.rs` 的 `expand_element` 中，对 `RsxAttr::Class(expr)` / `RsxAttr::Other { value }` 做与子节点类似的 `IntoDynamicAttr` 分派。当检测到属性值的类型实现了 `IntoDynamicAttr` 时，自动调用 `.dynamic_attr()` 而非 `.attr()`。
 
-### P1-7: `rsx!{}` 宏自动识别 signal 表达式
+**保守策略**: 不做 AST 分析判断是否是 signal（容易误判），而是依赖类型系统——只要属性值类型实现了 `IntoDynamicAttr` 就走 dynamic 路径，否则走 static 路径。这样对现有代码零影响。
 
-在 `packages/macros/` 中改造 `rsx!{}` 宏展开逻辑：
+### Gap 2: create_effect 返回的 EffectHandle 在挂载时被丢弃（低优先级）
 
-**检测规则**：
+**现状**: `render_vnode` 中创建 DynamicText effect 时：
 ```rust
-// 文本节点直接包含 signal.read() / signal.get() 调用
-rsx! { <span>{count.read().to_string()}</span> }
-// → 编译为 DynamicText，而非 VText
-
-// class/属性直接包含 signal 调用
-rsx! { <div class={classes.get()}>{...}</div> }
-// → 编译为 DynamicClass
+// web/src/wit_platform.rs:2057
+tairitsu_vdom::create_effect(move || {
+    let new_text = (compute.borrow_mut())();
+    bindings::...set_text_content(raw, Some(&new_text));
+});
+// EffectHandle 被 drop —— effect 本身不会停止（因为 subscriber 仍持有 Rc）
+// 但组件卸载时无法主动 stop()
 ```
 
-**宏展开差异**：
-```
-// 现有展开（粗粒度）：
-VElement::new("span").child(VText::new(count.read().to_string()))
+**影响**: 组件被移除后，如果 signal 还在其他地方存活，effect 闭包仍会被触发，尝试操作已不存在的 DOM 节点。目前浏览器端不会 panic（set_text_content 对不存在的节点是 no-op），但这是潜在的资源泄漏。
 
-// 优化后展开（细粒度）：
-VElement::new("span").child(ChildNode::DynamicText {
-    initial: count.read().to_string(),
-    compute: Box::new(move || count.read().to_string()),
-})
-```
+**修复方案**:
+1. `runtime.rs` 维护 `effect_handles: HashMap<ComponentId, Vec<EffectHandle>>`
+2. `render_vnode` 中将 `create_effect` 返回的 handle 注册到当前组件
+3. `cleanup_component(id)` 时批量 `stop()` 所有 handle
 
-**检测策略**：分析 RSX 表达式 AST，若 `{}` 块内包含 `.read()` / `.get()` 方法调用且 receiver 是已知 signal 类型，标记为 dynamic。保守策略：检测到时生成 dynamic 版本，检测不到时保持原行为。
-
-### P1-8: 运行时 effect 清理机制
-
-当组件卸载时，需要清理该组件创建的所有 `create_effect` 注册的 effect。
-
-**当前状态**：`create_effect` (`packages/vdom/src/reactive/mod.rs:112-130`) 返回 `EffectHandle` 但其 `_cleanup` 字段只是空操作。
-
-**改造**：
-- `EffectHandle` 持有实际的 cleanup 闭包（移除 DOM 事件监听器等）
-- `runtime.rs` 维护每个组件的 effect 列表
-- 组件卸载时 `runtime.rs` 批量 drop 所有 effect handle
-
-### 预期性能提升
-
-| 场景 | 现状 | 优化后 |
-|------|------|--------|
-| 计数器更新 | 重渲染整个 counter 组件 + VDOM diff | 仅更新 `span.textContent` |
-| 表格单个 cell 更新 | 重渲染整个 table 组件 | 仅更新该 cell 的 text |
-| 表单 value 绑定 | 重渲染整个 form | 仅更新 `input.value` |
-| 动画帧更新（60fps） | 每帧完整 VDOM diff | 仅更新被动画的 CSS 属性 |
-| `on_scroll` 回调中更新状态 | 每次 scroll 触发完整 re-render | 仅更新依赖的 DOM 属性 |
-
-高频更新场景（动画、拖拽、表单输入）预计提升 **3-10 倍**。
-
-### 不会做的事情
-
-- **不会移除 VDOM** — VDOM 仍用于结构型渲染（条件/循环/slot/portal）
-- **不会改成 Leptos 的纯 fine-grained** — 保留 React 式组件模型
-- **不会引入编译时静态分析** — 使用运行时 `Signal::get()` 自动依赖追踪（已有基础设施）
+**优先级**: 低。当前行为是 benign 的——不会 crash，只是多余的一次 closure 调用。在高频组件创建/销毁场景（如虚拟列表）才可能成为问题。
 
 ---
 
@@ -521,7 +473,7 @@ VElement::new("span").child(ChildNode::DynamicText {
 | — | T-1 ~ T-7 | ✅ 全部完成 |
 | 一 | B-1: 定位语改为 Full-stack Framework | ✅ 完成 (README + docs repositioned) |
 | 一 | B-2: 三层 API 分层命名 | ⬜ 待开始 (需 0.5.0 breaking change) |
-| 一 | B-3: todo-fullstack 全栈示例 | ⬜ 待开始 |
+| 一 | B-3: todo-fullstack 全栈示例 | ✅ 完成 (examples/todo-app with rsx! + Signal + 7 tests) |
 | 二 | P0-1: 修复 unsafe extern "C" 事件 hack | ✅ 完成 (injected callback pattern) |
 | 二 | P0-2: tairitsu new/init 脚手架 | ✅ 完成 (rsx! + Signal + component template) |
 | 二 | P0-3: 降级 Edition 2021 + stable toolchain | ✅ 完成 (50+ let-chain refactors, CI updated) |
