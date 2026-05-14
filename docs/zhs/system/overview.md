@@ -1,43 +1,83 @@
-# 系统架构总览
+# 系统概览
 
-Tairitsu 是面向 WebAssembly Component Model 的通用运行时，核心目标是：
+Tairitsu 是一个基于 WASM Component Model 的全栈框架。同一个 WASM 组件可以在服务端（Container 运行时）、浏览器（VDOM 运行时）和边缘节点运行——全部通过相同的 WIT 接口定义。
 
-- 不绑定单一业务 WIT
-- 提供可插拔宿主导入与客体导出调用
-- 同时支持编译期与运行期接口路径
+## 四层架构
 
-## 架构分层
-
-```mermaid
-graph TD
-    subgraph APP["应用层（业务）"]
-        A1["自定义 WIT 接口 / 组件"]
-        A2["示例工程（examples/*）"]
-    end
-    subgraph FW["框架层（Tairitsu）"]
-        F1["runtime: 镜像/容器/调用引擎"]
-        F2["macros: 宏辅助接口定义"]
-        F3["vdom + hooks + style + web: UI 运行层"]
-        F4["browser-worlds: 浏览器 WIT 协议"]
-        F5["browser-wit-resolver + packager: 解析与分发"]
-    end
-    subgraph HOST["宿主层"]
-        H1["wasmtime / native host"]
-        H2["browser-glue（TS）"]
-    end
-    APP --> FW --> HOST
+```
+┌──────────────────────────────────────────────────────┐
+│  4. 工具层                                            │
+│     packager、dev server、MCP、视觉回归、脚本           │
+├──────────────────────────────────────────────────────┤
+│  3. 平台层                                            │
+│     WitPlatform（WIT 绑定）、WebPlatform（web-sys）    │
+│     browser-glue（TypeScript ↔ WIT 桥接）              │
+├──────────────────────────────────────────────────────┤
+│  2. 运行时层                                          │
+│     Container / Registry / Image 生命周期              │
+│     WIT 绑定、动态调用（RON + binary canonical ABI）   │
+├──────────────────────────────────────────────────────┤
+│  1. 接口层                                            │
+│     WIT world 定义、browser-worlds                    │
+│     W3C WebIDL → WIT 代码生成管线                      │
+└──────────────────────────────────────────────────────┘
 ```
 
-## 关键设计原则
+## 请求流程
 
-1. 接口先行：优先通过 WIT 描述协议
-2. 运行时解耦：容器模型不绑定业务语义
-3. 双路径共存：`web` 与 `wit-bindings` 可并行演进
-4. 离线优先：WIT 缓存支持无网构建
+### 浏览器（客户端路径）
 
-## 你应该从哪里开始
+```
+用户点击按钮
+  → DOM 事件触发
+  → browser-glue 捕获事件，转换为 WIT ABI
+  → WASM 组件接收类型化事件（MouseEvent/KeyboardEvent/...）
+  → Signal 更新 → VDOM diff → Patch 操作
+  → Patch 通过 DomOps 应用 → DOM 更新
+```
 
-- 运行时能力：见 [runtime](./runtime.md)
-- 浏览器协议与生成：见 [wit-pipeline](./wit-pipeline.md)
-- 双后端平台：见 [web-backends](./web-backends.md)
-- 版本治理：见 [versioning](./versioning.md)
+### 服务端（SSR 路径）
+
+```
+HTTP 请求到达
+  → axum dev server 或独立 wasmtime 宿主
+  → Container 实例化 WASM 组件
+  → 组件通过 WIT 调用渲染 VNode 树
+  → SSR 引擎序列化为 HTML 字符串
+  → 流式响应发送给客户端
+```
+
+## 核心设计决策
+
+### 为什么选择 Component Model 而非 wasm-bindgen？
+
+| wasm-bindgen 路径 | WIT 路径（Tairitsu） |
+|:--|:--|
+| Rust → wasm-bindgen → JS shim → 浏览器 | Rust → WIT → canonical ABI → 浏览器（未来原生） |
+| 与 JS 运行时紧密耦合 | 语言无关的 WIT 接口 |
+| 无法在服务端复用 | 同一组件可在任何 wasmtime 宿主运行 |
+| 成熟稳定的生态（Leptos, Dioxus, Yew） | 新兴、面向未来 |
+
+Tairitsu 押注 Component Model 将成为浏览器-wasm 互操作的标准，从而消除对 wasm-bindgen JS 胶水层的需求。
+
+### 为什么采用 Docker-like 的 Image/Container/Registry？
+
+WASM 组件需要类似容器的生命周期管理：
+
+- **Image** = 编译后的 `.wasm` 二进制 + 元数据（类似 Docker 镜像）
+- **Container** = 运行中实例，带宿主提供的 WIT imports（类似 Docker 容器）
+- **Registry** = 镜像和活跃容器的集合（类似 Docker daemon）
+
+这一模型支持：
+- 开发时热重载（替换 Image，保留 Container）
+- 版本化部署（标记镜像，回滚）
+- 多租户隔离（分离容器，共享宿主）
+- 动态调用（在运行时调用运行中的组件）
+
+## 下一步
+
+- [运行时与容器模型](runtime.md) — 深入了解 Container/Image/Registry
+- [VDOM 与渲染](vdom.md) — 浏览器端 VDOM 工作原理
+- [WIT 管线](wit-pipeline.md) — W3C WebIDL → WIT 生成
+- [Web 后端](web-backends.md) — 双 WitPlatform / WebPlatform 策略
+- [浏览器胶水层](browser-glue.md) — TypeScript 桥接层

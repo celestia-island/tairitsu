@@ -30,6 +30,7 @@ pub mod vtty;
 pub mod wasm;
 pub mod wit_check;
 pub mod wit_cmd;
+pub mod wit_plugin;
 
 #[cfg(feature = "cli")]
 pub use cli::run;
@@ -42,6 +43,7 @@ pub use resources::{
     ResourceIndex, ResourceIndexer, ScssResource, ScssUtils, SvgResource, SvgUtils,
 };
 pub use utils::error::{Result, TairitsuPackagerError};
+pub use wit_plugin::PluginWitRegistry;
 
 /// Version of tairitsu-packager
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -5,5 +5,5 @@ mod downloader;
 mod platform;
 
 pub use cache::BrowserCache;
-pub use downloader::{BrowserDownloader, CHROME_VERSION, DownloadProgress};
-pub use platform::{Platform, detect_platform};
+pub use downloader::{BrowserDownloader, DownloadProgress, CHROME_VERSION};
+pub use platform::{detect_platform, Platform};

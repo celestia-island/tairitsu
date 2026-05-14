@@ -102,7 +102,7 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
 
     #[cfg(feature = "ssr")]
     {
-        use tairitsu_ssr::{SsrConfig, render_full_page};
+        use tairitsu_ssr::{render_full_page, SsrConfig};
 
         let ssr_config = SsrConfig::new(
             prerender_config.viewport_width,
@@ -175,25 +175,26 @@ fn copy_assets(dist_dir: &std::path::Path, output_dir: &std::path::Path) -> crat
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        if path.is_file()
-            && let Some(ext) = path.extension()
-            && asset_extensions.contains(&ext.to_string_lossy().as_ref())
-        {
-            let relative = path.strip_prefix(dist_dir).map_err(|e| {
-                crate::TairitsuPackagerError::BuildError(format!(
-                    "Failed to get relative path: {}",
-                    e
-                ))
-            })?;
-            let dest = output_dir.join(relative);
+        if path.is_file() {
+            if let Some(ext) = path.extension() {
+                if asset_extensions.contains(&ext.to_string_lossy().as_ref()) {
+                    let relative = path.strip_prefix(dist_dir).map_err(|e| {
+                        crate::TairitsuPackagerError::BuildError(format!(
+                            "Failed to get relative path: {}",
+                            e
+                        ))
+                    })?;
+                    let dest = output_dir.join(relative);
 
-            // Create parent directory if needed
-            if let Some(parent) = dest.parent() {
-                fs::create_dir_all(parent)?;
+                    // Create parent directory if needed
+                    if let Some(parent) = dest.parent() {
+                        fs::create_dir_all(parent)?;
+                    }
+
+                    fs::copy(path, &dest)?;
+                    tracing::debug!("  Copied asset: {}", relative.display());
+                }
             }
-
-            fs::copy(path, &dest)?;
-            tracing::debug!("  Copied asset: {}", relative.display());
         }
     }
 

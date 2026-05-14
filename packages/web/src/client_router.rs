@@ -106,7 +106,11 @@ fn normalize_path(path: &str) -> String {
     if p.ends_with('/') && p.len() > 1 {
         p.pop();
     }
-    if p.is_empty() { "/".to_string() } else { p }
+    if p.is_empty() {
+        "/".to_string()
+    } else {
+        p
+    }
 }
 
 pub fn current_path() -> String {

@@ -32,6 +32,37 @@ Ensure `wit-bindgen` version matches in `Cargo.toml`:
 wit-bindgen = { version = "0.33", features = ["realloc"] }
 ```
 
+### dev-wasm profile not defined
+
+**Error:**
+```
+error: profile `dev-wasm` is not defined
+```
+
+**Solution:**
+Add the profile to your workspace `Cargo.toml`:
+```toml
+[profile.dev-wasm]
+inherits = "release"
+lto = true
+opt-level = 'z'
+codegen-units = 1
+panic = "abort"
+```
+Projects created with `tairitsu init` already include this profile.
+
+### browser-glue runtime bundle not found
+
+**Error:**
+```
+browser-glue runtime bundle (dist/runtime.js) not found
+```
+
+**Solution:**
+1. Run `npm run build` in `packages/browser-glue/`
+2. Or set the environment variable: `TAIRITSU_RUNTIME_BUNDLE=/path/to/browser-glue/dist/runtime.js`
+3. Or install via npm: `npm install tairitsu-browser-glue`
+
 ### TypeScript compilation errors
 
 **Error:**

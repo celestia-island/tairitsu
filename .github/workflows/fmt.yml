@@ -18,10 +18,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly
           components: rustfmt
 
       - name: Run fmt
-        run: cargo +nightly fmt --all -- --check --unstable-features
+        run: cargo fmt --all -- --check

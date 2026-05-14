@@ -5,7 +5,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 pub use metadata::TairitsuMetadata;
-pub use routes::{DiscoveredRoute, discover_routes};
+pub use routes::{discover_routes, DiscoveredRoute};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {

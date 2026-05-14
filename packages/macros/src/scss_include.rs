@@ -36,8 +36,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
-    LitStr,
     parse::{Parse, ParseStream},
+    LitStr,
 };
 
 // ─── Input syntax ──────────────────────────────────────────────────────

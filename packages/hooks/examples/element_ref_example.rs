@@ -10,7 +10,7 @@
 //! extract a `DomHandle` safely on any platform.
 
 use tairitsu_hooks::use_element_ref;
-use tairitsu_vdom::{VElement, VNode, resolve_element_ref};
+use tairitsu_vdom::{resolve_element_ref, VElement, VNode};
 
 /// Component demonstrating basic element ref usage.
 ///

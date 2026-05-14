@@ -53,7 +53,7 @@ use std::{
     sync::Arc,
 };
 
-use tairitsu_vdom::{VNode, runtime};
+use tairitsu_vdom::{runtime, VNode};
 
 /// State of an async resource.
 #[derive(Clone, Debug, PartialEq)]
@@ -193,10 +193,10 @@ impl ResourceRegistry {
         self.accessed_resources.borrow_mut().insert(resource_id);
 
         // If we're in a suspense boundary, track this resource
-        if let Some(boundary_id) = self.active_boundary
-            && let Some(boundary) = self.suspense_boundaries.get_mut(&boundary_id)
-        {
-            boundary.tracked_resources.insert(resource_id);
+        if let Some(boundary_id) = self.active_boundary {
+            if let Some(boundary) = self.suspense_boundaries.get_mut(&boundary_id) {
+                boundary.tracked_resources.insert(resource_id);
+            }
         }
     }
 

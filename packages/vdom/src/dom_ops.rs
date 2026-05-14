@@ -158,6 +158,8 @@ pub struct DomFuncs {
     pub get_computed_style_value: unsafe fn(u64, &str) -> String,
     pub set_timeout_fn: unsafe fn(Box<dyn FnOnce()>, i32) -> i32,
     pub clear_timeout_fn: unsafe fn(i32),
+    pub set_interval_fn: unsafe fn(Box<dyn FnMut()>, i32) -> i32,
+    pub clear_interval_fn: unsafe fn(i32),
     pub request_animation_frame_fn: unsafe fn(Box<dyn FnMut(f64)>) -> u32,
     pub cancel_animation_frame_fn: unsafe fn(u32),
 }
@@ -338,6 +340,20 @@ pub fn set_timeout(callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
 pub fn clear_timeout(id: i32) {
     if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
         unsafe { (f.clear_timeout_fn)(id) };
+    }
+}
+
+pub fn set_interval(callback: Box<dyn FnMut()>, ms: i32) -> i32 {
+    DOM_FUNCS
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map_or(0, |f| unsafe { (f.set_interval_fn)(callback, ms) })
+}
+
+pub fn clear_interval(id: i32) {
+    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+        unsafe { (f.clear_interval_fn)(id) };
     }
 }
 

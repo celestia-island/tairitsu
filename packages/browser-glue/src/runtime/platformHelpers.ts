@@ -7,6 +7,7 @@
 if (!globalThis.__tairitsuTimerState) {
   globalThis.__tairitsuTimerState = {
     timeoutCallbacks: new Map(),
+    intervalCallbacks: new Map(),
     nextTimeoutId: 1,
   };
 }
@@ -41,6 +42,25 @@ export const platformHelpers_exports = {
     if (s.timeoutCallbacks.has(id)) {
       window.clearTimeout(s.timeoutCallbacks.get(id));
       s.timeoutCallbacks.delete(id);
+    }
+  },
+  setInterval(callbackId, ms) {
+    const s = globalThis.__tairitsuTimerState;
+    const id = s.nextTimeoutId++;
+    const intervalId = window.setInterval(() => {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]) {
+        const exp = globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"];
+        (exp.onInterval || exp.on_interval)?.(callbackId);
+      }
+    }, ms);
+    s.intervalCallbacks.set(id, intervalId);
+    return id;
+  },
+  clearInterval(id) {
+    const s = globalThis.__tairitsuTimerState;
+    if (s.intervalCallbacks.has(id)) {
+      window.clearInterval(s.intervalCallbacks.get(id));
+      s.intervalCallbacks.delete(id);
     }
   },
   requestAnimationFrame(callbackId) {

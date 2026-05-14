@@ -1,4 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 fn main() {
     println!("cargo:rerun-if-changed=Cargo.toml");
@@ -17,6 +20,51 @@ fn main() {
     };
 
     println!("cargo:rustc-env=TAIRITSU_DIST_DIR={}", resolved.display());
+
+    resolve_wit_path(&manifest_dir);
+}
+
+/// Locate the composed WIT directory and generate `wit_bindings_generated.rs` in
+/// `$OUT_DIR`. The generated file contains a `wit_bindgen::generate!` invocation
+/// with the correct absolute path, so it works both in the monorepo and when
+/// `tairitsu-web` is consumed from crates.io.
+///
+/// Resolution order:
+/// 1. `DEP_TAIRITSU_BROWSER_WORLDS_WIT_COMPOSED_DIR` (set by `tairitsu-browser-worlds` build.rs
+///    via `cargo:wit_composed_dir` — available when `links = "tairitsu-browser-worlds"` is set)
+/// 2. Monorepo fallback: `../browser-worlds/wit/composed` (for in-tree development)
+fn resolve_wit_path(manifest_dir: &Path) {
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap_or_else(|_| ".".to_string()));
+
+    let wit_composed_dir =
+        if let Ok(dir) = std::env::var("DEP_TAIRITSU_BROWSER_WORLDS_WIT_COMPOSED_DIR") {
+            PathBuf::from(dir)
+        } else {
+            let monorepo_path = manifest_dir.join("../browser-worlds/wit/composed");
+            if monorepo_path.exists() {
+                monorepo_path
+            } else {
+                eprintln!(
+                "[tairitsu-web] Warning: Could not locate browser-worlds WIT composed directory. \
+                 wit-bindings feature may not compile."
+            );
+                return;
+            }
+        };
+
+    let escaped_path = wit_composed_dir.to_string_lossy().replace('\\', "\\\\");
+
+    let bindings_code = format!(
+        r#"wit_bindgen::generate!({{
+    path: "{escaped_path}",
+    world: "browser-full",
+}});"#
+    );
+
+    let dest = out_dir.join("wit_bindings_generated.rs");
+    if let Err(e) = fs::write(&dest, &bindings_code) {
+        eprintln!("[tairitsu-web] Warning: Failed to write generated WIT bindings file: {e}");
+    }
 }
 
 fn resolve_output_dir(cargo_toml: &PathBuf) -> Option<PathBuf> {

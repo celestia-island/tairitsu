@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc};
 
-use crate::{EventData, svg::SafeSvg};
+use crate::{svg::SafeSvg, EventData};
 
 /// Type-erased element ref that can be stored in VNode.
 ///
@@ -95,6 +95,39 @@ pub enum VNode {
     Element(VElement),
     Text(VText),
     Fragment(Vec<VNode>),
+    DynamicText(DynamicText),
+}
+
+#[derive(Clone)]
+pub struct DynamicText {
+    pub initial: String,
+    pub compute: Rc<RefCell<dyn FnMut() -> String>>,
+}
+
+impl DynamicText {
+    pub fn new<F>(initial: String, compute: F) -> Self
+    where
+        F: FnMut() -> String + 'static,
+    {
+        Self {
+            initial,
+            compute: Rc::new(RefCell::new(compute)),
+        }
+    }
+}
+
+impl PartialEq for DynamicText {
+    fn eq(&self, other: &Self) -> bool {
+        self.initial == other.initial
+    }
+}
+
+impl fmt::Debug for DynamicText {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DynamicText")
+            .field("initial", &self.initial)
+            .finish()
+    }
 }
 
 impl Default for VNode {
@@ -110,6 +143,8 @@ pub fn empty_vnode() -> VNode {
 
 pub type EventHandler = Rc<RefCell<dyn FnMut(Box<dyn EventData>)>>;
 
+pub type DynamicCompute = Rc<RefCell<dyn FnMut() -> String>>;
+
 pub struct VElement {
     pub tag: String,
     pub key: Option<String>,
@@ -118,16 +153,15 @@ pub struct VElement {
     pub style: Style,
     pub class: Classes,
     pub event_handlers: HashMap<String, EventHandler>,
-    /// Raw HTML to be set as inner_html (for dangerouslySetInnerHTML equivalent)
     pub inner_html: Option<String>,
-    /// Element reference that will be populated with the DOM element handle
-    /// when this VElement is mounted to the DOM.
     pub element_ref: Option<AnyElementRef>,
+    pub dynamic_attributes: Vec<(String, DynamicCompute)>,
+    pub dynamic_styles: Vec<(String, DynamicCompute)>,
+    pub dynamic_classes: Vec<DynamicCompute>,
 }
 
 impl PartialEq for VElement {
     fn eq(&self, other: &Self) -> bool {
-        // Compare all fields except event_handlers and element_ref (which can't be compared)
         self.tag == other.tag
             && self.key == other.key
             && self.attributes == other.attributes
@@ -135,7 +169,9 @@ impl PartialEq for VElement {
             && self.style == other.style
             && self.class == other.class
             && self.inner_html == other.inner_html
-        // Note: event_handlers and element_ref are intentionally not compared
+            && self.dynamic_attributes.len() == other.dynamic_attributes.len()
+            && self.dynamic_styles.len() == other.dynamic_styles.len()
+            && self.dynamic_classes.len() == other.dynamic_classes.len()
     }
 }
 
@@ -152,6 +188,23 @@ impl fmt::Debug for VElement {
                 "event_handlers",
                 &self.event_handlers.keys().collect::<Vec<_>>(),
             )
+            .field(
+                "dynamic_attributes",
+                &self
+                    .dynamic_attributes
+                    .iter()
+                    .map(|(k, _)| k)
+                    .collect::<Vec<_>>(),
+            )
+            .field(
+                "dynamic_styles",
+                &self
+                    .dynamic_styles
+                    .iter()
+                    .map(|(k, _)| k)
+                    .collect::<Vec<_>>(),
+            )
+            .field("dynamic_classes", &self.dynamic_classes.len())
             .finish()
     }
 }
@@ -167,9 +220,10 @@ impl Clone for VElement {
             class: self.class.clone(),
             event_handlers: self.event_handlers.clone(),
             inner_html: self.inner_html.clone(),
-            // Note: element_ref is intentionally NOT cloned
-            // When cloning a VElement, we create a new element without a ref
             element_ref: None,
+            dynamic_attributes: self.dynamic_attributes.clone(),
+            dynamic_styles: self.dynamic_styles.clone(),
+            dynamic_classes: self.dynamic_classes.clone(),
         }
     }
 }
@@ -261,6 +315,9 @@ impl VElement {
             event_handlers: HashMap::new(),
             inner_html: None,
             element_ref: None,
+            dynamic_attributes: Vec::new(),
+            dynamic_styles: Vec::new(),
+            dynamic_classes: Vec::new(),
         }
     }
 
@@ -272,6 +329,21 @@ impl VElement {
         if let Some(v) = value.into_attr_value() {
             self.attributes.insert(name.to_string(), v);
         }
+        self
+    }
+
+    pub fn apply_attr(mut self, name: &str, value: impl IntoDynamicAttr) -> Self {
+        value.apply_to_element(&mut self, name);
+        self
+    }
+
+    pub fn apply_class(mut self, value: impl IntoClassValue) -> Self {
+        value.apply_to(&mut self);
+        self
+    }
+
+    pub fn apply_style(mut self, value: impl IntoStyleValue) -> Self {
+        value.apply_to(&mut self);
         self
     }
 
@@ -318,6 +390,372 @@ impl VElement {
     ) -> Self {
         self.event_handlers
             .insert(event.to_string(), Rc::new(RefCell::new(handler)));
+        self
+    }
+
+    pub fn on_click(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("click", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dblclick(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("dblclick", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mousedown(
+        self,
+        mut handler: impl FnMut(crate::events::MouseEvent) + 'static,
+    ) -> Self {
+        self.on_event("mousedown", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mouseup(self, mut handler: impl FnMut(crate::events::MouseEvent) + 'static) -> Self {
+        self.on_event("mouseup", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mousemove(
+        self,
+        mut handler: impl FnMut(crate::events::MouseEvent) + 'static,
+    ) -> Self {
+        self.on_event("mousemove", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mouseenter(
+        self,
+        mut handler: impl FnMut(crate::events::MouseEvent) + 'static,
+    ) -> Self {
+        self.on_event("mouseenter", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_mouseleave(
+        self,
+        mut handler: impl FnMut(crate::events::MouseEvent) + 'static,
+    ) -> Self {
+        self.on_event("mouseleave", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::MouseEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_keydown(
+        self,
+        mut handler: impl FnMut(crate::events::KeyboardEvent) + 'static,
+    ) -> Self {
+        self.on_event("keydown", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::KeyboardEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_keyup(self, mut handler: impl FnMut(crate::events::KeyboardEvent) + 'static) -> Self {
+        self.on_event("keyup", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::KeyboardEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_keypress(
+        self,
+        mut handler: impl FnMut(crate::events::KeyboardEvent) + 'static,
+    ) -> Self {
+        self.on_event("keypress", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::KeyboardEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_input(self, mut handler: impl FnMut(crate::events::InputEvent) + 'static) -> Self {
+        self.on_event("input", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::InputEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_change(self, mut handler: impl FnMut(crate::events::ChangeEvent) + 'static) -> Self {
+        self.on_event("change", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::ChangeEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_focus(self, mut handler: impl FnMut(crate::events::FocusEvent) + 'static) -> Self {
+        self.on_event("focus", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::FocusEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_blur(self, mut handler: impl FnMut(crate::events::FocusEvent) + 'static) -> Self {
+        self.on_event("blur", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::FocusEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_submit(self, mut handler: impl FnMut(crate::events::ChangeEvent) + 'static) -> Self {
+        self.on_event("submit", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::ChangeEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_wheel(self, mut handler: impl FnMut(crate::events::WheelEvent) + 'static) -> Self {
+        self.on_event("wheel", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::WheelEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dragstart(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("dragstart", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dragend(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("dragend", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dragover(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("dragover", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_dragleave(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("dragleave", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_drop(self, mut handler: impl FnMut(crate::events::DragEvent) + 'static) -> Self {
+        self.on_event("drop", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::DragEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_touchstart(
+        self,
+        mut handler: impl FnMut(crate::events::TouchEvent) + 'static,
+    ) -> Self {
+        self.on_event("touchstart", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TouchEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_touchmove(
+        self,
+        mut handler: impl FnMut(crate::events::TouchEvent) + 'static,
+    ) -> Self {
+        self.on_event("touchmove", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TouchEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_touchend(self, mut handler: impl FnMut(crate::events::TouchEvent) + 'static) -> Self {
+        self.on_event("touchend", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TouchEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_touchcancel(
+        self,
+        mut handler: impl FnMut(crate::events::TouchEvent) + 'static,
+    ) -> Self {
+        self.on_event("touchcancel", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TouchEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerdown(
+        self,
+        mut handler: impl FnMut(crate::events::PointerEvent) + 'static,
+    ) -> Self {
+        self.on_event("pointerdown", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerup(
+        self,
+        mut handler: impl FnMut(crate::events::PointerEvent) + 'static,
+    ) -> Self {
+        self.on_event("pointerup", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointermove(
+        self,
+        mut handler: impl FnMut(crate::events::PointerEvent) + 'static,
+    ) -> Self {
+        self.on_event("pointermove", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerenter(
+        self,
+        mut handler: impl FnMut(crate::events::PointerEvent) + 'static,
+    ) -> Self {
+        self.on_event("pointerenter", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerleave(
+        self,
+        mut handler: impl FnMut(crate::events::PointerEvent) + 'static,
+    ) -> Self {
+        self.on_event("pointerleave", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerover(
+        self,
+        mut handler: impl FnMut(crate::events::PointerEvent) + 'static,
+    ) -> Self {
+        self.on_event("pointerover", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_pointerout(
+        self,
+        mut handler: impl FnMut(crate::events::PointerEvent) + 'static,
+    ) -> Self {
+        self.on_event("pointerout", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::PointerEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_transitionend(
+        self,
+        mut handler: impl FnMut(crate::events::TransitionEvent) + 'static,
+    ) -> Self {
+        self.on_event("transitionend", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::TransitionEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_animationstart(
+        self,
+        mut handler: impl FnMut(crate::events::AnimationEvent) + 'static,
+    ) -> Self {
+        self.on_event("animationstart", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::AnimationEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_animationend(
+        self,
+        mut handler: impl FnMut(crate::events::AnimationEvent) + 'static,
+    ) -> Self {
+        self.on_event("animationend", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::AnimationEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_animationiteration(
+        self,
+        mut handler: impl FnMut(crate::events::AnimationEvent) + 'static,
+    ) -> Self {
+        self.on_event("animationiteration", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::AnimationEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn on_scroll(self, mut handler: impl FnMut(crate::events::GenericEvent) + 'static) -> Self {
+        self.on_event("scroll", move |e: Box<dyn EventData>| {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::GenericEvent>() {
+                handler(event.clone());
+            }
+        })
+    }
+
+    pub fn with_css_var(mut self, name: &str, value: &str) -> Self {
+        let var_name = if name.starts_with("--") {
+            name.to_string()
+        } else {
+            format!("--{}", name)
+        };
+        self.style.css_variables.push((var_name, value.to_string()));
         self
     }
 
@@ -372,6 +810,32 @@ impl VElement {
         self.element_ref = Some(element_ref);
         self
     }
+
+    pub fn dynamic_attr<F>(mut self, name: &str, compute: F) -> Self
+    where
+        F: FnMut() -> String + 'static,
+    {
+        self.dynamic_attributes
+            .push((name.to_string(), Rc::new(RefCell::new(compute))));
+        self
+    }
+
+    pub fn dynamic_style<F>(mut self, name: &str, compute: F) -> Self
+    where
+        F: FnMut() -> String + 'static,
+    {
+        self.dynamic_styles
+            .push((name.to_string(), Rc::new(RefCell::new(compute))));
+        self
+    }
+
+    pub fn dynamic_class<F>(mut self, compute: F) -> Self
+    where
+        F: FnMut() -> String + 'static,
+    {
+        self.dynamic_classes.push(Rc::new(RefCell::new(compute)));
+        self
+    }
 }
 
 impl From<&str> for Classes {
@@ -391,10 +855,10 @@ impl From<&str> for Style {
         let mut style = Style::new();
         for part in s.split(';') {
             let part = part.trim();
-            if !part.is_empty()
-                && let Some((name, value)) = part.split_once(':')
-            {
-                style = style.add(name.trim(), value.trim());
+            if !part.is_empty() {
+                if let Some((name, value)) = part.split_once(':') {
+                    style = style.add(name.trim(), value.trim());
+                }
             }
         }
         style
@@ -427,6 +891,13 @@ impl VText {
 /// Create a text [`VNode`].
 pub fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
+}
+
+pub fn dynamic_text<F>(initial: String, compute: F) -> VNode
+where
+    F: FnMut() -> String + 'static,
+{
+    VNode::DynamicText(DynamicText::new(initial, compute))
 }
 
 /// Create an element builder (shorthand for [`VElement::new`]).
@@ -509,6 +980,9 @@ impl VNode {
                     child.write_html(buf);
                 }
             }
+            VNode::DynamicText(dt) => {
+                html_escape_into(buf, &dt.initial);
+            }
         }
     }
 }
@@ -557,4 +1031,282 @@ fn is_void_element(tag: &str) -> bool {
             | "track"
             | "wbr"
     )
+}
+
+/// Trait for types that can be converted into a [`VNode`] child.
+///
+/// Implemented for `VNode`, `String`, `&str`, `&String`, and `Signal<T>`.
+/// When a `Signal<T>` is used, it automatically creates a [`DynamicText`] node
+/// that updates the DOM directly when the signal changes — no full re-render needed.
+///
+/// The `rsx!` macro uses this trait automatically for `{expr}` children.
+pub trait IntoVNodeChild {
+    fn into_vnode_child(self) -> VNode;
+}
+
+impl IntoVNodeChild for VNode {
+    fn into_vnode_child(self) -> VNode {
+        self
+    }
+}
+
+impl IntoVNodeChild for String {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self))
+    }
+}
+
+impl IntoVNodeChild for &str {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(self))
+    }
+}
+
+impl IntoVNodeChild for &String {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(self))
+    }
+}
+
+impl IntoVNodeChild for u32 {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self.to_string()))
+    }
+}
+
+impl IntoVNodeChild for usize {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self.to_string()))
+    }
+}
+
+impl IntoVNodeChild for i32 {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self.to_string()))
+    }
+}
+
+impl IntoVNodeChild for f64 {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self.to_string()))
+    }
+}
+
+impl<T: Clone + std::string::ToString + 'static> IntoVNodeChild for crate::reactive::Signal<T> {
+    fn into_vnode_child(self) -> VNode {
+        let initial = self.get().to_string();
+        let signal = self.clone();
+        dynamic_text(initial, move || signal.get().to_string())
+    }
+}
+
+pub trait IntoDynamicAttr {
+    fn apply_to_element(self, element: &mut VElement, name: &str);
+}
+
+impl IntoDynamicAttr for String {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element.attributes.insert(name.to_string(), self);
+    }
+}
+
+impl IntoDynamicAttr for &str {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for Option<String> {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        if let Some(v) = self {
+            element.attributes.insert(name.to_string(), v);
+        }
+    }
+}
+
+impl IntoDynamicAttr for bool {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        if self {
+            element
+                .attributes
+                .insert(name.to_string(), name.to_string());
+        }
+    }
+}
+
+impl IntoDynamicAttr for &String {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element.attributes.insert(name.to_string(), self.clone());
+    }
+}
+
+impl IntoDynamicAttr for Option<&str> {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        if let Some(v) = self {
+            element.attributes.insert(name.to_string(), v.to_string());
+        }
+    }
+}
+
+impl IntoDynamicAttr for i32 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for i64 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for u32 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for u64 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for usize {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for f64 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for f32 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+pub struct Dyn<F: FnMut() -> String + 'static>(pub F);
+
+impl<F: FnMut() -> String + 'static> IntoDynamicAttr for Dyn<F> {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .dynamic_attributes
+            .push((name.to_string(), Rc::new(RefCell::new(self.0))));
+    }
+}
+
+impl<T: Clone + std::string::ToString + 'static> IntoDynamicAttr for crate::reactive::Signal<T> {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        let signal = self.clone();
+        element.dynamic_attributes.push((
+            name.to_string(),
+            Rc::new(RefCell::new(move || signal.get().to_string())),
+        ));
+    }
+}
+
+pub trait IntoClassValue {
+    fn apply_to(self, element: &mut VElement);
+}
+
+impl IntoClassValue for Classes {
+    fn apply_to(self, element: &mut VElement) {
+        element.class = self;
+    }
+}
+
+impl IntoClassValue for &str {
+    fn apply_to(self, element: &mut VElement) {
+        element.class = Classes::from(self);
+    }
+}
+
+impl IntoClassValue for String {
+    fn apply_to(self, element: &mut VElement) {
+        element.class = Classes::from(self.as_str());
+    }
+}
+
+impl<F: FnMut() -> String + 'static> IntoClassValue for Dyn<F> {
+    fn apply_to(self, element: &mut VElement) {
+        element.dynamic_classes.push(Rc::new(RefCell::new(self.0)));
+    }
+}
+
+impl<T: Clone + std::string::ToString + 'static> IntoClassValue for crate::reactive::Signal<T> {
+    fn apply_to(self, element: &mut VElement) {
+        let signal = self.clone();
+        element
+            .dynamic_classes
+            .push(Rc::new(RefCell::new(move || signal.get().to_string())));
+    }
+}
+
+pub trait IntoStyleValue {
+    fn apply_to(self, element: &mut VElement);
+}
+
+impl IntoStyleValue for Style {
+    fn apply_to(self, element: &mut VElement) {
+        element.style = self;
+    }
+}
+
+impl IntoStyleValue for &str {
+    fn apply_to(self, element: &mut VElement) {
+        element.style = Style::from(self);
+    }
+}
+
+impl IntoStyleValue for String {
+    fn apply_to(self, element: &mut VElement) {
+        element.style = Style::from(self.as_str());
+    }
+}
+
+impl IntoStyleValue for Option<String> {
+    fn apply_to(self, element: &mut VElement) {
+        if let Some(s) = self {
+            element.style = Style::from(s.as_str());
+        }
+    }
+}
+
+impl<F: FnMut() -> String + 'static> IntoStyleValue for Dyn<F> {
+    fn apply_to(self, element: &mut VElement) {
+        element
+            .dynamic_styles
+            .push(("cssText".to_string(), Rc::new(RefCell::new(self.0))));
+    }
+}
+
+impl<T: Clone + std::string::ToString + 'static> IntoStyleValue for crate::reactive::Signal<T> {
+    fn apply_to(self, element: &mut VElement) {
+        let signal = self.clone();
+        element.dynamic_styles.push((
+            "cssText".to_string(),
+            Rc::new(RefCell::new(move || signal.get().to_string())),
+        ));
+    }
 }

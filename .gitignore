@@ -28,10 +28,9 @@ dist/
 *.d.ts.map
 .cache/
 
-# Keep npm package source and config files (gitignored above, un-ignore here)
+# npm package sources: track package.json + .ts, ignore built dist/
 !packages/npm/**/package.json
 !packages/npm/**/src/*.ts
-!packages/npm/**/*.ts
 
 # Static assets policy: ignore public folders and compiled CSS, keep SCSS in git
 **/public/
@@ -46,9 +45,9 @@ Thumbs.db
 .mcp.json
 .playwright-mcp/
 
-# Keep sub-project package.json files (root package.json is gitignored)
+# Keep package.json files for npm workspace management
+!package.json
 !packages/npm/*/package.json
-!packages/browser-glue/package.json
 
 # Debug JS injection scripts (intermediate artifacts, embedded as Rust strings)
 packages/packager/src/debug/*.js

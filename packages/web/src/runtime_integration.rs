@@ -32,10 +32,18 @@ use crate::WitElement;
 /// ```
 #[cfg(feature = "wit-bindings")]
 pub fn init_runtime(root_element: WitElement) {
-    // Store the root element for patch application
     let root_ref: Rc<RefCell<WitElement>> = Rc::new(RefCell::new(root_element));
 
-    // Set up the schedule callback for requestAnimationFrame
+    #[cfg(target_family = "wasm")]
+    {
+        tairitsu_vdom::events::register_event_control_functions(
+            crate::wit_platform::prevent_event_default,
+            |handle| {
+                crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::event_target::stop_propagation(handle);
+            },
+        );
+    }
+
     tairitsu_vdom::runtime::set_schedule_callback({
         move |callback: Box<dyn FnOnce()>| {
             // Use the WIT bindings directly for requestAnimationFrame
@@ -63,21 +71,23 @@ pub fn init_runtime(root_element: WitElement) {
     // Set up the apply_patches callback
     tairitsu_vdom::runtime::set_apply_patches_callback({
         let root_ref_clone: Rc<RefCell<WitElement>> = Rc::clone(&root_ref);
-        move |_component_id: tairitsu_vdom::ComponentId, patches: Vec<Patch>| {
+        move |component_id: tairitsu_vdom::ComponentId, patches: Vec<Patch>| {
             let root = root_ref_clone.borrow();
             #[cfg(target_family = "wasm")]
             {
                 if let Ok(platform) = crate::WitPlatform::new() {
-                    if let Err(e) = platform.apply_patches(&root, &patches) {
-                        tracing::error!("Failed to apply patches: {:?}", e);
-                    }
+                    crate::wit_platform::wasm_impl::with_render_component(component_id, || {
+                        if let Err(e) = platform.apply_patches(&root, &patches) {
+                            tracing::error!("Failed to apply patches: {:?}", e);
+                        }
+                    });
                 } else {
                     tracing::error!("Failed to create platform for patch application");
                 }
             }
             #[cfg(not(target_family = "wasm"))]
             {
-                let _ = (root, patches);
+                let _ = (root, patches, component_id);
                 tracing::error!("apply_patches is only available on wasm32 targets");
             }
         }

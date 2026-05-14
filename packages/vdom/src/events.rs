@@ -4,65 +4,67 @@ pub trait EventData: Any {
     fn as_any(&self) -> &dyn Any;
 }
 
-/// Type alias for boxed event data, commonly used in event handlers.
-/// This provides a simpler type name for `Box<dyn EventData>`.
 pub type Event = Box<dyn EventData>;
 
-/// Handle to an event that can be used for prevent_default/stop_propagation.
-/// The handle is stored and passed to browser-glue via WIT bindings.
+type EventControlFn = fn(u64);
+
+static mut PREVENT_DEFAULT_FN: Option<EventControlFn> = None;
+static mut STOP_PROPAGATION_FN: Option<EventControlFn> = None;
+
+pub fn register_event_control_functions(
+    prevent_default: EventControlFn,
+    stop_propagation: EventControlFn,
+) {
+    unsafe {
+        PREVENT_DEFAULT_FN = Some(prevent_default);
+        STOP_PROPAGATION_FN = Some(stop_propagation);
+    }
+}
+
+fn call_prevent_default(handle: u64) {
+    unsafe {
+        if let Some(f) = PREVENT_DEFAULT_FN {
+            f(handle);
+        }
+    }
+}
+
+fn call_stop_propagation(handle: u64) {
+    unsafe {
+        if let Some(f) = STOP_PROPAGATION_FN {
+            f(handle);
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct EventWitHandle {
     handle: Option<u64>,
 }
 
 impl EventWitHandle {
-    /// Create a new event handle from a WIT handle.
     pub fn from_wit(handle: u64) -> Self {
         Self {
             handle: Some(handle),
         }
     }
 
-    /// Create a placeholder handle (for non-WIT builds).
     pub fn placeholder() -> Self {
         Self { handle: None }
     }
 
-    /// Call prevent_default on this event.
     pub fn prevent_default(&self) {
         if let Some(handle) = self.handle {
-            // This will be linked via WIT bindings in browser-glue
-            unsafe {
-                // The actual implementation is provided by browser-glue
-                // These are weak symbols that will be resolved at link time
-                unsafe extern "C" {
-                    fn tairitsu_prevent_default(event_handle: u64);
-                }
-                tairitsu_prevent_default(handle);
-            }
+            call_prevent_default(handle);
         }
     }
 
-    /// Call stop_propagation on this event.
     pub fn stop_propagation(&self) {
         if let Some(handle) = self.handle {
-            unsafe {
-                unsafe extern "C" {
-                    fn tairitsu_stop_propagation(event_handle: u64);
-                }
-                tairitsu_stop_propagation(handle);
-            }
+            call_stop_propagation(handle);
         }
     }
 }
-
-#[cfg(not(target_arch = "wasm32"))]
-#[unsafe(no_mangle)]
-pub extern "C" fn tairitsu_prevent_default(_event_handle: u64) {}
-
-#[cfg(not(target_arch = "wasm32"))]
-#[unsafe(no_mangle)]
-pub extern "C" fn tairitsu_stop_propagation(_event_handle: u64) {}
 
 impl Default for EventWitHandle {
     fn default() -> Self {
@@ -424,6 +426,8 @@ impl Default for InputEvent {
 #[derive(Debug, Clone)]
 pub struct ChangeEvent {
     pub value: String,
+    pub target: Option<u64>,
+    event_handle: EventWitHandle,
 }
 
 impl EventData for ChangeEvent {
@@ -436,6 +440,8 @@ impl ChangeEvent {
     pub fn new() -> Self {
         Self {
             value: String::new(),
+            target: None,
+            event_handle: EventWitHandle::placeholder(),
         }
     }
 
@@ -443,9 +449,53 @@ impl ChangeEvent {
         self.value = value.into();
         self
     }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
 }
 
 impl Default for ChangeEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub struct SubmitEvent {
+    pub target: Option<u64>,
+    pub form_data: Vec<(String, String)>,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for SubmitEvent {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl SubmitEvent {
+    pub fn new() -> Self {
+        Self {
+            target: None,
+            form_data: Vec::new(),
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for SubmitEvent {
     fn default() -> Self {
         Self::new()
     }
@@ -956,6 +1006,7 @@ pub type MouseData = MouseEvent;
 pub struct WheelEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    pub current_target: Option<u64>,
     /// Horizontal scroll amount (pixels)
     pub delta_x: f64,
     /// Vertical scroll amount (pixels)
@@ -993,6 +1044,7 @@ impl WheelEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             delta_x: 0.0,
             delta_y: 0.0,
             delta_z: 0.0,
@@ -1168,6 +1220,7 @@ impl Default for TouchPoint {
 pub struct TouchEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    pub current_target: Option<u64>,
     /// All active touch points
     pub touches: Vec<TouchPoint>,
     /// Touch points that have changed since the last event
@@ -1189,6 +1242,7 @@ impl TouchEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             touches: Vec::new(),
             changed_touches: Vec::new(),
             target_touches: Vec::new(),
@@ -1199,6 +1253,11 @@ impl TouchEvent {
 
     pub fn target(mut self, target: u64) -> Self {
         self.target = Some(target);
+        self
+    }
+
+    pub fn current_target(mut self, current_target: u64) -> Self {
+        self.current_target = Some(current_target);
         self
     }
 
@@ -1302,6 +1361,8 @@ impl std::str::FromStr for PointerType {
 pub struct PointerEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    /// The currentTarget — the element the listener is bound to.
+    pub current_target: Option<u64>,
     /// Unique pointer ID for this active pointer
     pub pointer_id: i32,
     /// Pointer type (mouse, pen, touch)
@@ -1367,6 +1428,7 @@ impl PointerEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             pointer_id: 0,
             pointer_type: PointerType::Mouse,
             is_primary: false,
@@ -1399,6 +1461,11 @@ impl PointerEvent {
 
     pub fn target(mut self, target: u64) -> Self {
         self.target = Some(target);
+        self
+    }
+
+    pub fn current_target(mut self, current_target: u64) -> Self {
+        self.current_target = Some(current_target);
         self
     }
 
@@ -1577,6 +1644,8 @@ impl Default for PointerEvent {
 pub struct TransitionEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    /// The currentTarget — the element the listener is bound to.
+    pub current_target: Option<u64>,
     /// The name of the CSS property that completed transitioning
     pub property_name: String,
     /// The number of seconds the transition took
@@ -1596,6 +1665,7 @@ impl TransitionEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             property_name: String::new(),
             elapsed_time: 0.0,
             pseudo_element: String::new(),
@@ -1605,6 +1675,11 @@ impl TransitionEvent {
 
     pub fn target(mut self, target: u64) -> Self {
         self.target = Some(target);
+        self
+    }
+
+    pub fn current_target(mut self, current_target: u64) -> Self {
+        self.current_target = Some(current_target);
         self
     }
 
@@ -1666,6 +1741,8 @@ impl Default for TransitionEvent {
 pub struct AnimationEvent {
     /// The target element handle that received this event.
     pub target: Option<u64>,
+    /// The currentTarget — the element the listener is bound to.
+    pub current_target: Option<u64>,
     /// The name of the animation
     pub animation_name: String,
     /// The name of the pseudo-element that was animating
@@ -1687,6 +1764,7 @@ impl AnimationEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             animation_name: String::new(),
             pseudo_element: String::new(),
             elapsed_time: 0.0,
@@ -1697,6 +1775,11 @@ impl AnimationEvent {
 
     pub fn target(mut self, target: u64) -> Self {
         self.target = Some(target);
+        self
+    }
+
+    pub fn current_target(mut self, current_target: u64) -> Self {
+        self.current_target = Some(current_target);
         self
     }
 

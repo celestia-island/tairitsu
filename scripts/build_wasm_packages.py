@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Rust crates as WASM components, optimize with wasm-opt, transpile with jco.
+"""Build Rust crates as WASM components (wasm32-wasip2) with wasm-opt optimization.
 
 Produces npm-ready packages under packages/npm/{crate-name}-wasm/
 
@@ -74,12 +74,13 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
         return False
 
     wasm_stem = crate_name.replace("-", "_")
-    pkg_dir = NPM_DIR / f"{crate_name}-wasm"
-    dist_dir = pkg_dir / "dist"
+    pkg_dir = NPM_DIR / "celestia-tairitsu-web-glue"
+    wasm_dir = pkg_dir / "dist" / "wasm"
+    dist_dir = wasm_dir
     dist_dir.mkdir(parents=True, exist_ok=True)
 
     # Step 1: cargo build --target wasm32-wasip2 --release
-    print(f"    [1/4] cargo build --target wasm32-wasip2 --release ...")
+    print(f"    [1/3] cargo build --target wasm32-wasip2 --release ...")
     result = subprocess.run(
         ["cargo", "build", "--target", "wasm32-wasip2", "--release", "--lib", "-p", crate_name],
         cwd=str(WORKSPACE_ROOT),
@@ -104,7 +105,7 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
         wasm_opt = find_tool("wasm-opt")
         if wasm_opt:
             optimized = dist_dir / f"{wasm_stem}.wasm"
-            print(f"    [2/4] wasm-opt -Oz ...")
+            print(f"    [2/3] wasm-opt -Oz ...")
             result = subprocess.run(
                 [wasm_opt, "-Oz", "-o", str(optimized), str(wasm_path)],
                 capture_output=True, text=True, encoding="utf-8", errors="replace",
@@ -119,65 +120,13 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
                 print(f"    wasm-opt failed, using unoptimized")
                 shutil.copy2(wasm_path, dist_dir / f"{wasm_stem}.wasm")
         else:
-            print(f"    [2/4] wasm-opt not found, skipping optimization")
+            print(f"    [2/3] wasm-opt not found, skipping optimization")
             shutil.copy2(wasm_path, dist_dir / f"{wasm_stem}.wasm")
     else:
         shutil.copy2(wasm_path, dist_dir / f"{wasm_stem}.wasm")
 
-    # Step 3: jco transpile
-    print(f"    [3/4] jco transpile ...")
-    jco = find_tool("jco", ["npx.cmd @bytecodealliance/jco", "npx @bytecodealliance/jco"])
-    wrapper_dir = dist_dir / "wrapper"
-    wrapper_dir.mkdir(exist_ok=True)
-
-    if jco:
-        jco_cmd = jco.split() if " " in jco else [jco]
-        result = subprocess.run(
-            jco_cmd + [
-                "transpile",
-                str(dist_dir / f"{wasm_stem}.wasm"),
-                "-o", str(wrapper_dir),
-            ],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            timeout=60,
-        )
-        if result.returncode == 0:
-            print(f"    jco transpile OK")
-        else:
-            print(f"    jco transpile failed: {result.stderr[-200:]}")
-
-    # Step 4: Generate package.json
-    print(f"    [4/4] Generating npm package ...")
-    pkg_json = {
-        "name": f"{SCOPE}/{crate_name}-wasm",
-        "version": VERSION,
-        "description": crate_info["description"],
-        "license": "MIT OR Apache-2.0",
-        "type": "module",
-        "main": f"./dist/wrapper/{wasm_stem}.js",
-        "files": [
-            f"dist/{wasm_stem}.wasm",
-            "dist/wrapper/**/*.js",
-            "dist/wrapper/**/*.d.ts",
-            "dist/wrapper/**/*.wasm",
-            "README.md",
-        ],
-        "repository": {
-            "type": "git",
-            "url": "https://github.com/celestia-org/tairitsu.git",
-            "directory": f"packages/npm/{crate_name}-wasm",
-        },
-        "publishConfig": {
-            "access": "public",
-            "registry": "https://registry.npmjs.org/",
-        },
-    }
-    (pkg_dir / "package.json").write_text(
-        json.dumps(pkg_json, indent=2) + "\n", encoding="utf-8"
-    )
-
     final_wasm = dist_dir / f"{wasm_stem}.wasm"
-    print(f"    DONE: {crate_name}-wasm ({final_wasm.stat().st_size:,} bytes)")
+    print(f"    DONE: {crate_name} ({final_wasm.stat().st_size:,} bytes)")
     return True
 
 

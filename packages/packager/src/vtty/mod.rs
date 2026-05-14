@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::{
-        Arc, Mutex,
         atomic::{AtomicU32, Ordering},
+        Arc, Mutex,
     },
 };
 

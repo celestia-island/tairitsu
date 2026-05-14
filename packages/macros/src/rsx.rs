@@ -1,8 +1,8 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
-    Expr, ExprLit, Ident, Lit, LitStr, Pat, Token,
     parse::{Parse, ParseStream},
+    Expr, ExprLit, Ident, Lit, LitStr, Pat, Token,
 };
 
 pub struct RsxElement {
@@ -411,9 +411,6 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
         return expand_custom_component(element);
     }
 
-    // HTML element handling
-    let mut class_code = quote! { tairitsu_vdom::Classes::new() };
-    let mut style_code = quote! { tairitsu_vdom::Style::new() };
     let mut event_handlers = Vec::new();
     let mut ref_attr = None;
     let mut other_attrs = Vec::new();
@@ -438,14 +435,16 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     for attr in element.attrs {
         match attr {
             RsxAttr::Class(expr) => {
-                class_code = interpolate_expr(expr);
+                let class_code = interpolate_expr(expr);
+                other_attrs.push(quote! { .apply_class(#class_code) });
             }
             RsxAttr::Style(expr) => {
-                style_code = interpolate_expr(expr);
+                let style_code = interpolate_expr(expr);
+                other_attrs.push(quote! { .apply_style(#style_code) });
             }
             RsxAttr::Id(expr) => {
                 let expr = interpolate_expr(expr);
-                other_attrs.push(quote! { .attr("id", #expr) });
+                other_attrs.push(quote! { .apply_attr("id", #expr) });
             }
             RsxAttr::Onclick(expr) => {
                 // For onclick, we need to downcast Box<dyn EventData> to MouseEvent
@@ -470,61 +469,62 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::Other { name, value } => {
                 // Only treat on_* as event handlers for known HTML elements
-                if is_known_html && let Some(event_name) = name.strip_prefix("on") {
-                    // Map event names to their types
-                    let event_type = match event_name {
-                        "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter"
-                        | "mouseleave" => {
-                            quote! { tairitsu_vdom::MouseEvent }
-                        }
-                        "keydown" | "keyup" | "keypress" => {
-                            quote! { tairitsu_vdom::KeyboardEvent }
-                        }
-                        "input" => {
-                            quote! { tairitsu_vdom::InputEvent }
-                        }
-                        "change" => {
-                            quote! { tairitsu_vdom::ChangeEvent }
-                        }
-                        "focus" | "blur" => {
-                            quote! { tairitsu_vdom::FocusEvent }
-                        }
-                        "dragstart" | "dragend" | "dragover" | "dragleave" | "drop" => {
-                            quote! { tairitsu_vdom::DragEvent }
-                        }
-                        "wheel" => {
-                            quote! { tairitsu_vdom::WheelEvent }
-                        }
-                        "touchstart" | "touchmove" | "touchend" | "touchcancel" => {
-                            quote! { tairitsu_vdom::TouchEvent }
-                        }
-                        "pointerdown" | "pointerup" | "pointermove" | "pointercancel"
-                        | "pointerout" | "pointerleave" | "pointerover" | "pointerenter"
-                        | "gotpointercapture" | "lostpointercapture" => {
-                            quote! { tairitsu_vdom::PointerEvent }
-                        }
-                        "transitionend" => {
-                            quote! { tairitsu_vdom::TransitionEvent }
-                        }
-                        "animationstart" | "animationend" | "animationiteration" => {
-                            quote! { tairitsu_vdom::AnimationEvent }
-                        }
-                        _ => {
-                            // For unknown events, just pass the boxed event
-                            event_handlers.push(quote! {
-                                .on_event(#event_name, {
-                                    let handler = #value;
-                                    move |e| {
-                                        handler(e);
-                                    }
-                                })
-                            });
-                            continue;
-                        }
-                    };
-                    // Capture handler in a binding
-                    // The handler is expected to be a closure that takes the event type
-                    event_handlers.push(quote! {
+                if is_known_html {
+                    if let Some(event_name) = name.strip_prefix("on") {
+                        // Map event names to their types
+                        let event_type = match event_name {
+                            "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter"
+                            | "mouseleave" => {
+                                quote! { tairitsu_vdom::MouseEvent }
+                            }
+                            "keydown" | "keyup" | "keypress" => {
+                                quote! { tairitsu_vdom::KeyboardEvent }
+                            }
+                            "input" => {
+                                quote! { tairitsu_vdom::InputEvent }
+                            }
+                            "change" => {
+                                quote! { tairitsu_vdom::ChangeEvent }
+                            }
+                            "focus" | "blur" => {
+                                quote! { tairitsu_vdom::FocusEvent }
+                            }
+                            "dragstart" | "dragend" | "dragover" | "dragleave" | "drop" => {
+                                quote! { tairitsu_vdom::DragEvent }
+                            }
+                            "wheel" => {
+                                quote! { tairitsu_vdom::WheelEvent }
+                            }
+                            "touchstart" | "touchmove" | "touchend" | "touchcancel" => {
+                                quote! { tairitsu_vdom::TouchEvent }
+                            }
+                            "pointerdown" | "pointerup" | "pointermove" | "pointercancel"
+                            | "pointerout" | "pointerleave" | "pointerover" | "pointerenter"
+                            | "gotpointercapture" | "lostpointercapture" => {
+                                quote! { tairitsu_vdom::PointerEvent }
+                            }
+                            "transitionend" => {
+                                quote! { tairitsu_vdom::TransitionEvent }
+                            }
+                            "animationstart" | "animationend" | "animationiteration" => {
+                                quote! { tairitsu_vdom::AnimationEvent }
+                            }
+                            _ => {
+                                // For unknown events, just pass the boxed event
+                                event_handlers.push(quote! {
+                                    .on_event(#event_name, {
+                                        let handler = #value;
+                                        move |e| {
+                                            handler(e);
+                                        }
+                                    })
+                                });
+                                continue;
+                            }
+                        };
+                        // Capture handler in a binding
+                        // The handler is expected to be a closure that takes the event type
+                        event_handlers.push(quote! {
                             .on_event(#event_name, {
                                 let handler = #value;
                                 move |e: Box<dyn tairitsu_vdom::EventData>| {
@@ -534,7 +534,8 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                                 }
                             })
                         });
-                    continue;
+                        continue;
+                    }
                 }
 
                 // For custom components or non-event attributes, pass as regular attribute
@@ -543,7 +544,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                     // Special handling for children - add as child, not attribute
                     children_code.push(quote! { .child(#value) });
                 } else {
-                    other_attrs.push(quote! { .attr(#name, #value) });
+                    other_attrs.push(quote! { .apply_attr(#name, #value) });
                 }
             }
         }
@@ -563,8 +564,6 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     quote! {
         tairitsu_vdom::VNode::Element(
             tairitsu_vdom::VElement::new(#tag_str)
-                .class(#class_code)
-                .style(#style_code)
                 #ref_code
                 #(#other_attrs)*
                 #(#event_handlers)*
@@ -656,7 +655,9 @@ fn expand_child(child: RsxChild) -> TokenStream2 {
             quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value)) }
         }
         RsxChild::Element(elem) => expand_rsx(elem),
-        RsxChild::Dynamic(expr) => quote! { #expr },
+        RsxChild::Dynamic(expr) => {
+            quote! { tairitsu_vdom::IntoVNodeChild::into_vnode_child(#expr) }
+        }
         RsxChild::Spread(expr) => quote! { tairitsu_vdom::VNode::Fragment(#expr) },
         RsxChild::If(rsx_if) => expand_rsx_if(rsx_if),
         RsxChild::Match(rsx_match) => expand_rsx_match(rsx_match),
@@ -747,7 +748,7 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
                 let inner = &text_value[1..text_value.len() - 1];
                 // Parse the inner as an expression
                 if let Ok(expr) = syn::parse_str::<Expr>(inner) {
-                    return quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(&format!("{}", #expr)))) };
+                    return quote! { .child(tairitsu_vdom::IntoVNodeChild::into_vnode_child(#expr)) };
                 }
             }
             quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value))) }
@@ -756,7 +757,9 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
             let expanded = expand_rsx(elem);
             quote! { .child(#expanded) }
         }
-        RsxChild::Dynamic(expr) => quote! { .child(#expr) },
+        RsxChild::Dynamic(expr) => {
+            quote! { .child(tairitsu_vdom::IntoVNodeChild::into_vnode_child(#expr)) }
+        }
         RsxChild::Spread(expr) => quote! { .children(#expr) },
         RsxChild::If(rsx_if) => {
             let expanded = expand_rsx_if(rsx_if);

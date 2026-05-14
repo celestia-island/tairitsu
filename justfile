@@ -38,14 +38,14 @@ default:
 # Install required Rust toolchain components
 install-tools:
     rustup target add wasm32-wasip2
-    rustup component add rustfmt --toolchain nightly
+    rustup component add rustfmt
     rustup component add clippy
     {{python}} scripts/download_wasi_adapters.py
 
 # Build browser-glue runtime bundle (IIFE for HTML <script> tag)
 build-glue-runtime:
-    mkdir -p packages/browser-glue/dist
-    npx esbuild packages/browser-glue/src/runtime/index.ts --bundle --outfile=packages/browser-glue/dist/runtime.js --format=iife --platform=browser
+    mkdir -p packages/npm/celestia-tairitsu-web-glue/dist
+    npx esbuild packages/npm/celestia-tairitsu-web-glue/src/runtime/index.ts --bundle --outfile=packages/npm/celestia-tairitsu-web-glue/dist/runtime.js --format=iife --platform=browser
 
 # Install tairitsu-packager CLI binary (tairitsu) + tairitsu-mcp
 install-packager: (build-glue-runtime)
@@ -60,7 +60,7 @@ setup: install-tools init
 # JS / Node dependency initialization
 # ============================================================================
 
-# Install Node.js dependencies for packages/browser-glue (auto-detects pnpm/yarn/npm)
+# Install Node.js dependencies for packages/npm/celestia-tairitsu-web-glue (auto-detects pnpm/yarn/npm)
 init:
     {{python}} scripts/init_browser_glue.py
 
@@ -79,25 +79,6 @@ clean-idl-cache:
     rm -rf target/tairitsu-wit/webidl-cache
 
 # ============================================================================
-# W3C WebIDL → WIT generation (legacy aliases → unified pipeline below)
-# ============================================================================
-
-# [Deprecated] Use wit-gen instead
-gen-wit-fetch:
-    @just wit-fetch-idl
-
-# [Deprecated] Use wit-fetch-force instead
-gen-wit-fetch-force:
-    @just wit-fetch-force
-
-# [Deprecated] Use wit-gen-wit instead
-gen-wit:
-    @just wit-gen-wit
-
-# [Deprecated] Use wit-gen instead
-gen-wit-all:
-    @just wit-gen
-
 # ============================================================================
 # Build tasks
 # ============================================================================
@@ -281,12 +262,12 @@ clippy:
 # Run formatting check
 fmt-check:
     @echo "Checking code formatting..."
-    cargo +nightly fmt --all -- --check --unstable-features
+    cargo fmt --all -- --check
 
 # Format all code
 fmt:
     @echo "Formatting all code..."
-    cargo +nightly fmt --all -- --unstable-features
+    cargo fmt --all
 
 # CI checks (format check + test)
 ci: fmt-check test
@@ -372,7 +353,7 @@ wit-stats:
 
 # Generate TypeScript glue code from WIT files
 # Reads:  packages/browser-worlds/wit/generated/*.wit
-# Writes: packages/browser-glue/src/generated/*-glue.ts
+# Writes: packages/npm/celestia-tairitsu-web-glue/src/generated/*-glue.ts
 glue-gen:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "TypeScript Glue generation (WIT → TypeScript)"
@@ -395,7 +376,7 @@ wit-full: wit-gen glue-gen
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "✅ Full WIT → TypeScript Glue pipeline complete!"
     @echo "   Generated WIT: packages/browser-worlds/wit/generated/"
-    @echo "   Generated Glue: packages/browser-glue/src/generated/"
+    @echo "   Generated Glue: packages/npm/celestia-tairitsu-web-glue/src/generated/"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Show all W3C data sources used by the pipeline
@@ -464,7 +445,7 @@ doc-open: doc
 
 # Generate and build all per-domain npm glue packages
 npm-build-glue:
-    @echo "Generating per-domain glue packages..."
+    @echo "Generating unified browser-glue package..."
     {{python}} scripts/build_npm_glue_packages.py
 
 # Build Rust crates into optimized wasm component npm packages
@@ -478,12 +459,12 @@ npm-list-wasm:
 
 # Build all npm packages (glue + runtime + wasm)
 npm-build-all: npm-build-glue
-    cd packages/npm/runtime && npm run build
-    cd packages/npm/glue-core && npm run build
+    cd packages/npm/celestia-tairitsu-web-glue && npm run build
+    cd packages/npm/celestia-tairitsu-web-glue && npm run build
     {{python}} scripts/build_wasm_packages.py
 
 # Publish all npm packages to @celestia scope (requires NPM_TOKEN env var)
-publish: (publish-pkg "packages/browser-glue") (publish-pkg "packages/npm/runtime")
+publish: (publish-pkg "packages/npm/celestia-tairitsu-web-glue") (publish-pkg "packages/npm/celestia-tairitsu-web-glue")
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "All npm packages published!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -500,9 +481,9 @@ publish-live:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @if [ -z "$NPM_TOKEN" ]; then echo "Error: NPM_TOKEN environment variable is not set."; exit 1; fi
     npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
-    cd packages/npm/runtime && npm run build && npm publish --access public
-    cd packages/npm/glue-core && npm run build && npm publish --access public
-    cd packages/browser-glue && npm run build:production && npm publish --access public
+    cd packages/npm/celestia-tairitsu-web-glue && npm run build && npm publish --access public
+    cd packages/npm/celestia-tairitsu-web-glue && npm run build && npm publish --access public
+    cd packages/npm/celestia-tairitsu-web-glue && npm run build:production && npm publish --access public
     @for dir in packages/npm/glue-*/; do cd "$$dir" && npm publish --access public && cd -; done
     @for dir in packages/npm/*-wasm/; do cd "$$dir" && npm publish --access public && cd -; done
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -511,8 +492,8 @@ publish-live:
 
 # Build all npm packages locally
 npm-build:
-    npm run build -w @celestia/tairitsu-browser-glue || (cd packages/browser-glue && npm run build)
-    npm run build -w @celestia/tairitsu-runtime || (cd packages/npm/runtime && npm run build)
+    npm run build -w @celestia/tairitsu-browser-glue || (cd packages/npm/celestia-tairitsu-web-glue && npm run build)
+    npm run build -w @celestia/tairitsu-runtime || (cd packages/npm/celestia-tairitsu-web-glue && npm run build)
 
 # Build CDN demo with esm.sh CDN URLs (for production deployment)
 cdn-demo-prod:
@@ -559,7 +540,7 @@ info:
     @echo "  - packages/browser-wit-resolver:  WIT package resolution + cache"
     @echo "  - packages/browser-worlds:        WIT world definitions (0.1.x hand-written,"
     @echo "                                    0.2.x generated from W3C WebIDL)"
-    @echo "  - packages/browser-glue:          TypeScript/SWC browser API glue"
+    @echo "  - packages/npm/celestia-tairitsu-web-glue:          TypeScript/SWC browser API glue"
     @echo ""
     @echo "Visual regression:"
     @echo "  just visual-capture - Capture screenshots via debug API"

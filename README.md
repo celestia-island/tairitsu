@@ -1,638 +1,148 @@
-<div align="center"><img src="./docs/logo_x256.png" width="120" /></div>
-<h1 align="center">Tairitsu</h1>
-<div align="center">
- <strong>
-   Generic WASM Component Runtime Engine
- </strong>
-</div>
+# Tairitsu
 
-<br />
+**Full-stack framework powered by the WASM Component Model.** Write components once, run them anywhere — server, browser, edge. All communication typed via WIT.
 
-<div align="center">
-  <!-- CI status -->
-  <a href="https://github.com/celestia-island/tairitsu/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/celestia-island/tairitsu/test.yml?branch=main"
-      alt="CI Status" />
-  </a>
-  <!-- Built with -->
-  <a href="https://github.com/casey/just">
-    <img src="https://img.shields.io/badge/built%20with-just-blue" alt="Built with just">
-  </a>
-</div>
+---
 
-<div align="center">
-  <h3>
-    <a href="https://celestia.world">
-      Website
-    </a>
-    <span> | </span>
-    <a href="#quick-start">
-      Quick Start
-    </a>
-  </h3>
-</div>
+## Why Tairitsu?
 
-<br/>
+Tairitsu unifies two worlds that are typically separate:
 
-A WebAssembly runtime for running component-model based WASM modules.
+| Traditional stack | Tairitsu |
+|:--|:--|
+| Backend: Node/Go/Rust server | Container runtime (native wasmtime) |
+| Frontend: React/Vue/Svelte | VDOM + hooks — compiled to `wasm32-wasip2` |
+| Protocol: REST/GraphQL/JSON | WIT interfaces: typed at compile time, zero serialization |
+| Build: Webpack/Vite/Trunk | `tairitsu dev` / `tairitsu build` — one tool for both targets |
+| Deploy: Docker + CDN | `tairitsu deploy` — push to Registry, serve anywhere |
 
-## Features
+**The same WASM component** talks to a server database, renders HTML via SSR, and handles browser DOM events — all through a single WIT interface definition.
 
-- 🐳 **Docker-like Architecture**: Image/Container model for managing WASM modules
-- 🔄 **Generic Runtime**: Does not prescribe any specific WIT interface - users define their own
-- 🎯 **Flexible**: Builder pattern for custom WIT bindings and host state
-- 🔌 **WIT-based**: Type-safe communication via WebAssembly Interface Types
-- 🦀 **Pure Rust**: Built on Wasmtime with the Component Model
-- 📦 **Macros**: Helper macros to reduce boilerplate
-- 🚀 **Dynamic Invocation**: Runtime WASM function calls with RON and binary canonical ABI
-- 🔤 **RON Support**: Rust-friendly serialization for better type compatibility
-- ⚡ **Dual Calling Paths**: RON (convenient) + Binary (high-performance) for dynamic invocation
-- 🔒 **Safe SVG**: XSS-protected SVG embedding with compile-time sanitization
-- 🎨 **Resource Indexing**: Build-time discovery and hashing of SCSS/SVG resources
+---
 
-## Safe SVG & Resources
+## Three Faces of Tairitsu
 
-Tairitsu provides safe SVG embedding with XSS protection and build-time resource indexing:
-
-### Safe SVG Usage
-
-```rust
-use tairitsu::SafeSvg;
-use tairitsu_macros::{svg, scss};
-
-// Safe SVG from static content
-let icon = SafeSvg::from_static(r#"<path d="M12 2L2 22h20L12 2z"/>"#);
-
-// Safe SVG from file (compile-time)
-let icon = svg! { file: "icons/sun.svg" };
-
-// Safe SVG by resource ID
-let icon = svg! { id: "sun" };
-
-// Use with VElement
-rsx! {
-    svg {
-        viewBox: "0 0 24 24",
-        safe_svg: icon,
-    }
-}
+```
+┌──────────────────────────────────────────────────────────┐
+│                                                          │
+│  📦 tairitsu-core    Server runtime                      │
+│     Container / Registry / WIT bindings / Dynamic calls  │
+│      docker-like WASM lifecycle                        │
+│                                                          │
+│  🎨 tairitsu-web     Client framework + SSR              │
+│     VDOM / hooks / rsx! / scss! / Suspense / i18n        │
+│      React-like, compiled to wasm32-wasip2             │
+│                                                          │
+│  🔧 tairitsu-cli     Build / dev / deploy toolchain       │
+│     Dev server / HMR / visual diff / MCP / VTty           │
+│      Vite-like, but understands WIT                    │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
 ```
 
-### SCSS with Class Hashing
-
-```rust
-// Inline SCSS with automatic class hashing
-let (css, class_map) = scss! {
-    .button {
-        background: var(--primary);
-        color: white;
-    }
-};
-
-// From file with scope isolation
-let (css, class_map) = scss! { file: "styles/main.scss", scope: "MyComponent" };
-
-// Use hashed class names
-let button_class = class_map.get("button").unwrap();
-```
-
-### Security
-
-SVG sanitization removes:
-
-- `<script>` tags
-- Event handlers (onclick, onload, onerror, etc.)
-- External references (xlink:href to external URLs)
-- JavaScript URLs (javascript:...)
-- Data URLs with executable content
-
-### CLI Commands
-
-```bash
-# Index resources
-tairitsu resources index
-
-# List indexed resources
-tairitsu resources list
-```
+---
 
 ## Quick Start
 
-This project uses [just](https://github.com/casey/just) as a build system.
-
-## Documentation
-
-- Simplified Chinese baseline: [docs/zhs/guides/index.md](docs/zhs/guides/index.md)
-- English baseline: [docs/en/guides/index.md](docs/en/guides/index.md)
-
-### Run Examples
-
-Tairitsu provides several examples demonstrating different approaches to WASM integration. Run them using `just`:
-
 ```bash
-# Run comprehensive tests
-just test
+# Install the CLI
+cargo install tairitsu-packager
+
+# Create a project
+tairitsu new my-app
+cd my-app
+
+# Start dev server (hot reload, browser VDOM)
+tairitsu dev
+
+# Build for production
+tairitsu build
 ```
 
-For all available commands and their descriptions, see the [justfile](justfile).
+Open `http://localhost:3000`.
 
-## Examples Overview
+---
 
-### 1. **wit-native-macro** - Macro-Assisted WIT Interface (Recommended)
-
-The easiest way to define WIT interfaces using procedural macros:
-
-**Features:**
-
-- Zero boilerplate - automatic enum generation from WIT-like syntax
-- Compile-time type safety with full IDE support
-- No runtime serialization overhead
-- Simple and intuitive API
+## A Component in 30 Seconds
 
 ```rust
-wit_interface! {
-    interface filesystem {
-        read: func(path: String) -> Result<Vec<u8>, String>;
-        write: func(path: String, data: Vec<u8>) -> Result<(), String>;
-        delete: func(path: String) -> Result<(), String>;
-        list: func(directory: String) -> Result<Vec<String>, String>;
+use tairitsu_macros::{component, rsx};
+use tairitsu_vdom::{VNode, Signal};
+
+#[component]
+fn Counter(initial: i32) -> VNode {
+    let count = Signal::new(initial);
+
+    rsx! {
+        div {
+            button {
+                onclick: move |_| count.set(count.get() + 1),
+                "Clicked: "
+                ..txt(&count.get().to_string())
+            }
+        }
     }
 }
 ```
 
-### 2. **wit-native-simple** - Trait-Based WIT Interface
+Same component, two execution paths:
+- **Browser**: `tairitsu dev` — renders with real DOM, handles click events
+- **Server**: `tairitsu serve` — renders to HTML string via SSR
 
-Manual trait implementation for maximum flexibility:
-
-**Features:**
-
-- Full control over interface definitions
-- Composable interfaces via traits
-- Zero-cost abstractions
-- Interface extension support
-
-### 3. **wit-dynamic-advanced** - Dynamic WASM Component Invocation
-
-Advanced dynamic invocation with actual WASM Components:
-
-**Features:**
-
-- 🚀 Runtime guest export calls (RON + Binary)
-- 📥 Host import registration and invocation
-- 🔍 Runtime function discovery
-- 🔤 RON serialization for Rust-friendly types
-- ⚡ Binary canonical ABI for high performance
-- ✅ Full support for basic and complex nested types
-
-### 4. **wit-compile-time** - Compile-Time WIT Binding
-
-Static WIT binding with wasmtime bindgen:
-
-**Features:**
-
-- Complete compile-time type checking
-- Zero runtime overhead
-- Best performance
-- IDE autocomplete support
-
-### 5. **wit-runtime** - Runtime WIT Loading
-
-Dynamic WIT definition loading:
-
-**Features:**
-
-- Runtime WIT discovery
-- Interface validation
-- Plugin system support
-- Capability negotiation
-
-See [examples/README.md](examples/README.md) for detailed documentation of each example.
-
-### Choosing the Right Approach
-
-| Approach | Type Safety | Performance | Flexibility | Best For |
-| :--- | :--- | :--- | :--- | :--- |
-| **Macro** | Full | Best | Medium | Most use cases |
-| **Trait** | Full | Best | High | Complex interfaces |
-| **Dynamic RON/WASM** | Runtime | Best (Binary) | Highest | Plugin systems, hot-reload |
-| **Compile-time** | Full | Best | Low | Fixed interfaces |
-| **Runtime** | Partial | Good | High | Plugin systems |
-
-### Basic Usage
-
-```rust,no_run
-use tairitsu::{Container, Image, HostState};
-use bytes::Bytes;
-
-// 1. Create a WASM image
-let wasm_binary = std::fs::read("component.wasm")?;
-let image = Image::new(Bytes::from(wasm_binary))?;
-
-// 2. Create container with your WIT bindings
-let container = Container::builder(image)?
-    .with_guest_initializer(|ctx| {
-        // Register your WIT interface (generated by wit-bindgen)
-        MyWit::add_to_linker(ctx.linker, |state| &mut state.my_data)?;
-
-        // Instantiate the component
-        let instance = MyWit::instantiate(
-            ctx.store,
-            ctx.component,
-            ctx.linker
-        )?;
-
-        Ok(GuestInstance::new(instance))
-    })?
-    .build()?;
-
-// 3. Use the container to call into WASM
-let guest = container.guest().downcast_ref::<MyWit>()?;
-let result = guest.my_function(ctx.store)?;
-```
+---
 
 ## Architecture
 
-Tairitsu is a **generic WASM runtime engine** - it does not prescribe any specific WIT interface:
-
-```mermaid
-graph TB
-    subgraph Registry["Registry"]
-        direction LR
-        Image1["Image"]
-        Image2["Image"]
-        Image3["Image"]
-    end
-
-    subgraph Containers["Containers"]
-        Container1["Container"]
-        Container2["Container"]
-    end
-
-    subgraph Container1["Container"]
-        direction TB
-        Guest["Guest (WASM)"]
-        Host["Host"]
-        Guest <-->|"User Defined<br/>Communication"| Host
-    end
-
-    Registry --> Containers
-    Image1 -.->|"Compiled WASM components"| Container1
-    Image2 -.->|"Compiled WASM components"| Container1
-    Image3 -.->|"Compiled WASM components"| Container2
-
-    style Registry fill:#e1f5ff
-    style Containers fill:#fff4e1
-    style Container1 fill:#f0e1ff
-    style Container2 fill:#f0e1ff
-    style Guest fill:#e1ffe1
-    style Host fill:#ffe1f0
+```
+┌──────────────┐    WIT interface     ┌──────────────┐
+│  Host (Rust)  │◀══════════════════▶│ Guest (WASM)  │
+│               │                     │               │
+│  Container    │    typed calls      │  Component    │
+│  Registry     │    zero-ser         │  VDOM tree    │
+│  Platform     │                     │  Event logic  │
+└──────────────┘                     └──────────────┘
 ```
 
-### Core Concepts
-
-- **Registry**: Manages WASM images and running containers (like Docker daemon)
-- **Image**: A compiled WASM component that can be instantiated (like Docker image)
-- **Container**: A running instance with user-defined WIT bindings
-- **WIT Bindings**: Users define their own WIT interfaces using `wit-bindgen`
-
-### Defining Your WIT Interface
-
-1. Create a `.wit` file:
-
-```wit
-interface my-app {
-    greet: func(name: string) -> string;
-    compute: func(input: string) -> string;
-}
-```
-
-1. Generate bindings with `wit-bindgen`:
-
-```bash
-wit-bindgen rust --world my-app
-```
-
-1. Use the generated bindings with Tairitsu:
-
-```rust
-use tairitsu::Container;
-
-let container = Container::builder(image)?
-    .with_guest_initializer(|ctx| {
-        // Use the generated bindings
-        MyApp::add_to_linker(ctx.linker, |state| &mut state.data)?;
-        let instance = MyApp::instantiate(ctx.store, ctx.component, ctx.linker)?;
-        Ok(GuestInstance::new(instance))
-    })?
-    .build()?;
-```
-
-## Helper Macros
-
-Tairitsu provides macros to reduce boilerplate:
-
-### `impl_wit_interface!`
-
-Quickly implement the `WitInterface` trait:
-
-```rust
-impl_wit_interface!(MyInterface, "my-interface",
-    fn register_handlers(&self, dispatcher: &mut WitCommandDispatcher) {
-        dispatcher.register("my-command", Box::new(my_handler));
-    }
-);
-```
-
-### `simple_handler!`
-
-Create stateless handlers:
-
-```rust
-let handler = simple_handler!(MyCommand, |cmd| {
-    match cmd {
-        MyCommand::Foo => Ok(()),
-    }
-});
-```
-
-### `stateful_handler!`
-
-Create handlers with state:
-
-```rust
-let handler = stateful_handler!(MyState, MyCommand, |state, cmd| {
-    state.counter += 1;
-    Ok(state.counter)
-});
-```
-
-## Advanced Usage
-
-### Type-Safe Commands with Zero Serialization
-
-The native approaches (`wit-native-*`) provide compile-time type safety without runtime serialization overhead:
-
-```rust
-use tairitsu::{WitCommand, WitCommandHandler, WitCommandDispatcher};
-
-// Define your command types
-#[derive(Debug, Clone)]
-pub enum MyCommands {
-    Process { input: String },
-    Query { id: u32 },
-}
-
-impl WitCommand for MyCommands {
-    type Response = Result<String, String>;
-
-    fn command_name(&self) -> &'static str {
-        match self {
-            Self::Process { .. } => "process",
-            Self::Query { .. } => "query",
-        }
-    }
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-}
-
-// Implement handler
-struct MyHandler;
-
-impl WitCommandHandler<MyCommands> for MyHandler {
-    fn execute(
-        &mut self,
-        command: &MyCommands,
-    ) -> Result<MyCommands::Response, String> {
-        match command {
-            MyCommands::Process { input } => {
-                Ok(Ok(format!("Processed: {}", input)))
-            }
-            MyCommands::Query { id } => {
-                Ok(Ok(format!("Query result for {}", id)))
-            }
-        }
-    }
-}
-```
-
-### Dynamic RON Invocation
-
-For scenarios requiring both Rust-friendly types and high performance:
-
-```rust
-use tairitsu::{ron::{typed_ron_tool, RonToolRegistry}, Container, Image};
-
-// RON provides Rust-native type support
-#[derive(Deserialize, Serialize)]
-struct CalculatorRequest {
-    a: i32,
-    b: i32,
-}
-
-#[derive(Deserialize, Serialize)]
-struct CalculatorResponse {
-    result: i32,
-}
-
-// Create a type-safe tool with RON
-let tool = typed_ron_tool("calculator", |input: CalculatorRequest| -> CalculatorResponse {
-    CalculatorResponse {
-        result: input.a + input.b,
-    }
-});
-
-// Register and invoke with RON syntax
-let mut registry = RonToolRegistry::new();
-registry.register("calculator".to_string(), tool);
-
-// RON uses Rust-like syntax
-let result = registry.invoke("calculator", "(a: 42, b: 58)")?;
-
-// For WASM Components, use the dynamic invocation API
-let mut container = Container::builder(image)?
-    .with_guest_initializer(|ctx| {
-        // ... setup WIT bindings
-        Ok(GuestInstance::new(instance))
-    })?
-    .build()?;
-
-// RON path - convenient and readable
-let result = container.call_guest_raw_desc(
-    "add",
-    r#"(a: 42, b: 58)"#
-)?;
-
-// Binary path - high performance
-use wasmtime::component::Val;
-let args = vec![Val::S32(42), Val::S32(58)];
-let results = container.call_guest_binary("add", &args)?;
-```
-
-**RON Type Support:**
-
-| Type | RON Syntax | Description |
-| ---- | ---------- | ----------- |
-| **Struct** | `Struct { field: value }` | Named fields |
-| **Tuple** | `(value1, value2)` | Ordered values |
-| **Enum** | `Variant(value)` | Enum with payload |
-| **Option** | `Some(value)` / `None` | Optional values |
-| **Result** | `Ok(value)` / `Err(error)` | Fallible operations |
-| **List** | `[item1, item2]` | Homogeneous arrays |
-| **Unit** | `()` | Empty tuple |
-
-### Composable Interfaces
-
-Use trait objects to compose multiple WIT interfaces:
-
-```rust
-use tairitsu::{CompositeWitInterface, WitInterface};
-
-struct FileSystemInterface;
-impl WitInterface for FileSystemInterface {
-    fn interface_name(&self) -> &'static str {
-        "filesystem"
-    }
-
-    fn register_handlers(&self, dispatcher: &mut WitCommandDispatcher) {
-        // Register handlers
-    }
-}
-
-struct NetworkInterface;
-impl WitInterface for NetworkInterface {
-    fn interface_name(&self) -> &'static str {
-        "network"
-    }
-
-    fn register_handlers(&self, dispatcher: &mut WitCommandDispatcher) {
-        // Register handlers
-    }
-}
-
-// Compose multiple interfaces
-let mut composite = CompositeWitInterface::new();
-composite.add_interface(Box::new(FileSystemInterface));
-composite.add_interface(Box::new(NetworkInterface));
-
-// Register all at once
-let mut dispatcher = WitCommandDispatcher::new();
-composite.register_all(&mut dispatcher);
-```
-
-## Design Philosophy
-
-Tairitsu is designed to be a **pure engine** - it provides:
-
-- ✅ Generic WASM container runtime
-- ✅ Image/Registry management
-- ✅ Builder pattern for WIT bindings
-- ✅ Helper macros to reduce boilerplate
-
-It does **not** prescribe:
-
-- ❌ Specific WIT interfaces (you define your own)
-- ❌ Command types (you define your own)
-- ❌ Serialization format (use WIT)
-
-This makes Tairitsu suitable for **any** WASM component-based application.
-
-## Architecture Trade-offs
-
-### Native vs Dynamic Approaches
-
-**Native (Trait-based)** - Use when:
-
-- You control both host and guest code
-- Performance is critical
-- Type safety is a priority
-- Building a closed system
-
-**Dynamic RON/WASM** - Use when:
-
-- Plugin systems with hot-reload required
-- Performance-critical dynamic calls needed
-- Rust-friendly serialization preferred
-- Full bidirectional guest-host communication
-
-**Choosing Between RON and Binary Paths:**
-
-| Path | Type Safety | Performance | Use Case |
-| ---- | ----------- | ----------- | -------- |
-| **RON** | Runtime | Good | Convenient, debugging, cross-language |
-| **Binary** | Runtime | Best | Hot loops, frequent calls, zero-copy |
-| **Static** | Compile-time | Best | Known interfaces, maximum type safety |
-
-### When to Use Each Approach
-
-#### Macro Approach (`wit-native-macro`)
-
-- ✅ Quick development with minimal boilerplate
-- ✅ Best for most applications
-- ✅ Easy to maintain and refactor
-- ❌ Less control than manual trait implementation
-
-#### Manual Trait Approach (`wit-native-simple`)
-
-- ✅ Maximum flexibility and control
-- ✅ Best for complex interface hierarchies
-- ✅ Can optimize for specific use cases
-- ❌ More boilerplate to maintain
-
-#### Dynamic RON/WASM Approach (`wit-dynamic-advanced`)
-
-- ✅ Ideal for plugin systems with hot-reload
-- ✅ Supports actual WASM Component execution
-- ✅ RON for Rust-friendly serialization
-- ✅ Binary path for high-performance calls
-- ✅ Bidirectional guest-host communication
-- ❌ More complex than static approaches
-- ❌ Requires WASM Components (not just tools)
-
-## Best Practices
-
-1. **Start with the macro approach** - It's the easiest way to get started
-2. **Use traits for composition** - Combine multiple interfaces using `CompositeWitInterface`
-3. **Prefer native approaches** - Use static API for known interfaces
-4. **Use RON for dynamic calls** - Rust-friendly types with runtime flexibility
-5. **Use binary path for hot loops** - When performance is critical
-6. **Define clear interfaces** - Well-designed WIT interfaces make your system more maintainable
-7. **Test in isolation** - Test handlers independently before integrating with WASM
-
-## What's New in 0.4.5
-
-- 🚀 **Dynamic WASM Component Invocation**
-  - Runtime guest export calls with `call_guest_raw_desc()` (RON)
-  - High-performance binary calls with `call_guest_binary()`
-  - Host import registration and invocation
-  - Runtime function discovery
-
-- 🔤 **RON Serialization Support**
-  - `RonBinding` and `RonToolRegistry` for Rust-friendly types
-  - Native Rust enum, tuple, option, and result support
-  - `typed_ron_tool!` macro for type-safe tools
-
-- ⚡ **Dual Calling Paths**
-  - RON path: Convenient, human-readable serialization
-  - Binary path: Zero-copy, canonical ABI performance
-
-- ✅ **Complete Type Support**
-  - All basic types (Bool, Integers, Floats, String, Char)
-  - Complex types (List, Tuple, Record, Variant, Result, Option)
-  - Full nested type support (e.g., `List<List<T>>`, `Option<Result<T, E>>`)
-
-- 📦 **New Example**: `wit-dynamic-advanced` showcasing all new features
-
-See [examples/README.md](examples/README.md) for migration guide and detailed examples.
-
-## What is Tairitsu?
-
-**Tairitsu** (対立) carries a dual meaning:
-
-1. **From Arcaea**: Named after the character Tairitsu from the rhythm game Arcaea, representing the "Conflict" side
-2. **Opposition & Duality**: Reflects the architectural concept of this framework - the inherent duality and opposition between the WASM virtual machine (guest) and the host environment, connected through WIT (WebAssembly Interface Types)
+---
+
+## Features
+
+- **WIT-native**: No wasm-bindgen. Full Component Model with type-safe interface definitions
+- **Docker-like runtime**: Image → Container → Registry lifecycle for WASM components
+- **VDOM + hooks**: React-like DX with `rsx!` macro, signals, effects, suspense
+- **Compile-time CSS**: `scss!` macro with class hashing (CSS Modules) and source maps
+- **Safe SVG**: `svg!` macro with XSS sanitization at compile time
+- **SSR + streaming**: Server-side rendering with HMR, fast refresh, error overlay
+- **Dual backends**: `WitPlatform` (WIT bindings) and `WebPlatform` (web-sys) side by side
+- **W3C coverage**: 50+ WebIDL specs → generated WIT interfaces → TypeScript glue
+- **Visual regression**: Pixel diff testing with Chromium automation
+- **MCP server**: AI agent integration via Model Context Protocol
+- **Desktop packaging**: Bundle as native app (Wry/Tao)
+
+---
+
+## Documentation
+
+- [Guides](docs/en/guides/index.md) — tutorials, quick start, migration
+- [System Architecture](docs/en/system/overview.md) — runtime model, WIT pipeline, backends
+- [Package Map](docs/en/components/index.md) — workspace crate hierarchy
+
+---
+
+## Compared to...
+
+|  | Tairitsu | Leptos | Dioxus | wasmCloud |
+|:--|:--|:--|:--|:--|
+| Paradigm | VDOM | Fine-grained reactive | VDOM | Actor/Lattice |
+| WASM model | Component Model | wasm-bindgen | wasm-bindgen | Component Model |
+| Server runtime | Built-in Container | Server functions | Server functions | Full platform |
+| SSR | Streaming + HMR | In-order + streaming | Static + hydration | N/A |
+| Browser binding | WIT (WebIDL→WIT) | web-sys | web-sys | N/A |
+| Deploy target | Any wasmtime host | WASM server | WASM server | Distributed cluster |
+| CSS | scss! macro | Stylers (Rust) | Stylers (Rust) | N/A |
+
+---
 
 ## License
 
-See [LICENSE](LICENSE) for details.
+MIT OR Apache-2.0

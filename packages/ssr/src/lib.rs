@@ -20,8 +20,8 @@ pub use host_state::{SsrConfig, SsrHostState};
 pub use html_render::FullDocumentConfig;
 #[cfg(feature = "streaming")]
 pub use streaming::{
-    HtmlChunk, HtmlStream, hydration_script, render_suspense_boundary, render_to_stream,
-    render_vnode_to_stream,
+    hydration_script, render_suspense_boundary, render_to_stream, render_vnode_to_stream,
+    HtmlChunk, HtmlStream,
 };
 pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
 

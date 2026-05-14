@@ -274,8 +274,8 @@ fn enable_ansi() {
     {
         use windows_sys::Win32::Foundation::INVALID_HANDLE_VALUE;
         use windows_sys::Win32::System::Console::{
-            ENABLE_VIRTUAL_TERMINAL_PROCESSING, GetConsoleMode, GetStdHandle, STD_ERROR_HANDLE,
-            STD_OUTPUT_HANDLE, SetConsoleMode,
+            GetConsoleMode, GetStdHandle, SetConsoleMode, ENABLE_VIRTUAL_TERMINAL_PROCESSING,
+            STD_ERROR_HANDLE, STD_OUTPUT_HANDLE,
         };
         unsafe {
             for handle_id in [STD_OUTPUT_HANDLE, STD_ERROR_HANDLE] {

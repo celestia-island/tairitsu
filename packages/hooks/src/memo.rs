@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use tairitsu_vdom::{Classes, Signal, Style};
+use tairitsu_vdom::{Classes, IntoClassValue, IntoStyleValue, Signal, Style, VElement};
 
 /// A memoized value that only recomputes when dependencies change.
 ///
@@ -90,6 +90,37 @@ where
 {
     fn from(memo: Memo<String, D, F>) -> Self {
         Classes::from(memo.read())
+    }
+}
+
+impl<D, F> IntoStyleValue for Memo<String, D, F>
+where
+    D: PartialEq + 'static,
+    F: Fn() -> String + Clone + 'static,
+{
+    fn apply_to(self, element: &mut VElement) {
+        let signal = self.value();
+        let compute_signal = signal.clone();
+        element.dynamic_styles.push((
+            "cssText".to_string(),
+            std::rc::Rc::new(std::cell::RefCell::new(move || compute_signal.get())),
+        ));
+    }
+}
+
+impl<D, F> IntoClassValue for Memo<String, D, F>
+where
+    D: PartialEq + 'static,
+    F: Fn() -> String + Clone + 'static,
+{
+    fn apply_to(self, element: &mut VElement) {
+        let signal = self.value();
+        let compute_signal = signal.clone();
+        element
+            .dynamic_classes
+            .push(std::rc::Rc::new(std::cell::RefCell::new(move || {
+                compute_signal.get()
+            })));
     }
 }
 

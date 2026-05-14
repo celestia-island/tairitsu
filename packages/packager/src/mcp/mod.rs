@@ -48,7 +48,12 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
     eprintln!(
         "{{\"jsonrpc\":\"2.0\",\"method\":\"notifications/diagnostic\",\"params\":{{\"status\":\"starting\",\"pid\":{},\"ppid\":{},\"features\":\"{}\"}}}}",
         std::process::id(),
-        std::os::unix::process::parent_id(),
+        {
+            #[cfg(unix)]
+            { std::os::unix::process::parent_id() }
+            #[cfg(windows)]
+            { get_ppid_windows() }
+        },
         if cfg!(feature = "vtty") {
             "vtty,browser"
         } else {
@@ -82,11 +87,11 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
 }
 
 async fn resolve_daemon_url() -> crate::Result<String> {
-    if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL")
-        && !url.is_empty()
-    {
-        tracing::debug!("[tairitsu-mcp] Using TAIRITSU_DAEMON_URL={}", url);
-        return Ok(url);
+    if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL") {
+        if !url.is_empty() {
+            tracing::debug!("[tairitsu-mcp] Using TAIRITSU_DAEMON_URL={}", url);
+            return Ok(url);
+        }
     }
 
     let searched = search_project_roots();
@@ -144,10 +149,10 @@ fn search_project_roots() -> Vec<std::path::PathBuf> {
         candidates.push(p.join("target"));
     }
 
-    if let Ok(exe) = std::env::current_exe()
-        && let Some(parent) = exe.parent().and_then(|p| p.parent())
-    {
-        candidates.push(parent.join("target"));
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
+            candidates.push(parent.join("target"));
+        }
     }
 
     candidates.dedup();
@@ -1043,14 +1048,16 @@ async fn invoke_tool(
                         .json(&json!({"script": check_js}))
                         .send()
                         .await;
-                    if let Ok(r) = resp
-                        && let Ok(body) = r.json::<serde_json::Value>().await
-                        && body
-                            .get("result")
-                            .and_then(|v| v.as_bool())
-                            .unwrap_or(false)
-                    {
-                        return Ok(format!("Text appeared: {}", text));
+                    if let Ok(r) = resp {
+                        if let Ok(body) = r.json::<serde_json::Value>().await {
+                            if body
+                                .get("result")
+                                .and_then(|v| v.as_bool())
+                                .unwrap_or(false)
+                            {
+                                return Ok(format!("Text appeared: {}", text));
+                            }
+                        }
                     }
                 }
                 Err(format!("Timeout waiting for text: {}", text))
@@ -1300,5 +1307,35 @@ fn map_key_name(key: &str) -> String {
         "PageDown" | "pagedown" => "PageDown".to_string(),
         "Space" | "space" => "Space".to_string(),
         _ => key.to_string(),
+    }
+}
+
+#[cfg(windows)]
+fn get_ppid_windows() -> u32 {
+    use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::*;
+
+    let pid = std::process::id();
+    unsafe {
+        let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snap == INVALID_HANDLE_VALUE {
+            return 0;
+        }
+        let mut entry: PROCESSENTRY32 = std::mem::zeroed();
+        entry.dwSize = std::mem::size_of::<PROCESSENTRY32>() as u32;
+        if Process32First(snap, &mut entry) != 0 {
+            loop {
+                if entry.th32ProcessID == pid {
+                    let ppid = entry.th32ParentProcessID;
+                    CloseHandle(snap);
+                    return ppid;
+                }
+                if Process32Next(snap, &mut entry) == 0 {
+                    break;
+                }
+            }
+        }
+        CloseHandle(snap);
+        0
     }
 }

@@ -105,7 +105,7 @@ fn expand_inline_svg(content: &str) -> TokenStream2 {
     let sanitized = sanitize_svg(content);
 
     quote! {
-        tairitsu::SafeSvg::from_static(#sanitized)
+        tairitsu_vdom::SafeSvg::from_static(#sanitized)
     }
 }
 
@@ -131,7 +131,7 @@ fn expand_file_svg(path: &str) -> TokenStream2 {
     let sanitized = sanitize_svg(&content);
 
     quote! {
-        tairitsu::SafeSvg::from_static(#sanitized)
+        tairitsu_vdom::SafeSvg::from_static(#sanitized)
     }
 }
 
@@ -160,7 +160,7 @@ fn expand_id_svg(id: &str) -> TokenStream2 {
                 Ok(content) => {
                     let sanitized = sanitize_svg(&content);
                     return quote! {
-                        tairitsu::SafeSvg::from_static(#sanitized)
+                        tairitsu_vdom::SafeSvg::from_static(#sanitized)
                     };
                 }
                 Err(err) => {
@@ -182,30 +182,31 @@ fn expand_id_svg(id: &str) -> TokenStream2 {
 
     let index_path = target_dir.join("tairitsu/resources/index.json");
 
-    if index_path.exists()
-        && let Ok(index_content) = std::fs::read_to_string(&index_path)
-        && let Ok(index) = serde_json::from_str::<ResourceIndexJson>(&index_content)
-    {
-        // Find SVG by ID
-        for svg_entry in index.svg {
-            if svg_entry.id == id {
-                // Found by ID, read the source file
-                let svg_path = crate_root_path.join(&svg_entry.source);
-                match std::fs::read_to_string(&svg_path) {
-                    Ok(content) => {
-                        let sanitized = sanitize_svg(&content);
-                        return quote! {
-                            tairitsu::SafeSvg::from_static(#sanitized)
-                        };
-                    }
-                    Err(err) => {
-                        let error_msg = format!(
-                            "Failed to read SVG file '{}' (indexed as '{}'): {}",
-                            svg_entry.source, id, err
-                        );
-                        return quote! {
-                            compile_error!(#error_msg)
-                        };
+    if index_path.exists() {
+        if let Ok(index_content) = std::fs::read_to_string(&index_path) {
+            if let Ok(index) = serde_json::from_str::<ResourceIndexJson>(&index_content) {
+                // Find SVG by ID
+                for svg_entry in index.svg {
+                    if svg_entry.id == id {
+                        // Found by ID, read the source file
+                        let svg_path = crate_root_path.join(&svg_entry.source);
+                        match std::fs::read_to_string(&svg_path) {
+                            Ok(content) => {
+                                let sanitized = sanitize_svg(&content);
+                                return quote! {
+                                    tairitsu_vdom::SafeSvg::from_static(#sanitized)
+                                };
+                            }
+                            Err(err) => {
+                                let error_msg = format!(
+                                    "Failed to read SVG file '{}' (indexed as '{}'): {}",
+                                    svg_entry.source, id, err
+                                );
+                                return quote! {
+                                    compile_error!(#error_msg)
+                                };
+                            }
+                        }
                     }
                 }
             }

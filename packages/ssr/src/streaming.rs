@@ -363,13 +363,11 @@ mod tests {
     fn test_html_chunk_is_complete() {
         assert!(HtmlChunk::Complete.is_complete());
         assert!(!HtmlChunk::Content("test".to_string()).is_complete());
-        assert!(
-            !HtmlChunk::SuspensePlaceholder {
-                id: "test".to_string(),
-                html: "test".to_string(),
-            }
-            .is_complete()
-        );
+        assert!(!HtmlChunk::SuspensePlaceholder {
+            id: "test".to_string(),
+            html: "test".to_string(),
+        }
+        .is_complete());
     }
 
     #[test]

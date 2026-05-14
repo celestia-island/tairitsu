@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 use crate::{
-    browser::{BrowserCache, BrowserDownloader, detect_platform},
+    browser::{detect_platform, BrowserCache, BrowserDownloader},
     runner::{TestHarness, TestHarnessConfig},
 };
 

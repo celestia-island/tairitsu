@@ -25,12 +25,12 @@ CDN_MODULES_DIR = "cdn-modules"
 
 GLUE_SPECIFIER_MAP = {
     "@tairitsu-glue/document": {
-        "package": "glue-dom",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "document_exports",
         "functions": ["createElement", "createTextNode", "getBody"],
     },
     "@tairitsu-glue/element": {
-        "package": "glue-dom",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "element_exports",
         "functions": [
             "setAttribute", "getBoundingClientRect", "getClassList",
@@ -40,7 +40,7 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/node": {
-        "package": "glue-dom",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "node_exports",
         "functions": [
             "appendChild", "getFirstChild", "removeChild", "setTextContent",
@@ -48,17 +48,17 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/non-element-parent-node": {
-        "package": "glue-dom",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "nonElementParentNode_exports",
         "functions": ["getElementById"],
     },
     "@tairitsu-glue/parent-node": {
-        "package": "glue-dom",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "parentNode_exports",
         "functions": ["querySelector", "querySelectorAll"],
     },
     "@tairitsu-glue/event": {
-        "package": "glue-events",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "event_exports",
         "functions": [
             "getCurrentTarget", "getTarget", "getEventType",
@@ -69,12 +69,12 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/event-target": {
-        "package": "glue-events",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "eventTarget_exports",
         "functions": ["addEventListener", "removeEventListener", "preventDefault", "stopPropagation"],
     },
     "@tairitsu-glue/css-style-declaration": {
-        "package": "glue-css",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "cssStyleDeclaration_exports",
         "functions": [
             "getCssText", "setCssText", "getLength", "item",
@@ -83,17 +83,17 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/element-css-inline-style": {
-        "package": "glue-css",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "elementCssInlineStyle_exports",
         "functions": ["getStyle"],
     },
     "@tairitsu-glue/dom-token-list": {
-        "package": "glue-css",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "domTokenList_exports",
         "functions": ["add", "remove", "contains"],
     },
     "@tairitsu-glue/platform-helpers": {
-        "package": "glue-platform",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "platformHelpers_exports",
         "functions": [
             "setTimeout", "clearTimeout", "requestAnimationFrame",
@@ -101,28 +101,22 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/window": {
-        "package": "glue-html",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "window_exports",
         "functions": ["getComputedStyle", "getInnerWidth", "getInnerHeight"],
     },
 }
 
 PACKAGE_TO_CDN_NAME = {
-    "glue-dom": "@celestia/tairitsu-glue-dom",
-    "glue-events": "@celestia/tairitsu-glue-events",
-    "glue-css": "@celestia/tairitsu-glue-css",
-    "glue-html": "@celestia/tairitsu-glue-html",
-    "glue-platform": "@celestia/tairitsu-glue-platform",
-    "glue-core": "@celestia/tairitsu-glue-core",
-    "glue-full": "@celestia/tairitsu-glue-full",
-    "runtime": "@celestia/tairitsu-runtime",
-    "tairitsu-vdom-wasm": "@celestia/tairitsu-vdom-wasm",
-    "tairitsu-hooks-wasm": "@celestia/tairitsu-hooks-wasm",
-    "tairitsu-style-wasm": "@celestia/tairitsu-style-wasm",
-    "hikari-palette-wasm": "@celestia/hikari-palette-wasm",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
 }
 
-VERSION = "0.1.0"
+VERSION = "0.5.0"
 
 
 def build_glue_source_modules(glue_pkg_dir: Path) -> dict[str, str]:
@@ -146,7 +140,7 @@ def generate_per_specifier_modules(dist_dir: Path) -> dict[str, str]:
     # that just initializes globalThis handle tables and helpers.
     core_dir = shims_dir / "glue-core"
     core_dir.mkdir(parents=True, exist_ok=True)
-    core_src = NPM_DIR / "glue-core" / "dist" / "index.js"
+    core_src = NPM_DIR / "celestia-tairitsu-web-glue" / "dist" / "index.js"
     if core_src.exists():
         core_code = core_src.read_text(encoding="utf-8")
         # Strip ES module exports: remove everything from the last 'export{' to end
@@ -240,10 +234,10 @@ def copy_modular_wasm_packages(dist_dir: Path):
     modules_dir.mkdir(parents=True, exist_ok=True)
     
     wasm_packages = [
-        "tairitsu-vdom-wasm",
-        "tairitsu-hooks-wasm",
-        "tairitsu-style-wasm",
-        "hikari-palette-wasm",
+        "celestia-tairitsu-web-glue",
+        "celestia-tairitsu-web-glue",
+        "celestia-tairitsu-web-glue",
+        "celestia-tairitsu-web-glue",
     ]
     
     copied = []
@@ -472,32 +466,22 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
         }};
 
         // --- Register glue interfaces from CDN modules ---
-        // Import all glue packages and register their INTERFACES
-        const glueModules = await Promise.all([
-            import('/{CDN_SHIMS_DIR}/glue-dom/index.js'),
-            import('/{CDN_SHIMS_DIR}/glue-events/index.js'),
-            import('/{CDN_SHIMS_DIR}/glue-css/index.js'),
-            import('/{CDN_SHIMS_DIR}/glue-html/index.js'),
-            import('/{CDN_SHIMS_DIR}/glue-platform/index.js'),
-        ]);
+        // Import the unified browser-glue package
+        const glueModule = await import('/{CDN_SHIMS_DIR}/browser-glue/index.js');
 
         // Merge all INTERFACES into global registry
         globalThis.__TAIRITSU_GLUE__ = {{
             INTERFACES: {{
-                ...glueModules[0].INTERFACES,
-                ...glueModules[1].INTERFACES,
-                ...glueModules[2].INTERFACES,
-                ...glueModules[3].INTERFACES,
-                ...glueModules[4].INTERFACES,
+                ...glueModule.INTERFACES,
             }},
         }};
 
         // --- Load modular wasm components (pre-cache) ---
         const MODULAR_COMPONENTS = {{
-            'tairitsu-vdom': '/{CDN_MODULES_DIR}/tairitsu-vdom-wasm/wrapper/tairitsu_vdom.js',
-            'tairitsu-hooks': '/{CDN_MODULES_DIR}/tairitsu-hooks-wasm/wrapper/tairitsu_hooks.js',
-            'tairitsu-style': '/{CDN_MODULES_DIR}/tairitsu-style-wasm/wrapper/tairitsu_style.js',
-            'hikari-palette': '/{CDN_MODULES_DIR}/hikari-palette-wasm/wrapper/hikari_palette.js',
+            'tairitsu-vdom': '/{CDN_MODULES_DIR}/tairitsu_vdom.wasm',
+            'tairitsu-hooks': '/{CDN_MODULES_DIR}/tairitsu_hooks.wasm',
+            'tairitsu-style': '/{CDN_MODULES_DIR}/tairitsu_style.wasm',
+            'hikari-palette': '/{CDN_MODULES_DIR}/hikari_palette.wasm',
         }};
 
         // Pre-load modular components in parallel (non-blocking)

@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
-use syn::{Attribute, FnArg, Ident, ItemFn, Pat, PatType, Result, parse_macro_input};
+use syn::{parse_macro_input, Attribute, FnArg, Ident, ItemFn, Pat, PatType, Result};
 
 pub fn expand_component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
@@ -23,18 +23,21 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
     let mut uses_existing_props = false;
     let mut existing_props_name: Option<syn::Type> = None;
 
-    if input.sig.inputs.len() == 1
-        && let Some(FnArg::Typed(pat_type)) = input.sig.inputs.first()
-        && let Pat::Ident(pat_ident) = &*pat_type.pat
-    {
-        // Check if param name is "props" and type ends with "Props"
-        if pat_ident.ident == "props"
-            && let syn::Type::Path(type_path) = &*pat_type.ty
-            && let Some(segment) = type_path.path.segments.last()
-            && segment.ident.to_string().ends_with("Props")
-        {
-            uses_existing_props = true;
-            existing_props_name = Some((*pat_type.ty).clone());
+    if input.sig.inputs.len() == 1 {
+        if let Some(FnArg::Typed(pat_type)) = input.sig.inputs.first() {
+            if let Pat::Ident(pat_ident) = &*pat_type.pat {
+                // Check if param name is "props" and type ends with "Props"
+                if pat_ident.ident == "props" {
+                    if let syn::Type::Path(type_path) = &*pat_type.ty {
+                        if let Some(segment) = type_path.path.segments.last() {
+                            if segment.ident.to_string().ends_with("Props") {
+                                uses_existing_props = true;
+                                existing_props_name = Some((*pat_type.ty).clone());
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
