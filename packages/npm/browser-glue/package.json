@@ -1,7 +1,7 @@
 {
-  "name": "@celestia/tairitsu-glue-media",
-  "version": "0.1.0",
-  "description": "Tairitsu browser glue stub for media WIT domain",
+  "name": "@celestia/tairitsu-browser-glue",
+  "version": "0.5.0",
+  "description": "Tairitsu browser glue — all WIT domain implementations in a single package",
   "license": "MIT OR Apache-2.0",
   "type": "module",
   "sideEffects": false,
@@ -19,8 +19,8 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/celestia-org/tairitsu.git",
-    "directory": "packages/npm/glue-media"
+    "url": "https://github.com/celestia-island/tairitsu.git",
+    "directory": "packages/npm/browser-glue"
   },
   "publishConfig": {
     "access": "public",

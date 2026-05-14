@@ -1,7 +1,8 @@
 {
   "name": "@celestia/tairitsu-glue-full",
-  "version": "0.1.0",
-  "description": "Tairitsu browser glue \u2014 all WIT domain implementations aggregated",
+  "version": "0.5.0",
+  "description": "Tairitsu browser glue — all WIT domain implementations aggregated (deprecated: use @celestia/tairitsu-browser-glue)",
+  "deprecated": "Use @celestia/tairitsu-browser-glue instead",
   "license": "MIT OR Apache-2.0",
   "type": "module",
   "sideEffects": false,
@@ -19,7 +20,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/celestia-org/tairitsu.git",
+    "url": "https://github.com/celestia-island/tairitsu.git",
     "directory": "packages/npm/glue-full"
   },
   "publishConfig": {
@@ -27,41 +28,10 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@celestia/tairitsu-glue-dom": "^0.1.0",
-    "@celestia/tairitsu-glue-events": "^0.1.0",
-    "@celestia/tairitsu-glue-css": "^0.1.0",
-    "@celestia/tairitsu-glue-html": "^0.1.0",
-    "@celestia/tairitsu-glue-observers": "^0.1.0",
-    "@celestia/tairitsu-glue-resize-observer": "^0.1.0",
-    "@celestia/tairitsu-glue-platform": "^0.1.0",
-    "@celestia/tairitsu-glue-auth": "^0.1.0",
-    "@celestia/tairitsu-glue-canvas": "^0.1.0",
-    "@celestia/tairitsu-glue-crypto": "^0.1.0",
-    "@celestia/tairitsu-glue-device": "^0.1.0",
-    "@celestia/tairitsu-glue-fetch": "^0.1.0",
-    "@celestia/tairitsu-glue-file-api": "^0.1.0",
-    "@celestia/tairitsu-glue-geolocation": "^0.1.0",
-    "@celestia/tairitsu-glue-indexed-db": "^0.1.0",
-    "@celestia/tairitsu-glue-media": "^0.1.0",
-    "@celestia/tairitsu-glue-misc": "^0.1.0",
-    "@celestia/tairitsu-glue-notifications": "^0.1.0",
-    "@celestia/tairitsu-glue-payments": "^0.1.0",
-    "@celestia/tairitsu-glue-performance": "^0.1.0",
-    "@celestia/tairitsu-glue-permissions": "^0.1.0",
-    "@celestia/tairitsu-glue-service-workers": "^0.1.0",
-    "@celestia/tairitsu-glue-storage": "^0.1.0",
-    "@celestia/tairitsu-glue-streams": "^0.1.0",
-    "@celestia/tairitsu-glue-svg": "^0.1.0",
-    "@celestia/tairitsu-glue-url": "^0.1.0",
-    "@celestia/tairitsu-glue-wasm": "^0.1.0",
-    "@celestia/tairitsu-glue-web-animations": "^0.1.0",
-    "@celestia/tairitsu-glue-webrtc": "^0.1.0",
-    "@celestia/tairitsu-glue-websocket": "^0.1.0",
-    "@celestia/tairitsu-glue-websockets": "^0.1.0",
-    "@celestia/tairitsu-glue-workers": "^0.1.0"
+    "@celestia/tairitsu-browser-glue": "^0.5.0"
   },
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify --external:@celestia/tairitsu-glue-*",
+    "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify",
     "clean": "rimraf dist",
     "prepublishOnly": "npm run build"
   },

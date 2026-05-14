@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Build all per-domain npm packages for @celestia/tairitsu-glue-*.
+"""Build the unified @celestia/tairitsu-browser-glue npm package.
 
 Reads runtime modules from packages/browser-glue/src/runtime/
-and generates optimized per-domain npm packages under packages/npm/.
+and generates a single aggregated npm package at packages/npm/browser-glue/.
+
+Also generates the backward-compatible glue-full shim.
 
 Usage:
     python scripts/build_npm_glue_packages.py          # Generate + build
@@ -12,7 +14,6 @@ Usage:
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -20,7 +21,7 @@ from pathlib import Path
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 RUNTIME_DIR = WORKSPACE_ROOT / "packages" / "browser-glue" / "src" / "runtime"
 NPM_DIR = WORKSPACE_ROOT / "packages" / "npm"
-VERSION = "0.1.0"
+VERSION = "0.5.0"
 SCOPE = "@celestia"
 
 DOMAIN_MAP = {
@@ -48,52 +49,180 @@ DOMAIN_MAP = {
         "interfaces": {
             "css-style-declaration": "cssStyleDeclaration",
             "element-css-inline-style": "elementCssInlineStyle",
-            "dom-token-list": "domTokenList",
         },
-        "runtime_modules": ["cssStyleDeclaration", "elementCssInlineStyle", "domTokenList"],
+        "runtime_modules": ["cssStyleDeclaration", "elementCssInlineStyle"],
     },
     "html": {
-        "description": "HTML window glue — window, location, history APIs",
+        "description": "HTML glue — forms, input elements, selection",
         "interfaces": {
-            "window": "window",
-            "location": "location",
-            "history": "history",
+            "html-element": "htmlElement",
         },
-        "runtime_modules": ["window", "location", "history"],
+        "runtime_modules": ["htmlElement"],
     },
     "observers": {
-        "description": "Observer glue — mutation, intersection observers",
+        "description": "Observer glue — MutationObserver, IntersectionObserver",
         "interfaces": {
-            "observers": "observers",
             "mutation-observer": "mutationObserver",
-            "mutation-record": "mutationRecord",
+            "intersection-observer": "intersectionObserver",
         },
-        "runtime_modules": ["observers", "mutationObserver", "mutationRecord"],
+        "runtime_modules": ["mutationObserver", "intersectionObserver"],
     },
     "resize-observer": {
-        "description": "ResizeObserver glue — resize observer entries and sizes",
-        "interfaces": {
-            "resize-observer": "resizeObserver",
-            "resize-observer-entry": "resizeObserverEntry",
-            "resize-observer-size": "resizeObserverSize",
-        },
-        "runtime_modules": ["resizeObserver", "resizeObserverEntry", "resizeObserverSize"],
+        "description": "ResizeObserver glue",
+        "interfaces": {"resize-observer": "resizeObserver"},
+        "runtime_modules": ["resizeObserver"],
     },
     "platform": {
-        "description": "Platform helper glue — setTimeout, rAF, clipboard, geolocation, IndexedDB wrappers",
+        "description": "Platform glue — viewport, timing, RAF",
         "interfaces": {
-            "platform-helpers": "platformHelpers",
+            "performance": "performance",
+            "animation-frame": "animationFrame",
+            "timer": "timer",
+            "clipboard": "clipboard",
+            "content-editable": "contentEditable",
+            "scroll": "scroll",
+            "resize": "resize",
+            "media-query": "mediaQuery",
+            "query-selector": "querySelector",
         },
-        "runtime_modules": ["platformHelpers"],
+        "runtime_modules": [
+            "performance", "animationFrame", "timer", "clipboard",
+            "contentEditable", "scroll", "resize", "mediaQuery", "querySelector",
+        ],
+    },
+    "auth": {
+        "description": "Web Authentication glue",
+        "interfaces": {"web-authentication": "webAuthentication"},
+        "runtime_modules": ["webAuthentication"],
+    },
+    "canvas": {
+        "description": "Canvas 2D glue",
+        "interfaces": {"canvas": "canvas"},
+        "runtime_modules": ["canvas"],
+    },
+    "crypto": {
+        "description": "Web Crypto API glue",
+        "interfaces": {"crypto": "crypto"},
+        "runtime_modules": ["crypto"],
+    },
+    "device": {
+        "description": "Device APIs glue",
+        "interfaces": {"device": "device"},
+        "runtime_modules": ["device"],
+    },
+    "fetch": {
+        "description": "Fetch API glue",
+        "interfaces": {"fetch": "fetch"},
+        "runtime_modules": ["fetch"],
+    },
+    "file-api": {
+        "description": "File API glue",
+        "interfaces": {"file": "file"},
+        "runtime_modules": [],
+    },
+    "geolocation": {
+        "description": "Geolocation API glue",
+        "interfaces": {"geolocation": "geolocation"},
+        "runtime_modules": ["geolocation"],
+    },
+    "indexed-db": {
+        "description": "IndexedDB glue",
+        "interfaces": {"indexed-db": "indexedDb"},
+        "runtime_modules": [],
+    },
+    "media": {
+        "description": "Media APIs glue — video, audio, media stream",
+        "interfaces": {"media": "media"},
+        "runtime_modules": ["media"],
+    },
+    "misc": {
+        "description": "Miscellaneous browser APIs glue",
+        "interfaces": {"misc": "misc"},
+        "runtime_modules": ["misc"],
+    },
+    "notifications": {
+        "description": "Notifications API glue",
+        "interfaces": {"notifications": "notifications"},
+        "runtime_modules": ["notifications"],
+    },
+    "payments": {
+        "description": "Payment Request API glue",
+        "interfaces": {"payments": "payments"},
+        "runtime_modules": ["payments"],
+    },
+    "performance": {
+        "description": "Performance APIs glue",
+        "interfaces": {"performance-ext": "performanceExt"},
+        "runtime_modules": ["performanceExt"],
+    },
+    "permissions": {
+        "description": "Permissions API glue",
+        "interfaces": {"permissions": "permissions"},
+        "runtime_modules": ["permissions"],
+    },
+    "service-workers": {
+        "description": "Service Worker glue",
+        "interfaces": {"service-workers": "serviceWorkers"},
+        "runtime_modules": [],
+    },
+    "storage": {
+        "description": "Web Storage glue",
+        "interfaces": {"storage": "storage"},
+        "runtime_modules": ["storage"],
+    },
+    "streams": {
+        "description": "Streams API glue",
+        "interfaces": {"streams": "streams"},
+        "runtime_modules": [],
+    },
+    "svg": {
+        "description": "SVG glue",
+        "interfaces": {"svg": "svg"},
+        "runtime_modules": ["svg"],
+    },
+    "url": {
+        "description": "URL API glue",
+        "interfaces": {"url": "url"},
+        "runtime_modules": ["url"],
+    },
+    "wasm": {
+        "description": "WebAssembly glue",
+        "interfaces": {"wasm": "wasm"},
+        "runtime_modules": ["wasm"],
+    },
+    "web-animations": {
+        "description": "Web Animations API glue",
+        "interfaces": {"web-animations": "webAnimations"},
+        "runtime_modules": [],
+    },
+    "webrtc": {
+        "description": "WebRTC glue",
+        "interfaces": {"webrtc": "webrtc"},
+        "runtime_modules": ["webrtc"],
+    },
+    "websocket": {
+        "description": "WebSocket glue",
+        "interfaces": {"websocket": "websocket"},
+        "runtime_modules": ["websocket"],
+    },
+    "websockets": {
+        "description": "WebSocket streams glue",
+        "interfaces": {"websockets": "websockets"},
+        "runtime_modules": ["websockets"],
+    },
+    "workers": {
+        "description": "Web Workers glue",
+        "interfaces": {"workers": "workers"},
+        "runtime_modules": ["workers"],
     },
 }
 
 AUTOGEN_DOMAINS = [
-    "auth", "canvas", "crypto", "device", "fetch", "file-api",
-    "geolocation", "indexed-db", "media", "misc", "notifications",
-    "payments", "performance", "permissions", "service-workers",
-    "storage", "streams", "svg", "url", "wasm", "web-animations",
-    "webrtc", "websocket", "websockets", "workers",
+    "file-api",
+    "indexed-db",
+    "service-workers",
+    "streams",
+    "web-animations",
 ]
 
 
@@ -117,100 +246,111 @@ def find_esbuild():
     raise RuntimeError("esbuild not found. Install with: npm install -g esbuild")
 
 
-def generate_core_package():
-    pkg_dir = NPM_DIR / "glue-core"
+def generate_browser_glue():
+    """Generate the unified browser-glue package with all domains."""
+    pkg_dir = NPM_DIR / "browser-glue"
     src_dir = pkg_dir / "src"
-    dist_dir = pkg_dir / "dist"
     src_dir.mkdir(parents=True, exist_ok=True)
-    dist_dir.mkdir(parents=True, exist_ok=True)
 
     handles_src = RUNTIME_DIR / "handles.ts"
     helpers_src = RUNTIME_DIR / "helpers.ts"
     async_src = WORKSPACE_ROOT / "packages" / "browser-glue" / "src" / "async.ts"
 
-    index_lines = [
+    core_lines = [
         "// Auto-generated by build_npm_glue_packages.py — DO NOT EDIT",
         "// @ts-nocheck",
         "",
     ]
 
     if handles_src.exists():
-        content = handles_src.read_text(encoding="utf-8")
-        content = content.replace("// @ts-nocheck\n", "")
-        index_lines.append("// --- handles ---")
-        index_lines.append(content.strip())
-        index_lines.append("")
+        content = handles_src.read_text(encoding="utf-8").replace("// @ts-nocheck\n", "")
+        core_lines.append("// === handles ===")
+        core_lines.append(content.strip())
+        core_lines.append("")
 
     if helpers_src.exists():
-        content = helpers_src.read_text(encoding="utf-8")
-        content = content.replace("// @ts-nocheck\n", "")
-        index_lines.append("// --- helpers ---")
-        index_lines.append(content.strip())
-        index_lines.append("")
+        content = helpers_src.read_text(encoding="utf-8").replace("// @ts-nocheck\n", "")
+        core_lines.append("// === helpers ===")
+        core_lines.append(content.strip())
+        core_lines.append("")
 
     if async_src.exists():
-        content = async_src.read_text(encoding="utf-8")
-        content = content.replace("// @ts-nocheck\n", "")
-        content = content.replace("export type ", "export type ")
-        index_lines.append("// --- async ---")
-        index_lines.append(content.strip())
-        index_lines.append("")
+        content = async_src.read_text(encoding="utf-8").replace("// @ts-nocheck\n", "")
+        core_lines.append("// === async ===")
+        core_lines.append(content.strip())
+        core_lines.append("")
 
-    index_content = "\n".join(index_lines)
-    (src_dir / "index.ts").write_text(index_content, encoding="utf-8")
+    (src_dir / "_core.ts").write_text("\n".join(core_lines), encoding="utf-8")
 
-    print(f"  OK glue-core: {len(index_content)} chars")
+    all_interfaces = {}
+    module_count = 0
 
+    for domain_name, domain_info in DOMAIN_MAP.items():
+        domain_lines = [
+            "// @ts-nocheck",
+            f"// Domain: {domain_name}",
+            "",
+        ]
 
-def generate_domain_package(domain_name: str, domain_info: dict):
-    pkg_name = f"glue-{domain_name}"
-    pkg_dir = NPM_DIR / pkg_name
-    src_dir = pkg_dir / "src"
-    src_dir.mkdir(parents=True, exist_ok=True)
+        runtime_modules = domain_info["runtime_modules"]
 
-    interface_map = domain_info["interfaces"]
-    runtime_modules = domain_info["runtime_modules"]
+        if runtime_modules:
+            for module_name in runtime_modules:
+                src_file = RUNTIME_DIR / f"{module_name}.ts"
+                if not src_file.exists():
+                    continue
+                content = src_file.read_text(encoding="utf-8").replace("// @ts-nocheck\n", "").strip()
+                domain_lines.append(f"// === {module_name} ===")
+                domain_lines.append(content)
+                domain_lines.append("")
+                module_count += 1
+        else:
+            glue_file = WORKSPACE_ROOT / "packages" / "browser-glue" / "src" / "glue" / f"{domain_name}.ts"
+            if glue_file.exists():
+                content = glue_file.read_text(encoding="utf-8").replace("// @ts-nocheck\n", "").strip()
+                domain_lines.append(content)
+                domain_lines.append("")
 
-    lines = [
+        iface_entries = []
+        for wit_name, module_name in domain_info["interfaces"].items():
+            export_name = f"{module_name}_exports"
+            iface_entries.append(f'  "@tairitsu-glue/{wit_name}": {export_name},')
+
+        domain_lines.append("// === Registry ===")
+        domain_lines.append("export const INTERFACES = {")
+        for entry in iface_entries:
+            domain_lines.append(entry)
+        domain_lines.append("};")
+        domain_lines.append("")
+
+        safe_name = domain_name.replace("-", "_")
+        (src_dir / f"{safe_name}.ts").write_text("\n".join(domain_lines), encoding="utf-8")
+        all_interfaces[domain_name] = safe_name
+
+    index_lines = [
         "// @ts-nocheck",
-        "// Auto-generated by build_npm_glue_packages.py",
+        "// Unified browser glue — all WIT domain implementations",
+        "",
+        'import "./_core.js";',
         "",
     ]
 
-    all_exports = []
-    for module_name in runtime_modules:
-        src_file = RUNTIME_DIR / f"{module_name}.ts"
-        if not src_file.exists():
-            print(f"  WARN {domain_name}: missing {module_name}.ts")
-            continue
+    for domain_name, safe_name in all_interfaces.items():
+        index_lines.append(f'import {{ INTERFACES as {safe_name} }} from "./{safe_name}.js";')
 
-        content = src_file.read_text(encoding="utf-8")
-        content = content.replace("// @ts-nocheck\n", "").strip()
-        lines.append(f"// === {module_name} ===")
-        lines.append(content)
-        lines.append("")
+    index_lines.append("")
+    index_lines.append("export const INTERFACES = {")
+    for safe_name in all_interfaces.values():
+        index_lines.append(f"  ...{safe_name},")
+    index_lines.append("};")
+    index_lines.append("")
 
-        export_name = f"{module_name}_exports"
-        all_exports.append(export_name)
-
-    iface_entries = []
-    for wit_name, module_name in interface_map.items():
-        export_name = f"{module_name}_exports"
-        iface_entries.append(f'  "@tairitsu-glue/{wit_name}": {export_name},')
-
-    lines.append("// === Registry ===")
-    lines.append(f"export const INTERFACES = {{")
-    for entry in iface_entries:
-        lines.append(entry)
-    lines.append("};")
-    lines.append("")
-
-    (src_dir / "index.ts").write_text("\n".join(lines), encoding="utf-8")
+    (src_dir / "index.ts").write_text("\n".join(index_lines), encoding="utf-8")
 
     pkg_json = {
-        "name": f"{SCOPE}/tairitsu-{pkg_name}",
+        "name": f"{SCOPE}/tairitsu-browser-glue",
         "version": VERSION,
-        "description": domain_info["description"],
+        "description": "Tairitsu browser glue — all WIT domain implementations in a single package",
         "license": "MIT OR Apache-2.0",
         "type": "module",
         "sideEffects": False,
@@ -225,15 +365,15 @@ def generate_domain_package(domain_name: str, domain_info: dict):
         "files": ["dist/**/*.js", "dist/**/*.d.ts"],
         "repository": {
             "type": "git",
-            "url": "https://github.com/celestia-org/tairitsu.git",
-            "directory": f"packages/npm/{pkg_name}",
+            "url": "https://github.com/celestia-island/tairitsu.git",
+            "directory": "packages/npm/browser-glue",
         },
         "publishConfig": {
             "access": "public",
             "registry": "https://registry.npmjs.org/",
         },
         "scripts": {
-            "build": f"esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify",
+            "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify",
             "clean": "rimraf dist",
             "prepublishOnly": "npm run build",
         },
@@ -246,113 +386,27 @@ def generate_domain_package(domain_name: str, domain_info: dict):
         json.dumps(pkg_json, indent=2) + "\n", encoding="utf-8"
     )
 
-    total_size = sum(
-        (RUNTIME_DIR / f"{m}.ts").stat().st_size
-        for m in runtime_modules
-        if (RUNTIME_DIR / f"{m}.ts").exists()
-    )
-    print(f"  OK {pkg_name}: {len(runtime_modules)} modules, {total_size} bytes source")
-
-
-def generate_autogen_stub(domain_name: str):
-    """Generate a stub package for auto-generated domains that have glue/*.ts but no runtime implementation."""
-    pkg_name = f"glue-{domain_name}"
-    pkg_dir = NPM_DIR / pkg_name
-    src_dir = pkg_dir / "src"
-    src_dir.mkdir(parents=True, exist_ok=True)
-
-    glue_file = WORKSPACE_ROOT / "packages" / "browser-glue" / "src" / "glue" / f"{domain_name}.ts"
-
-    if glue_file.exists():
-        content = glue_file.read_text(encoding="utf-8")
-        content = content.replace("// @ts-nocheck\n", "")
-        (src_dir / "index.ts").write_text(
-            "// @ts-nocheck\n// Auto-generated stub — delegates to browser-glue glue module\n\n"
-            + content,
-            encoding="utf-8",
-        )
-        glue_size = glue_file.stat().st_size
-    else:
-        (src_dir / "index.ts").write_text(
-            f"// @ts-nocheck\n// Stub for {domain_name} — no implementation yet\nexport const INTERFACES = {{}};\n",
-            encoding="utf-8",
-        )
-        glue_size = 0
-
-    pkg_json = {
-        "name": f"{SCOPE}/tairitsu-{pkg_name}",
-        "version": VERSION,
-        "description": f"Tairitsu browser glue stub for {domain_name} WIT domain",
-        "license": "MIT OR Apache-2.0",
-        "type": "module",
-        "sideEffects": False,
-        "main": "./dist/index.js",
-        "types": "./dist/index.d.ts",
-        "exports": {
-            ".": {
-                "import": "./dist/index.js",
-                "types": "./dist/index.d.ts",
-            }
-        },
-        "files": ["dist/**/*.js", "dist/**/*.d.ts"],
-        "repository": {
-            "type": "git",
-            "url": "https://github.com/celestia-org/tairitsu.git",
-            "directory": f"packages/npm/{pkg_name}",
-        },
-        "publishConfig": {
-            "access": "public",
-            "registry": "https://registry.npmjs.org/",
-        },
-        "scripts": {
-            "build": f"esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify",
-            "clean": "rimraf dist",
-            "prepublishOnly": "npm run build",
-        },
-        "devDependencies": {
-            "esbuild": "^0.25.0",
-            "rimraf": "^5.0.0",
-        },
-    }
-    (pkg_dir / "package.json").write_text(
-        json.dumps(pkg_json, indent=2) + "\n", encoding="utf-8"
-    )
-    print(f"  OK {pkg_name} (stub): {glue_size} bytes glue source")
+    print(f"  OK browser-glue: {module_count} modules across {len(DOMAIN_MAP)} domains")
 
 
 def generate_glue_full():
+    """Generate the backward-compatible glue-full shim."""
     pkg_dir = NPM_DIR / "glue-full"
     src_dir = pkg_dir / "src"
     src_dir.mkdir(parents=True, exist_ok=True)
 
-    runtime_deps = [f"@{SCOPE[1:]}/tairitsu-glue-{d}" for d in DOMAIN_MAP]
-    stub_deps = [f"@{SCOPE[1:]}/tairitsu-glue-{d}" for d in AUTOGEN_DOMAINS]
-    all_deps = runtime_deps + stub_deps
-
-    lines = [
-        "// @ts-nocheck",
-        "// Auto-generated aggregation package",
-        "",
-    ]
-
-    for d in list(DOMAIN_MAP.keys()) + AUTOGEN_DOMAINS:
-        pkg_ref = f"@{SCOPE[1:]}/tairitsu-glue-{d}"
-        lines.append(f'import {{ INTERFACES as {d.replace("-", "_")} }} from "{pkg_ref}";')
-    lines.append("")
-
-    lines.append("export const INTERFACES = {")
-    for d in list(DOMAIN_MAP.keys()) + AUTOGEN_DOMAINS:
-        var_name = d.replace("-", "_")
-        lines.append(f"  ...{var_name},")
-    lines.append("};")
-    lines.append("")
-
-    (src_dir / "index.ts").write_text("\n".join(lines), encoding="utf-8")
+    (src_dir / "index.ts").write_text(
+        "// @ts-nocheck\n"
+        "// Re-export from the unified browser-glue package\n"
+        'export { INTERFACES } from "@celestia/tairitsu-browser-glue";\n',
+        encoding="utf-8",
+    )
 
     pkg_json = {
         "name": f"{SCOPE}/tairitsu-glue-full",
         "version": VERSION,
-        "description": "Tairitsu browser glue — all WIT domain implementations aggregated",
+        "description": "Tairitsu browser glue — all WIT domain implementations aggregated (deprecated: use @celestia/tairitsu-browser-glue)",
+        "deprecated": "Use @celestia/tairitsu-browser-glue instead",
         "license": "MIT OR Apache-2.0",
         "type": "module",
         "sideEffects": False,
@@ -367,16 +421,18 @@ def generate_glue_full():
         "files": ["dist/**/*.js", "dist/**/*.d.ts"],
         "repository": {
             "type": "git",
-            "url": "https://github.com/celestia-org/tairitsu.git",
+            "url": "https://github.com/celestia-island/tairitsu.git",
             "directory": "packages/npm/glue-full",
         },
         "publishConfig": {
             "access": "public",
             "registry": "https://registry.npmjs.org/",
         },
-        "dependencies": {dep: f"^{VERSION}" for dep in all_deps},
+        "dependencies": {
+            f"{SCOPE}/tairitsu-browser-glue": f"^{VERSION}",
+        },
         "scripts": {
-            "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify --external:@celestia/tairitsu-glue-*",
+            "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify",
             "clean": "rimraf dist",
             "prepublishOnly": "npm run build",
         },
@@ -388,7 +444,7 @@ def generate_glue_full():
     (pkg_dir / "package.json").write_text(
         json.dumps(pkg_json, indent=2) + "\n", encoding="utf-8"
     )
-    print(f"  OK glue-full: aggregates {len(all_deps)} domain packages")
+    print(f"  OK glue-full: shim -> @celestia/tairitsu-browser-glue")
 
 
 def build_all():
@@ -403,7 +459,7 @@ def build_all():
         if not (pkg_dir / "package.json").exists():
             continue
         if pkg_dir.name == "runtime":
-            continue  # already has its own build
+            continue
 
         pkg_json = json.loads((pkg_dir / "package.json").read_text(encoding="utf-8"))
         name = pkg_json.get("name", pkg_dir.name)
@@ -457,25 +513,17 @@ def main():
 
     if "--build" not in args:
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        print("Generating per-domain npm packages...")
+        print("Generating unified browser-glue npm package...")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-        print("\n[1/3] Core package:")
-        generate_core_package()
+        print("\n[1/2] Unified browser-glue package:")
+        generate_browser_glue()
 
-        print("\n[2/3] Runtime domain packages:")
-        for domain_name, domain_info in DOMAIN_MAP.items():
-            generate_domain_package(domain_name, domain_info)
-
-        print("\n[3/3] Auto-generated stub packages:")
-        for domain_name in AUTOGEN_DOMAINS:
-            generate_autogen_stub(domain_name)
-
-        print("\n[4/4] Aggregation package:")
+        print("\n[2/2] Backward-compatible glue-full shim:")
         generate_glue_full()
 
         print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        print(f"Generated {len(DOMAIN_MAP)} runtime + {len(AUTOGEN_DOMAINS)} stub = {len(DOMAIN_MAP) + len(AUTOGEN_DOMAINS)} domain packages")
+        print(f"Generated unified package with {len(DOMAIN_MAP)} domains")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
     if "--gen" not in args:

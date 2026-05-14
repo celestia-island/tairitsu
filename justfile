@@ -445,7 +445,7 @@ doc-open: doc
 
 # Generate and build all per-domain npm glue packages
 npm-build-glue:
-    @echo "Generating per-domain glue packages..."
+    @echo "Generating unified browser-glue package..."
     {{python}} scripts/build_npm_glue_packages.py
 
 # Build Rust crates into optimized wasm component npm packages
@@ -460,7 +460,7 @@ npm-list-wasm:
 # Build all npm packages (glue + runtime + wasm)
 npm-build-all: npm-build-glue
     cd packages/npm/runtime && npm run build
-    cd packages/npm/glue-core && npm run build
+    cd packages/npm/browser-glue && npm run build
     {{python}} scripts/build_wasm_packages.py
 
 # Publish all npm packages to @celestia scope (requires NPM_TOKEN env var)
@@ -482,7 +482,7 @@ publish-live:
     @if [ -z "$NPM_TOKEN" ]; then echo "Error: NPM_TOKEN environment variable is not set."; exit 1; fi
     npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
     cd packages/npm/runtime && npm run build && npm publish --access public
-    cd packages/npm/glue-core && npm run build && npm publish --access public
+    cd packages/npm/browser-glue && npm run build && npm publish --access public
     cd packages/browser-glue && npm run build:production && npm publish --access public
     @for dir in packages/npm/glue-*/; do cd "$$dir" && npm publish --access public && cd -; done
     @for dir in packages/npm/*-wasm/; do cd "$$dir" && npm publish --access public && cd -; done
