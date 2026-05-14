@@ -79,25 +79,6 @@ clean-idl-cache:
     rm -rf target/tairitsu-wit/webidl-cache
 
 # ============================================================================
-# W3C WebIDL → WIT generation (legacy aliases → unified pipeline below)
-# ============================================================================
-
-# [Deprecated] Use wit-gen instead
-gen-wit-fetch:
-    @just wit-fetch-idl
-
-# [Deprecated] Use wit-fetch-force instead
-gen-wit-fetch-force:
-    @just wit-fetch-force
-
-# [Deprecated] Use wit-gen-wit instead
-gen-wit:
-    @just wit-gen-wit
-
-# [Deprecated] Use wit-gen instead
-gen-wit-all:
-    @just wit-gen
-
 # ============================================================================
 # Build tasks
 # ============================================================================

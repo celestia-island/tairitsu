@@ -477,10 +477,10 @@ tairitsu_vdom::create_effect(move || {
 | 二 | P0-1: 修复 unsafe extern "C" 事件 hack | ✅ 完成 (injected callback pattern) |
 | 二 | P0-2: tairitsu new/init 脚手架 | ✅ 完成 (rsx! + Signal + component template) |
 | 二 | P0-3: 降级 Edition 2021 + stable toolchain | ✅ 完成 (50+ let-chain refactors, CI updated) |
-| 三 | P1-1: 39→1 npm 包合并 | ⬜ 待开始 |
+| 三 | P1-1: 39→1 npm 包合并 | ⏸ 推迟 (JS 构建基础设施，glue-full 已作为聚合包存在) |
 | 三 | P1-2: VDOM diff 算法升级 | ✅ 已有 (LIS-based keyed reconciliation with 15 tests) |
 | 三 | P1-3: 事件系统剩余补全 | ✅ 完成 (ListenerOptions.capture wired, SubmitEvent added, ChangeEvent enhanced) |
-| 三 | P1-4: WIT generation pipeline 去重 | ⬜ 待开始 |
+| 三 | P1-4: WIT generation pipeline 去重 | ✅ 完成 (removed 4 deprecated justfile aliases, single pipeline remains) |
 | **六** | **P1-5: DynamicText VNode 变体** | ✅ 完成 (effect-based fine-grained text update) |
 | **六** | **P1-6: DynamicAttr/DynamicClass 绑定** | ✅ 完成 (VElement dynamic_* fields + platform effects) |
 | **六** | **P1-7: rsx!{} 宏自动识别 signal 表达式** | ✅ 完成 (IntoVNodeChild trait + Dyn wrapper) |
