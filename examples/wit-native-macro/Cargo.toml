@@ -24,7 +24,7 @@ log = { version = "^0.4", features = ["std"] }
 # For native builds (macros re-exported from runtime)
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Workspace dependencies
-tairitsu = { path = "../../packages/runtime" }
+tairitsu-core = { path = "../../packages/runtime" }
 tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # For WASM guest builds

@@ -105,7 +105,7 @@ fn expand_inline_svg(content: &str) -> TokenStream2 {
     let sanitized = sanitize_svg(content);
 
     quote! {
-        tairitsu::SafeSvg::from_static(#sanitized)
+        tairitsu_vdom::SafeSvg::from_static(#sanitized)
     }
 }
 
@@ -131,7 +131,7 @@ fn expand_file_svg(path: &str) -> TokenStream2 {
     let sanitized = sanitize_svg(&content);
 
     quote! {
-        tairitsu::SafeSvg::from_static(#sanitized)
+        tairitsu_vdom::SafeSvg::from_static(#sanitized)
     }
 }
 
@@ -160,7 +160,7 @@ fn expand_id_svg(id: &str) -> TokenStream2 {
                 Ok(content) => {
                     let sanitized = sanitize_svg(&content);
                     return quote! {
-                        tairitsu::SafeSvg::from_static(#sanitized)
+                        tairitsu_vdom::SafeSvg::from_static(#sanitized)
                     };
                 }
                 Err(err) => {
@@ -194,7 +194,7 @@ fn expand_id_svg(id: &str) -> TokenStream2 {
                             Ok(content) => {
                                 let sanitized = sanitize_svg(&content);
                                 return quote! {
-                                    tairitsu::SafeSvg::from_static(#sanitized)
+                                    tairitsu_vdom::SafeSvg::from_static(#sanitized)
                                 };
                             }
                             Err(err) => {

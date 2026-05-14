@@ -9,7 +9,7 @@
 use anyhow::Result;
 use log::{debug, error, info, warn};
 
-use tairitsu::dynamic::host_imports::HostImportRegistry;
+use tairitsu_core::dynamic::host_imports::HostImportRegistry;
 use tairitsu_web::{
     ron::{typed_ron_tool, RonBinding, RonToolRegistry},
     Container, Image,
@@ -196,7 +196,7 @@ fn main() -> Result<()> {
     // ========================================================================
     info!("\n🧪 Scenario 6: Complex Type Support Verification");
 
-    use tairitsu::dynamic::{ron_to_val, val_to_ron};
+    use tairitsu_core::dynamic::{ron_to_val, val_to_ron};
     use wasmtime::component::Val;
 
     // Test 1: List type

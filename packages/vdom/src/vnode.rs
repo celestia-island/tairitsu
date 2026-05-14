@@ -1138,9 +1138,7 @@ impl IntoDynamicAttr for bool {
 
 impl IntoDynamicAttr for &String {
     fn apply_to_element(self, element: &mut VElement, name: &str) {
-        element
-            .attributes
-            .insert(name.to_string(), self.clone());
+        element.attributes.insert(name.to_string(), self.clone());
     }
 }
 

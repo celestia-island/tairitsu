@@ -8,7 +8,7 @@ edition.workspace = true
 repository.workspace = true
 
 [dependencies]
-tairitsu = { workspace = true, optional = true }
+tairitsu-core = { workspace = true, optional = true }
 tairitsu-vdom = { workspace = true, optional = true }
 tairitsu-hooks = { workspace = true, optional = true }
 tairitsu-macros = { workspace = true, optional = true }
@@ -37,8 +37,8 @@ hmr = ["ssr"]
 fast-refresh = ["ssr", "hmr"]
 error-overlay = ["ssr", "hmr"]
 i18n = ["hooks", "dep:iso639_enum"]
-ssr = ["dep:tairitsu", "dep:tairitsu-ssr"]
-packager = ["dep:tairitsu", "dep:tairitsu-packager"]
+ssr = ["dep:tairitsu-core", "dep:tairitsu-ssr"]
+packager = ["dep:tairitsu-core", "dep:tairitsu-packager"]
 browser = ["vdom", "hooks", "macros", "style", "router"]
 browser-full = [
   "vdom",
@@ -54,7 +54,7 @@ browser-full = [
 server = ["ssr", "packager"]
 full = ["browser-full", "server"]
 wit-bindings = ["dep:wit-bindgen"]
-runtime = ["dep:tairitsu"]
+runtime = ["dep:tairitsu-core"]
 
 [dev-dependencies]
 tokio = { workspace = true, default-features = false, features = [

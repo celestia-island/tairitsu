@@ -9,7 +9,7 @@ use std::path::PathBuf;
 #[cfg(feature = "dynamic")]
 fn test_real_wasm_component_dynamic_invocation() {
     use bytes::Bytes;
-    use tairitsu::Image;
+    use tairitsu_core::Image;
 
     // Build the WASM component first
     // Note: This test requires the WASM component to be pre-built
@@ -44,7 +44,7 @@ fn test_real_wasm_component_dynamic_invocation() {
 #[test]
 #[cfg(feature = "dynamic")]
 fn test_complex_type_serialization_roundtrip() {
-    use tairitsu::dynamic::{ron_to_val, val_to_ron};
+    use tairitsu_core::dynamic::{ron_to_val, val_to_ron};
     use wasmtime::component::{Type, Val};
 
     // Test 1: Simple List
@@ -113,7 +113,7 @@ fn test_complex_type_serialization_roundtrip() {
 #[test]
 #[cfg(feature = "dynamic")]
 fn test_nested_complex_types() {
-    use tairitsu::dynamic::val_to_ron;
+    use tairitsu_core::dynamic::val_to_ron;
     use wasmtime::component::Val;
 
     println!("\n=== Testing Nested Complex Types ===");
@@ -162,7 +162,7 @@ fn test_nested_complex_types() {
 #[test]
 #[cfg(feature = "dynamic")]
 fn test_edge_cases_and_special_types() {
-    use tairitsu::dynamic::val_to_ron;
+    use tairitsu_core::dynamic::val_to_ron;
     use wasmtime::component::Val;
 
     println!("\n=== Testing Edge Cases and Special Types ===");
@@ -258,7 +258,7 @@ fn test_edge_cases_and_special_types() {
 #[test]
 #[cfg(feature = "dynamic")]
 fn test_serialization_capabilities_summary() {
-    use tairitsu::dynamic::val_to_ron;
+    use tairitsu_core::dynamic::val_to_ron;
     use wasmtime::component::Val;
 
     println!("\n=== Serialization Capabilities Summary ===");

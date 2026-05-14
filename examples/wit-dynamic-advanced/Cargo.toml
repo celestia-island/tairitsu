@@ -7,7 +7,7 @@ authors = ["langyo <langyo.china@gmail.com>"]
 
 [dependencies]
 # Workspace dependencies
-tairitsu = { path = "../../packages/runtime", features = ["dynamic"] }
+tairitsu-core = { path = "../../packages/runtime", features = ["dynamic"] }
 tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # Basic language and tools

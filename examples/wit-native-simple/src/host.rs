@@ -164,7 +164,7 @@ impl WitInterface for FileSystemInterface {
         "filesystem"
     }
 
-    fn register_handlers(&self, _dispatcher: &mut tairitsu::WitCommandDispatcher) {
+    fn register_handlers(&self, _dispatcher: &mut tairitsu_core::WitCommandDispatcher) {
         info!("[Interface] Registered: {}", self.interface_name());
     }
 }
@@ -176,7 +176,7 @@ impl WitInterface for NetworkInterface {
         "network"
     }
 
-    fn register_handlers(&self, _dispatcher: &mut tairitsu::WitCommandDispatcher) {
+    fn register_handlers(&self, _dispatcher: &mut tairitsu_core::WitCommandDispatcher) {
         info!("[Interface] Registered: {}", self.interface_name());
     }
 }
@@ -202,7 +202,7 @@ fn main() -> Result<()> {
     info!("  ✓ Added network interface");
 
     // Step 2: Create dispatcher and register all handlers
-    let mut dispatcher = tairitsu::WitCommandDispatcher::new();
+    let mut dispatcher = tairitsu_core::WitCommandDispatcher::new();
     composite.register_all(&mut dispatcher);
 
     // Step 3: Demonstrate zero-serialization command execution

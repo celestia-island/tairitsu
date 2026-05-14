@@ -6,7 +6,7 @@
 
 // Core runtime (optional - only available with 'runtime' or 'ssr' or 'packager' features)
 #[cfg(any(feature = "runtime", feature = "ssr", feature = "packager"))]
-pub use tairitsu::*;
+pub use tairitsu_core::*;
 
 // Feature-gated package exports
 #[cfg(feature = "hooks")]

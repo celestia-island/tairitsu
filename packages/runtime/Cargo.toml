@@ -1,10 +1,10 @@
 [package]
-name = "tairitsu"
+name = "tairitsu-core"
 version.workspace = true
 edition.workspace = true
 publish = true
 authors.workspace = true
-description = "A WebAssembly runtime for running component-model based WASM modules"
+description = "Core WASM Component Model runtime — Container, Registry, WIT binding, RON/Binary interop"
 license = "Apache-2.0"
 repository.workspace = true
 

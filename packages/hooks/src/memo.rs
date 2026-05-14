@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use tairitsu_vdom::{Classes, Signal, Style, IntoStyleValue, IntoClassValue, VElement};
+use tairitsu_vdom::{Classes, IntoClassValue, IntoStyleValue, Signal, Style, VElement};
 
 /// A memoized value that only recomputes when dependencies change.
 ///
@@ -118,7 +118,9 @@ where
         let compute_signal = signal.clone();
         element
             .dynamic_classes
-            .push(std::rc::Rc::new(std::cell::RefCell::new(move || compute_signal.get())));
+            .push(std::rc::Rc::new(std::cell::RefCell::new(move || {
+                compute_signal.get()
+            })));
     }
 }
 
