@@ -1,13 +1,13 @@
 {
   "name": "@celestia-island/tairitsu-web-glue",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Tairitsu CDN glue — pre-compiled JS bindings per WIT domain for browser consumption",
   "license": "MIT OR Apache-2.0",
   "publishConfig": {
     "access": "public"
   },
   "files": [
-    "dist/**/*"
+    "dist"
   ],
   "repository": {
     "type": "git",

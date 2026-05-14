@@ -103,6 +103,17 @@ jobs:
       - name: Build glue packages
         run: python3 scripts/build_npm_glue_packages.py
 
+      - name: Verify dist contents
+        run: |
+          cd packages/npm/celestia-tairitsu-web-glue
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+            echo "::error::dist/ is empty or missing — build failed"
+            exit 1
+          fi
+          echo "dist/ contents:"
+          find dist -type f | head -40
+          npm pack --dry-run 2>&1 | grep -E "npm notice (name|version|total files|package size)"
+
       - name: Publish
         run: |
           cd packages/npm/celestia-tairitsu-web-glue
