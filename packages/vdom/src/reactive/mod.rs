@@ -135,6 +135,14 @@ pub struct EffectHandle {
     stopped: Rc<Cell<bool>>,
 }
 
+impl Clone for EffectHandle {
+    fn clone(&self) -> Self {
+        Self {
+            stopped: self.stopped.clone(),
+        }
+    }
+}
+
 impl EffectHandle {
     /// Stop the effect. It will no longer re-run when tracked signals change.
     pub fn stop(&self) {

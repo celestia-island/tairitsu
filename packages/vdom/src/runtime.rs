@@ -238,6 +238,13 @@ fn render_component(id: ComponentId) {
         rt.active_component = Some(id);
         let _ = prev;
 
+        // Stop previous render's effect handles so they don't accumulate.
+        if let Some(handles) = rt.effect_handles.remove(&id) {
+            for handle in handles {
+                handle.stop();
+            }
+        }
+
         let old_vnode = rt.component_vnodes.get(&id).cloned();
         let apply_patches_cb = rt.apply_patches_callback.clone();
 

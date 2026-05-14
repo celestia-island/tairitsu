@@ -332,6 +332,21 @@ impl VElement {
         self
     }
 
+    pub fn apply_attr(mut self, name: &str, value: impl IntoDynamicAttr) -> Self {
+        value.apply_to_element(&mut self, name);
+        self
+    }
+
+    pub fn apply_class(mut self, value: impl IntoClassValue) -> Self {
+        value.apply_to(&mut self);
+        self
+    }
+
+    pub fn apply_style(mut self, value: impl IntoStyleValue) -> Self {
+        value.apply_to(&mut self);
+        self
+    }
+
     /// Add an optional attribute to the element.
     /// This is a convenience method that is equivalent to calling `attr` with an `Option<T>` value.
     /// When the value is `Some(v)`, the attribute is added with value `v`.
@@ -1087,6 +1102,22 @@ impl IntoDynamicAttr for Option<String> {
     }
 }
 
+impl IntoDynamicAttr for bool {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        if self {
+            element.attributes.insert(name.to_string(), name.to_string());
+        }
+    }
+}
+
+impl IntoDynamicAttr for &String {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.clone());
+    }
+}
+
 pub struct Dyn<F: FnMut() -> String + 'static>(pub F);
 
 impl<F: FnMut() -> String + 'static> IntoDynamicAttr for Dyn<F> {
@@ -1094,5 +1125,92 @@ impl<F: FnMut() -> String + 'static> IntoDynamicAttr for Dyn<F> {
         element
             .dynamic_attributes
             .push((name.to_string(), Rc::new(RefCell::new(self.0))));
+    }
+}
+
+impl<T: Clone + std::string::ToString + 'static> IntoDynamicAttr for crate::reactive::Signal<T> {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        let signal = self.clone();
+        element.dynamic_attributes.push((
+            name.to_string(),
+            Rc::new(RefCell::new(move || signal.get().to_string())),
+        ));
+    }
+}
+
+pub trait IntoClassValue {
+    fn apply_to(self, element: &mut VElement);
+}
+
+impl IntoClassValue for Classes {
+    fn apply_to(self, element: &mut VElement) {
+        element.class = self;
+    }
+}
+
+impl IntoClassValue for &str {
+    fn apply_to(self, element: &mut VElement) {
+        element.class = Classes::from(self);
+    }
+}
+
+impl IntoClassValue for String {
+    fn apply_to(self, element: &mut VElement) {
+        element.class = Classes::from(self.as_str());
+    }
+}
+
+impl<F: FnMut() -> String + 'static> IntoClassValue for Dyn<F> {
+    fn apply_to(self, element: &mut VElement) {
+        element.dynamic_classes.push(Rc::new(RefCell::new(self.0)));
+    }
+}
+
+impl<T: Clone + std::string::ToString + 'static> IntoClassValue for crate::reactive::Signal<T> {
+    fn apply_to(self, element: &mut VElement) {
+        let signal = self.clone();
+        element
+            .dynamic_classes
+            .push(Rc::new(RefCell::new(move || signal.get().to_string())));
+    }
+}
+
+pub trait IntoStyleValue {
+    fn apply_to(self, element: &mut VElement);
+}
+
+impl IntoStyleValue for Style {
+    fn apply_to(self, element: &mut VElement) {
+        element.style = self;
+    }
+}
+
+impl IntoStyleValue for &str {
+    fn apply_to(self, element: &mut VElement) {
+        element.style = Style::from(self);
+    }
+}
+
+impl IntoStyleValue for String {
+    fn apply_to(self, element: &mut VElement) {
+        element.style = Style::from(self.as_str());
+    }
+}
+
+impl<F: FnMut() -> String + 'static> IntoStyleValue for Dyn<F> {
+    fn apply_to(self, element: &mut VElement) {
+        element
+            .dynamic_styles
+            .push(("cssText".to_string(), Rc::new(RefCell::new(self.0))));
+    }
+}
+
+impl<T: Clone + std::string::ToString + 'static> IntoStyleValue for crate::reactive::Signal<T> {
+    fn apply_to(self, element: &mut VElement) {
+        let signal = self.clone();
+        element.dynamic_styles.push((
+            "cssText".to_string(),
+            Rc::new(RefCell::new(move || signal.get().to_string())),
+        ));
     }
 }

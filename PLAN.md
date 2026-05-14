@@ -384,48 +384,29 @@ docs/en/
 | 挂载时创建 effect | `render_vnode` 中为 DynamicText/Attr/Style/Class 调用 `create_effect` | `web/src/wit_platform.rs:2010-2061` |
 | Hikari Platform 层复活 | 30+ stub 函数改为委托到 `Box<dyn Fn>` 函数指针表 | `hikari/packages/components/src/platform/` |
 
-### Gap 1: rsx!{} 属性位置不自动生成 Dynamic（中优先级）
+### Gap 1: rsx!{} 属性位置不自动生成 Dynamic — ✅ 已修复
 
-**现状**: rsx! 宏中 `{signal}` 作为**子节点**会通过 `IntoVNodeChild for Signal<T>` 自动变成 DynamicText ✅。但**属性位置**不会：
-```rust
-rsx! {
-    div {
-        class: some_signal.get(),   // ← 变成静态字符串，每次 re-render 才更新
-        {some_signal}               // ← 自动变成 DynamicText ✅
-    }
-}
-```
+**实现**: 为 `IntoDynamicAttr`、`IntoClassValue`、`IntoStyleValue` 三个 trait 补充了 `Signal<T>` 实现。Rust 的 trait dispatch 自动处理——当属性值类型是 `Signal<T>` 时，编译器选择 Signal 版本的 impl，生成 `dynamic_attributes`/`dynamic_classes`/`dynamic_styles`，挂载时通过 `create_effect` 实现细粒度更新。
 
-**需要手动写法才能变成 Dynamic**:
-```rust
-element.dynamic_class(move || some_signal.get().to_string())
-```
+**代码位置**: `packages/vdom/src/vnode.rs` — `impl IntoDynamicAttr for Signal<T>`、`impl IntoClassValue for Signal<T>`、`impl IntoStyleValue for Signal<T>`
 
-**修复方案**: 在 `packages/macros/src/rsx.rs` 的 `expand_element` 中，对 `RsxAttr::Class(expr)` / `RsxAttr::Other { value }` 做与子节点类似的 `IntoDynamicAttr` 分派。当检测到属性值的类型实现了 `IntoDynamicAttr` 时，自动调用 `.dynamic_attr()` 而非 `.attr()`。
+**额外修复**: 补充 `IntoDynamicAttr` for `bool` 和 `&String` impl，消除 Hikari website 中的 3 个编译错误。
 
-**保守策略**: 不做 AST 分析判断是否是 signal（容易误判），而是依赖类型系统——只要属性值类型实现了 `IntoDynamicAttr` 就走 dynamic 路径，否则走 static 路径。这样对现有代码零影响。
+### Gap 2: create_effect EffectHandle 泄漏 — ✅ 已修复
 
-### Gap 2: create_effect 返回的 EffectHandle 在挂载时被丢弃（低优先级）
+**实现**:
+1. `runtime.rs` 新增 `effect_handles: HashMap<ComponentId, Vec<EffectHandle>>` + `register_effect_handle()` 公开函数
+2. `EffectHandle` 实现 `Clone`（内部仅 `Rc<Cell<bool>>`）
+3. `wit_platform.rs` 新增 `create_tracked_effect()` 辅助函数，内部通过 `CURRENT_RENDER_COMPONENT` thread-local 将 handle 注册到当前组件
+4. `runtime_integration.rs` 的 `apply_patches` 回调通过 `with_render_component(id, ...)` 设置渲染上下文
+5. `cleanup_component(id)` 批量 `stop()` 所有 handle
+6. 全部 9 处 `tairitsu_vdom::create_effect` 调用替换为 `create_tracked_effect`
 
-**现状**: `render_vnode` 中创建 DynamicText effect 时：
-```rust
-// web/src/wit_platform.rs:2057
-tairitsu_vdom::create_effect(move || {
-    let new_text = (compute.borrow_mut())();
-    bindings::...set_text_content(raw, Some(&new_text));
-});
-// EffectHandle 被 drop —— effect 本身不会停止（因为 subscriber 仍持有 Rc）
-// 但组件卸载时无法主动 stop()
-```
-
-**影响**: 组件被移除后，如果 signal 还在其他地方存活，effect 闭包仍会被触发，尝试操作已不存在的 DOM 节点。目前浏览器端不会 panic（set_text_content 对不存在的节点是 no-op），但这是潜在的资源泄漏。
-
-**修复方案**:
-1. `runtime.rs` 维护 `effect_handles: HashMap<ComponentId, Vec<EffectHandle>>`
-2. `render_vnode` 中将 `create_effect` 返回的 handle 注册到当前组件
-3. `cleanup_component(id)` 时批量 `stop()` 所有 handle
-
-**优先级**: 低。当前行为是 benign 的——不会 crash，只是多余的一次 closure 调用。在高频组件创建/销毁场景（如虚拟列表）才可能成为问题。
+**代码位置**:
+- `packages/vdom/src/runtime.rs` — `effect_handles` 字段 + `register_effect_handle()`
+- `packages/vdom/src/reactive/mod.rs` — `impl Clone for EffectHandle`
+- `packages/web/src/wit_platform.rs` — `CURRENT_RENDER_COMPONENT` thread-local + `create_tracked_effect()`
+- `packages/web/src/runtime_integration.rs` — `with_render_component()` 包裹 `apply_patches`
 
 ---
 
@@ -483,8 +464,8 @@ tairitsu_vdom::create_effect(move || {
 | 三 | P1-4: WIT generation pipeline 去重 | ✅ 完成 (removed 4 deprecated justfile aliases, single pipeline remains) |
 | **六** | **P1-5: DynamicText VNode 变体** | ✅ 完成 (effect-based fine-grained text update) |
 | **六** | **P1-6: DynamicAttr/DynamicClass 绑定** | ✅ 完成 (VElement dynamic_* fields + platform effects) |
-| **六** | **P1-7: rsx!{} 宏自动识别 signal 表达式** | ✅ 完成 (IntoVNodeChild trait + Dyn wrapper) |
-| **六** | **P1-8: 运行时 effect 清理机制** | ✅ 完成 (generation-based stale callback prevention + EffectHandle::stop()) |
+| **六** | **P1-7: rsx!{} 宏自动识别 signal 表达式** | ✅ 完成 (IntoVNodeChild for Signal<T> + IntoDynamicAttr/Class/Style for Signal<T>) |
+| **六** | **P1-8: 运行时 effect 清理机制** | ✅ 完成 (effect_handles HashMap + register_effect_handle + create_tracked_effect + cleanup_component batch stop) |
 | 四 | P2-1: 移除 Scheduler 双轨制 | ✅ 完成 (scheduler.rs deleted, 760 lines removed) |
 | 四 | P2-2: 测试覆盖率提升 | ✅ 完成 (37 diff + 16 reactive + 10 event + 5 event = 68 new tests) |
 | 四 | P2-3: 补充对外 API 文档 | ✅ 完成 (Signal, create_effect, batch, IntoVNodeChild rustdoc) |

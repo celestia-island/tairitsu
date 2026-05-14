@@ -71,21 +71,23 @@ pub fn init_runtime(root_element: WitElement) {
     // Set up the apply_patches callback
     tairitsu_vdom::runtime::set_apply_patches_callback({
         let root_ref_clone: Rc<RefCell<WitElement>> = Rc::clone(&root_ref);
-        move |_component_id: tairitsu_vdom::ComponentId, patches: Vec<Patch>| {
+        move |component_id: tairitsu_vdom::ComponentId, patches: Vec<Patch>| {
             let root = root_ref_clone.borrow();
             #[cfg(target_family = "wasm")]
             {
                 if let Ok(platform) = crate::WitPlatform::new() {
-                    if let Err(e) = platform.apply_patches(&root, &patches) {
-                        tracing::error!("Failed to apply patches: {:?}", e);
-                    }
+                    crate::wit_platform::wasm_impl::with_render_component(component_id, || {
+                        if let Err(e) = platform.apply_patches(&root, &patches) {
+                            tracing::error!("Failed to apply patches: {:?}", e);
+                        }
+                    });
                 } else {
                     tracing::error!("Failed to create platform for patch application");
                 }
             }
             #[cfg(not(target_family = "wasm"))]
             {
-                let _ = (root, patches);
+                let _ = (root, patches, component_id);
                 tracing::error!("apply_patches is only available on wasm32 targets");
             }
         }

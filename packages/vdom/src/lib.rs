@@ -41,7 +41,8 @@ pub use runtime::{
 pub use svg::SafeSvg;
 pub use vnode::{
     dynamic_text, el, empty_vnode, txt, AnyElementRef, Classes, Dyn, DynamicCompute, DynamicText,
-    IntoAttrValue, IntoDynamicAttr, IntoVNodeChild, Style, VElement, VNode, VText,
+    IntoAttrValue, IntoClassValue, IntoDynamicAttr, IntoStyleValue, IntoVNodeChild, Style,
+    VElement, VNode, VText,
 };
 
 #[cfg(target_family = "wasm")]

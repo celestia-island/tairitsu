@@ -277,6 +277,34 @@ pub mod wasm_impl {
 
     use super::{WitElement, WitEvent, WitPlatform};
 
+    thread_local! {
+        static CURRENT_RENDER_COMPONENT: RefCell<Option<tairitsu_vdom::ComponentId>> = RefCell::new(None);
+    }
+
+    fn with_render_component<T>(id: tairitsu_vdom::ComponentId, f: impl FnOnce() -> T) -> T {
+        CURRENT_RENDER_COMPONENT.with(|c| {
+            *c.borrow_mut() = Some(id);
+        });
+        let result = f();
+        CURRENT_RENDER_COMPONENT.with(|c| {
+            *c.borrow_mut() = None;
+        });
+        result
+    }
+
+    fn create_tracked_effect<F>(f: F) -> tairitsu_vdom::EffectHandle
+    where
+        F: FnMut() + 'static,
+    {
+        let handle = tairitsu_vdom::create_effect(f);
+        CURRENT_RENDER_COMPONENT.with(|c| {
+            if let Some(id) = *c.borrow() {
+                tairitsu_vdom::register_effect_handle(id, handle.clone());
+            }
+        });
+        handle
+    }
+
     unsafe extern "C" {
         fn tairitsu_component_bootstrap();
     }
@@ -2011,7 +2039,7 @@ pub mod wasm_impl {
                     let raw = element.as_raw();
                     let name = name.clone();
                     let compute = compute.clone();
-                    tairitsu_vdom::create_effect(move || {
+                    create_tracked_effect(move || {
                         let value = (compute.borrow_mut())();
                         bindings::tairitsu_browser::full::element::set_attribute(
                             raw, &name, &value,
@@ -2024,7 +2052,7 @@ pub mod wasm_impl {
                     let name = name.clone();
                     let compute = compute.clone();
                     let platform = platform.clone();
-                    tairitsu_vdom::create_effect(move || {
+                    create_tracked_effect(move || {
                         let value = (compute.borrow_mut())();
                         let el = WitElement::from_raw(raw);
                         platform.set_style(&el, &name, &value);
@@ -2034,7 +2062,7 @@ pub mod wasm_impl {
                 for compute in &velement.dynamic_classes {
                     let raw = element.as_raw();
                     let compute = compute.clone();
-                    tairitsu_vdom::create_effect(move || {
+                    create_tracked_effect(move || {
                         let value = (compute.borrow_mut())();
                         bindings::tairitsu_browser::full::element::set_attribute(
                             raw, "class", &value,
@@ -2054,7 +2082,7 @@ pub mod wasm_impl {
 
                 let raw = text_node.as_raw();
                 let compute = dt.compute.clone();
-                tairitsu_vdom::create_effect(move || {
+                create_tracked_effect(move || {
                     let new_text = (compute.borrow_mut())();
                     bindings::tairitsu_browser::full::node::set_text_content(raw, Some(&new_text));
                 });
@@ -2242,7 +2270,7 @@ pub mod wasm_impl {
                     let raw = element.as_raw();
                     let name = name.clone();
                     let compute = compute.clone();
-                    tairitsu_vdom::create_effect(move || {
+                    create_tracked_effect(move || {
                         let value = (compute.borrow_mut())();
                         bindings::tairitsu_browser::full::element::set_attribute(
                             raw, &name, &value,
@@ -2255,7 +2283,7 @@ pub mod wasm_impl {
                     let name = name.clone();
                     let compute = compute.clone();
                     let p = *platform;
-                    tairitsu_vdom::create_effect(move || {
+                    create_tracked_effect(move || {
                         let value = (compute.borrow_mut())();
                         let el = WitElement::from_raw(raw);
                         p.set_style(&el, &name, &value);
@@ -2265,7 +2293,7 @@ pub mod wasm_impl {
                 for compute in &velement.dynamic_classes {
                     let raw = element.as_raw();
                     let compute = compute.clone();
-                    tairitsu_vdom::create_effect(move || {
+                    create_tracked_effect(move || {
                         let value = (compute.borrow_mut())();
                         bindings::tairitsu_browser::full::element::set_attribute(
                             raw, "class", &value,
@@ -2281,7 +2309,7 @@ pub mod wasm_impl {
 
                 let raw = text_node.as_raw();
                 let compute = dt.compute.clone();
-                tairitsu_vdom::create_effect(move || {
+                create_tracked_effect(move || {
                     let new_text = (compute.borrow_mut())();
                     bindings::tairitsu_browser::full::node::set_text_content(raw, Some(&new_text));
                 });
@@ -2359,7 +2387,7 @@ pub mod wasm_impl {
 
                 let raw = element.as_raw();
                 let compute = dt.compute.clone();
-                tairitsu_vdom::create_effect(move || {
+                create_tracked_effect(move || {
                     let new_text = (compute.borrow_mut())();
                     bindings::tairitsu_browser::full::node::set_text_content(raw, Some(&new_text));
                 });

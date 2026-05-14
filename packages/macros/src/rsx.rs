@@ -411,9 +411,6 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
         return expand_custom_component(element);
     }
 
-    // HTML element handling
-    let mut class_code = quote! { tairitsu_vdom::Classes::new() };
-    let mut style_code = quote! { tairitsu_vdom::Style::new() };
     let mut event_handlers = Vec::new();
     let mut ref_attr = None;
     let mut other_attrs = Vec::new();
@@ -438,10 +435,12 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     for attr in element.attrs {
         match attr {
             RsxAttr::Class(expr) => {
-                class_code = interpolate_expr(expr);
+                let class_code = interpolate_expr(expr);
+                other_attrs.push(quote! { .apply_class(#class_code) });
             }
             RsxAttr::Style(expr) => {
-                style_code = interpolate_expr(expr);
+                let style_code = interpolate_expr(expr);
+                other_attrs.push(quote! { .apply_style(#style_code) });
             }
             RsxAttr::Id(expr) => {
                 let expr = interpolate_expr(expr);
@@ -545,7 +544,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                     // Special handling for children - add as child, not attribute
                     children_code.push(quote! { .child(#value) });
                 } else {
-                    other_attrs.push(quote! { .attr(#name, #value) });
+                    other_attrs.push(quote! { .apply_attr(#name, #value) });
                 }
             }
         }
@@ -565,8 +564,6 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     quote! {
         tairitsu_vdom::VNode::Element(
             tairitsu_vdom::VElement::new(#tag_str)
-                .class(#class_code)
-                .style(#style_code)
                 #ref_code
                 #(#other_attrs)*
                 #(#event_handlers)*
