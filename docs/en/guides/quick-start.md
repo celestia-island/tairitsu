@@ -1,18 +1,54 @@
 # Quick Start
 
-## Prerequisites
-- Rust (stable recommended)
-- just
-- Python 3
-- Node.js (for browser-glue)
+Get Tairitsu running in 5 minutes.
 
-## Setup
+## Prerequisites
+
+- **Rust** (stable) — [rustup.rs](https://rustup.rs)
+- **just** — `cargo install just` or [github.com/casey/just](https://github.com/casey/just)
+- **Python 3** — for WIT generation scripts
+- **Node.js** — for browser-glue TypeScript runtime
+
+## Install the CLI
 
 ```bash
-just install-tools
+# Build and install the tairitsu CLI globally
+just install-packager
+
+# Verify
+tairitsu --version
 ```
 
-## Verify the workspace
+## Create a Project
+
+```bash
+tairitsu new my-app
+cd my-app
+```
+
+This scaffolds a Tairitsu project with:
+- `Cargo.toml` with `[profile.dev-wasm]` for WASM builds
+- `src/lib.rs` bootstrap code
+- `justfile` with `just dev` / `just build`
+
+## Start Developing
+
+```bash
+# Development server with hot reload
+tairitsu dev
+```
+
+Open `http://localhost:3000`. Edit `src/lib.rs` — changes appear instantly.
+
+## Build for Production
+
+```bash
+tairitsu build
+```
+
+Outputs optimized WASM components and static assets in `dist/`.
+
+## Verify the Workspace (for contributors)
 
 ```bash
 cargo check --workspace
@@ -20,34 +56,21 @@ cargo test --workspace
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
-## Create a new project
-
-```bash
-cargo install tairitsu-packager
-tairitsu init my-app
-cd my-app
-```
-
-The generated `Cargo.toml` includes a `[profile.dev-wasm]` section (required
-for debug WASM builds). The `src/lib.rs` bootstraps the app via
-`WitPlatform::new()` + `mount_vnode_to_app()`.
-
-```bash
-tairitsu dev
-```
-
-Open `http://localhost:3000` to see the running app.
-
-## Verify browser glue
+## Verify Browser Glue
 
 ```bash
 cd packages/browser-glue
 npm run typecheck
 ```
 
-## Verify E2E package
+## Verify E2E Tests
 
 ```bash
-cd ../..
 cargo test -p tairitsu-e2e
 ```
+
+## Next Steps
+
+- [Getting Started Tutorial](getting-started.md) — build a full app from scratch
+- [System Overview](../system/overview.md) — understand the architecture
+- [From Dioxus to Tairitsu](migration/dioxus-to-tairitsu.md) — migrate an existing app

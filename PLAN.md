@@ -1,6 +1,6 @@
 # Tairitsu 改进计划
 
-> 基于 celestia/PLAN.md 基础设施综述 + hikari 实际开发反馈
+> 架构审计 + 竞品横评反馈的综合改造路线图
 > 最后更新: 2026-05-14
 
 ---
@@ -56,18 +56,10 @@
 
 `Platform` 保持为 super-trait + blanket impl，完全向后兼容。需要 `Element` 的子 trait 继承 `DomOps`。
 
----
-
-## 待办（按优先级）
-
-### P1 — 高优先级
-
-（T-1b、T-3、T-6 已完成）
-
 ### ✅ T-5: 统一 Reactive 系统 (2026-05-14)
 
 - `Scheduler` 标记为 `#[deprecated]`（生产环境只用 `runtime.rs`）
-- `runtime.rs` 为唯一调度器，`Scheduler` 将在 0.3.0 移除
+- `runtime.rs` 为唯一调度器，`Scheduler` 将在 0.5.0 移除
 
 ### ✅ T-7: 事件监听器选项 (2026-05-14)
 
@@ -87,6 +79,289 @@
 
 ---
 
+## 第一阶段：重新定位（Branding & Identity）
+
+> **核心问题**：Tairitsu 当前对外叙事是"Generic WASM Component Runtime Engine"，但实际上代码库的 80% 是 Web 框架（VDOM/hooks/SSR/macros）。Runtime 层只有 ~3000 行。这种叙事与实际的不匹配导致两套用户群体都无法正确定位项目。
+>
+> **洞察**：Tairitsu 的矛盾不是设计缺陷，而是 WASM Component Model 天然携带的 dual-target 特性 —— 同一个 .wasm 组件可以在服务端（Container/Registry）运行，也可以在客户端（浏览器 VDOM）运行。这正是它唯一的技术护城河，应该从 bug 叙事翻转为 feature 叙事。
+
+### B-1: 重新定义项目定位语
+
+| 当前 | 目标 |
+|------|------|
+| **Generic WASM Component Runtime Engine** | **Full-stack framework powered by the WASM Component Model** |
+| 暗示：仅服务端运行时 | 暗示：服务端 + 客户端一体化 |
+| 对标：wasmtime/wasmCloud | 对标：组合了 Leptos/Dioxus + wasmCloud 的能力 |
+
+副标题：*Write components once, run them anywhere — server, browser, edge. All communication typed via WIT.*
+
+### B-2: 对外三层 API 分层命名
+
+当前 `tairitsu` crate 同时是 runtime 引擎又 re-export 所有宏，导致不同场景的用户被无关符号污染。
+
+目标结构（0.5.0）：
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  tairitsu (umbrella, 全栈用户)                            │
+│                                                          │
+│  📦 tairitsu-core    → 服务端运行时                       │
+│     Container / Registry / WIT binding / RON / Binary     │
+│     对标：wasmCloud, Spin, wasmtime 裸用                  │
+│                                                          │
+│  🎨 tairitsu-web     → 客户端框架 & SSR 渲染              │
+│     VDOM / hooks / rsx! / scss! / SSR / Suspense         │
+│     对标：Leptos, Dioxus, Yew                             │
+│                                                          │
+│  🔧 tairitsu-cli     → 构建 / 调试 / 部署工具              │
+│     packager, dev server, MCP, visual diff, VTty          │
+│     对标：Vite, Trunk, dioxus-cli                         │
+└──────────────────────────────────────────────────────────┘
+```
+
+具体操作：
+- `tairitsu` crate 保留为 umbrella（依赖 core + web + ssr），不做 breaking change
+- 新增 `tairitsu-core` crate 别名（`packages/runtime` 的对外名称）
+- `tairitsu-web` 保持现有结构，补充文档
+- `tairitsu-packager` 提供 `tairitsu` CLI binary
+
+### B-3: 统一 Hello World 全栈示例
+
+创建 `examples/todo-fullstack/`，展示同一个 WIT 接口在三种环境运行：
+
+```
+examples/todo-fullstack/
+├── wit/
+│   └── todo.wit          # 统一的 WIT 接口定义
+├── src/
+│   ├── lib.rs            # 核心组件（可在 server/client 两端编译）
+│   ├── server.rs         # 服务端 Container 入口
+│   └── client.rs         # 客户端 VDOM 入口
+├── Cargo.toml
+└── README.md
+```
+
+核心示例展示：
+```rust
+// 同一个组件，同一套代码
+#[component]
+fn TodoApp() -> VNode {
+    rsx! {
+        div { class: "todo-app",
+            Suspense {
+                fallback: rsx! { "Loading..." },
+                TodoList {}  // 在 client 环境走 fetch, server 环境直接调 WIT
+            }
+        }
+    }
+}
+```
+
+命令行展示三个执行路径：
+- `tairitsu dev` → dev server + 浏览器 VDOM 渲染
+- `tairitsu serve` → 生产 SSR 渲染（Container 运行时）
+- `tairitsu build` → 编译为独立 WASM 组件，放入任意 wasmtime 环境
+
+---
+
+## 第二阶段：稳定性与开发者体验（P0 – 必须）
+
+### P0-1: 修复事件系统的 unsafe extern "C" hack
+
+**当前问题**（`packages/vdom/src/events.rs:35-42`）：
+```rust
+unsafe {
+    unsafe extern "C" {
+        fn tairitsu_prevent_default(event_handle: u64);
+    }
+    tairitsu_prevent_default(handle);
+}
+```
+因为 WIT 层面尚未支持事件监听器选项，`preventDefault`/`stopPropagation` 通过 weak symbol 与 TypeScript 胶水层通信，脆弱且不可移植。
+
+**方案**：
+- **短期**（0.5.0）：在 WIT 中显式定义事件控制接口，browser-glue 的 TS 侧通过 canonical ABI 调用实现，移除所有 unsafe extern "C"
+- **长期**（0.6+）：等 W3C WebIDL → WIT pipeline 自动包含 PreventDefault()/StopPropagation() 方法后，迁移到标准 WIT
+
+### P0-2: 实现 `tairitsu new` / `tairitsu init` 脚手架
+
+当前 README 的 "Quick Start" 只有一段 `Container::builder()` 代码片段，对前端用户完全无入口。
+
+需求：
+```bash
+tairitsu new my-app          # 全栈模板（含 server + client 编译目标）
+tairitsu new my-app --web    # 纯前端模板（仅 client wasm target）
+tairitsu new my-app --server # 纯服务端模板（仅 server native target）
+tairitsu new my-app --example todo  # 从内置模板创建
+```
+
+模板应预置：
+- 标准目录结构
+- `Cargo.toml` 含 `[profile.dev-wasm]`
+- `src/lib.rs` 引导代码（`WitPlatform::new()` + `mount_vnode_to_app()`）
+- `.gitignore`
+- `justfile`（含 `just dev` / `just build` / `just test`）
+
+### P0-3: 降级到 stable Rust + Edition 2021
+
+当前状态：
+- `edition = "2024"` — 在 Rust 生态中极其小众
+- `rustfmt` 需要 nightly toolchain
+- 目标 `wasm32-wasip2` 本身就非 stable
+
+**降级收益**：
+- `cargo fmt` 不再需要特殊 toolchain 配置
+- CI 可以去掉 nightly 相关步骤
+- 降低首次使用者的心智负担
+- Edition 2021 完全满足当前代码需求
+
+**迁移步骤**：
+1. 全局修改 `edition = "2024"` → `edition = "2021"`
+2. 检查 `gen` keyword、`use<..>` lifetime capture syntax 等 2024 特有语法，如有则移除
+3. 移除 CI 中的 nightly toolchain 安装步骤（保留 `wasm32-wasip2` target 安装）
+4. 更新 `just fmt` recipe，使用 stable rustfmt
+
+---
+
+## 第三阶段：架构精耕（P1 – 重要）
+
+### P1-1: 39 个 npm 子包合并为单一 `@tairitsu/browser-glue`
+
+**当前状态**：`packages/npm/` 下有 39 个 per-domain 子包（`glue-dom`, `glue-fetch`, `glue-canvas`, `glue-animation`...）。
+
+**问题**：
+- 每个子包需要独立维护、版本管理、发布
+- 版本不同步的风险极高
+- 用户需要安装几十个包或用具名 import
+
+**方案**：
+```
+@tairitsu/browser-glue         # 唯一对外 npm 包
+├── src/
+│   ├── dom/                   # 内部模块，对应原 glue-dom
+│   ├── fetch/                 # 内部模块，对应原 glue-fetch
+│   ├── canvas/                # 内部模块，对应原 glue-canvas
+│   └── ...
+├── package.json
+└── tsconfig.json
+```
+
+- 通过 TypeScript path mapping 组织内部模块
+- 利用 esbuild/rollup tree-shaking 保证 bundle 体积
+- 向后兼容：保留 39 个子包作为 `@tairitsu/browser-glue` 的 re-export
+- 0.6.0 时废弃旧子包
+
+### P1-2: VDOM diff 算法升级
+
+**当前状态**：`packages/vdom/src/diff.rs` (756 行) 实现基础 O(n) children diff，仅通过元素索引匹配。
+
+**问题**：
+- 动态列表（如 TodoMVC 的增删改）会导致过多 DOM 操作
+- 缺少 keyed reconciliation（通过 key 做最小移动）
+- SSR fast-refresh 路径也有相关性能瓶颈
+
+**方案**：
+1. 在 diff 层增加 `diff_keyed_children` 函数，实现标准的 keyed diff（参考 React reconcileChildrenArray / Vue2 双端对比）
+2. 添加 feature flag `keyed-diff` 让用户选择
+3. 同时将 diff 拆分为独立模块：`diff_nodes.rs`, `diff_children.rs`, `diff_attributes.rs`
+
+### P1-3: 事件系统剩余补全
+
+WIT 层中的 TODO：
+- `SubmitEvent.form_data` 在 browser-glue 中需要实现
+- `ListenerOptions` (passive/once/capture) 在 WIT 层标记待上游支持 —— 影响滚动性能
+- `WheelEvent` 缺少 `deltaX/Y/Z` 的标准化 WIT 类型映射
+- `TransitionEvent` 缺少 `elapsedTime` / `propertyName` 字段
+
+### P1-4: WIT generation pipeline 去重
+
+**当前状态**：两条并行的 WIT 生成管线：
+1. `scripts/gen_wit_from_webidl.py` — 主管线，fetch 50+ WebIDL specs
+2. `scripts/gen-wit-all` — 备用管线（simpler, fewer specs, idl-cache/）
+
+**方案**：合并为单管线，通过 CLI 参数控制 spec 范围。
+
+---
+
+## 第四阶段：工程质量（P2 – 应该）
+
+### P2-1: 移除 Scheduler 双轨制
+
+T-5 已标记 `packages/vdom/src/scheduler.rs` (760 行) 为 deprecated，0.5.0 中彻底移除。所有调度逻辑统一到 `packages/vdom/src/runtime.rs`。
+
+### P2-2: 测试覆盖率提升
+
+运行 `cargo llvm-cov` 或 `cargo tarpaulin` 获取基准，然后逐步补充：
+
+| 模块 | 当前问题 | 目标 |
+|------|---------|------|
+| `vdom/diff.rs` (756行) | 仅有集成测试，缺少 keyed/fragment/attribute 单测 | 80%+ 行覆盖 |
+| `runtime/dynamic/deserialize.rs` (385行) | 缺少复杂嵌套类型 RON 反序列化测试 | 90%+ 行覆盖 |
+| `ssr/streaming.rs` (280行) | 缺少 streaming SSR 集成测试 | 核心路径覆盖 |
+| `ssr/error_overlay/` (525+472行) | 缺少错误模板渲染测试 | 关键模板覆盖 |
+
+### P2-3: 补充对外 API 文档（rustdoc）
+
+所有 `pub` 类型的核心方法应当在对应模块的 `//!` 注释中有 rustdoc 示例：
+- `Container::builder()` / `Container::call_guest_raw_desc()`
+- `VNode` / `VElement` 构造方法
+- `Signal::new()` / `Signal::get()` / `Signal::set()`
+- `rsx!` 宏的各种语法（children、属性、事件、条件渲染、列表渲染）
+- `scss!` / `include_scss!` / `svg!` 宏的用法
+
+---
+
+## 第五阶段：文档体系（P2 – 应该）
+
+### D-1: 重构英文文档入口层次
+
+当前的 `docs/en/` 仅有骨架，多篇核心文档为 stub（5-18 行）。
+
+目标结构：
+```
+docs/en/
+├── index.md                    # 主入口（重写）
+├── guides/
+│   ├── index.md                # 导航枢纽（重写）
+│   ├── getting-started.md      # 从零开始的完整教程（新增）
+│   ├── quick-start.md          # 快速体验（重写）
+│   ├── workspace-map.md        # 仓库导览
+│   ├── build-test-release.md   # 构建与发布
+│   ├── migration/
+│   │   └── dioxus-to-tairitsu.md
+│   ├── troubleshooting.md
+│   └── glossary.md
+├── system/
+│   ├── overview.md             # 系统架构全景（重写）
+│   ├── runtime.md              # Container/Registry 模型
+│   ├── vdom.md                 # VDOM 渲染引擎（新增）
+│   ├── wit-pipeline.md         # WIT 代码生成管线
+│   ├── web-backends.md         # 双后端策略
+│   ├── browser-glue.md         # 浏览器胶水层
+│   └── versioning.md           # 版本策略
+├── components/
+│   ├── index.md                # 分层包清单（重写）
+│   └── packages.md             # 逐包详解
+├── skills/
+│   └── debug-agent.md
+└── enterprise/
+    └── support.md
+```
+
+### D-2: 新增开发者教程文档
+
+`docs/en/guides/getting-started.md`：
+- 第一章：为什么选择 Tairitsu（WASM Component Model 的 dual-target 优势）
+- 第二章：安装与脚手架（`tairitsu new`）
+- 第三章：你的第一个全栈组件（rsx! + Signal + WIT interface）
+- 第四章：在浏览器中运行（`tairitsu dev`）
+- 第五章：在服务端渲染（`tairitsu serve`）
+- 第六章：部署到 Registry（`tairitsu deploy`）
+
+整个教程围绕一个逐步构建的 "Guestbook" 示例展开，展示同一个组件在 client/server 两端的行为。
+
+---
+
 ## 架构决策记录
 
 ### AD-1: 事件便利方法实现策略
@@ -94,3 +369,37 @@
 - **原因**: 最小侵入，不修改 trait 或 WIT 层
 - **替代方案**: 宏生成（减少重复代码，但降低可读性）
 - **后续**: 当方法数量超过 25 个时考虑重构为宏
+
+### AD-2: 项目身份叙事策略 (2026-05-14)
+- **决策**: 将定位从 "Generic WASM Runtime Engine" 改为 "Full-stack WASM Component Model Framework"
+- **原因**: 代码库中 Web 框架部分占 80%，容器运行时仅 3000 行。Runtime 是基础设施而非用户面
+- **核心叙事**: Tairitsu = WASM Component Model 的 dual-target 特性（同一组件在 server/client 两端运行）作为唯一护城河
+- **替代方案**: 拆分为两个独立项目（放弃全栈叙事优势）
+
+### AD-3: crate 分层命名 (2026-05-14)
+- **决策**: 保留 `tairitsu` 为 umbrella，新增 `tairitsu-core` 别名，强化 `tairitsu-web` / `tairitsu-cli` 定位
+- **原因**: 不 breaking change 的前提下，让不同场景用户看到清晰的命名
+- **替代方案**: 激进重命名所有 crate（breaking every user）
+
+---
+
+## 进度总览
+
+| 阶段 | 任务 | 状态 |
+|------|------|------|
+| — | T-1 ~ T-7 | ✅ 全部完成 |
+| 一 | B-1: 定位语改为 Full-stack Framework | ⬜ 待开始 |
+| 一 | B-2: 三层 API 分层命名 | ⬜ 待开始 |
+| 一 | B-3: todo-fullstack 全栈示例 | ⬜ 待开始 |
+| 二 | P0-1: 修复 unsafe extern "C" 事件 hack | ⬜ 待开始 |
+| 二 | P0-2: tairitsu new/init 脚手架 | ⬜ 待开始 |
+| 二 | P0-3: 降级 Edition 2021 + stable toolchain | ⬜ 待开始 |
+| 三 | P1-1: 39→1 npm 包合并 | ⬜ 待开始 |
+| 三 | P1-2: VDOM diff 算法升级 | ⬜ 待开始 |
+| 三 | P1-3: 事件系统剩余补全 | ⬜ 待开始 |
+| 三 | P1-4: WIT generation pipeline 去重 | ⬜ 待开始 |
+| 四 | P2-1: 移除 Scheduler 双轨制 | ⬜ 待开始 |
+| 四 | P2-2: 测试覆盖率提升 | ⬜ 待开始 |
+| 四 | P2-3: 补充对外 API 文档 | ⬜ 待开始 |
+| 五 | D-1: 重构英文文档入口层次 | ⬜ 待开始 |
+| 五 | D-2: 新增开发者教程 | ⬜ 待开始 |
