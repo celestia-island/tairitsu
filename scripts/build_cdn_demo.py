@@ -109,7 +109,6 @@ GLUE_SPECIFIER_MAP = {
 
 PACKAGE_TO_CDN_NAME = {
     "browser-glue": "@celestia/tairitsu-browser-glue",
-    "glue-full": "@celestia/tairitsu-glue-full",
     "runtime": "@celestia/tairitsu-runtime",
     "tairitsu-vdom-wasm": "@celestia/tairitsu-vdom-wasm",
     "tairitsu-hooks-wasm": "@celestia/tairitsu-hooks-wasm",

@@ -4,8 +4,6 @@
 Reads runtime modules from packages/browser-glue/src/runtime/
 and generates a single aggregated npm package at packages/npm/browser-glue/.
 
-Also generates the backward-compatible glue-full shim.
-
 Usage:
     python scripts/build_npm_glue_packages.py          # Generate + build
     python scripts/build_npm_glue_packages.py --gen     # Generate only
@@ -389,64 +387,6 @@ def generate_browser_glue():
     print(f"  OK browser-glue: {module_count} modules across {len(DOMAIN_MAP)} domains")
 
 
-def generate_glue_full():
-    """Generate the backward-compatible glue-full shim."""
-    pkg_dir = NPM_DIR / "glue-full"
-    src_dir = pkg_dir / "src"
-    src_dir.mkdir(parents=True, exist_ok=True)
-
-    (src_dir / "index.ts").write_text(
-        "// @ts-nocheck\n"
-        "// Re-export from the unified browser-glue package\n"
-        'export { INTERFACES } from "@celestia/tairitsu-browser-glue";\n',
-        encoding="utf-8",
-    )
-
-    pkg_json = {
-        "name": f"{SCOPE}/tairitsu-glue-full",
-        "version": VERSION,
-        "description": "Tairitsu browser glue — all WIT domain implementations aggregated (deprecated: use @celestia/tairitsu-browser-glue)",
-        "deprecated": "Use @celestia/tairitsu-browser-glue instead",
-        "license": "MIT OR Apache-2.0",
-        "type": "module",
-        "sideEffects": False,
-        "main": "./dist/index.js",
-        "types": "./dist/index.d.ts",
-        "exports": {
-            ".": {
-                "import": "./dist/index.js",
-                "types": "./dist/index.d.ts",
-            }
-        },
-        "files": ["dist/**/*.js", "dist/**/*.d.ts"],
-        "repository": {
-            "type": "git",
-            "url": "https://github.com/celestia-island/tairitsu.git",
-            "directory": "packages/npm/glue-full",
-        },
-        "publishConfig": {
-            "access": "public",
-            "registry": "https://registry.npmjs.org/",
-        },
-        "dependencies": {
-            f"{SCOPE}/tairitsu-browser-glue": f"^{VERSION}",
-        },
-        "scripts": {
-            "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify",
-            "clean": "rimraf dist",
-            "prepublishOnly": "npm run build",
-        },
-        "devDependencies": {
-            "esbuild": "^0.25.0",
-            "rimraf": "^5.0.0",
-        },
-    }
-    (pkg_dir / "package.json").write_text(
-        json.dumps(pkg_json, indent=2) + "\n", encoding="utf-8"
-    )
-    print(f"  OK glue-full: shim -> @celestia/tairitsu-browser-glue")
-
-
 def build_all():
     """Run esbuild on all generated packages."""
     npm_packages = sorted(NPM_DIR.iterdir())
@@ -516,11 +456,8 @@ def main():
         print("Generating unified browser-glue npm package...")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-        print("\n[1/2] Unified browser-glue package:")
+        print("\n[1/1] Unified browser-glue package:")
         generate_browser_glue()
-
-        print("\n[2/2] Backward-compatible glue-full shim:")
-        generate_glue_full()
 
         print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         print(f"Generated unified package with {len(DOMAIN_MAP)} domains")

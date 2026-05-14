@@ -362,7 +362,7 @@ docs/en/
 
 ---
 
-## 第六阶段：渲染性能 — 细粒度响应式更新（P1）✅ 核心已完成，2 个 gap 待补
+## 第六阶段：渲染性能 — 细粒度响应式更新（P1）✅ 核心已完成，1 个 gap 待补
 
 > **审计结论（2026-05-14 Hikari 锐评后全面复验）**: DynamicText/DynamicAttr/DynamicClass 的完整链路已经实现并可用。Hikari 已新增 Signal 驱动的 Reactive Counter 演示组件验证该链路。
 >
