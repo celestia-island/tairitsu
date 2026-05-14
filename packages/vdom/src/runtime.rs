@@ -7,7 +7,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use tracing::trace;
 
-use crate::{patch::Patch, VNode};
+use crate::{patch::Patch, reactive::EffectHandle, VNode};
 
 /// Component ID - unique identifier for each component instance
 pub type ComponentId = usize;
@@ -23,26 +23,17 @@ type ApplyPatchesCallback = Rc<RefCell<dyn FnMut(ComponentId, Vec<Patch>)>>;
 
 /// Inner state of the reactive runtime
 struct RuntimeInner {
-    /// Next available component ID
     next_id: ComponentId,
-    /// Active component being rendered (for dependency tracking)
     active_component: Option<ComponentId>,
-    /// Map of component ID to its current VNode
     component_vnodes: HashMap<ComponentId, VNode>,
-    /// Map of component ID to its render function
     render_functions: HashMap<ComponentId, RenderFn>,
-    /// Map of signal inner Rc to component IDs that depend on it
     signal_dependencies: HashMap<usize, Vec<ComponentId>>,
-    /// Pending re-renders (dirty components)
     dirty_components: Vec<ComponentId>,
-    /// Callback for scheduling renders via requestAnimationFrame
     schedule_callback: Option<ScheduleCallback>,
-    /// Callback for applying patches to the DOM
     apply_patches_callback: Option<ApplyPatchesCallback>,
-    /// Whether a re-render is scheduled
     scheduled: bool,
-    /// Pending rAF callback ID
     raf_id: Option<u32>,
+    effect_handles: HashMap<ComponentId, Vec<EffectHandle>>,
 }
 
 impl RuntimeInner {
@@ -58,6 +49,7 @@ impl RuntimeInner {
             apply_patches_callback: None,
             scheduled: false,
             raf_id: None,
+            effect_handles: HashMap::new(),
         }
     }
 }
@@ -333,12 +325,24 @@ pub fn cleanup_component(id: ComponentId) {
         rt.component_vnodes.remove(&id);
         rt.dirty_components.retain(|&c| c != id);
 
-        // Remove signal dependencies
         for deps in rt.signal_dependencies.values_mut() {
             deps.retain(|&c| c != id);
         }
 
+        if let Some(handles) = rt.effect_handles.remove(&id) {
+            for handle in handles {
+                handle.stop();
+            }
+        }
+
         trace!("Cleaned up component {}", id);
+    });
+}
+
+pub fn register_effect_handle(id: ComponentId, handle: EffectHandle) {
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        rt.effect_handles.entry(id).or_default().push(handle);
     });
 }
 

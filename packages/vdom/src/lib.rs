@@ -34,8 +34,9 @@ pub use reactive::{
     Signal,
 };
 pub use runtime::{
-    cleanup_component, flush_render, mark_dirty, notify_signal, request_rerender, rerender,
-    store_initial_vnode, subscribe_component, use_component, with_component, ComponentId,
+    cleanup_component, flush_render, mark_dirty, notify_signal, register_effect_handle,
+    request_rerender, rerender, store_initial_vnode, subscribe_component, use_component,
+    with_component, ComponentId,
 };
 pub use svg::SafeSvg;
 pub use vnode::{
