@@ -1068,6 +1068,30 @@ impl IntoVNodeChild for &String {
     }
 }
 
+impl IntoVNodeChild for u32 {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self.to_string()))
+    }
+}
+
+impl IntoVNodeChild for usize {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self.to_string()))
+    }
+}
+
+impl IntoVNodeChild for i32 {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self.to_string()))
+    }
+}
+
+impl IntoVNodeChild for f64 {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self.to_string()))
+    }
+}
+
 impl<T: Clone + std::string::ToString + 'static> IntoVNodeChild for crate::reactive::Signal<T> {
     fn into_vnode_child(self) -> VNode {
         let initial = self.get().to_string();
@@ -1114,7 +1138,17 @@ impl IntoDynamicAttr for bool {
 
 impl IntoDynamicAttr for &String {
     fn apply_to_element(self, element: &mut VElement, name: &str) {
-        element.attributes.insert(name.to_string(), self.clone());
+        element
+            .attributes
+            .insert(name.to_string(), self.clone());
+    }
+}
+
+impl IntoDynamicAttr for Option<&str> {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        if let Some(v) = self {
+            element.attributes.insert(name.to_string(), v.to_string());
+        }
     }
 }
 
@@ -1250,6 +1284,14 @@ impl IntoStyleValue for &str {
 impl IntoStyleValue for String {
     fn apply_to(self, element: &mut VElement) {
         element.style = Style::from(self.as_str());
+    }
+}
+
+impl IntoStyleValue for Option<String> {
+    fn apply_to(self, element: &mut VElement) {
+        if let Some(s) = self {
+            element.style = Style::from(s.as_str());
+        }
     }
 }
 
