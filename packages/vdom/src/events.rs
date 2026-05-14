@@ -426,6 +426,8 @@ impl Default for InputEvent {
 #[derive(Debug, Clone)]
 pub struct ChangeEvent {
     pub value: String,
+    pub target: Option<u64>,
+    event_handle: EventWitHandle,
 }
 
 impl EventData for ChangeEvent {
@@ -438,6 +440,8 @@ impl ChangeEvent {
     pub fn new() -> Self {
         Self {
             value: String::new(),
+            target: None,
+            event_handle: EventWitHandle::placeholder(),
         }
     }
 
@@ -445,9 +449,53 @@ impl ChangeEvent {
         self.value = value.into();
         self
     }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
 }
 
 impl Default for ChangeEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub struct SubmitEvent {
+    pub target: Option<u64>,
+    pub form_data: Vec<(String, String)>,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for SubmitEvent {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl SubmitEvent {
+    pub fn new() -> Self {
+        Self {
+            target: None,
+            form_data: Vec::new(),
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for SubmitEvent {
     fn default() -> Self {
         Self::new()
     }

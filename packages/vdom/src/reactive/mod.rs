@@ -1,14 +1,19 @@
-use std::{any::Any, cell::RefCell, rc::Rc};
+use std::{cell::Cell, cell::RefCell, rc::Rc};
 
 use tracing::trace;
 
+type SubscribeFn = Box<dyn Fn(Rc<dyn Fn()>)>;
+
+pub struct DependencyEntry {
+    subscribe: SubscribeFn,
+}
+
 thread_local! {
-    static DEPENDENCIES: RefCell<Vec<Rc<RefCell<dyn Any>>>> = RefCell::new(Vec::new());
+    static DEPENDENCIES: RefCell<Vec<DependencyEntry>> = const { RefCell::new(Vec::new()) };
     static BATCHING: RefCell<bool> = const { RefCell::new(false) };
     static PENDING_UPDATES: RefCell<Vec<Box<dyn FnOnce()>>> = RefCell::new(Vec::new());
 }
 
-// Get the memory address of a RefCell for use as a hash key
 fn refcell_ptr<T>(refcell: &Rc<RefCell<T>>) -> usize {
     refcell.as_ref() as *const RefCell<T> as usize
 }
@@ -18,7 +23,6 @@ pub struct Signal<T> {
     inner: Rc<RefCell<SignalInner<T>>>,
 }
 
-// Implement PartialEq by comparing the inner Rc pointer (identity comparison)
 impl<T> PartialEq for Signal<T> {
     fn eq(&self, other: &Self) -> bool {
         Rc::ptr_eq(&self.inner, &other.inner)
@@ -43,16 +47,16 @@ impl<T: Clone + 'static> Signal<T> {
     }
 
     pub fn get(&self) -> T {
-        // Track this signal access in the current component context
         let signal_ptr = refcell_ptr(&self.inner);
-
-        // Notify the runtime that this signal was accessed
-        // This will be used to establish dependencies
         crate::runtime::track_signal(signal_ptr);
 
+        let signal = self.clone();
         DEPENDENCIES.with(|deps| {
-            deps.borrow_mut()
-                .push(Rc::clone(&self.inner) as Rc<RefCell<dyn Any>>);
+            deps.borrow_mut().push(DependencyEntry {
+                subscribe: Box::new(move |cb: Rc<dyn Fn()>| {
+                    signal.inner.borrow_mut().subscribers.push(cb);
+                }),
+            });
         });
 
         self.inner.borrow().value.clone()
@@ -67,7 +71,6 @@ impl<T: Clone + 'static> Signal<T> {
             inner.subscribers.clone()
         };
 
-        // Notify runtime that this signal changed
         crate::runtime::notify_signal(signal_ptr);
 
         if BATCHING.with(|b| *b.borrow()) {
@@ -83,20 +86,14 @@ impl<T: Clone + 'static> Signal<T> {
         self.inner.borrow_mut().subscribers.push(Rc::new(callback));
     }
 
-    /// Alias for get() - Dioxus compatibility
     pub fn read(&self) -> T {
         self.get()
     }
 
-    /// Returns a mutable reference to the value - Dioxus compatibility
-    /// Usage: let mut guard = signal.write(); guard.push(item);
-    /// Note: Changes made through this guard will NOT automatically trigger subscribers.
-    /// Use signal.set() or manually call signal.notify() if reactivity is needed.
     pub fn write(&self) -> std::cell::RefMut<'_, T> {
         std::cell::RefMut::map(self.inner.borrow_mut(), |inner| &mut inner.value)
     }
 
-    /// Manually trigger all subscribers (for use after write() modifications)
     pub fn notify(&self) {
         let subscribers = self.inner.borrow().subscribers.clone();
         for subscriber in subscribers {
@@ -106,27 +103,89 @@ impl<T: Clone + 'static> Signal<T> {
 }
 
 pub struct EffectHandle {
-    _cleanup: Box<dyn Fn()>,
+    stopped: Rc<Cell<bool>>,
+}
+
+impl EffectHandle {
+    pub fn stop(&self) {
+        self.stopped.set(true);
+    }
+
+    pub fn is_stopped(&self) -> bool {
+        self.stopped.get()
+    }
 }
 
 pub fn create_effect<F>(f: F) -> EffectHandle
 where
     F: FnMut() + 'static,
 {
-    let callback = Rc::new(RefCell::new(f));
-    let wrapped = callback.clone();
+    let callback: Rc<RefCell<dyn FnMut()>> = Rc::new(RefCell::new(f));
+    let stopped = Rc::new(Cell::new(false));
+    let generation = Rc::new(Cell::new(0u64));
 
+    execute_effect(&callback, &stopped, &generation);
+
+    EffectHandle { stopped }
+}
+
+fn execute_effect(
+    callback: &Rc<RefCell<dyn FnMut()>>,
+    stopped: &Rc<Cell<bool>>,
+    generation: &Rc<Cell<u64>>,
+) {
+    if stopped.get() {
+        return;
+    }
+
+    let gen = generation.get();
+    generation.set(gen + 1);
+    let my_gen = generation.get();
+
+    DEPENDENCIES.with(|deps| deps.borrow_mut().clear());
+
+    callback.borrow_mut()();
+
+    let deps: Vec<DependencyEntry> =
+        DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect());
+
+    if deps.is_empty() {
+        return;
+    }
+
+    let cb = callback.clone();
+    let stopped_clone = stopped.clone();
+    let gen_clone = generation.clone();
+    let rerun: Rc<dyn Fn()> = Rc::new(move || {
+        if stopped_clone.get() {
+            return;
+        }
+        if gen_clone.get() != my_gen {
+            return;
+        }
+        execute_effect(&cb, &stopped_clone, &gen_clone);
+    });
+
+    for dep in deps {
+        (dep.subscribe)(rerun.clone());
+    }
+}
+
+pub fn drain_dependencies() -> Vec<DependencyEntry> {
     DEPENDENCIES.with(|deps| {
         deps.borrow_mut().clear();
     });
 
-    wrapped.borrow_mut()();
+    // Run nothing — caller should run their closure first, then call this
+    DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect())
+}
 
-    let cleanup = Box::new(move || {
-        trace!("Effect cleaned up");
-    });
+pub fn clear_dependencies() {
+    DEPENDENCIES.with(|deps| deps.borrow_mut().clear());
+}
 
-    EffectHandle { _cleanup: cleanup }
+pub fn take_dependencies() -> Vec<DependencyEntry> {
+    DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect())
 }
 
 pub fn batch<F, R>(f: F) -> R

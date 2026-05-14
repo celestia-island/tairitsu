@@ -572,15 +572,30 @@ pub mod wasm_impl {
         fn on_generic_event(listener_id: u64, event_handle: u64, event_type: String) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
             let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
-            let current_target =
-                bindings::tairitsu_browser::full::event::get_current_target(event_handle);
-            let event: Box<dyn EventData> = Box::new(
-                GenericEvent::new()
-                    .event_type(&event_type)
-                    .event_handle(wit_handle)
-                    .target(target.unwrap_or(0))
-                    .current_target(current_target.unwrap_or(0)),
-            );
+
+            let event: Box<dyn EventData> = match event_type.as_str() {
+                "submit" => Box::new(tairitsu_vdom::SubmitEvent {
+                    target,
+                    form_data: Vec::new(),
+                    event_handle: wit_handle,
+                }),
+                "change" => Box::new(tairitsu_vdom::ChangeEvent {
+                    value: String::new(),
+                    target,
+                    event_handle: wit_handle,
+                }),
+                _ => {
+                    let current_target =
+                        bindings::tairitsu_browser::full::event::get_current_target(event_handle);
+                    Box::new(
+                        GenericEvent::new()
+                            .event_type(&event_type)
+                            .event_handle(wit_handle)
+                            .target(target.unwrap_or(0))
+                            .current_target(current_target.unwrap_or(0)),
+                    )
+                }
+            };
             dispatch_event(listener_id, &event_type, event);
         }
     }
@@ -1135,13 +1150,12 @@ pub mod wasm_impl {
             element: &Self::Element,
             event: &str,
             handler: Box<dyn FnMut(Box<dyn EventData>)>,
-            _options: tairitsu_vdom::ListenerOptions,
+            options: tairitsu_vdom::ListenerOptions,
         ) {
-            // TODO: pass options to WIT when supported
             let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
                 element.as_raw(),
                 event,
-                false,
+                options.capture,
             )
             .unwrap_or_else(|e| {
                 log_error(&format!("add_event_listener failed: {}", e));
@@ -1993,11 +2007,57 @@ pub mod wasm_impl {
                     }
                 }
 
+                for (name, compute) in &velement.dynamic_attributes {
+                    let raw = element.as_raw();
+                    let name = name.clone();
+                    let compute = compute.clone();
+                    tairitsu_vdom::create_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        bindings::tairitsu_browser::full::element::set_attribute(
+                            raw, &name, &value,
+                        );
+                    });
+                }
+
+                for (name, compute) in &velement.dynamic_styles {
+                    let raw = element.as_raw();
+                    let name = name.clone();
+                    let compute = compute.clone();
+                    let platform = platform.clone();
+                    tairitsu_vdom::create_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        let el = WitElement::from_raw(raw);
+                        platform.set_style(&el, &name, &value);
+                    });
+                }
+
+                for compute in &velement.dynamic_classes {
+                    let raw = element.as_raw();
+                    let compute = compute.clone();
+                    tairitsu_vdom::create_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        bindings::tairitsu_browser::full::element::set_attribute(
+                            raw, "class", &value,
+                        );
+                    });
+                }
+
                 platform.append_child(parent, &element);
             }
             VNode::Text(vtext) => {
                 let text_node = platform.create_text_node(&vtext.text);
                 platform.append_child(parent, &text_node);
+            }
+            VNode::DynamicText(dt) => {
+                let text_node = platform.create_text_node(&dt.initial);
+                platform.append_child(parent, &text_node);
+
+                let raw = text_node.as_raw();
+                let compute = dt.compute.clone();
+                tairitsu_vdom::create_effect(move || {
+                    let new_text = (compute.borrow_mut())();
+                    bindings::tairitsu_browser::full::node::set_text_content(raw, Some(&new_text));
+                });
             }
             VNode::Fragment(children) => {
                 for child in children {
@@ -2178,9 +2238,56 @@ pub mod wasm_impl {
                     );
                 }
 
+                for (name, compute) in &velement.dynamic_attributes {
+                    let raw = element.as_raw();
+                    let name = name.clone();
+                    let compute = compute.clone();
+                    tairitsu_vdom::create_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        bindings::tairitsu_browser::full::element::set_attribute(
+                            raw, &name, &value,
+                        );
+                    });
+                }
+
+                for (name, compute) in &velement.dynamic_styles {
+                    let raw = element.as_raw();
+                    let name = name.clone();
+                    let compute = compute.clone();
+                    let p = *platform;
+                    tairitsu_vdom::create_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        let el = WitElement::from_raw(raw);
+                        p.set_style(&el, &name, &value);
+                    });
+                }
+
+                for compute in &velement.dynamic_classes {
+                    let raw = element.as_raw();
+                    let compute = compute.clone();
+                    tairitsu_vdom::create_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        bindings::tairitsu_browser::full::element::set_attribute(
+                            raw, "class", &value,
+                        );
+                    });
+                }
+
                 Ok(element)
             }
             VNode::Text(vtext) => Ok(platform.create_text_node(&vtext.text)),
+            VNode::DynamicText(dt) => {
+                let text_node = platform.create_text_node(&dt.initial);
+
+                let raw = text_node.as_raw();
+                let compute = dt.compute.clone();
+                tairitsu_vdom::create_effect(move || {
+                    let new_text = (compute.borrow_mut())();
+                    bindings::tairitsu_browser::full::node::set_text_content(raw, Some(&new_text));
+                });
+
+                Ok(text_node)
+            }
             VNode::Fragment(_) => {
                 // Fragments can't be represented as a single element
                 // Create a placeholder div
@@ -2243,6 +2350,19 @@ pub mod wasm_impl {
                 for child in children {
                     render_vnode(platform, child, element)?;
                 }
+            }
+            VNode::DynamicText(dt) => {
+                bindings::tairitsu_browser::full::node::set_text_content(
+                    element.as_raw(),
+                    Some(&dt.initial),
+                );
+
+                let raw = element.as_raw();
+                let compute = dt.compute.clone();
+                tairitsu_vdom::create_effect(move || {
+                    let new_text = (compute.borrow_mut())();
+                    bindings::tairitsu_browser::full::node::set_text_content(raw, Some(&new_text));
+                });
             }
         }
 

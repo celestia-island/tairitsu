@@ -658,7 +658,9 @@ fn expand_child(child: RsxChild) -> TokenStream2 {
             quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value)) }
         }
         RsxChild::Element(elem) => expand_rsx(elem),
-        RsxChild::Dynamic(expr) => quote! { #expr },
+        RsxChild::Dynamic(expr) => {
+            quote! { tairitsu_vdom::IntoVNodeChild::into_vnode_child(#expr) }
+        }
         RsxChild::Spread(expr) => quote! { tairitsu_vdom::VNode::Fragment(#expr) },
         RsxChild::If(rsx_if) => expand_rsx_if(rsx_if),
         RsxChild::Match(rsx_match) => expand_rsx_match(rsx_match),
@@ -749,7 +751,7 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
                 let inner = &text_value[1..text_value.len() - 1];
                 // Parse the inner as an expression
                 if let Ok(expr) = syn::parse_str::<Expr>(inner) {
-                    return quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(&format!("{}", #expr)))) };
+                    return quote! { .child(tairitsu_vdom::IntoVNodeChild::into_vnode_child(#expr)) };
                 }
             }
             quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value))) }
@@ -758,7 +760,9 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
             let expanded = expand_rsx(elem);
             quote! { .child(#expanded) }
         }
-        RsxChild::Dynamic(expr) => quote! { .child(#expr) },
+        RsxChild::Dynamic(expr) => {
+            quote! { .child(tairitsu_vdom::IntoVNodeChild::into_vnode_child(#expr)) }
+        }
         RsxChild::Spread(expr) => quote! { .children(#expr) },
         RsxChild::If(rsx_if) => {
             let expanded = expand_rsx_if(rsx_if);

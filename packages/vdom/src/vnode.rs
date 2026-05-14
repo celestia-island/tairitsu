@@ -95,6 +95,39 @@ pub enum VNode {
     Element(VElement),
     Text(VText),
     Fragment(Vec<VNode>),
+    DynamicText(DynamicText),
+}
+
+#[derive(Clone)]
+pub struct DynamicText {
+    pub initial: String,
+    pub compute: Rc<RefCell<dyn FnMut() -> String>>,
+}
+
+impl DynamicText {
+    pub fn new<F>(initial: String, compute: F) -> Self
+    where
+        F: FnMut() -> String + 'static,
+    {
+        Self {
+            initial,
+            compute: Rc::new(RefCell::new(compute)),
+        }
+    }
+}
+
+impl PartialEq for DynamicText {
+    fn eq(&self, other: &Self) -> bool {
+        self.initial == other.initial
+    }
+}
+
+impl fmt::Debug for DynamicText {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DynamicText")
+            .field("initial", &self.initial)
+            .finish()
+    }
 }
 
 impl Default for VNode {
@@ -110,6 +143,8 @@ pub fn empty_vnode() -> VNode {
 
 pub type EventHandler = Rc<RefCell<dyn FnMut(Box<dyn EventData>)>>;
 
+pub type DynamicCompute = Rc<RefCell<dyn FnMut() -> String>>;
+
 pub struct VElement {
     pub tag: String,
     pub key: Option<String>,
@@ -118,16 +153,15 @@ pub struct VElement {
     pub style: Style,
     pub class: Classes,
     pub event_handlers: HashMap<String, EventHandler>,
-    /// Raw HTML to be set as inner_html (for dangerouslySetInnerHTML equivalent)
     pub inner_html: Option<String>,
-    /// Element reference that will be populated with the DOM element handle
-    /// when this VElement is mounted to the DOM.
     pub element_ref: Option<AnyElementRef>,
+    pub dynamic_attributes: Vec<(String, DynamicCompute)>,
+    pub dynamic_styles: Vec<(String, DynamicCompute)>,
+    pub dynamic_classes: Vec<DynamicCompute>,
 }
 
 impl PartialEq for VElement {
     fn eq(&self, other: &Self) -> bool {
-        // Compare all fields except event_handlers and element_ref (which can't be compared)
         self.tag == other.tag
             && self.key == other.key
             && self.attributes == other.attributes
@@ -135,7 +169,9 @@ impl PartialEq for VElement {
             && self.style == other.style
             && self.class == other.class
             && self.inner_html == other.inner_html
-        // Note: event_handlers and element_ref are intentionally not compared
+            && self.dynamic_attributes.len() == other.dynamic_attributes.len()
+            && self.dynamic_styles.len() == other.dynamic_styles.len()
+            && self.dynamic_classes.len() == other.dynamic_classes.len()
     }
 }
 
@@ -152,6 +188,23 @@ impl fmt::Debug for VElement {
                 "event_handlers",
                 &self.event_handlers.keys().collect::<Vec<_>>(),
             )
+            .field(
+                "dynamic_attributes",
+                &self
+                    .dynamic_attributes
+                    .iter()
+                    .map(|(k, _)| k)
+                    .collect::<Vec<_>>(),
+            )
+            .field(
+                "dynamic_styles",
+                &self
+                    .dynamic_styles
+                    .iter()
+                    .map(|(k, _)| k)
+                    .collect::<Vec<_>>(),
+            )
+            .field("dynamic_classes", &self.dynamic_classes.len())
             .finish()
     }
 }
@@ -167,9 +220,10 @@ impl Clone for VElement {
             class: self.class.clone(),
             event_handlers: self.event_handlers.clone(),
             inner_html: self.inner_html.clone(),
-            // Note: element_ref is intentionally NOT cloned
-            // When cloning a VElement, we create a new element without a ref
             element_ref: None,
+            dynamic_attributes: self.dynamic_attributes.clone(),
+            dynamic_styles: self.dynamic_styles.clone(),
+            dynamic_classes: self.dynamic_classes.clone(),
         }
     }
 }
@@ -261,6 +315,9 @@ impl VElement {
             event_handlers: HashMap::new(),
             inner_html: None,
             element_ref: None,
+            dynamic_attributes: Vec::new(),
+            dynamic_styles: Vec::new(),
+            dynamic_classes: Vec::new(),
         }
     }
 
@@ -738,6 +795,32 @@ impl VElement {
         self.element_ref = Some(element_ref);
         self
     }
+
+    pub fn dynamic_attr<F>(mut self, name: &str, compute: F) -> Self
+    where
+        F: FnMut() -> String + 'static,
+    {
+        self.dynamic_attributes
+            .push((name.to_string(), Rc::new(RefCell::new(compute))));
+        self
+    }
+
+    pub fn dynamic_style<F>(mut self, name: &str, compute: F) -> Self
+    where
+        F: FnMut() -> String + 'static,
+    {
+        self.dynamic_styles
+            .push((name.to_string(), Rc::new(RefCell::new(compute))));
+        self
+    }
+
+    pub fn dynamic_class<F>(mut self, compute: F) -> Self
+    where
+        F: FnMut() -> String + 'static,
+    {
+        self.dynamic_classes.push(Rc::new(RefCell::new(compute)));
+        self
+    }
 }
 
 impl From<&str> for Classes {
@@ -793,6 +876,13 @@ impl VText {
 /// Create a text [`VNode`].
 pub fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
+}
+
+pub fn dynamic_text<F>(initial: String, compute: F) -> VNode
+where
+    F: FnMut() -> String + 'static,
+{
+    VNode::DynamicText(DynamicText::new(initial, compute))
 }
 
 /// Create an element builder (shorthand for [`VElement::new`]).
@@ -875,6 +965,9 @@ impl VNode {
                     child.write_html(buf);
                 }
             }
+            VNode::DynamicText(dt) => {
+                html_escape_into(buf, &dt.initial);
+            }
         }
     }
 }
@@ -923,4 +1016,76 @@ fn is_void_element(tag: &str) -> bool {
             | "track"
             | "wbr"
     )
+}
+
+pub trait IntoVNodeChild {
+    fn into_vnode_child(self) -> VNode;
+}
+
+impl IntoVNodeChild for VNode {
+    fn into_vnode_child(self) -> VNode {
+        self
+    }
+}
+
+impl IntoVNodeChild for String {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(&self))
+    }
+}
+
+impl IntoVNodeChild for &str {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(self))
+    }
+}
+
+impl IntoVNodeChild for &String {
+    fn into_vnode_child(self) -> VNode {
+        VNode::Text(VText::new(self))
+    }
+}
+
+impl<T: Clone + std::string::ToString + 'static> IntoVNodeChild for crate::reactive::Signal<T> {
+    fn into_vnode_child(self) -> VNode {
+        let initial = self.get().to_string();
+        let signal = self.clone();
+        dynamic_text(initial, move || signal.get().to_string())
+    }
+}
+
+pub trait IntoDynamicAttr {
+    fn apply_to_element(self, element: &mut VElement, name: &str);
+}
+
+impl IntoDynamicAttr for String {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element.attributes.insert(name.to_string(), self);
+    }
+}
+
+impl IntoDynamicAttr for &str {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for Option<String> {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        if let Some(v) = self {
+            element.attributes.insert(name.to_string(), v);
+        }
+    }
+}
+
+pub struct Dyn<F: FnMut() -> String + 'static>(pub F);
+
+impl<F: FnMut() -> String + 'static> IntoDynamicAttr for Dyn<F> {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .dynamic_attributes
+            .push((name.to_string(), Rc::new(RefCell::new(self.0))));
+    }
 }

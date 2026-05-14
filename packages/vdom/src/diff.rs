@@ -29,6 +29,9 @@ fn diff_node(old: &VNode, new: &VNode, patches: &mut Vec<Patch>) {
                 });
             }
         }
+        (VNode::DynamicText(_), VNode::DynamicText(_)) => {
+            // DynamicText is managed by its own effect — skip diff
+        }
         (VNode::Element(old_elem), VNode::Element(new_elem)) => {
             diff_element(old_elem, new_elem, patches);
         }
@@ -141,6 +144,9 @@ fn diff_children_indexed(old_children: &[VNode], new_children: &[VNode], patches
 
         match (old_child, new_child) {
             (Some(old), Some(new)) => {
+                if matches!(old, VNode::DynamicText(_)) && matches!(new, VNode::DynamicText(_)) {
+                    continue;
+                }
                 let child_patches = diff(Some(old), new);
                 if !child_patches.is_empty() {
                     patches.push(Patch::UpdateChild {
@@ -752,5 +758,55 @@ mod tests {
         let patches = diff(Some(&old), &new);
         assert_eq!(patches.len(), 1);
         assert!(matches!(&patches[0], Patch::ReplaceNode { .. }));
+    }
+
+    #[test]
+    fn test_diff_dynamic_text_skips() {
+        let old = VNode::DynamicText(crate::vnode::DynamicText::new("hello".into(), || {
+            "hello".to_string()
+        }));
+        let new = VNode::DynamicText(crate::vnode::DynamicText::new("world".into(), || {
+            "world".to_string()
+        }));
+
+        let patches = diff(Some(&old), &new);
+        assert!(patches.is_empty());
+    }
+
+    #[test]
+    fn test_diff_dynamic_text_to_text_replaces() {
+        let old = VNode::DynamicText(crate::vnode::DynamicText::new("hello".into(), || {
+            "hello".into()
+        }));
+        let new = VNode::Text(VText::new("world"));
+
+        let patches = diff(Some(&old), &new);
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(&patches[0], Patch::ReplaceNode { .. }));
+    }
+
+    #[test]
+    fn test_diff_text_to_dynamic_text_replaces() {
+        let old = VNode::Text(VText::new("hello"));
+        let new = VNode::DynamicText(crate::vnode::DynamicText::new("hello".into(), || {
+            "hello".into()
+        }));
+
+        let patches = diff(Some(&old), &new);
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(&patches[0], Patch::ReplaceNode { .. }));
+    }
+
+    #[test]
+    fn test_dynamic_text_in_children_skipped() {
+        let old = VNode::Element(VElement::new("div").child(VNode::DynamicText(
+            crate::vnode::DynamicText::new("v1".into(), || "v1".into()),
+        )));
+        let new = VNode::Element(VElement::new("div").child(VNode::DynamicText(
+            crate::vnode::DynamicText::new("v2".into(), || "v2".into()),
+        )));
+
+        let patches = diff(Some(&old), &new);
+        assert!(patches.is_empty());
     }
 }

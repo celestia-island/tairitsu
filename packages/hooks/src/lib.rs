@@ -2,6 +2,7 @@ pub mod animation;
 pub mod callback;
 pub mod context;
 pub mod dom_ref;
+pub mod dynamic;
 pub mod effect;
 pub mod element_ref;
 pub mod interval;
@@ -20,9 +21,7 @@ pub use animation::{
 pub use callback::{use_callback, use_return_callback, use_void_callback, Callback};
 pub use context::{consume_context, provide_context, use_context, Context};
 pub use dom_ref::{use_dom_ref, DomRef};
-pub use element_ref::{use_element_ref, ElementRef};
-
-// Dioxus compatibility alias
+pub use dynamic::{use_dynamic_text, use_dynamic_text_fn};
 pub use effect::use_effect;
 pub use interval::{use_interval, IntervalHandle};
 pub use memo::{use_memo, use_memo_with, use_memo_with_deps, Memo};

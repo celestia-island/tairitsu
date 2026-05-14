@@ -18,8 +18,8 @@ pub use dom_ops::{
 pub use events::{
     AnimationEvent, ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle,
     FileData, FocusEvent, FormData, FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent,
-    MouseData, MouseEvent, PointerEvent, PointerType, TouchEvent, TouchPoint, TransitionEvent,
-    WheelEvent,
+    MouseData, MouseEvent, PointerEvent, PointerType, SubmitEvent, TouchEvent, TouchPoint,
+    TransitionEvent, WheelEvent,
 };
 pub use patch::Patch;
 pub use platform::{
@@ -29,14 +29,18 @@ pub use platform::{
     ObserverOps, Platform, QueryOps, ResizeObserverEntry, ResizeObserverSize, ScrollOps, TimerOps,
 };
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
-pub use reactive::{batch, create_effect, EffectHandle, Signal};
+pub use reactive::{
+    batch, clear_dependencies, create_effect, take_dependencies, DependencyEntry, EffectHandle,
+    Signal,
+};
 pub use runtime::{
     cleanup_component, flush_render, mark_dirty, notify_signal, request_rerender, rerender,
     store_initial_vnode, subscribe_component, use_component, with_component, ComponentId,
 };
 pub use svg::SafeSvg;
 pub use vnode::{
-    el, empty_vnode, txt, AnyElementRef, Classes, IntoAttrValue, Style, VElement, VNode, VText,
+    dynamic_text, el, empty_vnode, txt, AnyElementRef, Classes, Dyn, DynamicCompute, DynamicText,
+    IntoAttrValue, IntoDynamicAttr, IntoVNodeChild, Style, VElement, VNode, VText,
 };
 
 #[cfg(target_family = "wasm")]
