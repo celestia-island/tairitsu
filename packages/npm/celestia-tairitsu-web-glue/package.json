@@ -1,7 +1,7 @@
 {
-  "name": "@celestia/tairitsu-browser-glue",
+  "name": "celestia-tairitsu-web-glue",
   "version": "0.5.0",
-  "description": "Tairitsu browser glue — all WIT domain implementations in a single package",
+  "description": "Tairitsu web glue — unified browser package: WIT domain glue, runtime loader, WASM bindings",
   "license": "MIT OR Apache-2.0",
   "type": "module",
   "sideEffects": false,
@@ -11,16 +11,30 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./glue": {
+      "import": "./dist/glue-index.js",
+      "types": "./dist/glue-index.d.ts"
+    },
+    "./runtime": {
+      "import": "./dist/runtime-index.js",
+      "types": "./dist/runtime-index.d.ts"
+    },
+    "./wasm/*": {
+      "import": "./dist/wasm/*.js",
+      "types": "./dist/wasm/*.d.ts"
     }
   },
   "files": [
     "dist/**/*.js",
-    "dist/**/*.d.ts"
+    "dist/**/*.d.ts",
+    "dist/**/*.wasm",
+    "README.md"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/celestia-island/tairitsu.git",
-    "directory": "packages/npm/browser-glue"
+    "directory": "packages/npm/celestia-tairitsu-web-glue"
   },
   "publishConfig": {
     "access": "public",
@@ -28,6 +42,7 @@
   },
   "scripts": {
     "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify",
+    "build:dev": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser",
     "clean": "rimraf dist",
     "prepublishOnly": "npm run build"
   },

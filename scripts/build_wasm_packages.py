@@ -74,8 +74,9 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
         return False
 
     wasm_stem = crate_name.replace("-", "_")
-    pkg_dir = NPM_DIR / f"{crate_name}-wasm"
-    dist_dir = pkg_dir / "dist"
+    pkg_dir = NPM_DIR / "celestia-tairitsu-web-glue"
+    wasm_dir = pkg_dir / "dist" / "wasm"
+    dist_dir = wasm_dir
     dist_dir.mkdir(parents=True, exist_ok=True)
 
     # Step 1: cargo build --target wasm32-wasip2 --release
@@ -127,8 +128,6 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
     # Step 3: jco transpile
     print(f"    [3/4] jco transpile ...")
     jco = find_tool("jco", ["npx.cmd @bytecodealliance/jco", "npx @bytecodealliance/jco"])
-    wrapper_dir = dist_dir / "wrapper"
-    wrapper_dir.mkdir(exist_ok=True)
 
     if jco:
         jco_cmd = jco.split() if " " in jco else [jco]
@@ -136,7 +135,7 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
             jco_cmd + [
                 "transpile",
                 str(dist_dir / f"{wasm_stem}.wasm"),
-                "-o", str(wrapper_dir),
+                "-o", str(dist_dir),
             ],
             capture_output=True, text=True, encoding="utf-8", errors="replace",
             timeout=60,
@@ -146,37 +145,6 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
         else:
             print(f"    jco transpile failed: {result.stderr[-200:]}")
 
-    # Step 4: Generate package.json
-    print(f"    [4/4] Generating npm package ...")
-    pkg_json = {
-        "name": f"{SCOPE}/{crate_name}-wasm",
-        "version": VERSION,
-        "description": crate_info["description"],
-        "license": "MIT OR Apache-2.0",
-        "type": "module",
-        "main": f"./dist/wrapper/{wasm_stem}.js",
-        "files": [
-            f"dist/{wasm_stem}.wasm",
-            "dist/wrapper/**/*.js",
-            "dist/wrapper/**/*.d.ts",
-            "dist/wrapper/**/*.wasm",
-            "README.md",
-        ],
-        "repository": {
-            "type": "git",
-            "url": "https://github.com/celestia-org/tairitsu.git",
-            "directory": f"packages/npm/{crate_name}-wasm",
-        },
-        "publishConfig": {
-            "access": "public",
-            "registry": "https://registry.npmjs.org/",
-        },
-    }
-    (pkg_dir / "package.json").write_text(
-        json.dumps(pkg_json, indent=2) + "\n", encoding="utf-8"
-    )
-
-    final_wasm = dist_dir / f"{wasm_stem}.wasm"
     print(f"    DONE: {crate_name}-wasm ({final_wasm.stat().st_size:,} bytes)")
     return True
 

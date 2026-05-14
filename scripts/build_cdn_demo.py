@@ -25,12 +25,12 @@ CDN_MODULES_DIR = "cdn-modules"
 
 GLUE_SPECIFIER_MAP = {
     "@tairitsu-glue/document": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "document_exports",
         "functions": ["createElement", "createTextNode", "getBody"],
     },
     "@tairitsu-glue/element": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "element_exports",
         "functions": [
             "setAttribute", "getBoundingClientRect", "getClassList",
@@ -40,7 +40,7 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/node": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "node_exports",
         "functions": [
             "appendChild", "getFirstChild", "removeChild", "setTextContent",
@@ -48,17 +48,17 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/non-element-parent-node": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "nonElementParentNode_exports",
         "functions": ["getElementById"],
     },
     "@tairitsu-glue/parent-node": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "parentNode_exports",
         "functions": ["querySelector", "querySelectorAll"],
     },
     "@tairitsu-glue/event": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "event_exports",
         "functions": [
             "getCurrentTarget", "getTarget", "getEventType",
@@ -69,12 +69,12 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/event-target": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "eventTarget_exports",
         "functions": ["addEventListener", "removeEventListener", "preventDefault", "stopPropagation"],
     },
     "@tairitsu-glue/css-style-declaration": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "cssStyleDeclaration_exports",
         "functions": [
             "getCssText", "setCssText", "getLength", "item",
@@ -83,17 +83,17 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/element-css-inline-style": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "elementCssInlineStyle_exports",
         "functions": ["getStyle"],
     },
     "@tairitsu-glue/dom-token-list": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "domTokenList_exports",
         "functions": ["add", "remove", "contains"],
     },
     "@tairitsu-glue/platform-helpers": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "platformHelpers_exports",
         "functions": [
             "setTimeout", "clearTimeout", "requestAnimationFrame",
@@ -101,19 +101,19 @@ GLUE_SPECIFIER_MAP = {
         ],
     },
     "@tairitsu-glue/window": {
-        "package": "browser-glue",
+        "package": "celestia-tairitsu-web-glue",
         "export_obj": "window_exports",
         "functions": ["getComputedStyle", "getInnerWidth", "getInnerHeight"],
     },
 }
 
 PACKAGE_TO_CDN_NAME = {
-    "browser-glue": "@celestia/tairitsu-browser-glue",
-    "runtime": "@celestia/tairitsu-runtime",
-    "tairitsu-vdom-wasm": "@celestia/tairitsu-vdom-wasm",
-    "tairitsu-hooks-wasm": "@celestia/tairitsu-hooks-wasm",
-    "tairitsu-style-wasm": "@celestia/tairitsu-style-wasm",
-    "hikari-palette-wasm": "@celestia/hikari-palette-wasm",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
+    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
 }
 
 VERSION = "0.5.0"
@@ -140,7 +140,7 @@ def generate_per_specifier_modules(dist_dir: Path) -> dict[str, str]:
     # that just initializes globalThis handle tables and helpers.
     core_dir = shims_dir / "glue-core"
     core_dir.mkdir(parents=True, exist_ok=True)
-    core_src = NPM_DIR / "browser-glue" / "dist" / "index.js"
+    core_src = NPM_DIR / "celestia-tairitsu-web-glue" / "dist" / "index.js"
     if core_src.exists():
         core_code = core_src.read_text(encoding="utf-8")
         # Strip ES module exports: remove everything from the last 'export{' to end
@@ -234,10 +234,10 @@ def copy_modular_wasm_packages(dist_dir: Path):
     modules_dir.mkdir(parents=True, exist_ok=True)
     
     wasm_packages = [
-        "tairitsu-vdom-wasm",
-        "tairitsu-hooks-wasm",
-        "tairitsu-style-wasm",
-        "hikari-palette-wasm",
+        "celestia-tairitsu-web-glue",
+        "celestia-tairitsu-web-glue",
+        "celestia-tairitsu-web-glue",
+        "celestia-tairitsu-web-glue",
     ]
     
     copied = []
