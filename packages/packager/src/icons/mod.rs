@@ -29,11 +29,11 @@ mod metadata;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-pub use fetcher::{IconFetcher, fetch_icons, force_fetch_icons};
-pub use generator::{IconBuildResult, generate_icon_module};
+pub use fetcher::{fetch_icons, force_fetch_icons, IconFetcher};
+pub use generator::{generate_icon_module, IconBuildResult};
 pub use metadata::{
-    IconEntry, IconMetadata, IconsConfig, MdiIconMeta, MdiMetadata, parse_icons_config,
-    parse_mdi_metadata,
+    parse_icons_config, parse_mdi_metadata, IconEntry, IconMetadata, IconsConfig, MdiIconMeta,
+    MdiMetadata,
 };
 
 /// Icon source library

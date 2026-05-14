@@ -12,28 +12,28 @@ pub mod media;
 pub mod media_query;
 pub mod observer;
 pub mod query;
-pub mod r#trait;
 pub mod scroll;
 pub mod timer;
+pub mod r#trait;
 
-pub use element::ElementHandle;
-pub use event::EventHandle;
-pub use dom::DomOps;
-pub use dom::ListenerOptions;
-pub use timer::TimerOps;
-pub use layout::LayoutOps;
-pub use observer::ObserverOps;
-pub use media_query::MediaQueryOps;
+pub use canvas::CanvasOps;
 pub use clipboard::ClipboardOps;
 pub use content_editable::ContentEditableOps;
-pub use scroll::ScrollOps;
-pub use query::QueryOps;
-pub use canvas::CanvasOps;
-pub use media::MediaOps;
-pub use geo::GeoOps;
+pub use dom::DomOps;
+pub use dom::ListenerOptions;
+pub use element::ElementHandle;
+pub use event::EventHandle;
 pub use file::FileOps;
+pub use geo::GeoOps;
 pub use idb::IdbOps;
+pub use layout::LayoutOps;
+pub use media::MediaOps;
+pub use media_query::MediaQueryOps;
+pub use observer::ObserverOps;
+pub use query::QueryOps;
 pub use r#trait::{
     CanvasContext, ContentEditableState, DomRect, GeoPosition, GeoPositionError,
     MutationObserverInit, MutationRecord, Platform, ResizeObserverEntry, ResizeObserverSize,
 };
+pub use scroll::ScrollOps;
+pub use timer::TimerOps;

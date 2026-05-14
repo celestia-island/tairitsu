@@ -1,7 +1,7 @@
 [package]
 name = "tairitsu-mcp"
 version.workspace = true
-edition = "2024"
+edition.workspace = true
 description = "Tairitsu MCP server — browser automation + VTty for AI coding assistants"
 authors.workspace = true
 license = "MIT OR Apache-2.0"

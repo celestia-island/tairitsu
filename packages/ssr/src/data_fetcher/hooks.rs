@@ -6,7 +6,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use tairitsu_vdom::runtime;
 
-use super::{Fetcher, Resource, http_fetcher::HttpFetcher};
+use super::{http_fetcher::HttpFetcher, Fetcher, Resource};
 
 /// Hook for fetching data from a URL
 ///

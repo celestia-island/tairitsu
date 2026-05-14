@@ -46,7 +46,7 @@ pub mod loader;
 pub mod macros;
 
 pub use context::{
-    I18nProvider, I18nState, provide_i18n, set_locale, translate, translate_or_key, use_locale,
+    provide_i18n, set_locale, translate, translate_or_key, use_locale, I18nProvider, I18nState,
 };
 pub use keys::*;
 pub use language::*;

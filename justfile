@@ -38,7 +38,7 @@ default:
 # Install required Rust toolchain components
 install-tools:
     rustup target add wasm32-wasip2
-    rustup component add rustfmt --toolchain nightly
+    rustup component add rustfmt
     rustup component add clippy
     {{python}} scripts/download_wasi_adapters.py
 
@@ -281,12 +281,12 @@ clippy:
 # Run formatting check
 fmt-check:
     @echo "Checking code formatting..."
-    cargo +nightly fmt --all -- --check --unstable-features
+    cargo fmt --all -- --check
 
 # Format all code
 fmt:
     @echo "Formatting all code..."
-    cargo +nightly fmt --all -- --unstable-features
+    cargo fmt --all
 
 # CI checks (format check + test)
 ci: fmt-check test

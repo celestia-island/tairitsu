@@ -4,14 +4,14 @@ use std::{
     sync::Arc,
     time::{Duration, Instant},
 };
-use tokio::sync::{RwLock, mpsc, oneshot};
+use tokio::sync::{mpsc, oneshot, RwLock};
 
 use axum::{
-    Router,
     extract::{Json, Query, State},
     http::StatusCode,
     response::{IntoResponse, Json as ResponseJson},
     routing::{delete, get, post},
+    Router,
 };
 use tower_http::{
     compression::CompressionLayer,
@@ -557,14 +557,14 @@ mod engine {
             .arg("--disable-dev-shm-usage")
             .arg("--disable-gpu");
 
-        if let Ok(exe) = std::env::var("CHROME_PATH")
-            && !exe.is_empty()
-        {
-            crate::log_info!("[debug-browser] Using CHROME_PATH={}", exe);
-            builder = builder.chrome_executable(exe);
-            return builder
-                .build()
-                .map_err(|e| format!("Bad browser config: {e}"));
+        if let Ok(exe) = std::env::var("CHROME_PATH") {
+            if !exe.is_empty() {
+                crate::log_info!("[debug-browser] Using CHROME_PATH={}", exe);
+                builder = builder.chrome_executable(exe);
+                return builder
+                    .build()
+                    .map_err(|e| format!("Bad browser config: {e}"));
+            }
         }
 
         if let Ok(exe) = which_chromium() {
@@ -604,12 +604,12 @@ mod engine {
             "chrome",
         ];
         for name in &candidates {
-            if let Ok(output) = std::process::Command::new("which").arg(name).output()
-                && output.status.success()
-            {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Ok(path);
+            if let Ok(output) = std::process::Command::new("which").arg(name).output() {
+                if output.status.success() {
+                    let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                    if !path.is_empty() {
+                        return Ok(path);
+                    }
                 }
             }
         }
@@ -1438,10 +1438,10 @@ async fn console_handler(
                     return false;
                 }
             }
-            if let Some(ref src) = params.source
-                && e.source.as_deref() != Some(src.as_str())
-            {
-                return false;
+            if let Some(ref src) = params.source {
+                if e.source.as_deref() != Some(src.as_str()) {
+                    return false;
+                }
             }
             true
         })
@@ -1892,10 +1892,10 @@ fn parse_location(s: &str) -> (String, Option<u32>, Option<u32>) {
         let after_colon = &s[colon_pos + 1..];
         if let Ok(col) = after_colon.parse::<u32>() {
             let before_col = &s[..colon_pos];
-            if let Some(colon2) = before_col.rfind(':')
-                && let Ok(line) = before_col[colon2 + 1..].parse::<u32>()
-            {
-                return (before_col[..colon2].to_string(), Some(line), Some(col));
+            if let Some(colon2) = before_col.rfind(':') {
+                if let Ok(line) = before_col[colon2 + 1..].parse::<u32>() {
+                    return (before_col[..colon2].to_string(), Some(line), Some(col));
+                }
             }
             return (before_col.to_string(), None, Some(col));
         }

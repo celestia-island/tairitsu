@@ -25,8 +25,8 @@ use std::{
 };
 
 pub use diff::{
-    ComponentChange, ComponentMetadata, DiffResult, FunctionChange, HookChange, HookInfo, HookType,
-    PropertyChange, PropertyInfo, diff_components,
+    diff_components, ComponentChange, ComponentMetadata, DiffResult, FunctionChange, HookChange,
+    HookInfo, HookType, PropertyChange, PropertyInfo,
 };
 use tairitsu_vdom::ComponentId;
 

@@ -1,7 +1,7 @@
 use vte::{Params, Perform};
 
 use super::graphics::{
-    InlineImageStore, KittyGraphicsState, process_kitty_apc, process_osc_1337, process_sixel,
+    process_kitty_apc, process_osc_1337, process_sixel, InlineImageStore, KittyGraphicsState,
 };
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -648,8 +648,8 @@ mod tests {
     #[cfg(feature = "vtty-visual")]
     #[test]
     fn test_kitty_apc_end_to_end() {
-        use crate::vtty::graphics::{InlineImageStore, KittyGraphicsState, process_kitty_apc};
-        use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
+        use crate::vtty::graphics::{process_kitty_apc, InlineImageStore, KittyGraphicsState};
+        use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
         use image::ImageBuffer;
         use image::Rgba;
 

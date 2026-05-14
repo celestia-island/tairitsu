@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use ab_glyph::{Font, FontVec, GlyphId, PxScale, ScaleFont, point};
+use ab_glyph::{point, Font, FontVec, GlyphId, PxScale, ScaleFont};
 use image::{ImageBuffer, Rgba};
 
 use super::screen::{Cell, ColorKind, RenderData};
@@ -231,32 +231,36 @@ fn find_font_file(candidates: &[&str]) -> Option<std::path::PathBuf> {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.is_file() {
-                    if let Some(name) = path.file_name().and_then(|n| n.to_str())
-                        && candidates.contains(&name)
-                    {
-                        return Some(path);
-                    }
-                } else if path.is_dir()
-                    && let Ok(sub) = std::fs::read_dir(&path)
-                {
-                    for se in sub.flatten() {
-                        let sp = se.path();
-                        if sp.is_file()
-                            && let Some(name) = sp.file_name().and_then(|n| n.to_str())
-                            && candidates.contains(&name)
-                        {
-                            return Some(sp);
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        if candidates.contains(&name) {
+                            return Some(path);
                         }
-                        if sp.is_dir()
-                            && let Ok(l3) = std::fs::read_dir(&sp)
-                        {
-                            for l3e in l3.flatten() {
-                                let l3p = l3e.path();
-                                if l3p.is_file()
-                                    && let Some(name) = l3p.file_name().and_then(|n| n.to_str())
-                                    && candidates.contains(&name)
-                                {
-                                    return Some(l3p);
+                    }
+                } else if path.is_dir() {
+                    if let Ok(sub) = std::fs::read_dir(&path) {
+                        for se in sub.flatten() {
+                            let sp = se.path();
+                            if sp.is_file() {
+                                if let Some(name) = sp.file_name().and_then(|n| n.to_str()) {
+                                    if candidates.contains(&name) {
+                                        return Some(sp);
+                                    }
+                                }
+                            }
+                            if sp.is_dir() {
+                                if let Ok(l3) = std::fs::read_dir(&sp) {
+                                    for l3e in l3.flatten() {
+                                        let l3p = l3e.path();
+                                        if l3p.is_file() {
+                                            if let Some(name) =
+                                                l3p.file_name().and_then(|n| n.to_str())
+                                            {
+                                                if candidates.contains(&name) {
+                                                    return Some(l3p);
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -601,7 +605,7 @@ fn composite_placement(
 }
 
 pub fn encode_base64(data: &[u8]) -> String {
-    use base64::{Engine, engine::general_purpose::STANDARD};
+    use base64::{engine::general_purpose::STANDARD, Engine};
     STANDARD.encode(data)
 }
 

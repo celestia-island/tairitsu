@@ -5,9 +5,9 @@ use futures::StreamExt;
 use std::{path::PathBuf, time::Duration};
 
 use chromiumoxide::{
-    Page,
     browser::{Browser, BrowserConfig},
     js::EvaluationResult,
+    Page,
 };
 use tracing::{debug, info, warn};
 

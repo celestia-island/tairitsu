@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use super::{FetchConfig, cache::Cache, error::FetchError, fetcher::Fetcher};
+use super::{cache::Cache, error::FetchError, fetcher::Fetcher, FetchConfig};
 
 /// HTTP fetcher for making HTTP requests with caching support
 #[derive(Clone)]
@@ -105,19 +105,19 @@ impl HttpFetcher {
         // Add custom headers from config
         #[cfg(feature = "data-fetcher")]
         for (key, value) in &self.config.headers {
-            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
-                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value)
-            {
-                headers.insert(header_name, header_value);
+            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes()) {
+                if let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
+                    headers.insert(header_name, header_value);
+                }
             }
         }
 
         // Add additional headers
         for (key, value) in additional {
-            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
-                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value)
-            {
-                headers.insert(header_name, header_value);
+            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes()) {
+                if let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
+                    headers.insert(header_name, header_value);
+                }
             }
         }
 

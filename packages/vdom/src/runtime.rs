@@ -7,7 +7,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use tracing::trace;
 
-use crate::{VNode, patch::Patch};
+use crate::{patch::Patch, VNode};
 
 /// Component ID - unique identifier for each component instance
 pub type ComponentId = usize;
@@ -190,7 +190,8 @@ pub fn track_signal(signal_ptr: usize) {
                     .push(component_id);
                 trace!(
                     "Component {} now depends on signal {:?}",
-                    component_id, signal_ptr
+                    component_id,
+                    signal_ptr
                 );
             });
         }
@@ -305,7 +306,8 @@ pub fn subscribe_component(signal_ptr: usize, component_id: ComponentId) {
             .push(component_id);
         trace!(
             "Component {} subscribed to signal {:?}",
-            component_id, signal_ptr
+            component_id,
+            signal_ptr
         );
     });
 }

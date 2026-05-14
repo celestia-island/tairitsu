@@ -24,8 +24,8 @@ pub mod wit_platform;
 pub use browser::BrowserPlatform;
 #[cfg(feature = "i18n")]
 pub use i18n::{
-    I18nProvider, I18nState, Language, TextDirection, provide_i18n, set_locale, translate,
-    translate_or_key, use_locale,
+    provide_i18n, set_locale, translate, translate_or_key, use_locale, I18nProvider, I18nState,
+    Language, TextDirection,
 };
 #[cfg(feature = "wit-bindings")]
 pub use navigation::{current_path, navigate, replace};
@@ -40,5 +40,5 @@ pub use ssr::SsrPlatform;
 pub use wit_platform::prevent_event_default;
 #[cfg(feature = "wit-bindings")]
 pub use wit_platform::{
-    WitElement, WitEvent, WitPlatform, get_pathname, push_state, replace_state,
+    get_pathname, push_state, replace_state, WitElement, WitEvent, WitPlatform,
 };

@@ -4,9 +4,9 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
-    Attribute, Expr, Ident, Meta, Result, Token, Type, Visibility,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
+    Attribute, Expr, Ident, Meta, Result, Token, Type, Visibility,
 };
 
 /// Parsed props field with optional default value from #[default(...)] attribute

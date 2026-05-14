@@ -113,10 +113,7 @@ impl PluginWitRegistry {
     /// Copy all plugin WIT files into `composed_dir/_plugins/`.
     ///
     /// Returns a map of interface name → destination path.
-    pub fn merge_into_composed_dir(
-        &self,
-        composed_dir: &Path,
-    ) -> Result<HashMap<String, PathBuf>> {
+    pub fn merge_into_composed_dir(&self, composed_dir: &Path) -> Result<HashMap<String, PathBuf>> {
         if self.is_empty() {
             return Ok(HashMap::new());
         }
@@ -126,12 +123,7 @@ impl PluginWitRegistry {
 
         let mut added = HashMap::new();
         for plugin in &self.plugins {
-            let dest = plugin_dir.join(
-                plugin
-                    .path
-                    .file_name()
-                    .unwrap_or_default(),
-            );
+            let dest = plugin_dir.join(plugin.path.file_name().unwrap_or_default());
             std::fs::write(&dest, &plugin.source)?;
             added.insert(plugin.interface_name.clone(), dest);
         }

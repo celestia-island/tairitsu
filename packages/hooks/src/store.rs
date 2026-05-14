@@ -297,7 +297,9 @@ macro_rules! store {
 /// ```
 #[macro_export]
 macro_rules! use_store {
-    ($store:expr) => {{ $store.get() }};
+    ($store:expr) => {{
+        $store.get()
+    }};
 }
 
 #[cfg(test)]

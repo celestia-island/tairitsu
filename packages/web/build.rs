@@ -1,4 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 fn main() {
     println!("cargo:rerun-if-changed=Cargo.toml");
@@ -30,23 +33,24 @@ fn main() {
 /// 1. `DEP_TAIRITSU_BROWSER_WORLDS_WIT_COMPOSED_DIR` (set by `tairitsu-browser-worlds` build.rs
 ///    via `cargo:wit_composed_dir` — available when `links = "tairitsu-browser-worlds"` is set)
 /// 2. Monorepo fallback: `../browser-worlds/wit/composed` (for in-tree development)
-fn resolve_wit_path(manifest_dir: &PathBuf) {
+fn resolve_wit_path(manifest_dir: &Path) {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap_or_else(|_| ".".to_string()));
 
-    let wit_composed_dir = if let Ok(dir) = std::env::var("DEP_TAIRITSU_BROWSER_WORLDS_WIT_COMPOSED_DIR") {
-        PathBuf::from(dir)
-    } else {
-        let monorepo_path = manifest_dir.join("../browser-worlds/wit/composed");
-        if monorepo_path.exists() {
-            monorepo_path
+    let wit_composed_dir =
+        if let Ok(dir) = std::env::var("DEP_TAIRITSU_BROWSER_WORLDS_WIT_COMPOSED_DIR") {
+            PathBuf::from(dir)
         } else {
-            eprintln!(
+            let monorepo_path = manifest_dir.join("../browser-worlds/wit/composed");
+            if monorepo_path.exists() {
+                monorepo_path
+            } else {
+                eprintln!(
                 "[tairitsu-web] Warning: Could not locate browser-worlds WIT composed directory. \
                  wit-bindings feature may not compile."
             );
-            return;
-        }
-    };
+                return;
+            }
+        };
 
     let escaped_path = wit_composed_dir.to_string_lossy().replace('\\', "\\\\");
 

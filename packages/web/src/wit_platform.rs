@@ -269,10 +269,10 @@ pub mod wasm_impl {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use tairitsu_vdom::{
-        CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent,
-        KeyboardEvent, Platform, VNode,
-        CanvasOps, ClipboardOps, ContentEditableOps, DomOps, FileOps, GeoOps, IdbOps, LayoutOps,
-        MediaOps, MediaQueryOps, ObserverOps, QueryOps, ScrollOps, TimerOps,
+        CanvasContext, CanvasOps, ClipboardOps, ContentEditableOps, DomOps, DomRect, EventData,
+        EventWitHandle, FileOps, FocusEvent, GenericEvent, GeoOps, IdbOps, InputEvent,
+        KeyboardEvent, LayoutOps, MediaOps, MediaQueryOps, ObserverOps, Platform, QueryOps,
+        ScrollOps, TimerOps, VNode,
     };
 
     use super::{WitElement, WitEvent, WitPlatform};
@@ -472,8 +472,7 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::MouseEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let target =
-                bindings::tairitsu_browser::full::event::get_target(event_handle);
+            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
             let current_target =
                 bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
@@ -507,8 +506,7 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::KeyboardEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let target =
-                bindings::tairitsu_browser::full::event::get_target(event_handle);
+            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
             let current_target =
                 bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
@@ -534,8 +532,7 @@ pub mod wasm_impl {
             _data: bindings::exports::tairitsu_browser::full::event_callbacks::FocusEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let target =
-                bindings::tairitsu_browser::full::event::get_target(event_handle);
+            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
             let current_target =
                 bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
@@ -553,8 +550,7 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::InputEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let target =
-                bindings::tairitsu_browser::full::event::get_target(event_handle);
+            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
             let current_target =
                 bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
@@ -575,8 +571,7 @@ pub mod wasm_impl {
 
         fn on_generic_event(listener_id: u64, event_handle: u64, event_type: String) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let target =
-                bindings::tairitsu_browser::full::event::get_target(event_handle);
+            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
             let current_target =
                 bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
@@ -1225,7 +1220,6 @@ pub mod wasm_impl {
             )
             .map(WitElement::from_raw)
         }
-
     }
 
     impl TimerOps for WitPlatform {
@@ -1258,7 +1252,6 @@ pub mod wasm_impl {
         fn cancel_animation_frame(&self, id: u32) {
             bindings::tairitsu_browser::full::platform_helpers::cancel_animation_frame(id)
         }
-
     }
 
     impl LayoutOps for WitPlatform {
@@ -1301,7 +1294,6 @@ pub mod wasm_impl {
         fn get_element_client_width(&self, element: &Self::Element) -> i32 {
             bindings::tairitsu_browser::full::element::get_client_width(element.as_raw())
         }
-
     }
 
     impl ObserverOps for WitPlatform {
@@ -1360,7 +1352,6 @@ pub mod wasm_impl {
         fn disconnect_mutation(&self, observer: u64) {
             bindings::tairitsu_browser::full::mutation_observer::disconnect(observer);
         }
-
     }
 
     impl MediaQueryOps for WitPlatform {
@@ -1393,7 +1384,6 @@ pub mod wasm_impl {
                 Some(listener_id),
             );
         }
-
     }
 
     impl ClipboardOps for WitPlatform {
@@ -1432,7 +1422,6 @@ pub mod wasm_impl {
                 m.borrow_mut().insert(promise_id, on_complete);
             });
         }
-
     }
 
     impl ContentEditableOps for WitPlatform {
@@ -1469,7 +1458,6 @@ pub mod wasm_impl {
                 editable,
             );
         }
-
     }
 
     impl ScrollOps for WitPlatform {
@@ -1523,7 +1511,6 @@ pub mod wasm_impl {
             )
             .map(WitElement::from_raw)
         }
-
     }
 
     impl QueryOps for WitPlatform {
@@ -1585,7 +1572,6 @@ pub mod wasm_impl {
                 height: rect.height,
             })
         }
-
     }
 
     impl CanvasOps for WitPlatform {
@@ -1630,7 +1616,6 @@ pub mod wasm_impl {
                 background,
             )
         }
-
     }
 
     impl MediaOps for WitPlatform {
@@ -1697,7 +1682,6 @@ pub mod wasm_impl {
                 analyser,
             )
         }
-
     }
 
     impl GeoOps for WitPlatform {
@@ -1731,7 +1715,6 @@ pub mod wasm_impl {
                 maximum_age,
             );
         }
-
     }
 
     impl FileOps for WitPlatform {
@@ -1785,7 +1768,6 @@ pub mod wasm_impl {
                 callback_id,
             );
         }
-
     }
 
     impl IdbOps for WitPlatform {
@@ -1931,9 +1913,7 @@ pub mod wasm_impl {
                 callback_id,
             );
         }
-
     }
-
 
     pub(super) fn mount_vnode_to_app(platform: &WitPlatform, vnode: VNode) -> Result<()> {
         let doc_handle: u64 = 0;

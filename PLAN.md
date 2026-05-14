@@ -362,6 +362,121 @@ docs/en/
 
 ---
 
+## 第六阶段：渲染性能 — 细粒度响应式更新（P1）
+
+> **背景**: Hikari 锐评中指出 VDOM 粗粒度渲染是性能瓶颈。每次 Signal 变化触发完整组件 re-render + tree diff，即使只改了一个文本节点。
+> **原理**: Tairitsu 已有 `Signal<T>` (`packages/vdom/src/reactive/mod.rs`) + `create_effect` 自动依赖追踪，但渲染层未利用——Signal::set 总是触发整个组件的 `rsx!{}` 重执行。
+> **目标**: Signal 变化时只更新依赖该 signal 的具体 DOM 属性/文本/类，不触发完整 VDOM diff。
+> **策略**: 保持 VDOM + Signal 混合模型，只在 leaf level 做细粒度更新（参考 Dioxus 2024 的 hybrid 策略）。
+
+### P1-5: 新增 `DynamicText` VNode 变体
+
+在 `packages/vdom/src/vnode.rs` 的 `ChildNode` 枚举中新增变体：
+
+```rust
+pub enum ChildNode {
+    VElement(VElement),
+    VText(VText),
+    DynamicText {
+        initial: String,
+        compute: Box<dyn Fn() -> String>,
+    },
+}
+```
+
+**diff 行为**（`packages/vdom/src/diff.rs`）：
+- 首次渲染：创建文本节点，设为 `initial`，挂载 `create_effect` 监听 signal 变化并直接更新 `textContent`
+- 后续 diff：`DynamicText` 不参与 diff（跳过，因为已有 effect 管辖）
+- 组件卸载：自动清理 effect
+
+**hooks 对接**（`packages/hooks/`）：
+- 新增 `use_dynamic_text(signal: Signal<T>) -> ChildNode` 便利 hook
+- 内部调用 `create_effect` + `Signal::get()` 建立依赖
+
+### P1-6: 新增 `DynamicAttr` / `DynamicClass` 绑定
+
+类似 DynamicText 但作用于元素属性和 class：
+
+```rust
+pub enum ChildNode {
+    // ...existing...
+    DynamicAttr {
+        element: VElement,
+        attr_name: String,
+        compute: Box<dyn Fn() -> String>,
+    },
+    DynamicClass {
+        element: VElement,
+        compute: Box<dyn Fn() -> String>,
+    },
+}
+```
+
+**diff 行为**：
+- 首次渲染：正常创建元素 + 设初始属性/class，挂载 effect
+- effect 触发时：直接调用 `set_attribute` / `class_list_add/remove`（通过 `DomOps` trait）
+- 后续 diff：`DynamicAttr`/`DynamicClass` 包裹的属性不参与属性级 diff
+
+### P1-7: `rsx!{}` 宏自动识别 signal 表达式
+
+在 `packages/macros/` 中改造 `rsx!{}` 宏展开逻辑：
+
+**检测规则**：
+```rust
+// 文本节点直接包含 signal.read() / signal.get() 调用
+rsx! { <span>{count.read().to_string()}</span> }
+// → 编译为 DynamicText，而非 VText
+
+// class/属性直接包含 signal 调用
+rsx! { <div class={classes.get()}>{...}</div> }
+// → 编译为 DynamicClass
+```
+
+**宏展开差异**：
+```
+// 现有展开（粗粒度）：
+VElement::new("span").child(VText::new(count.read().to_string()))
+
+// 优化后展开（细粒度）：
+VElement::new("span").child(ChildNode::DynamicText {
+    initial: count.read().to_string(),
+    compute: Box::new(move || count.read().to_string()),
+})
+```
+
+**检测策略**：分析 RSX 表达式 AST，若 `{}` 块内包含 `.read()` / `.get()` 方法调用且 receiver 是已知 signal 类型，标记为 dynamic。保守策略：检测到时生成 dynamic 版本，检测不到时保持原行为。
+
+### P1-8: 运行时 effect 清理机制
+
+当组件卸载时，需要清理该组件创建的所有 `create_effect` 注册的 effect。
+
+**当前状态**：`create_effect` (`packages/vdom/src/reactive/mod.rs:112-130`) 返回 `EffectHandle` 但其 `_cleanup` 字段只是空操作。
+
+**改造**：
+- `EffectHandle` 持有实际的 cleanup 闭包（移除 DOM 事件监听器等）
+- `runtime.rs` 维护每个组件的 effect 列表
+- 组件卸载时 `runtime.rs` 批量 drop 所有 effect handle
+
+### 预期性能提升
+
+| 场景 | 现状 | 优化后 |
+|------|------|--------|
+| 计数器更新 | 重渲染整个 counter 组件 + VDOM diff | 仅更新 `span.textContent` |
+| 表格单个 cell 更新 | 重渲染整个 table 组件 | 仅更新该 cell 的 text |
+| 表单 value 绑定 | 重渲染整个 form | 仅更新 `input.value` |
+| 动画帧更新（60fps） | 每帧完整 VDOM diff | 仅更新被动画的 CSS 属性 |
+| `on_scroll` 回调中更新状态 | 每次 scroll 触发完整 re-render | 仅更新依赖的 DOM 属性 |
+
+高频更新场景（动画、拖拽、表单输入）预计提升 **3-10 倍**。
+
+### 不会做的事情
+
+- **不会移除 VDOM** — VDOM 仍用于结构型渲染（条件/循环/slot/portal）
+- **不会改成 Leptos 的纯 fine-grained** — 保留 React 式组件模型
+- **不会引入编译时静态分析** — 使用运行时 `Signal::get()` 自动依赖追踪（已有基础设施）
+
+---
+
 ## 架构决策记录
 
 ### AD-1: 事件便利方法实现策略
@@ -381,6 +496,22 @@ docs/en/
 - **原因**: 不 breaking change 的前提下，让不同场景用户看到清晰的命名
 - **替代方案**: 激进重命名所有 crate（breaking every user）
 
+### AD-4: 细粒度响应式采用 Hybrid 策略而非纯 fine-grained (2026-05-14)
+- **决策**: 保持 VDOM + Signal 混合模型，只在 leaf level 做 DynamicText/DynamicAttr 细粒度更新
+- **原因**: VDOM 对 Portal/条件渲染/SSR/列表 reconciliation 仍然有价值，完全去掉得不偿失
+- **参考**: Dioxus 2024+ 也采用相同 hybrid 策略（VDOM 管结构，Signal 管值）
+- **替代方案**: 改为 Leptos 式纯 fine-grained（需重写整个 diff/patch 系统，代价太大）
+
+### AD-5: Dynamic VNode 在 vdom crate 中实现 (2026-05-14)
+- **决策**: DynamicText/DynamicAttr/DynamicClass 作为 VNode 变体在 `tairitsu-vdom` 中实现
+- **原因**: 这是渲染引擎的基础能力，所有基于 Tairitsu 的框架（Hikari 及未来的）都需要
+- **影响**: `tairitsu-macros` 的 `rsx!{}` 宏需要同步改造以自动生成 Dynamic 变体
+
+### AD-6: Hikari Platform 层采用 Box<dyn Fn> 函数指针表 (2026-05-14)
+- **决策**: Hikari 的 `platform::wit.rs` 不直接依赖 `WitPlatform`，而是通过 `Box<dyn Fn(Args) -> Ret>` 闭包表间接调用
+- **原因**: Platform trait 有关联类型 `type Element: ElementHandle`，不满足 dyn-safe；`WitPlatform` 的 trait impl 仅在 `#[cfg(target_family = "wasm")]` 下编译，native build 会失败
+- **影响**: 每个 Hikari 应用入口需调用 `platform_init::register(&platform)` 一次注册
+
 ---
 
 ## 进度总览
@@ -398,6 +529,10 @@ docs/en/
 | 三 | P1-2: VDOM diff 算法升级 | ⬜ 待开始 |
 | 三 | P1-3: 事件系统剩余补全 | ⬜ 待开始 |
 | 三 | P1-4: WIT generation pipeline 去重 | ⬜ 待开始 |
+| **六** | **P1-5: DynamicText VNode 变体** | ⬜ 待开始 |
+| **六** | **P1-6: DynamicAttr/DynamicClass 绑定** | ⬜ 待开始 |
+| **六** | **P1-7: rsx!{} 宏自动识别 signal 表达式** | ⬜ 待开始 |
+| **六** | **P1-8: 运行时 effect 清理机制** | ⬜ 待开始 |
 | 四 | P2-1: 移除 Scheduler 双轨制 | ⬜ 待开始 |
 | 四 | P2-2: 测试覆盖率提升 | ⬜ 待开始 |
 | 四 | P2-3: 补充对外 API 文档 | ⬜ 待开始 |

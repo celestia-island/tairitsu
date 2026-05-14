@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::{
-        Arc, Mutex,
         atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
     },
 };
 
@@ -270,10 +270,10 @@ impl VttySession {
     pub fn kill(&mut self) -> Result<(), String> {
         self.alive.store(false, Ordering::Relaxed);
         self.reader_running.store(false, Ordering::Relaxed);
-        if let Ok(mut guard) = self.reader_handle.lock()
-            && let Some(handle) = guard.take()
-        {
-            let _ = handle.join();
+        if let Ok(mut guard) = self.reader_handle.lock() {
+            if let Some(handle) = guard.take() {
+                let _ = handle.join();
+            }
         }
         let mut guard = self
             .pty

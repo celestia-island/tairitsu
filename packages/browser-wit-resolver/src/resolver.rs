@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use tracing::{debug, info};
 
-use crate::{DEFAULT_REGISTRY, cache::Cache, fetch::FetchClient};
+use crate::{cache::Cache, fetch::FetchClient, DEFAULT_REGISTRY};
 
 /// A fully-resolved WIT package ready for use.
 #[derive(Debug, Clone)]

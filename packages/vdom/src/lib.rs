@@ -7,38 +7,36 @@ pub mod platform;
 pub mod portal;
 pub mod reactive;
 pub mod runtime;
-pub mod scheduler;
 pub mod svg;
 pub mod vnode;
 
 pub use callback::{Callback, EventHandler};
 pub use dom_ops::{
-    DomFuncs, DomHandle, get_bounding_client_rect, register_dom_functions, register_ref_resolver,
-    register_wit_functions, resolve_element_ref, set_attribute, set_style,
+    get_bounding_client_rect, register_dom_functions, register_ref_resolver,
+    register_wit_functions, resolve_element_ref, set_attribute, set_style, DomFuncs, DomHandle,
 };
 pub use events::{
     AnimationEvent, ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle,
     FileData, FocusEvent, FormData, FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent,
-    MouseData, MouseEvent, PointerEvent, PointerType, TouchEvent, TouchPoint,
-    TransitionEvent, WheelEvent,
+    MouseData, MouseEvent, PointerEvent, PointerType, TouchEvent, TouchPoint, TransitionEvent,
+    WheelEvent,
 };
 pub use patch::Patch;
 pub use platform::{
-    CanvasContext, CanvasOps, ClipboardOps, ContentEditableState, ContentEditableOps, DomOps,
-    DomRect, ElementHandle, EventHandle, FileOps, GeoOps, GeoPosition, GeoPositionError,
-    IdbOps, LayoutOps, ListenerOptions, MediaOps, MediaQueryOps, MutationObserverInit, MutationRecord, ObserverOps,
-    Platform, QueryOps, ResizeObserverEntry, ResizeObserverSize, ScrollOps, TimerOps,
+    CanvasContext, CanvasOps, ClipboardOps, ContentEditableOps, ContentEditableState, DomOps,
+    DomRect, ElementHandle, EventHandle, FileOps, GeoOps, GeoPosition, GeoPositionError, IdbOps,
+    LayoutOps, ListenerOptions, MediaOps, MediaQueryOps, MutationObserverInit, MutationRecord,
+    ObserverOps, Platform, QueryOps, ResizeObserverEntry, ResizeObserverSize, ScrollOps, TimerOps,
 };
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
-pub use reactive::{EffectHandle, Signal, batch, create_effect};
+pub use reactive::{batch, create_effect, EffectHandle, Signal};
 pub use runtime::{
-    ComponentId, cleanup_component, flush_render, mark_dirty, notify_signal, request_rerender,
-    rerender, store_initial_vnode, subscribe_component, use_component, with_component,
+    cleanup_component, flush_render, mark_dirty, notify_signal, request_rerender, rerender,
+    store_initial_vnode, subscribe_component, use_component, with_component, ComponentId,
 };
-pub use scheduler::Scheduler;
 pub use svg::SafeSvg;
 pub use vnode::{
-    AnyElementRef, Classes, IntoAttrValue, Style, VElement, VNode, VText, el, empty_vnode, txt,
+    el, empty_vnode, txt, AnyElementRef, Classes, IntoAttrValue, Style, VElement, VNode, VText,
 };
 
 #[cfg(target_family = "wasm")]

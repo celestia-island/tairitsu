@@ -2,12 +2,12 @@ use std::{
     io::{self, Read, Write},
     os::unix::io::RawFd,
     sync::{
-        Arc, Mutex,
         atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
     },
 };
 
-use portable_pty::{Child, ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
+use portable_pty::{native_pty_system, Child, ChildKiller, CommandBuilder, MasterPty, PtySize};
 
 fn to_io(e: impl std::fmt::Display) -> io::Error {
     io::Error::other(e.to_string())

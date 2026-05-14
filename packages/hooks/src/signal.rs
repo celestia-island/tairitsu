@@ -1,4 +1,4 @@
-use tairitsu_vdom::{Classes, Signal, Style, VNode, runtime};
+use tairitsu_vdom::{runtime, Classes, Signal, Style, VNode};
 
 /// Creates a new Signal with the given initial value.
 /// Takes a closure that returns the initial value (Dioxus-compatible API).
@@ -20,7 +20,7 @@ pub fn use_signal<T: Clone + 'static, F: FnOnce() -> T>(initial: F) -> ReactiveS
 
 pub fn use_standalone_signal<T: Clone + 'static>(initial: T) -> StandaloneSignal<T> {
     let signal = Signal::new(initial);
-    let component_id = runtime::use_component(|| VNode::empty());
+    let component_id = runtime::use_component(VNode::empty);
 
     StandaloneSignal {
         signal,

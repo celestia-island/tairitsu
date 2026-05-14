@@ -20,7 +20,7 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use tairitsu_vdom::{AnyElementRef, DomHandle, resolve_element_ref};
+use tairitsu_vdom::{resolve_element_ref, AnyElementRef, DomHandle};
 
 /// A DOM element reference that resolves to a [`DomHandle`] after mounting.
 ///

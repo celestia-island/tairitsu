@@ -87,11 +87,11 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
 }
 
 async fn resolve_daemon_url() -> crate::Result<String> {
-    if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL")
-        && !url.is_empty()
-    {
-        tracing::debug!("[tairitsu-mcp] Using TAIRITSU_DAEMON_URL={}", url);
-        return Ok(url);
+    if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL") {
+        if !url.is_empty() {
+            tracing::debug!("[tairitsu-mcp] Using TAIRITSU_DAEMON_URL={}", url);
+            return Ok(url);
+        }
     }
 
     let searched = search_project_roots();
@@ -149,10 +149,10 @@ fn search_project_roots() -> Vec<std::path::PathBuf> {
         candidates.push(p.join("target"));
     }
 
-    if let Ok(exe) = std::env::current_exe()
-        && let Some(parent) = exe.parent().and_then(|p| p.parent())
-    {
-        candidates.push(parent.join("target"));
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
+            candidates.push(parent.join("target"));
+        }
     }
 
     candidates.dedup();
@@ -1048,14 +1048,16 @@ async fn invoke_tool(
                         .json(&json!({"script": check_js}))
                         .send()
                         .await;
-                    if let Ok(r) = resp
-                        && let Ok(body) = r.json::<serde_json::Value>().await
-                        && body
-                            .get("result")
-                            .and_then(|v| v.as_bool())
-                            .unwrap_or(false)
-                    {
-                        return Ok(format!("Text appeared: {}", text));
+                    if let Ok(r) = resp {
+                        if let Ok(body) = r.json::<serde_json::Value>().await {
+                            if body
+                                .get("result")
+                                .and_then(|v| v.as_bool())
+                                .unwrap_or(false)
+                            {
+                                return Ok(format!("Text appeared: {}", text));
+                            }
+                        }
                     }
                 }
                 Err(format!("Timeout waiting for text: {}", text))
@@ -1310,8 +1312,8 @@ fn map_key_name(key: &str) -> String {
 
 #[cfg(windows)]
 fn get_ppid_windows() -> u32 {
-    use windows_sys::Win32::System::Diagnostics::ToolHelp::*;
     use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::*;
 
     let pid = std::process::id();
     unsafe {

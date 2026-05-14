@@ -115,11 +115,12 @@ fn find_npx() -> String {
 fn find_workspace_root(manifest_dir: &Path) -> PathBuf {
     let mut current = manifest_dir.parent();
     while let Some(dir) = current {
-        if dir.join("Cargo.toml").exists()
-            && let Ok(cargo_toml) = std::fs::read_to_string(dir.join("Cargo.toml"))
-            && cargo_toml.contains("[workspace]")
-        {
-            return dir.to_path_buf();
+        if dir.join("Cargo.toml").exists() {
+            if let Ok(cargo_toml) = std::fs::read_to_string(dir.join("Cargo.toml")) {
+                if cargo_toml.contains("[workspace]") {
+                    return dir.to_path_buf();
+                }
+            }
         }
         current = dir.parent();
     }

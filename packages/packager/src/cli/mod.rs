@@ -450,11 +450,11 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
 }
 
 pub fn run_tokio() {
-    if daemon::is_daemon()
-        && let Err(e) = daemon::daemonize_self()
-    {
-        let _ = daemon::signal_failed(&format!("daemonize failed: {}", e));
-        std::process::exit(1);
+    if daemon::is_daemon() {
+        if let Err(e) = daemon::daemonize_self() {
+            let _ = daemon::signal_failed(&format!("daemonize failed: {}", e));
+            std::process::exit(1);
+        }
     }
 
     #[tokio::main]

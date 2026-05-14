@@ -14,13 +14,13 @@ use tracing::error;
 #[cfg(feature = "dev-server")]
 use {
     axum::{
-        Router,
         extract::Request,
         middleware::{self, Next},
         response::{Html, Response},
         routing::get,
+        Router,
     },
-    tairitsu_ssr::{SsrConfig, render_full_page},
+    tairitsu_ssr::{render_full_page, SsrConfig},
     tower_http::services::ServeDir,
 };
 
@@ -272,7 +272,7 @@ pub fn prerender_routes(
     #[cfg(feature = "ssr")]
     {
         use std::fs;
-        use tairitsu_ssr::{SsrConfig, render_full_page};
+        use tairitsu_ssr::{render_full_page, SsrConfig};
 
         let discovered = config.discovered_routes();
         let effective_routes: Vec<String> = if routes.is_empty() && !discovered.is_empty() {

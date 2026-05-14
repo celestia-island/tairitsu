@@ -1,8 +1,8 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
-    Expr, ExprLit, Ident, Lit, LitStr, Pat, Token,
     parse::{Parse, ParseStream},
+    Expr, ExprLit, Ident, Lit, LitStr, Pat, Token,
 };
 
 pub struct RsxElement {
@@ -470,61 +470,62 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::Other { name, value } => {
                 // Only treat on_* as event handlers for known HTML elements
-                if is_known_html && let Some(event_name) = name.strip_prefix("on") {
-                    // Map event names to their types
-                    let event_type = match event_name {
-                        "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter"
-                        | "mouseleave" => {
-                            quote! { tairitsu_vdom::MouseEvent }
-                        }
-                        "keydown" | "keyup" | "keypress" => {
-                            quote! { tairitsu_vdom::KeyboardEvent }
-                        }
-                        "input" => {
-                            quote! { tairitsu_vdom::InputEvent }
-                        }
-                        "change" => {
-                            quote! { tairitsu_vdom::ChangeEvent }
-                        }
-                        "focus" | "blur" => {
-                            quote! { tairitsu_vdom::FocusEvent }
-                        }
-                        "dragstart" | "dragend" | "dragover" | "dragleave" | "drop" => {
-                            quote! { tairitsu_vdom::DragEvent }
-                        }
-                        "wheel" => {
-                            quote! { tairitsu_vdom::WheelEvent }
-                        }
-                        "touchstart" | "touchmove" | "touchend" | "touchcancel" => {
-                            quote! { tairitsu_vdom::TouchEvent }
-                        }
-                        "pointerdown" | "pointerup" | "pointermove" | "pointercancel"
-                        | "pointerout" | "pointerleave" | "pointerover" | "pointerenter"
-                        | "gotpointercapture" | "lostpointercapture" => {
-                            quote! { tairitsu_vdom::PointerEvent }
-                        }
-                        "transitionend" => {
-                            quote! { tairitsu_vdom::TransitionEvent }
-                        }
-                        "animationstart" | "animationend" | "animationiteration" => {
-                            quote! { tairitsu_vdom::AnimationEvent }
-                        }
-                        _ => {
-                            // For unknown events, just pass the boxed event
-                            event_handlers.push(quote! {
-                                .on_event(#event_name, {
-                                    let handler = #value;
-                                    move |e| {
-                                        handler(e);
-                                    }
-                                })
-                            });
-                            continue;
-                        }
-                    };
-                    // Capture handler in a binding
-                    // The handler is expected to be a closure that takes the event type
-                    event_handlers.push(quote! {
+                if is_known_html {
+                    if let Some(event_name) = name.strip_prefix("on") {
+                        // Map event names to their types
+                        let event_type = match event_name {
+                            "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter"
+                            | "mouseleave" => {
+                                quote! { tairitsu_vdom::MouseEvent }
+                            }
+                            "keydown" | "keyup" | "keypress" => {
+                                quote! { tairitsu_vdom::KeyboardEvent }
+                            }
+                            "input" => {
+                                quote! { tairitsu_vdom::InputEvent }
+                            }
+                            "change" => {
+                                quote! { tairitsu_vdom::ChangeEvent }
+                            }
+                            "focus" | "blur" => {
+                                quote! { tairitsu_vdom::FocusEvent }
+                            }
+                            "dragstart" | "dragend" | "dragover" | "dragleave" | "drop" => {
+                                quote! { tairitsu_vdom::DragEvent }
+                            }
+                            "wheel" => {
+                                quote! { tairitsu_vdom::WheelEvent }
+                            }
+                            "touchstart" | "touchmove" | "touchend" | "touchcancel" => {
+                                quote! { tairitsu_vdom::TouchEvent }
+                            }
+                            "pointerdown" | "pointerup" | "pointermove" | "pointercancel"
+                            | "pointerout" | "pointerleave" | "pointerover" | "pointerenter"
+                            | "gotpointercapture" | "lostpointercapture" => {
+                                quote! { tairitsu_vdom::PointerEvent }
+                            }
+                            "transitionend" => {
+                                quote! { tairitsu_vdom::TransitionEvent }
+                            }
+                            "animationstart" | "animationend" | "animationiteration" => {
+                                quote! { tairitsu_vdom::AnimationEvent }
+                            }
+                            _ => {
+                                // For unknown events, just pass the boxed event
+                                event_handlers.push(quote! {
+                                    .on_event(#event_name, {
+                                        let handler = #value;
+                                        move |e| {
+                                            handler(e);
+                                        }
+                                    })
+                                });
+                                continue;
+                            }
+                        };
+                        // Capture handler in a binding
+                        // The handler is expected to be a closure that takes the event type
+                        event_handlers.push(quote! {
                             .on_event(#event_name, {
                                 let handler = #value;
                                 move |e: Box<dyn tairitsu_vdom::EventData>| {
@@ -534,7 +535,8 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                                 }
                             })
                         });
-                    continue;
+                        continue;
+                    }
                 }
 
                 // For custom components or non-event attributes, pass as regular attribute

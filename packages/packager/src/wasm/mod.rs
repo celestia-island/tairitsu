@@ -229,10 +229,10 @@ fn build_wasm_component(
     let pb_clone = pb.clone();
 
     fn extract_crate_name(package_id: &str) -> &str {
-        if let Some(after_hash) = package_id.split('#').nth(1)
-            && let Some(name) = after_hash.split('@').next()
-        {
-            return name;
+        if let Some(after_hash) = package_id.split('#').nth(1) {
+            if let Some(name) = after_hash.split('@').next() {
+                return name;
+            }
         }
         package_id
     }
@@ -253,98 +253,97 @@ fn build_wasm_component(
     let handle = std::thread::spawn(move || {
         for line in std::io::BufReader::new(stdout).lines() {
             let Ok(line) = line else { continue };
-            if let Ok(msg) = serde_json::from_str::<serde_json::Value>(&line)
-                && let Some(reason) = msg.get("reason").and_then(|r| r.as_str())
-            {
-                match reason {
-                    "compiler-artifact" => {
-                        if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str()) {
-                            let crate_name = extract_crate_name(package_id);
-                            if let Some(target) = msg.get("target")
-                                && target
-                                    .get("kind")
-                                    .and_then(|k| k.as_array())
-                                    .is_some_and(|k| {
-                                        k.iter().any(|kind| kind.as_str() == Some("lib"))
-                                    })
+            if let Ok(msg) = serde_json::from_str::<serde_json::Value>(&line) {
+                if let Some(reason) = msg.get("reason").and_then(|r| r.as_str()) {
+                    match reason {
+                        "compiler-artifact" => {
+                            if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str())
                             {
-                                pb_clone.set_message(format!("compile {}", crate_name));
-                            }
-                        }
-                    }
-                    "compiler-message" => {
-                        if let Some(rendered) = msg
-                            .get("message")
-                            .and_then(|m| m.get("rendered"))
-                            .and_then(|r| r.as_str())
-                        {
-                            if verbose {
-                                pb_clone.println(rendered);
-                            }
-                            if let Ok(mut d) = diag_clone.lock() {
-                                d.push_str(rendered);
-                                d.push('\n');
-                            }
-                            if !verbose {
-                                let level = msg
-                                    .get("message")
-                                    .and_then(|m| m.get("level"))
-                                    .and_then(|l| l.as_str())
-                                    .unwrap_or("")
-                                    .to_string();
-                                let diag_msg = msg
-                                    .get("message")
-                                    .and_then(|m| m.get("message"))
-                                    .and_then(|m| m.as_str())
-                                    .unwrap_or("")
-                                    .to_string();
-                                let location = msg.get("message").and_then(|m| {
-                                    m.get("spans")
-                                        .and_then(|s| s.as_array())
-                                        .and_then(|a| a.first())
-                                        .and_then(|span| {
-                                            let file = span
-                                                .get("file_name")
-                                                .and_then(|f| f.as_str())
-                                                .unwrap_or("");
-                                            let line = span
-                                                .get("line_start")
-                                                .and_then(|l| l.as_u64())
-                                                .unwrap_or(0);
-                                            if file.is_empty() {
-                                                return None;
-                                            }
-                                            let name = std::path::Path::new(file)
-                                                .file_name()
-                                                .and_then(|n| n.to_str())
-                                                .unwrap_or(file);
-                                            Some(if line > 0 {
-                                                format!("{}:{}", name, line)
-                                            } else {
-                                                name.to_string()
-                                            })
-                                        })
-                                });
-                                if matches!(level.as_str(), "warning" | "error")
-                                    && let Ok(mut entries) = entries_clone.lock()
-                                {
-                                    entries.push(DiagEntry {
-                                        level,
-                                        message: diag_msg,
-                                        location,
-                                    });
+                                let crate_name = extract_crate_name(package_id);
+                                if let Some(target) = msg.get("target") {
+                                    if target.get("kind").and_then(|k| k.as_array()).is_some_and(
+                                        |k| k.iter().any(|kind| kind.as_str() == Some("lib")),
+                                    ) {
+                                        pb_clone.set_message(format!("compile {}", crate_name));
+                                    }
                                 }
                             }
                         }
-                    }
-                    "build-script-executed" => {
-                        if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str()) {
-                            let crate_name = extract_crate_name(package_id);
-                            pb_clone.set_message(format!("build script {}", crate_name));
+                        "compiler-message" => {
+                            if let Some(rendered) = msg
+                                .get("message")
+                                .and_then(|m| m.get("rendered"))
+                                .and_then(|r| r.as_str())
+                            {
+                                if verbose {
+                                    pb_clone.println(rendered);
+                                }
+                                if let Ok(mut d) = diag_clone.lock() {
+                                    d.push_str(rendered);
+                                    d.push('\n');
+                                }
+                                if !verbose {
+                                    let level = msg
+                                        .get("message")
+                                        .and_then(|m| m.get("level"))
+                                        .and_then(|l| l.as_str())
+                                        .unwrap_or("")
+                                        .to_string();
+                                    let diag_msg = msg
+                                        .get("message")
+                                        .and_then(|m| m.get("message"))
+                                        .and_then(|m| m.as_str())
+                                        .unwrap_or("")
+                                        .to_string();
+                                    let location = msg.get("message").and_then(|m| {
+                                        m.get("spans")
+                                            .and_then(|s| s.as_array())
+                                            .and_then(|a| a.first())
+                                            .and_then(|span| {
+                                                let file = span
+                                                    .get("file_name")
+                                                    .and_then(|f| f.as_str())
+                                                    .unwrap_or("");
+                                                let line = span
+                                                    .get("line_start")
+                                                    .and_then(|l| l.as_u64())
+                                                    .unwrap_or(0);
+                                                if file.is_empty() {
+                                                    return None;
+                                                }
+                                                let name = std::path::Path::new(file)
+                                                    .file_name()
+                                                    .and_then(|n| n.to_str())
+                                                    .unwrap_or(file);
+                                                Some(if line > 0 {
+                                                    format!("{}:{}", name, line)
+                                                } else {
+                                                    name.to_string()
+                                                })
+                                            })
+                                    });
+                                    if matches!(level.as_str(), "warning" | "error") {
+                                        if let Ok(mut entries) = entries_clone.lock() {
+                                            entries.push(DiagEntry {
+                                                level,
+                                                message: diag_msg,
+                                                location,
+                                            });
+                                        }
+                                    }
+                                }
+                            }
                         }
+                        "build-script-executed" => {
+                            if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str())
+                            {
+                                let crate_name = extract_crate_name(package_id);
+                                pb_clone.set_message(format!("build script {}", crate_name));
+                            }
+                        }
+                        "build-finished" => {}
+                        _ => {}
                     }
-                    "build-finished" => {}
-                    _ => {}
                 }
             }
         }
@@ -532,7 +531,8 @@ fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<
     Err(crate::TairitsuPackagerError::BuildError(
         "browser-glue runtime bundle (dist/runtime.js) not found. \
          Set TAIRITSU_RUNTIME_BUNDLE env var to the path of runtime.js, \
-         or ensure browser-glue is built (run `npm run build` in packages/browser-glue).".to_string(),
+         or ensure browser-glue is built (run `npm run build` in packages/browser-glue)."
+            .to_string(),
     ))
 }
 
@@ -728,25 +728,25 @@ fn build_symbol_module_map(
             } else {
                 continue;
             };
-            if let Some(rest) = after_export.strip_prefix(prefix)
-                && let Some(sym_full) = rest.split_whitespace().next()
-            {
-                let sym_name = sym_full
-                    .split('(')
-                    .next()
-                    .unwrap_or(sym_full)
-                    .trim()
-                    .to_string();
-                if !sym_name.is_empty() {
-                    let has_self = rest.contains("(self)") || rest.contains("(self,");
-                    match map.get(&sym_name) {
-                        Some((_other_mod, other_has_self)) => {
-                            if *other_has_self && !has_self {
+            if let Some(rest) = after_export.strip_prefix(prefix) {
+                if let Some(sym_full) = rest.split_whitespace().next() {
+                    let sym_name = sym_full
+                        .split('(')
+                        .next()
+                        .unwrap_or(sym_full)
+                        .trim()
+                        .to_string();
+                    if !sym_name.is_empty() {
+                        let has_self = rest.contains("(self)") || rest.contains("(self,");
+                        match map.get(&sym_name) {
+                            Some((_other_mod, other_has_self)) => {
+                                if *other_has_self && !has_self {
+                                    map.insert(sym_name, (module_name.to_string(), has_self));
+                                }
+                            }
+                            None => {
                                 map.insert(sym_name, (module_name.to_string(), has_self));
                             }
-                        }
-                        None => {
-                            map.insert(sym_name, (module_name.to_string(), has_self));
                         }
                     }
                 }
@@ -871,10 +871,10 @@ fn copy_browser_glue_with_output_dir(
             copied = true;
 
             let top_barrel = dest_glue.join("index.js");
-            if top_barrel.exists()
-                && let Err(e) = flatten_barrel_exports(&top_barrel)
-            {
-                crate::log_warn!("Failed to flatten top-level barrel: {}", e);
+            if top_barrel.exists() {
+                if let Err(e) = flatten_barrel_exports(&top_barrel) {
+                    crate::log_warn!("Failed to flatten top-level barrel: {}", e);
+                }
             }
             break;
         }
@@ -1085,16 +1085,20 @@ fn try_generate_component_wrapper(
         Some(wrapper_dir.join("index.js"))
     } else {
         let named = wrapper_dir.join(format!("{}.js", wasm_stem));
-        if named.exists() { Some(named) } else { None }
+        if named.exists() {
+            Some(named)
+        } else {
+            None
+        }
     };
 
     if let Some(main) = wrapper_main {
         let wrapper_mtime = std::fs::metadata(&main)?.modified().ok();
         let wasm_mtime = std::fs::metadata(component_wasm_path)?.modified().ok();
-        if let (Some(w), Some(c)) = (wrapper_mtime, wasm_mtime)
-            && w >= c
-        {
-            return Ok(true);
+        if let (Some(w), Some(c)) = (wrapper_mtime, wasm_mtime) {
+            if w >= c {
+                return Ok(true);
+            }
         }
     }
 
@@ -1160,84 +1164,88 @@ fn try_generate_component_wrapper(
                         wrapper_dir.join(format!("{}.js", wasm_stem)),
                     ];
                     for js_file in js_files {
-                        if js_file.exists()
-                            && let Ok(mut content) = std::fs::read_to_string(&js_file)
-                        {
-                            let original = content.clone();
-                            content = content
-                                .replace("from 'tairitsu-browser:full/", "from '@tairitsu-glue/");
-                            content = content
-                                .replace("from \"tairitsu-browser:full/", "from \"@tairitsu-glue/");
+                        if js_file.exists() {
+                            if let Ok(mut content) = std::fs::read_to_string(&js_file) {
+                                let original = content.clone();
+                                content = content.replace(
+                                    "from 'tairitsu-browser:full/",
+                                    "from '@tairitsu-glue/",
+                                );
+                                content = content.replace(
+                                    "from \"tairitsu-browser:full/",
+                                    "from \"@tairitsu-glue/",
+                                );
 
-                            let _import_map_interfaces: std::collections::HashSet<&str> =
-                                [].into_iter().collect();
+                                let _import_map_interfaces: std::collections::HashSet<&str> =
+                                    [].into_iter().collect();
 
-                            content = re_import
-                                .replace_all(&content, |caps: &regex::Captures| {
-                                    let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
-                                    let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
-                                    let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
-                                    if m1.is_empty() {
-                                        return String::new();
-                                    }
-                                    let _iface_name = m2.split('/').next().unwrap_or("");
-
-                                    // Split symbols: import-map-available vs needs-glue-fallback
-                                    let mut map_syms = Vec::new();
-                                    for sym in m1.trim().split(',') {
-                                        let s = sym.trim();
-                                        if s.is_empty() {
-                                            continue;
+                                content = re_import
+                                    .replace_all(&content, |caps: &regex::Captures| {
+                                        let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
+                                        let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+                                        let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
+                                        if m1.is_empty() {
+                                            return String::new();
                                         }
-                                        // All interfaces now provided by __tairitsu_glue__.js import map
-                                        map_syms.push(s.to_string());
-                                    }
+                                        let _iface_name = m2.split('/').next().unwrap_or("");
 
-                                    let mut parts = Vec::new();
-                                    if !map_syms.is_empty() {
-                                        parts.push(format!(
-                                            "import {{ {} }} from '@tairitsu-glue/{}';",
-                                            map_syms.join(", "),
-                                            m2
-                                        ));
-                                    }
-                                    // Resolve each symbol to its own module
-                                    parts.join("\n  ")
-                                })
-                                .to_string();
-                            content = re_import_d
-                                .replace_all(&content, |caps: &regex::Captures| {
-                                    let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
-                                    let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
-                                    let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
-                                    if m1.is_empty() {
-                                        return String::new();
-                                    }
-                                    let _iface_name = m2.split('/').next().unwrap_or("");
-
-                                    let mut map_syms = Vec::new();
-                                    for sym in m1.trim().split(',') {
-                                        let s = sym.trim();
-                                        if s.is_empty() {
-                                            continue;
+                                        // Split symbols: import-map-available vs needs-glue-fallback
+                                        let mut map_syms = Vec::new();
+                                        for sym in m1.trim().split(',') {
+                                            let s = sym.trim();
+                                            if s.is_empty() {
+                                                continue;
+                                            }
+                                            // All interfaces now provided by __tairitsu_glue__.js import map
+                                            map_syms.push(s.to_string());
                                         }
-                                        map_syms.push(s.to_string());
-                                    }
 
-                                    let mut parts = Vec::new();
-                                    if !map_syms.is_empty() {
-                                        parts.push(format!(
-                                            "import {{ {} }} from \"@tairitsu-glue/{}\";",
-                                            map_syms.join(", "),
-                                            m2
-                                        ));
-                                    }
-                                    parts.join("\n  ")
-                                })
-                                .to_string();
+                                        let mut parts = Vec::new();
+                                        if !map_syms.is_empty() {
+                                            parts.push(format!(
+                                                "import {{ {} }} from '@tairitsu-glue/{}';",
+                                                map_syms.join(", "),
+                                                m2
+                                            ));
+                                        }
+                                        // Resolve each symbol to its own module
+                                        parts.join("\n  ")
+                                    })
+                                    .to_string();
+                                content = re_import_d
+                                    .replace_all(&content, |caps: &regex::Captures| {
+                                        let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
+                                        let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+                                        let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
+                                        if m1.is_empty() {
+                                            return String::new();
+                                        }
+                                        let _iface_name = m2.split('/').next().unwrap_or("");
 
-                            if content != original {
-                                std::fs::write(&js_file, content)?;
+                                        let mut map_syms = Vec::new();
+                                        for sym in m1.trim().split(',') {
+                                            let s = sym.trim();
+                                            if s.is_empty() {
+                                                continue;
+                                            }
+                                            map_syms.push(s.to_string());
+                                        }
+
+                                        let mut parts = Vec::new();
+                                        if !map_syms.is_empty() {
+                                            parts.push(format!(
+                                                "import {{ {} }} from \"@tairitsu-glue/{}\";",
+                                                map_syms.join(", "),
+                                                m2
+                                            ));
+                                        }
+                                        parts.join("\n  ")
+                                    })
+                                    .to_string();
+
+                                if content != original {
+                                    std::fs::write(&js_file, content)?;
+                                }
                             }
                         }
 
@@ -2023,7 +2031,7 @@ pub async fn dev_server(
     debug: bool,
     debug_port: Option<u16>,
 ) -> crate::Result<()> {
-    use axum::{Router, middleware, response::Html, routing::get};
+    use axum::{middleware, response::Html, routing::get, Router};
     use tower_http::services::ServeDir;
 
     if watch {
@@ -2043,67 +2051,66 @@ pub async fn dev_server(
 
     {
         let probe = std::net::TcpListener::bind(("127.0.0.1", port));
-        if let Err(ref err) = probe
-            && err.kind() == std::io::ErrorKind::AddrInUse
-        {
-            let owner = crate::daemon::port_owner_info(port);
-            let our_pid = crate::daemon::read_pid().unwrap_or(0);
+        if let Err(ref err) = probe {
+            if err.kind() == std::io::ErrorKind::AddrInUse {
+                let owner = crate::daemon::port_owner_info(port);
+                let our_pid = crate::daemon::read_pid().unwrap_or(0);
 
-            if let Some(ref info) = owner {
-                if info.pid == our_pid && !crate::daemon::is_daemon() {
-                    return Err(crate::TairitsuPackagerError::BuildError(
-                        crate::fmt_tmpl!(locale().dev.port_in_use_daemon, port => port.to_string(), pid => info.pid.to_string()),
-                    ));
+                if let Some(ref info) = owner {
+                    if info.pid == our_pid && !crate::daemon::is_daemon() {
+                        return Err(crate::TairitsuPackagerError::BuildError(
+                            crate::fmt_tmpl!(locale().dev.port_in_use_daemon, port => port.to_string(), pid => info.pid.to_string()),
+                        ));
+                    }
+
+                    let is_tairitsu = info
+                        .exe_path
+                        .as_ref()
+                        .map(|exe| {
+                            let exe_str = exe.to_string_lossy().to_lowercase();
+                            exe_str.contains("tairitsu")
+                        })
+                        .unwrap_or(false);
+
+                    if is_tairitsu {
+                        if !force {
+                            let mut msg = crate::fmt_tmpl!(locale().dev.port_in_use_other_daemon, port => port.to_string(), pid => info.pid.to_string());
+                            if let Some(ref exe) = info.exe_path {
+                                msg.push_str(&format!("\n  Executable: {}", exe.display()));
+                            }
+                            msg.push_str(&format!("\n  {}", locale().dev.port_use_force));
+                            return Err(crate::TairitsuPackagerError::BuildError(msg));
+                        }
+
+                        crate::log_warn!(
+                            "{}",
+                            crate::fmt_tmpl!(
+                                locale().build.force_killing_daemon,
+                                pid => info.pid.to_string(),
+                                port => port.to_string()
+                            )
+                        );
+                        crate::daemon::kill_process_by_pid(info.pid);
+                        std::thread::sleep(std::time::Duration::from_millis(500));
+                    }
                 }
 
-                let is_tairitsu = info
-                    .exe_path
-                    .as_ref()
-                    .map(|exe| {
-                        let exe_str = exe.to_string_lossy().to_lowercase();
-                        exe_str.contains("tairitsu")
-                    })
-                    .unwrap_or(false);
-
-                if is_tairitsu {
-                    if !force {
-                        let mut msg = crate::fmt_tmpl!(locale().dev.port_in_use_other_daemon, port => port.to_string(), pid => info.pid.to_string());
-                        if let Some(ref exe) = info.exe_path {
-                            msg.push_str(&format!("\n  Executable: {}", exe.display()));
+                let probe2 = std::net::TcpListener::bind(("127.0.0.1", port));
+                if let Err(ref err2) = probe2 {
+                    if err2.kind() == std::io::ErrorKind::AddrInUse {
+                        let mut msg = crate::fmt_tmpl!(locale().dev.port_in_use_other, port => port.to_string());
+                        if let Some(info) = owner {
+                            msg.push_str(&format!(" (PID {})", info.pid));
+                            if let Some(exe) = info.exe_path {
+                                msg.push_str(&format!("\n  Executable: {}", exe.display()));
+                            }
                         }
-                        msg.push_str(&format!("\n  {}", locale().dev.port_use_force));
+                        msg.push_str(&format!("\n  {}", locale().dev.port_change_hint));
                         return Err(crate::TairitsuPackagerError::BuildError(msg));
                     }
-
-                    crate::log_warn!(
-                        "{}",
-                        crate::fmt_tmpl!(
-                            locale().build.force_killing_daemon,
-                            pid => info.pid.to_string(),
-                            port => port.to_string()
-                        )
-                    );
-                    crate::daemon::kill_process_by_pid(info.pid);
-                    std::thread::sleep(std::time::Duration::from_millis(500));
                 }
+                drop(probe2);
             }
-
-            let probe2 = std::net::TcpListener::bind(("127.0.0.1", port));
-            if let Err(ref err2) = probe2
-                && err2.kind() == std::io::ErrorKind::AddrInUse
-            {
-                let mut msg =
-                    crate::fmt_tmpl!(locale().dev.port_in_use_other, port => port.to_string());
-                if let Some(info) = owner {
-                    msg.push_str(&format!(" (PID {})", info.pid));
-                    if let Some(exe) = info.exe_path {
-                        msg.push_str(&format!("\n  Executable: {}", exe.display()));
-                    }
-                }
-                msg.push_str(&format!("\n  {}", locale().dev.port_change_hint));
-                return Err(crate::TairitsuPackagerError::BuildError(msg));
-            }
-            drop(probe2);
         }
         drop(probe);
     }
@@ -2226,8 +2233,8 @@ pub async fn dev_server(
             get(move || {
                 let tx = reload_tx_for_route.clone();
                 async move {
-                    use axum::response::IntoResponse;
                     use axum::response::sse::{Event, Sse};
+                    use axum::response::IntoResponse;
                     use futures::stream::StreamExt;
                     let receiver = tx.subscribe();
                     let stream =
@@ -2348,7 +2355,7 @@ pub async fn dev_server(
         let shutdown = async {
             #[cfg(unix)]
             {
-                use tokio::signal::unix::{SignalKind, signal};
+                use tokio::signal::unix::{signal, SignalKind};
                 let mut sigterm = signal(SignalKind::terminate()).unwrap();
                 tokio::select! {
                     _ = tokio::signal::ctrl_c() => {},
@@ -2544,10 +2551,10 @@ async fn run_watch_loop(
                     "c" | "C" => Some(DevCmd::Clear),
                     _ => None,
                 };
-                if let Some(c) = cmd
-                    && cmd_tx.blocking_send(c).is_err()
-                {
-                    break;
+                if let Some(c) = cmd {
+                    if cmd_tx.blocking_send(c).is_err() {
+                        break;
+                    }
                 }
             }
         });

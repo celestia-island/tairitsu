@@ -67,7 +67,7 @@ pub use container::{
 pub use image::Image;
 
 // RON types (always exported, but only usable when 'ron' dependency is available)
-pub use ron::{RonBinding, RonFunctionTool, RonTool, RonToolRegistry, typed_ron_tool};
+pub use ron::{typed_ron_tool, RonBinding, RonFunctionTool, RonTool, RonToolRegistry};
 
 // Dynamic invocation exports (requires 'dynamic' feature)
 #[cfg(feature = "dynamic")]
@@ -86,7 +86,7 @@ pub use anyhow::{Error, Result};
 
 // Re-export procedural macros
 pub use tairitsu_macros::{
-    AsTool, WitCommand, export_wit, wit_guest_impl, wit_interface, wit_world,
+    export_wit, wit_guest_impl, wit_interface, wit_world, AsTool, WitCommand,
 };
 
 // Re-export wasmtime types for user convenience

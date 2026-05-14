@@ -28,7 +28,7 @@
 
 use std::path::{Path, PathBuf};
 
-use super::{IconSource, MDI_DEFAULT_VERSION, metadata::IconMetadata};
+use super::{metadata::IconMetadata, IconSource, MDI_DEFAULT_VERSION};
 
 // ============================================================================
 // Constants
@@ -142,24 +142,24 @@ impl IconFetcher {
             let entry = entry?;
             let path = entry.path();
 
-            if path.extension().map(|e| e == "svg").unwrap_or(false)
-                && let Some(name) = path.file_stem().and_then(|s| s.to_str())
-            {
-                let content = std::fs::read_to_string(&path)?;
-                let svg_path = extract_svg_path(&content);
+            if path.extension().map(|e| e == "svg").unwrap_or(false) {
+                if let Some(name) = path.file_stem().and_then(|s| s.to_str()) {
+                    let content = std::fs::read_to_string(&path)?;
+                    let svg_path = extract_svg_path(&content);
 
-                metadata.icons.insert(
-                    name.to_string(),
-                    crate::icons::IconEntry {
-                        name: name.to_string(),
-                        aliases: vec![],
-                        tags: vec![],
-                        author: None,
-                        version: None,
-                        deprecated: false,
-                        svg_path,
-                    },
-                );
+                    metadata.icons.insert(
+                        name.to_string(),
+                        crate::icons::IconEntry {
+                            name: name.to_string(),
+                            aliases: vec![],
+                            tags: vec![],
+                            author: None,
+                            version: None,
+                            deprecated: false,
+                            svg_path,
+                        },
+                    );
+                }
             }
         }
 
@@ -188,10 +188,10 @@ impl IconFetcher {
         // Load SVG paths for each icon
         for (name, icon) in &mut metadata.icons {
             let svg_path = svg_dir.join(format!("{}.svg", name));
-            if svg_path.exists()
-                && let Ok(content) = std::fs::read_to_string(&svg_path)
-            {
-                icon.svg_path = extract_svg_path(&content);
+            if svg_path.exists() {
+                if let Ok(content) = std::fs::read_to_string(&svg_path) {
+                    icon.svg_path = extract_svg_path(&content);
+                }
             }
         }
 

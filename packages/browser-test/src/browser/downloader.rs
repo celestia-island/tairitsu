@@ -1,6 +1,6 @@
 //! Chromium browser downloader
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use futures::StreamExt;
 use std::{
     fs::File,

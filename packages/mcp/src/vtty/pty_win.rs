@@ -9,7 +9,7 @@ use std::{
     time::Duration,
 };
 
-use portable_pty::{Child, ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
+use portable_pty::{native_pty_system, Child, ChildKiller, CommandBuilder, MasterPty, PtySize};
 
 fn to_io(e: impl std::fmt::Display) -> io::Error {
     io::Error::new(io::ErrorKind::Other, e.to_string())
