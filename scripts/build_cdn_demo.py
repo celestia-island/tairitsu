@@ -478,10 +478,10 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
 
         // --- Load modular wasm components (pre-cache) ---
         const MODULAR_COMPONENTS = {{
-            'tairitsu-vdom': '/{CDN_MODULES_DIR}/tairitsu-vdom-wasm/wrapper/tairitsu_vdom.js',
-            'tairitsu-hooks': '/{CDN_MODULES_DIR}/tairitsu-hooks-wasm/wrapper/tairitsu_hooks.js',
-            'tairitsu-style': '/{CDN_MODULES_DIR}/tairitsu-style-wasm/wrapper/tairitsu_style.js',
-            'hikari-palette': '/{CDN_MODULES_DIR}/hikari-palette-wasm/wrapper/hikari_palette.js',
+            'tairitsu-vdom': '/{CDN_MODULES_DIR}/tairitsu_vdom.wasm',
+            'tairitsu-hooks': '/{CDN_MODULES_DIR}/tairitsu_hooks.wasm',
+            'tairitsu-style': '/{CDN_MODULES_DIR}/tairitsu_style.wasm',
+            'hikari-palette': '/{CDN_MODULES_DIR}/hikari_palette.wasm',
         }};
 
         // Pre-load modular components in parallel (non-blocking)
