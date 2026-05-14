@@ -34,6 +34,7 @@ struct RuntimeInner {
     scheduled: bool,
     raf_id: Option<u32>,
     effect_handles: HashMap<ComponentId, Vec<EffectHandle>>,
+    element_to_component: HashMap<u64, ComponentId>,
 }
 
 impl RuntimeInner {
@@ -50,6 +51,7 @@ impl RuntimeInner {
             scheduled: false,
             raf_id: None,
             effect_handles: HashMap::new(),
+            element_to_component: HashMap::new(),
         }
     }
 }
@@ -263,9 +265,10 @@ fn render_component(id: ComponentId) {
     let new_vnode = (ext.render_fn.borrow_mut())();
 
     // Phase 3: store the new VNode (brief borrow).
+    // NOTE: active_component stays Some(id) so that patch application
+    // (Phase 4) can register newly created DOM elements to this component.
     RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
-        rt.active_component = None;
         rt.component_vnodes.insert(id, new_vnode.clone());
     });
 
@@ -287,6 +290,11 @@ fn render_component(id: ComponentId) {
             guard(id, patches);
         }
     }
+
+    // Phase 5: reset active component after patch application is complete.
+    RUNTIME.with(|runtime| {
+        runtime.borrow_mut().active_component = None;
+    });
 }
 
 pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
@@ -331,6 +339,7 @@ pub fn cleanup_component(id: ComponentId) {
         rt.render_functions.remove(&id);
         rt.component_vnodes.remove(&id);
         rt.dirty_components.retain(|&c| c != id);
+        rt.element_to_component.retain(|_, &mut c| c != id);
 
         for deps in rt.signal_dependencies.values_mut() {
             deps.retain(|&c| c != id);
@@ -351,6 +360,47 @@ pub fn register_effect_handle(id: ComponentId, handle: EffectHandle) {
         let mut rt = runtime.borrow_mut();
         rt.effect_handles.entry(id).or_default().push(handle);
     });
+}
+
+/// Register a DOM element handle as belonging to the currently active component.
+///
+/// Called from the platform layer when `render_vnode` creates a new element.
+/// The mapping is used by [`on_element_removed`] to detect cross-component
+/// subtree removal and trigger [`cleanup_component`].
+pub fn register_element(handle: u64) {
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        if let Some(id) = rt.active_component {
+            rt.element_to_component.insert(handle, id);
+        }
+    });
+}
+
+/// Called when a DOM element is removed from the tree.
+///
+/// If the removed element belongs to a **different** component than the one
+/// currently being re-rendered, the owning component is fully cleaned up
+/// (effects stopped, signal subscriptions removed, render function dropped).
+///
+/// If the element belongs to the currently rendering component, only the
+/// mapping entry is removed — the component itself is still active.
+pub fn on_element_removed(handle: u64) {
+    let info = RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        let cid = rt.element_to_component.remove(&handle);
+        let is_self = cid.is_some_and(|id| rt.active_component == Some(id));
+        (cid, is_self)
+    });
+
+    let (Some(cid), is_self) = info else {
+        return;
+    };
+
+    if is_self {
+        return;
+    }
+
+    cleanup_component(cid);
 }
 
 /// Get the current VNode for a component (useful for testing).
@@ -468,5 +518,106 @@ mod tests {
 
         // Check that patches were applied
         assert!(!applied_patches.borrow().is_empty());
+    }
+
+    #[test]
+    fn test_register_element_with_active_component() {
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+
+        with_component(id, || {
+            register_element(42);
+        });
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.get(&42), Some(&id));
+        });
+    }
+
+    #[test]
+    fn test_register_element_without_active_component() {
+        register_element(99);
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.get(&99), None);
+        });
+    }
+
+    #[test]
+    fn test_on_element_removed_no_mapping() {
+        on_element_removed(9999);
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert!(rt.element_to_component.is_empty());
+        });
+    }
+
+    #[test]
+    fn test_on_element_removed_cross_component_cleanup() {
+        let id1 = use_component(|| VNode::Text(crate::vnode::VText::new("a")));
+        let id2 = use_component(|| VNode::Text(crate::vnode::VText::new("b")));
+
+        with_component(id1, || {
+            register_element(100);
+        });
+        with_component(id2, || {
+            register_element(200);
+            register_element(201);
+        });
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.len(), 3);
+        });
+
+        with_component(id1, || {
+            on_element_removed(200);
+        });
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.get(&100), Some(&id1));
+            assert_eq!(rt.element_to_component.get(&200), None);
+            assert_eq!(rt.element_to_component.get(&201), None);
+            assert!(rt.render_functions.get(&id2).is_none());
+            assert!(rt.component_vnodes.get(&id2).is_none());
+        });
+    }
+
+    #[test]
+    fn test_on_element_removed_same_component_skips_cleanup() {
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+
+        with_component(id, || {
+            register_element(300);
+            on_element_removed(300);
+        });
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert!(rt.render_functions.get(&id).is_some());
+            assert!(rt.element_to_component.get(&300).is_none());
+        });
+    }
+
+    #[test]
+    fn test_cleanup_component_removes_element_mappings() {
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+
+        with_component(id, || {
+            register_element(400);
+            register_element(401);
+        });
+
+        cleanup_component(id);
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.get(&400), None);
+            assert_eq!(rt.element_to_component.get(&401), None);
+            assert!(rt.render_functions.get(&id).is_none());
+        });
     }
 }

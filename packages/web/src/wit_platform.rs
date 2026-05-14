@@ -1984,6 +1984,8 @@ pub mod wasm_impl {
             VNode::Element(velement) => {
                 let element = platform.create_element(&velement.tag);
 
+                tairitsu_vdom::runtime::register_element(element.as_raw());
+
                 // Populate element_ref if present
                 if let Some(ref element_ref) = velement.element_ref {
                     use std::any::Any;
@@ -2238,6 +2240,8 @@ pub mod wasm_impl {
             VNode::Element(velement) => {
                 let element = platform.create_element(&velement.tag);
 
+                tairitsu_vdom::runtime::register_element(element.as_raw());
+
                 // Populate element_ref if present (for patch-created elements)
                 if let Some(ref element_ref) = velement.element_ref {
                     use std::any::Any;
@@ -2473,6 +2477,7 @@ pub mod wasm_impl {
     fn remove_child_at(platform: &WitPlatform, parent: &WitElement, index: usize) -> Result<()> {
         let child = get_child_at(parent, index)?;
         if let Some(child_element) = child {
+            tairitsu_vdom::runtime::on_element_removed(child_element.as_raw());
             platform.remove_child(parent, &child_element);
         }
         Ok(())
