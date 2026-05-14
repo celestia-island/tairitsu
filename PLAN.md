@@ -453,12 +453,12 @@ docs/en/
 |------|------|------|
 | — | T-1 ~ T-7 | ✅ 全部完成 |
 | 一 | B-1: 定位语改为 Full-stack Framework | ✅ 完成 (README + docs repositioned) |
-| 一 | B-2: 三层 API 分层命名 | ⬜ 待开始 (需 0.5.0 breaking change) |
+| 一 | B-2: 三层 API 分层命名 | ✅ 完成 (tairitsu → tairitsu-core, 0.5.0 breaking) |
 | 一 | B-3: todo-fullstack 全栈示例 | ✅ 完成 (examples/todo-app with rsx! + Signal + 7 tests) |
 | 二 | P0-1: 修复 unsafe extern "C" 事件 hack | ✅ 完成 (injected callback pattern) |
 | 二 | P0-2: tairitsu new/init 脚手架 | ✅ 完成 (rsx! + Signal + component template) |
 | 二 | P0-3: 降级 Edition 2021 + stable toolchain | ✅ 完成 (50+ let-chain refactors, CI updated) |
-| 三 | P1-1: 39→1 npm 包合并 | ⏸ 推迟 (JS 构建基础设施，glue-full 已作为聚合包存在) |
+| 三 | P1-1: 39→1 npm 包合并 | ✅ 完成 (34 glue-* → browser-glue, glue-full deprecated shim) |
 | 三 | P1-2: VDOM diff 算法升级 | ✅ 已有 (LIS-based keyed reconciliation with 15 tests) |
 | 三 | P1-3: 事件系统剩余补全 | ✅ 完成 (ListenerOptions.capture wired, SubmitEvent added, ChangeEvent enhanced) |
 | 三 | P1-4: WIT generation pipeline 去重 | ✅ 完成 (removed 4 deprecated justfile aliases, single pipeline remains) |
