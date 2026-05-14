@@ -1105,16 +1105,72 @@ impl IntoDynamicAttr for Option<String> {
 impl IntoDynamicAttr for bool {
     fn apply_to_element(self, element: &mut VElement, name: &str) {
         if self {
-            element.attributes.insert(name.to_string(), name.to_string());
+            element
+                .attributes
+                .insert(name.to_string(), name.to_string());
         }
     }
 }
 
 impl IntoDynamicAttr for &String {
     fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element.attributes.insert(name.to_string(), self.clone());
+    }
+}
+
+impl IntoDynamicAttr for i32 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
         element
             .attributes
-            .insert(name.to_string(), self.clone());
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for i64 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for u32 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for u64 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for usize {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for f64 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
+    }
+}
+
+impl IntoDynamicAttr for f32 {
+    fn apply_to_element(self, element: &mut VElement, name: &str) {
+        element
+            .attributes
+            .insert(name.to_string(), self.to_string());
     }
 }
 

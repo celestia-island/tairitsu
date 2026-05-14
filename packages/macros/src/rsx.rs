@@ -444,7 +444,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::Id(expr) => {
                 let expr = interpolate_expr(expr);
-                other_attrs.push(quote! { .attr("id", #expr) });
+                other_attrs.push(quote! { .apply_attr("id", #expr) });
             }
             RsxAttr::Onclick(expr) => {
                 // For onclick, we need to downcast Box<dyn EventData> to MouseEvent

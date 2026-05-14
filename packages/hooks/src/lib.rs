@@ -23,6 +23,7 @@ pub use context::{consume_context, provide_context, use_context, Context};
 pub use dom_ref::{use_dom_ref, DomRef};
 pub use dynamic::{use_dynamic_text, use_dynamic_text_fn};
 pub use effect::use_effect;
+pub use element_ref::{use_element_ref, ElementRef};
 pub use interval::{use_interval, IntervalHandle};
 pub use memo::{use_memo, use_memo_with, use_memo_with_deps, Memo};
 pub use provide_context as use_context_provider;
