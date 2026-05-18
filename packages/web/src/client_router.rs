@@ -9,6 +9,8 @@
 
 use std::cell::RefCell;
 
+use tairitsu_vdom::TimerOps;
+
 use crate::wit_platform::{self, WitPlatform};
 
 thread_local! {
@@ -76,8 +78,7 @@ fn do_render(inner: &RouterServiceInner, path: &str) {
 fn schedule_poll() {
     INSTANCE.with(|i| {
         if let Some(ref inner) = *i.borrow() {
-            let _ = tairitsu_vdom::Platform::set_timeout(
-                &inner.platform,
+            let _ = inner.platform.set_timeout(
                 Box::new(|| {
                     poll_url_change();
                 }),
