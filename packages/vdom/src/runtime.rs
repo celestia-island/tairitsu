@@ -585,8 +585,8 @@ mod tests {
             assert_eq!(rt.element_to_component.get(&100), Some(&id1));
             assert_eq!(rt.element_to_component.get(&200), None);
             assert_eq!(rt.element_to_component.get(&201), None);
-            assert!(rt.render_functions.get(&id2).is_none());
-            assert!(rt.component_vnodes.get(&id2).is_none());
+            assert!(!rt.render_functions.contains_key(&id2));
+            assert!(!rt.component_vnodes.contains_key(&id2));
         });
     }
 
@@ -601,8 +601,8 @@ mod tests {
 
         RUNTIME.with(|runtime| {
             let rt = runtime.borrow();
-            assert!(rt.render_functions.get(&id).is_some());
-            assert!(rt.element_to_component.get(&300).is_none());
+            assert!(rt.render_functions.contains_key(&id));
+            assert!(!rt.element_to_component.contains_key(&300));
         });
     }
 
@@ -621,7 +621,7 @@ mod tests {
             let rt = runtime.borrow();
             assert_eq!(rt.element_to_component.get(&400), None);
             assert_eq!(rt.element_to_component.get(&401), None);
-            assert!(rt.render_functions.get(&id).is_none());
+            assert!(!rt.render_functions.contains_key(&id));
         });
     }
 }
