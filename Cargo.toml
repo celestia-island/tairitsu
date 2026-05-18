@@ -21,6 +21,7 @@ members = [
     "examples/wit-native-macro",
     "examples/vtty-graphics-demo",
     "examples/todo-app",
+    "examples/website",
 ]
 resolver = "2"
 
