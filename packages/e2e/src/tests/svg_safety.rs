@@ -5,9 +5,9 @@
 //! event handlers, and javascript: URLs are stripped while safe SVG elements
 //! like basic shapes and fragment references are preserved.
 
-use anyhow::Result;
 use std::time::{Duration, Instant};
 
+use anyhow::Result;
 use thirtyfour::WebDriver;
 use tracing::info;
 

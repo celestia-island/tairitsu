@@ -6,7 +6,6 @@
 
 use anyhow::{anyhow, bail, Context, Result};
 use ron::Value as RonValue;
-
 use wasmtime::component::{Type, Val};
 
 /// Convert RON string to Wasmtime Val (requires type information)
@@ -84,8 +83,9 @@ pub fn ron_value_to_val(ron_value: RonValue, target_type: &Type) -> Result<Val> 
 
 // Basic type handlers
 mod basic {
-    use super::*;
     use ron::Value as RonValue;
+
+    use super::*;
 
     pub fn deserialize_bool(ron: RonValue) -> Result<Val> {
         match ron {
@@ -214,8 +214,9 @@ mod basic {
 
 // Complex type handlers
 mod complex {
-    use super::*;
     use ron::Value as RonValue;
+
+    use super::*;
 
     /// Type alias for recursive deserializer function
     pub type Deserializer = fn(RonValue, &Type) -> Result<Val>;

@@ -26,7 +26,6 @@ mod fetcher;
 mod generator;
 mod metadata;
 
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 pub use fetcher::{fetch_icons, force_fetch_icons, IconFetcher};
@@ -35,6 +34,7 @@ pub use metadata::{
     parse_icons_config, parse_mdi_metadata, IconEntry, IconMetadata, IconsConfig, MdiIconMeta,
     MdiMetadata,
 };
+use serde::{Deserialize, Serialize};
 
 /// Icon source library
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]

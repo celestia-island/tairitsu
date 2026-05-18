@@ -1,17 +1,19 @@
 #[cfg(feature = "vtty")]
 mod vtty;
 
-use anyhow::Result;
-use serde::Deserialize;
-use serde_json::json;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 
+use anyhow::Result;
+use rmcp::handler::server::wrapper::Parameters;
+use rmcp::model::*;
+use rmcp::service::RequestContext;
 use rmcp::{
-    handler::server::wrapper::Parameters, model::*, service::RequestContext, tool, tool_handler,
-    tool_router, ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
+    tool, tool_handler, tool_router, ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
 };
 use schemars::JsonSchema;
+use serde::Deserialize;
+use serde_json::json;
+use tokio::sync::RwLock;
 
 struct Server {
     base_url: Arc<RwLock<String>>,
@@ -888,8 +890,9 @@ async fn resolve_default_cwd(context: &RequestContext<RoleServer>) -> Option<Str
 // ── daemon resolution ───────────────────────────────
 
 mod daemon {
-    use anyhow::anyhow;
     use std::path::PathBuf;
+
+    use anyhow::anyhow;
 
     pub(super) async fn resolve_daemon_url() -> anyhow::Result<String> {
         if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL") {

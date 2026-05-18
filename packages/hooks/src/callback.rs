@@ -1,4 +1,5 @@
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 /// A cached callback that only recreates when dependencies change.
 ///
@@ -143,8 +144,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cell::Cell;
+
+    use super::*;
 
     #[test]
     fn test_use_callback_basic() {

@@ -3,10 +3,8 @@
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::{
-    error::{CssValueParseError, ParseResult},
-    length::{CssBinOp, CssExpression, CssLength},
-};
+use super::error::{CssValueParseError, ParseResult};
+use super::length::{CssBinOp, CssExpression, CssLength};
 
 /// CSS value parser using Pest grammar.
 #[derive(Parser)]

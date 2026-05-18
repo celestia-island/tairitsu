@@ -4,10 +4,10 @@
 //! with the actual WASM container system, achieving zero serialization overhead
 //! while maintaining full compile-time type safety.
 
-use anyhow::Result;
-use log::info;
 use std::collections::HashMap;
 
+use anyhow::Result;
+use log::info;
 use tairitsu_web::{CompositeWitInterface, WitCommand, WitCommandHandler, WitInterface};
 
 // ============================================================================

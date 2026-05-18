@@ -1,5 +1,5 @@
 use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Parser, Tag, TagEnd};
-use tairitsu_vdom::{VElement, VNode, el, txt};
+use tairitsu_vdom::{el, txt, VElement, VNode};
 
 pub fn render_markdown(md: &str) -> VNode {
     let parser = Parser::new(md);
@@ -27,10 +27,10 @@ pub fn render_markdown(md: &str) -> VNode {
                 Tag::Emphasis => stack.push(el("em")),
                 Tag::Strong => stack.push(el("strong")),
                 Tag::Strikethrough => stack.push(el("del")),
-                Tag::Link { dest_url, .. } => {
-                    stack.push(el("a").attr("href", dest_url.as_ref()))
-                }
-                Tag::Image { dest_url, title, .. } => {
+                Tag::Link { dest_url, .. } => stack.push(el("a").attr("href", dest_url.as_ref())),
+                Tag::Image {
+                    dest_url, title, ..
+                } => {
                     let img = el("img")
                         .attr("src", dest_url.as_ref())
                         .attr("alt", title.as_ref());
@@ -122,7 +122,11 @@ pub fn render_markdown(md: &str) -> VNode {
 }
 
 pub fn markdown_content(md: &str) -> VNode {
-    VNode::Element(el("div").class("hi-markdown-content").child(render_markdown(md)))
+    VNode::Element(
+        el("div")
+            .class("hi-markdown-content")
+            .child(render_markdown(md)),
+    )
 }
 
 fn heading_tag(level: HeadingLevel) -> &'static str {

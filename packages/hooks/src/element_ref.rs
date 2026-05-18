@@ -24,7 +24,8 @@
 //! assert!(div_ref.get().is_none());
 //! ```
 
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 /// A reference to a DOM element that will be populated during rendering.
 ///

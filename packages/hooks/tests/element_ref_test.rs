@@ -6,7 +6,8 @@
 //! On wasm32, the platform stores `WitElement` instead. The `resolve_element_ref()`
 //! function from `tairitsu_vdom` handles this difference transparently.
 
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use tairitsu_hooks::use_element_ref;
 use tairitsu_vdom::resolve_element_ref;

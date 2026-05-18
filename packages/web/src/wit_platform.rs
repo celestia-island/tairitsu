@@ -27,7 +27,6 @@
 //! ```
 
 use anyhow::Result;
-
 #[cfg(feature = "wit-bindings")]
 use tairitsu_vdom::{ElementHandle, EventHandle};
 
@@ -263,11 +262,11 @@ impl WitPlatform {
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub mod wasm_impl {
-    use anyhow::Result;
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::sync::atomic::{AtomicU64, Ordering};
 
+    use anyhow::Result;
     use tairitsu_vdom::{
         CanvasContext, CanvasOps, ClipboardOps, ContentEditableOps, DomOps, DomRect, EventData,
         EventWitHandle, FileOps, FocusEvent, GenericEvent, GeoOps, IdbOps, InputEvent,
@@ -1984,6 +1983,8 @@ pub mod wasm_impl {
             VNode::Element(velement) => {
                 let element = platform.create_element(&velement.tag);
 
+                tairitsu_vdom::runtime::register_element(element.as_raw());
+
                 // Populate element_ref if present
                 if let Some(ref element_ref) = velement.element_ref {
                     use std::any::Any;
@@ -2238,6 +2239,8 @@ pub mod wasm_impl {
             VNode::Element(velement) => {
                 let element = platform.create_element(&velement.tag);
 
+                tairitsu_vdom::runtime::register_element(element.as_raw());
+
                 // Populate element_ref if present (for patch-created elements)
                 if let Some(ref element_ref) = velement.element_ref {
                     use std::any::Any;
@@ -2473,6 +2476,7 @@ pub mod wasm_impl {
     fn remove_child_at(platform: &WitPlatform, parent: &WitElement, index: usize) -> Result<()> {
         let child = get_child_at(parent, index)?;
         if let Some(child_element) = child {
+            tairitsu_vdom::runtime::on_element_removed(child_element.as_raw());
             platform.remove_child(parent, &child_element);
         }
         Ok(())
@@ -3022,6 +3026,7 @@ mod tests {
     #[test]
     fn test_wit_element_any_operations() {
         use std::any::TypeId;
+
         use tairitsu_vdom::ElementHandle;
 
         let element = super::WitElement::from_raw(777);

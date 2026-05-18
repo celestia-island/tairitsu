@@ -13,7 +13,6 @@ pub mod style_integration;
 pub mod svg_safety;
 
 use anyhow::Result;
-
 pub use async_operations::AsyncOperationsTests;
 pub use basic_components::BasicComponentsTests;
 pub use build::BuildTests;

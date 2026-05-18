@@ -16,6 +16,10 @@ pub mod streaming;
 pub mod stubs;
 pub mod virtual_dom;
 
+use anyhow::Result;
+use bindings::BrowserFull;
+// Re-export sign_component for the sign_component_macro! to work
+pub use fast_refresh::sign_component;
 pub use host_state::{SsrConfig, SsrHostState};
 pub use html_render::FullDocumentConfig;
 #[cfg(feature = "streaming")]
@@ -24,12 +28,6 @@ pub use streaming::{
     HtmlChunk, HtmlStream,
 };
 pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
-
-// Re-export sign_component for the sign_component_macro! to work
-pub use fast_refresh::sign_component;
-
-use anyhow::Result;
-use bindings::BrowserFull;
 use wasmtime::{Engine, Store};
 
 /// Render a WASM component to HTML

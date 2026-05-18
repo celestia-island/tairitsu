@@ -1,7 +1,5 @@
-use std::{
-    ops::{Deref, DerefMut},
-    rc::Rc,
-};
+use std::ops::{Deref, DerefMut};
+use std::rc::Rc;
 
 /// A smart pointer wrapping `Fn(T) -> R` for event handling.
 ///
@@ -181,9 +179,10 @@ pub type EventHandler<T> = Callback<T, ()>;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cell::Cell;
     use std::rc::Rc;
+
+    use super::*;
 
     #[test]
     fn test_callback_new() {

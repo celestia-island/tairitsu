@@ -3,7 +3,8 @@
 //! This module provides functions to integrate the reactive runtime
 //! with the web platform's DOM manipulation capabilities.
 
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use tairitsu_vdom::Patch;
 

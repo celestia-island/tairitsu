@@ -12,9 +12,10 @@
 //! Speaks JSON-RPC 2.0 over stdin/stdout.  Designed for the `mcpServers`
 //! configuration in opencode.jsonc / opencode.json.
 
+use std::io::{self, BufRead, Write};
+
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::io::{self, BufRead, Write};
 
 const MCP_PROTOCOL_VERSION: &str = "2024-11-05";
 const TOOL_PREFIX: &str = "";

@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum Language {

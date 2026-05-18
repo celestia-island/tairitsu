@@ -3,8 +3,9 @@
 //! This module provides utilities for comparing component definitions
 //! to determine if state can be preserved during hot reload.
 
-use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+
+use serde::{Deserialize, Serialize};
 
 use super::ComponentSignature;
 
@@ -490,8 +491,7 @@ impl HookInfo {
 
 #[cfg(test)]
 mod tests {
-    use super::ComponentSignature;
-    use super::*;
+    use super::{ComponentSignature, *};
 
     fn make_signature(name: &str) -> ComponentSignature {
         ComponentSignature::new(name, "src/test.rs", 10)

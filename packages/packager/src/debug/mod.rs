@@ -1,22 +1,16 @@
-use serde::{Deserialize, Serialize};
-use std::{
-    net::SocketAddr,
-    sync::Arc,
-    time::{Duration, Instant},
-};
-use tokio::sync::{mpsc, oneshot, RwLock};
+use std::net::SocketAddr;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
-use axum::{
-    extract::{Json, Query, State},
-    http::StatusCode,
-    response::{IntoResponse, Json as ResponseJson},
-    routing::{delete, get, post},
-    Router,
-};
-use tower_http::{
-    compression::CompressionLayer,
-    cors::{Any, CorsLayer},
-};
+use axum::extract::{Json, Query, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Json as ResponseJson};
+use axum::routing::{delete, get, post};
+use axum::Router;
+use serde::{Deserialize, Serialize};
+use tokio::sync::{mpsc, oneshot, RwLock};
+use tower_http::compression::CompressionLayer;
+use tower_http::cors::{Any, CorsLayer};
 
 use crate::config::Config;
 
@@ -486,13 +480,14 @@ impl BrowserHandle {
 
 #[cfg(feature = "debug-browser")]
 mod engine {
-    use super::*;
     use base64::Engine;
     use chromiumoxide::browser::{Browser, BrowserConfig};
     use chromiumoxide::cdp::browser_protocol::emulation::SetDeviceMetricsOverrideParams;
     use chromiumoxide::cdp::browser_protocol::page::CaptureScreenshotFormat;
     use chromiumoxide::page::ScreenshotParams;
     use futures::StreamExt;
+
+    use super::*;
 
     pub(super) async fn spawn_browser(
         base_url: String,

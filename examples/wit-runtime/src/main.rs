@@ -6,7 +6,6 @@
 use anyhow::Result;
 use log::{debug, info, warn};
 use rand::Rng;
-
 use tairitsu_web::WitLoader;
 
 fn main() -> Result<()> {

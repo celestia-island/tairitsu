@@ -61,37 +61,32 @@ pub mod wit_registry;
 #[cfg(feature = "dynamic")]
 pub mod dynamic;
 
+// Re-export common types
+pub use anyhow::{Error, Result};
 pub use container::{
     Container, ExportInfo, GuestHandlerContext, GuestInstance, HostState, HostStateImpl, ImportInfo,
 };
-pub use image::Image;
-
-// RON types (always exported, but only usable when 'ron' dependency is available)
-pub use ron::{typed_ron_tool, RonBinding, RonFunctionTool, RonTool, RonToolRegistry};
-
 // Dynamic invocation exports (requires 'dynamic' feature)
 #[cfg(feature = "dynamic")]
 pub use dynamic::host_imports::{HostImport, HostImportRegistry};
 #[cfg(feature = "dynamic")]
 pub use dynamic::{ron_to_val, val_to_ron};
+pub use image::Image;
 pub use registry::Registry;
+// RON types (always exported, but only usable when 'ron' dependency is available)
+pub use ron::{typed_ron_tool, RonBinding, RonFunctionTool, RonTool, RonToolRegistry};
+// Re-export procedural macros
+pub use tairitsu_macros::{
+    export_wit, wit_guest_impl, wit_interface, wit_world, AsTool, WitCommand,
+};
+// Re-export wasmtime types for user convenience
+pub use wasmtime::{Engine, Store};
+pub use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 pub use wit::{FunctionInfo, WitLoader};
 pub use wit_helper::GuestInfo;
 pub use wit_registry::{
     CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface,
 };
-
-// Re-export common types
-pub use anyhow::{Error, Result};
-
-// Re-export procedural macros
-pub use tairitsu_macros::{
-    export_wit, wit_guest_impl, wit_interface, wit_world, AsTool, WitCommand,
-};
-
-// Re-export wasmtime types for user convenience
-pub use wasmtime::{Engine, Store};
-pub use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 
 // Helper macros are automatically available through the wit_helper module
 // Usage: tairitsu::impl_wit_interface!(), tairitsu::simple_handler!(), etc.

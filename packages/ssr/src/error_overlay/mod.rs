@@ -7,7 +7,6 @@
 mod templates;
 
 use serde::{Deserialize, Serialize};
-
 use tairitsu_vdom::{VElement, VNode};
 pub use templates::Templates;
 

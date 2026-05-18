@@ -11,9 +11,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cell::RefCell;
     use std::rc::Rc;
+
+    use super::*;
 
     #[test]
     fn test_use_effect() {

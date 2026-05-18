@@ -3,11 +3,9 @@
 //! On Windows: ConPTY via native_pty_system()
 //! On Unix: forkpty via native_pty_system()
 
-use std::{
-    io::{self, Read, Write},
-    sync::Mutex,
-    time::Duration,
-};
+use std::io::{self, Read, Write};
+use std::sync::Mutex;
+use std::time::Duration;
 
 use portable_pty::{native_pty_system, Child, ChildKiller, CommandBuilder, MasterPty, PtySize};
 

@@ -38,8 +38,9 @@ pub use serialize::val_to_ron;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use wasmtime::component::Val;
+
+    use super::*;
 
     #[test]
     fn test_val_to_ron_basic_types() {

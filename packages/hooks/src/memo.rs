@@ -1,4 +1,5 @@
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use tairitsu_vdom::{Classes, IntoClassValue, IntoStyleValue, Signal, Style, VElement};
 
@@ -182,8 +183,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cell::Cell;
+
+    use super::*;
 
     #[test]
     fn test_use_memo_basic() {

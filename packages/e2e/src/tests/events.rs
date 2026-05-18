@@ -2,9 +2,9 @@
 //!
 //! Tests for DOM event handling including click, input, keyboard, and focus events.
 
-use anyhow::Result;
 use std::time::{Duration, Instant};
 
+use anyhow::Result;
 use thirtyfour::{By, Key, WebDriver};
 use tracing::info;
 

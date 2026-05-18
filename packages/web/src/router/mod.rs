@@ -22,7 +22,9 @@
 
 pub mod segment;
 
-use std::{collections::HashMap, fmt, sync::Arc};
+use std::collections::HashMap;
+use std::fmt;
+use std::sync::Arc;
 
 pub use segment::{RouteSegment, SegmentType};
 use tairitsu_vdom::VNode;
@@ -370,8 +372,9 @@ impl Router {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::sync::Arc;
+
+    use super::*;
 
     fn mock_handler(_params: Params) -> VNode {
         VNode::Text(tairitsu_vdom::VText::new("mock"))

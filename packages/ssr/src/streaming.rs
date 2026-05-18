@@ -49,13 +49,14 @@
 //! # }
 //! ```
 
-use anyhow::Result;
-use futures::stream::Stream;
 use std::pin::Pin;
 
+use anyhow::Result;
+use futures::stream::Stream;
 use tairitsu_vdom::VNode;
 
-use crate::{host_state::SsrConfig, render_to_html};
+use crate::host_state::SsrConfig;
+use crate::render_to_html;
 
 /// A chunk of HTML that can be sent to the client
 ///
@@ -327,9 +328,10 @@ pub fn hydration_script() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use futures::stream::StreamExt;
     use tairitsu_vdom::{VElement, VText};
+
+    use super::*;
 
     #[test]
     fn test_html_chunk_content_to_string() {

@@ -5,10 +5,8 @@
 //! 2. Dependencies are tracked correctly
 //! 3. Patches are applied efficiently
 
-use tairitsu_vdom::{
-    vnode::{VElement, VNode},
-    Signal,
-};
+use tairitsu_vdom::vnode::{VElement, VNode};
+use tairitsu_vdom::Signal;
 
 #[test]
 fn test_signal_triggers_dependency_tracking() {

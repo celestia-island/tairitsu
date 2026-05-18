@@ -605,7 +605,8 @@ fn composite_placement(
 }
 
 pub fn encode_base64(data: &[u8]) -> String {
-    use base64::{engine::general_purpose::STANDARD, Engine};
+    use base64::engine::general_purpose::STANDARD;
+    use base64::Engine;
     STANDARD.encode(data)
 }
 

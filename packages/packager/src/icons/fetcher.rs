@@ -28,7 +28,8 @@
 
 use std::path::{Path, PathBuf};
 
-use super::{metadata::IconMetadata, IconSource, MDI_DEFAULT_VERSION};
+use super::metadata::IconMetadata;
+use super::{IconSource, MDI_DEFAULT_VERSION};
 
 // ============================================================================
 // Constants
@@ -256,8 +257,9 @@ impl IconFetcher {
 
 #[cfg(feature = "icon-fetch")]
 mod http_fetch {
-    use super::*;
     use std::sync::OnceLock;
+
+    use super::*;
 
     /// MDI GitHub raw URL for meta.json
     const MDI_GITHUB_META_URL: &str =

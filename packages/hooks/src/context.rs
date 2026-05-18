@@ -1,9 +1,7 @@
-use std::{
-    any::{Any, TypeId},
-    cell::RefCell,
-    collections::HashMap,
-    rc::Rc,
-};
+use std::any::{Any, TypeId};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
 
 thread_local! {
     static CONTEXT: RefCell<HashMap<TypeId, Rc<dyn Any>>> = RefCell::new(HashMap::new());
