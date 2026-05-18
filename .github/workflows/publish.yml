@@ -81,11 +81,9 @@ jobs:
           with open('Cargo.toml', 'w') as f: tomlkit.dump(d, f)
           "
 
-      - uses: katyo/publish-crates@v2
-        with:
-          registry-token: ${{ secrets.CRATES_IO_API_TOKEN }}
-          args: --allow-dirty
-          ignore-unpublished-changes: true
+      - run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
+
+      - run: python3 scripts/publish_crates.py
 
   publish-npm:
     name: Publish to npm
