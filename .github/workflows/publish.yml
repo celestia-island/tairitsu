@@ -71,20 +71,21 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
+      - name: Strip examples from workspace to avoid git-dep conflicts
+        run: |
+          pip install tomlkit
+          python3 -c "
+          import tomlkit
+          with open('Cargo.toml') as f: d = tomlkit.load(f)
+          d['workspace']['members'] = [m for m in d['workspace']['members'] if not m.startswith('examples/')]
+          with open('Cargo.toml', 'w') as f: tomlkit.dump(d, f)
+          "
 
-      # Publish in dependency order
-      - run: cargo publish -p tairitsu-macros                  --allow-dirty -v
-      - run: cargo publish -p tairitsu-browser-worlds          --allow-dirty -v
-      - run: cargo publish -p tairitsu-vdom                    --allow-dirty -v
-      - run: cargo publish -p tairitsu                       --allow-dirty -v
-      - run: cargo publish -p tairitsu-style                   --allow-dirty -v
-      - run: cargo publish -p tairitsu-hooks                   --allow-dirty -v
-      - run: cargo publish -p tairitsu-browser-wit-resolver    --allow-dirty -v
-      - run: cargo publish -p tairitsu-ssr                     --allow-dirty -v
-      - run: cargo publish -p tairitsu-packager                --allow-dirty -v
-      - run: cargo publish -p tairitsu-web                     --allow-dirty -v
-      - run: cargo publish -p tairitsu-mcp                     --allow-dirty -v
+      - uses: katyo/publish-crates@v2
+        with:
+          registry-token: ${{ secrets.CRATES_IO_API_TOKEN }}
+          args: --allow-dirty
+          ignore-unpublished-changes: true
 
   publish-npm:
     name: Publish to npm

@@ -26,7 +26,17 @@ members = [
 resolver = "2"
 
 [patch.crates-io]
+tairitsu = { path = "packages/runtime" }
 tairitsu-macros = { path = "packages/macros" }
+tairitsu-vdom = { path = "packages/vdom" }
+tairitsu-hooks = { path = "packages/hooks" }
+tairitsu-style = { path = "packages/style" }
+tairitsu-ssr = { path = "packages/ssr" }
+tairitsu-web = { path = "packages/web" }
+tairitsu-browser-worlds = { path = "packages/browser-worlds" }
+tairitsu-browser-wit-resolver = { path = "packages/browser-wit-resolver" }
+tairitsu-packager = { path = "packages/packager" }
+tairitsu-mcp = { path = "packages/mcp" }
 
 [profile.release]
 lto = true
@@ -43,7 +53,7 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
-version = "0.5.2"
+version = "0.5.4"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -58,14 +68,14 @@ tokio = { version = "^1", default-features = false, features = [
     "time",
     "signal",
 ] }
-tairitsu = { version = "0.5.2", path = "packages/runtime" }
-tairitsu-macros = { version = "0.5.2", path = "packages/macros" }
-tairitsu-vdom = { version = "0.5.2", path = "packages/vdom" }
-tairitsu-hooks = { version = "0.5.2", path = "packages/hooks" }
-tairitsu-style = { version = "0.5.2", path = "packages/style" }
-tairitsu-ssr = { version = "0.5.2", path = "packages/ssr" }
-tairitsu-web = { version = "0.5.2", path = "packages/web" }
-tairitsu-browser-worlds = { version = "0.5.2", path = "packages/browser-worlds" }
-tairitsu-browser-wit-resolver = { version = "0.5.2", path = "packages/browser-wit-resolver" }
-tairitsu-packager = { version = "0.5.2", path = "packages/packager" }
-tairitsu-mcp = { version = "0.5.2", path = "packages/mcp" }
+tairitsu = { version = "0.5.4", path = "packages/runtime" }
+tairitsu-macros = { version = "0.5.4", path = "packages/macros" }
+tairitsu-vdom = { version = "0.5.4", path = "packages/vdom" }
+tairitsu-hooks = { version = "0.5.4", path = "packages/hooks" }
+tairitsu-style = { version = "0.5.4", path = "packages/style" }
+tairitsu-ssr = { version = "0.5.4", path = "packages/ssr" }
+tairitsu-web = { version = "0.5.4", path = "packages/web" }
+tairitsu-browser-worlds = { version = "0.5.4", path = "packages/browser-worlds" }
+tairitsu-browser-wit-resolver = { version = "0.5.4", path = "packages/browser-wit-resolver" }
+tairitsu-packager = { version = "0.5.4", path = "packages/packager" }
+tairitsu-mcp = { version = "0.5.4", path = "packages/mcp" }
