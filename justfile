@@ -74,9 +74,7 @@ clean:
 
 # Clean the downloaded WebIDL cache (forces re-fetch on next wit-gen)
 clean-idl-cache:
-    @echo "Removing IDL caches..."
-    rm -rf scripts/idl-cache
-    rm -rf target/tairitsu-wit/webidl-cache
+    @{{python}} scripts/clean_idl_cache.py
 
 # ============================================================================
 # ============================================================================
@@ -476,19 +474,7 @@ publish-pkg dir:
 
 # Publish for real (not dry-run) — requires NPM_TOKEN
 publish-live:
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Publishing all npm packages (LIVE)..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @if [ -z "$NPM_TOKEN" ]; then echo "Error: NPM_TOKEN environment variable is not set."; exit 1; fi
-    npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
-    cd packages/npm/celestia-tairitsu-web-glue && npm run build && npm publish --access public
-    cd packages/npm/celestia-tairitsu-web-glue && npm run build && npm publish --access public
-    cd packages/npm/celestia-tairitsu-web-glue && npm run build:production && npm publish --access public
-    @for dir in packages/npm/glue-*/; do cd "$$dir" && npm publish --access public && cd -; done
-    @for dir in packages/npm/*-wasm/; do cd "$$dir" && npm publish --access public && cd -; done
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "All npm packages published (LIVE)!"
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @{{python}} scripts/publish_live.py
 
 # Build all npm packages locally
 npm-build:
@@ -553,47 +539,7 @@ info:
 
 # Capture screenshots via debug API server (requires running dev --debug)
 visual-capture:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    DEBUG_PORT="${DEBUG_PORT:-3001}"
-    BASE_URL="http://localhost:${DEBUG_PORT}"
-    OUTPUT_DIR="target/visual-diff/actual"
-    
-    mkdir -p "$OUTPUT_DIR"
-    
-    # Check debug server is running
-    if ! curl -sf "${BASE_URL}/health" > /dev/null 2>&1; then
-        echo "Error: Debug API not running at ${BASE_URL}"
-        echo "Start with: just dev-debug"
-        exit 1
-    fi
-    
-    PAGES=("home" "button" "form" "search" "switch" "feedback" "display" "avatar" "image" "tag" "empty" "comment")
-    
-    for page in "${PAGES[@]}"; do
-        echo -n "Capturing /${page}... "
-        
-        # Navigate to page
-        curl -sf -X POST "${BASE_URL}/navigate" \
-            -H 'Content-Type: application/json' \
-            -d "{\"url\":\"/${page}\"}" > /dev/null
-        
-        sleep 1
-        
-        # Take screenshot and decode base64 to PNG
-        RESPONSE=$(curl -sf -X POST "${BASE_URL}/screenshot" \
-            -H 'Content-Type: application/json' \
-            -d '{"full_page": false}')
-        
-        if [ $? -eq 0 ] && echo "$RESPONSE" | grep -q '"ok":true'; then
-            echo "$RESPONSE" | python3 -c "import sys,json,base64;d=json.load(sys.stdin);open('${OUTPUT_DIR}/${page}.png','wb').write(base64.b64decode(d['data']['data'])) if d.get('ok') else sys.exit(1); print('OK')"
-        else
-            echo "SKIP (server returned error)"
-        fi
-    done
-    
-    echo ""
-    echo "Screenshots saved to ${OUTPUT_DIR}/"
+    @{{python}} scripts/visual_capture.py
 
 # Run visual diff comparison against baseline
 visual-diff tolerance="0.01":
