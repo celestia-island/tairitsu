@@ -1,11 +1,10 @@
 //! Registry - Manages Images and Containers (similar to Docker registry/daemon)
 
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
 use anyhow::{Context, Result};
 use bytes::Bytes;
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
 
 use crate::{Container, Image};
 
@@ -128,8 +127,9 @@ impl std::fmt::Debug for Registry {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use bytes::Bytes;
+
+    use super::*;
 
     const MINIMAL_WASM: &[u8] = b"\x00asm\x01\x00\x00\x00";
 

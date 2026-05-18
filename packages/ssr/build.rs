@@ -3,7 +3,10 @@
 //! This build script parses the WIT file and generates stub implementations
 //! for all browser interfaces that are not manually implemented.
 
-use std::{collections::HashSet, fs::File, io::Write, path::Path};
+use std::collections::HashSet;
+use std::fs::File;
+use std::io::Write;
+use std::path::Path;
 
 fn main() {
     println!("cargo:rerun-if-changed=wit/browser-full.wit");

@@ -7,16 +7,12 @@ pub mod pty_win;
 pub mod render;
 pub mod screen;
 
-use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc, Mutex,
-    },
-};
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use screen::Vt100Screen;
+use serde::{Deserialize, Serialize};
 
 static SESSION_COUNTER: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
 

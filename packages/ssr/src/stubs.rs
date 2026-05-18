@@ -14,7 +14,6 @@
 #![allow(clippy::too_many_arguments)]
 
 use anyhow::Result;
-
 use wasmtime::component::Linker;
 
 use crate::host_state::SsrHostState;

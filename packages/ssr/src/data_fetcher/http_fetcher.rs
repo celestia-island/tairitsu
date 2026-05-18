@@ -6,7 +6,10 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use super::{cache::Cache, error::FetchError, fetcher::Fetcher, FetchConfig};
+use super::cache::Cache;
+use super::error::FetchError;
+use super::fetcher::Fetcher;
+use super::FetchConfig;
 
 /// HTTP fetcher for making HTTP requests with caching support
 #[derive(Clone)]
@@ -258,8 +261,9 @@ impl Fetcher for HttpFetcher {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::time::Duration;
+
+    use super::*;
 
     #[test]
     fn test_http_fetcher_new() {

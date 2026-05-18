@@ -163,6 +163,7 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
 #[allow(dead_code)]
 fn copy_assets(dist_dir: &std::path::Path, output_dir: &std::path::Path) -> crate::Result<()> {
     use std::fs;
+
     use walkdir::WalkDir;
 
     let asset_extensions = [

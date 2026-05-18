@@ -134,8 +134,9 @@ impl PluginWitRegistry {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs;
+
+    use super::*;
 
     #[test]
     fn test_scan_empty_dir() {

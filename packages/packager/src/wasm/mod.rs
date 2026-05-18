@@ -2,7 +2,8 @@ use std::time::{Duration, Instant};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
-use crate::{config::Config, daemon};
+use crate::config::Config;
+use crate::daemon;
 
 fn locale() -> &'static crate::i18n::Translations {
     crate::i18n::translations()
@@ -2051,7 +2052,9 @@ pub async fn dev_server(
     debug: bool,
     debug_port: Option<u16>,
 ) -> crate::Result<()> {
-    use axum::{middleware, response::Html, routing::get, Router};
+    use axum::response::Html;
+    use axum::routing::get;
+    use axum::{middleware, Router};
     use tower_http::services::ServeDir;
 
     if watch {

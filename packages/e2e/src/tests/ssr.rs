@@ -2,15 +2,14 @@
 //!
 //! Tests for Server-Side Rendering functionality.
 
-use anyhow::Result;
 use std::path::PathBuf;
 
+use anyhow::Result;
+// Import WebDriver for the trait - we don't use it but need it for the impl
+use thirtyfour::WebDriver;
 use tracing::info;
 
 use crate::tests::{Test, TestResult};
-
-// Import WebDriver for the trait - we don't use it but need it for the impl
-use thirtyfour::WebDriver;
 
 /// SSR Tests
 pub struct SsrTests;

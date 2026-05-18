@@ -27,7 +27,6 @@
 //! ```
 
 use anyhow::Result;
-
 #[cfg(feature = "wit-bindings")]
 use tairitsu_vdom::{ElementHandle, EventHandle};
 
@@ -263,11 +262,11 @@ impl WitPlatform {
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub mod wasm_impl {
-    use anyhow::Result;
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::sync::atomic::{AtomicU64, Ordering};
 
+    use anyhow::Result;
     use tairitsu_vdom::{
         CanvasContext, CanvasOps, ClipboardOps, ContentEditableOps, DomOps, DomRect, EventData,
         EventWitHandle, FileOps, FocusEvent, GenericEvent, GeoOps, IdbOps, InputEvent,
@@ -3027,6 +3026,7 @@ mod tests {
     #[test]
     fn test_wit_element_any_operations() {
         use std::any::TypeId;
+
         use tairitsu_vdom::ElementHandle;
 
         let element = super::WitElement::from_raw(777);

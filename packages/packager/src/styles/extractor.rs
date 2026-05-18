@@ -1,5 +1,6 @@
-use anyhow::Result;
 use std::collections::HashSet;
+
+use anyhow::Result;
 
 pub struct CssExtractor {
     options: ExtractorOptions,

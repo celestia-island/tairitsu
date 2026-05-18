@@ -4,12 +4,9 @@
 //! Users need to implement WIT interface bindings and initialization themselves.
 
 use anyhow::{Context as AnyhowContext, Result};
-
-use wasmtime::{
-    component::{Component, Linker},
-    error::Context,
-    Store,
-};
+use wasmtime::component::{Component, Linker};
+use wasmtime::error::Context;
+use wasmtime::Store;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 #[cfg(feature = "dynamic")]
@@ -405,8 +402,9 @@ impl<T: HostStateImpl> Container<T> {
         function_name: &str,
         raw_desc_payload: &str,
     ) -> Result<String> {
-        use crate::dynamic::{ron_to_val, val_to_ron};
         use wasmtime::component::Val;
+
+        use crate::dynamic::{ron_to_val, val_to_ron};
 
         // Get the function (direct field access avoids borrow checker issues)
         let instance = self

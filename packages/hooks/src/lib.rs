@@ -39,7 +39,6 @@ pub use suspense::{
     resource_state, use_resource, use_suspense, Resource, ResourceState, ResourceStatus, Suspense,
     SuspenseBoundary,
 };
-
 // Re-export Event types from vdom for convenience
 pub use tairitsu_vdom::{Event, GenericEvent};
 

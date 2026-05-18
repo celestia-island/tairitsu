@@ -3,8 +3,8 @@
 //! This shows how the wit_interface! macro generates enums with zero boilerplate
 
 use log::info;
-
-use tairitsu_web::{wit_interface, wit_registry::WitCommandHandler};
+use tairitsu_web::wit_interface;
+use tairitsu_web::wit_registry::WitCommandHandler;
 
 // Generate three separate interfaces using the macro
 wit_interface! {

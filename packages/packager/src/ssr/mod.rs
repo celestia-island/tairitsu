@@ -6,9 +6,9 @@
 
 pub mod prerender;
 
-use anyhow::Result;
 use std::path::PathBuf;
 
+use anyhow::Result;
 #[cfg(feature = "ssr")]
 use tracing::error;
 #[cfg(feature = "dev-server")]
@@ -37,8 +37,9 @@ pub async fn ssr_dev_server(
     open: bool,
     _watch: bool,
 ) -> crate::Result<()> {
-    use crate::wasm::build_component;
     use std::time::Instant;
+
+    use crate::wasm::build_component;
 
     crate::log_info!("Tairitsu SSR development server");
 
@@ -272,6 +273,7 @@ pub fn prerender_routes(
     #[cfg(feature = "ssr")]
     {
         use std::fs;
+
         use tairitsu_ssr::{render_full_page, SsrConfig};
 
         let discovered = config.discovered_routes();

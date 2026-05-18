@@ -17,11 +17,9 @@ pub fn toggle_dark_mode() {
     DARK_MODE.with(|c| c.set(!c.get()));
     tairitsu_vdom::rerender();
 }
-use crate::{
-    components::{sidebar, top_nav},
-    pages::{event_test, guides, home, not_found, packages, system},
-    theme,
-};
+use crate::components::{sidebar, top_nav};
+use crate::pages::{event_test, guides, home, not_found, packages, system};
+use crate::theme;
 
 /// Render the full app — all pages included for JS-based SPA show/hide.
 pub fn render() -> VNode {

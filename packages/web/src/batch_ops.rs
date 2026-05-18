@@ -2,7 +2,8 @@
 //!
 //! Groups multiple DOM operations together to reduce WIT round-trips.
 
-use std::{cell::RefCell, collections::HashMap};
+use std::cell::RefCell;
+use std::collections::HashMap;
 
 use crate::wit_platform::WitElement;
 

@@ -648,10 +648,11 @@ mod tests {
     #[cfg(feature = "vtty-visual")]
     #[test]
     fn test_kitty_apc_end_to_end() {
+        use base64::engine::general_purpose::STANDARD as BASE64;
+        use base64::Engine;
+        use image::{ImageBuffer, Rgba};
+
         use crate::vtty::graphics::{process_kitty_apc, InlineImageStore, KittyGraphicsState};
-        use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
-        use image::ImageBuffer;
-        use image::Rgba;
 
         let mut logo = ImageBuffer::from_pixel(16u32, 8u32, Rgba([0x00u8, 0x2bu8, 0x36u8, 255u8]));
         logo.put_pixel(4, 4, Rgba([255u8, 0u8, 0u8, 255u8]));
@@ -739,8 +740,9 @@ mod tests {
 
     #[test]
     fn test_vte_apc_buffer_content() {
-        use base64::Engine;
         use std::io::Cursor;
+
+        use base64::Engine;
         let mut s = Vt100Screen::new(40, 10);
         let png = image::RgbaImage::from_pixel(2, 2, image::Rgba([255, 0, 0, 255]));
         let mut png_bytes = Vec::new();

@@ -3,10 +3,10 @@
 //! This demonstrates how to use trait objects and dynamic dispatch
 //! to compose multiple WIT interfaces without runtime serialization.
 
-use log::info;
-use rand::Rng;
 use std::collections::HashMap;
 
+use log::info;
+use rand::Rng;
 use tairitsu_web::{
     CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface,
 };

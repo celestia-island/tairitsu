@@ -8,12 +8,9 @@
 
 use anyhow::Result;
 use log::{debug, error, info, warn};
-
 use tairitsu::dynamic::host_imports::HostImportRegistry;
-use tairitsu_web::{
-    ron::{typed_ron_tool, RonBinding, RonToolRegistry},
-    Container, Image,
-};
+use tairitsu_web::ron::{typed_ron_tool, RonBinding, RonToolRegistry};
+use tairitsu_web::{Container, Image};
 
 // ============================================================================
 // Host Import Implementation

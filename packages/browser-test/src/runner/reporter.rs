@@ -1,6 +1,7 @@
 //! Test result reporting
 
-use std::{fmt, time::Duration};
+use std::fmt;
+use std::time::Duration;
 
 /// Result of a single test
 #[derive(Debug, Clone)]

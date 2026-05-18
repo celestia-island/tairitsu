@@ -44,14 +44,12 @@
 //! - Automatic re-rendering via the runtime
 //! - Thread-safe state updates for async operations
 
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    fmt,
-    future::Future,
-    rc::Rc,
-    sync::Arc,
-};
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
+use std::fmt;
+use std::future::Future;
+use std::rc::Rc;
+use std::sync::Arc;
 
 use tairitsu_vdom::{runtime, VNode};
 
@@ -696,8 +694,9 @@ pub fn trigger_resource_update<T: Clone + Send + Sync + 'static>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::time::Duration;
+
+    use super::*;
 
     #[test]
     fn test_resource_state_loading() {

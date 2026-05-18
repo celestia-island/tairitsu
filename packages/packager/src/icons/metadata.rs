@@ -3,8 +3,9 @@
 //! Handles parsing of `[package.metadata.tairitsu.icons]` configuration
 //! and MDI meta.json format.
 
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 
 use super::IconStyle;
 

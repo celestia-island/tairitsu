@@ -76,8 +76,9 @@ pub fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use tairitsu_vdom::IntoVNodeChild;
+
+    use super::*;
 
     #[test]
     fn test_todo_app_renders() {

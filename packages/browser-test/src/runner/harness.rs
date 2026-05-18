@@ -1,14 +1,13 @@
 //! Test harness for browser-glue tests
 
-use anyhow::{Context, Result};
-use futures::StreamExt;
-use std::{path::PathBuf, time::Duration};
+use std::path::PathBuf;
+use std::time::Duration;
 
-use chromiumoxide::{
-    browser::{Browser, BrowserConfig},
-    js::EvaluationResult,
-    Page,
-};
+use anyhow::{Context, Result};
+use chromiumoxide::browser::{Browser, BrowserConfig};
+use chromiumoxide::js::EvaluationResult;
+use chromiumoxide::Page;
+use futures::StreamExt;
 use tracing::{debug, info, warn};
 
 use super::reporter::{TestReport, TestResult};

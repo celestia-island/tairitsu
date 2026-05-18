@@ -3,11 +3,9 @@
 
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{
-    parse::{Parse, ParseStream},
-    punctuated::Punctuated,
-    Attribute, Expr, Ident, Meta, Result, Token, Type, Visibility,
-};
+use syn::parse::{Parse, ParseStream};
+use syn::punctuated::Punctuated;
+use syn::{Attribute, Expr, Ident, Meta, Result, Token, Type, Visibility};
 
 /// Parsed props field with optional default value from #[default(...)] attribute
 pub struct PropsField {

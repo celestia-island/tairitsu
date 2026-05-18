@@ -1,6 +1,7 @@
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use std::collections::HashMap;
 
+use base64::engine::general_purpose::STANDARD as BASE64;
+use base64::Engine;
 use image::{ImageBuffer, Rgba};
 
 type ImgBuf = ImageBuffer<Rgba<u8>, Vec<u8>>;

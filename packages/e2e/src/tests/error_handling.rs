@@ -2,9 +2,12 @@
 //!
 //! Tests for error handling including build errors, runtime errors, and edge cases.
 
-use anyhow::Result;
-use std::{fs, path::PathBuf, process::Command, time::Instant};
+use std::fs;
+use std::path::PathBuf;
+use std::process::Command;
+use std::time::Instant;
 
+use anyhow::Result;
 use tempfile::TempDir;
 use thirtyfour::WebDriver;
 use tracing::info;

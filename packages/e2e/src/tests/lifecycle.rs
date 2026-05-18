@@ -2,9 +2,9 @@
 //!
 //! Tests for component lifecycle including mount, update, and unmount.
 
-use anyhow::Result;
 use std::time::{Duration, Instant};
 
+use anyhow::Result;
 use thirtyfour::{By, WebDriver};
 use tracing::info;
 
