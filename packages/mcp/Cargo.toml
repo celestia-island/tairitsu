@@ -6,6 +6,7 @@ description = "Tairitsu MCP server — browser automation + VTty for AI coding a
 authors.workspace = true
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+exclude = ["src/vtty/fonts/"]
 
 [[bin]]
 name = "tairitsu-mcp"
