@@ -13,7 +13,8 @@ scss_content = {
     | string_single
     | at_rule
     | rule_block
-    | WHITESPACE / NEWLINE
+    | WHITESPACE
+    | NEWLINE
 }
 
 /// Block comment /* ... */ — consume entirely
@@ -44,7 +45,7 @@ selector = {
 }
 
 combinators = {
-    (simple_selector / combinator_char / WHITESPACE)+
+    (simple_selector | combinator_char | WHITESPACE)+
 }
 
 combinator_char = { [" >+~|"] }
