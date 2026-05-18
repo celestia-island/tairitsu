@@ -220,11 +220,12 @@ fn build_wasm_component(
     }
 
     cmd.stdout(Stdio::piped());
-    cmd.stderr(Stdio::null());
+    cmd.stderr(Stdio::piped());
 
     let mut child = cmd.spawn()?;
 
     let stdout = child.stdout.take().expect("stdout should be piped");
+    let stderr = child.stderr.take().expect("stderr should be piped");
 
     let pb_clone = pb.clone();
 
@@ -249,6 +250,22 @@ fn build_wasm_component(
     let diag_entries: std::sync::Arc<std::sync::Mutex<Vec<DiagEntry>>> =
         std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     let entries_clone = diag_entries.clone();
+
+    let stderr_capture = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
+    let stderr_clone = stderr_capture.clone();
+    let stderr_handle = std::thread::spawn(move || {
+        use std::io::BufRead;
+        let mut buf = String::new();
+        for line in std::io::BufReader::new(stderr).lines() {
+            if let Ok(line) = line {
+                buf.push_str(&line);
+                buf.push('\n');
+            }
+        }
+        if let Ok(mut s) = stderr_clone.lock() {
+            *s = buf;
+        }
+    });
 
     let handle = std::thread::spawn(move || {
         for line in std::io::BufReader::new(stdout).lines() {
@@ -351,6 +368,7 @@ fn build_wasm_component(
 
     let status = child.wait()?;
     handle.join().ok();
+    stderr_handle.join().ok();
 
     if !status.success() {
         if !verbose {
@@ -385,20 +403,21 @@ fn build_wasm_component(
             .lock()
             .map(|d| d.trim().to_string())
             .unwrap_or_default();
+        let stderr_text = stderr_capture
+            .lock()
+            .map(|s| s.trim().to_string())
+            .unwrap_or_default();
+        let error_detail = if !diag_text.is_empty() {
+            diag_text
+        } else if !stderr_text.is_empty() {
+            stderr_text
+        } else {
+            "cargo build --target wasm32-wasip2 failed".to_string()
+        };
         if daemon::is_daemon() {
-            let _ = daemon::append_build_log(
-                "component",
-                false,
-                Some("cargo build --target wasm32-wasip2 failed"),
-            );
+            let _ = daemon::append_build_log("component", false, Some(&error_detail));
         }
-        return Err(crate::TairitsuPackagerError::BuildError(
-            if diag_text.is_empty() {
-                "cargo build --target wasm32-wasip2 failed".to_string()
-            } else {
-                diag_text
-            },
-        ));
+        return Err(crate::TairitsuPackagerError::BuildError(error_detail));
     }
 
     if !verbose {
