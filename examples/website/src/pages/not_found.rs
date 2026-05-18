@@ -1,7 +1,7 @@
 //! 404 Not Found page
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{VNode, el, txt};
+use tairitsu_vdom::{el, txt, VNode};
 
 use crate::i18n::{self, Language};
 

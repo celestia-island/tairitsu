@@ -256,11 +256,12 @@ fn build_wasm_component(
     let stderr_handle = std::thread::spawn(move || {
         use std::io::BufRead;
         let mut buf = String::new();
-        for line in std::io::BufReader::new(stderr).lines() {
-            if let Ok(line) = line {
-                buf.push_str(&line);
-                buf.push('\n');
-            }
+        for line in std::io::BufReader::new(stderr)
+            .lines()
+            .map_while(Result::ok)
+        {
+            buf.push_str(&line);
+            buf.push('\n');
         }
         if let Ok(mut s) = stderr_clone.lock() {
             *s = buf;

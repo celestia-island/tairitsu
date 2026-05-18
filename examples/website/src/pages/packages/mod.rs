@@ -1,6 +1,6 @@
 //! Package listing pages for tairitsu framework.
 
-use tairitsu_vdom::{VElement, VNode, txt};
+use tairitsu_vdom::{txt, VElement, VNode};
 
 use crate::components::breadcrumb;
 

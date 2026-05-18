@@ -45,8 +45,8 @@ curl http://localhost:3001/ready
 
 # 截取像素级截图
 curl -X POST http://localhost:3001/screenshot \\
-  -H 'Content-Type: application/json' \\
-  -d '{}'"
+    -H 'Content-Type: application/json' \\
+    -d '{}'"
         } } }
 
         h3 { "API 端点一览" }
@@ -96,7 +96,7 @@ curl -X POST http://localhost:3001/screenshot \\
         p { "使用 ", code { "/batch" }, " 端点可以一次执行多个操作，每个操作按顺序执行：", }
         div { class: "hi-code-block language-bash", pre { code {
             "curl -X POST http://localhost:3001/batch \\
-  -H 'Content-Type: application/json' \\
+    -H 'Content-Type: application/json' \\
   -d '{
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
@@ -129,8 +129,8 @@ curl http://localhost:3001/ready
 
 # Take a pixel-perfect screenshot
 curl -X POST http://localhost:3001/screenshot \\
-  -H 'Content-Type: application/json' \\
-  -d '{}'"
+    -H 'Content-Type: application/json' \\
+    -d '{}'"
         } } }
 
         h3 { "API Endpoints" }
@@ -180,7 +180,7 @@ curl -X POST http://localhost:3001/screenshot \\
         p { "Use ", code { "/batch" }, " to execute multiple operations sequentially:" }
         div { class: "hi-code-block language-bash", pre { code {
             "curl -X POST http://localhost:3001/batch \\
-  -H 'Content-Type: application/json' \\
+    -H 'Content-Type: application/json' \\
   -d '{
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
@@ -213,8 +213,8 @@ curl http://localhost:3001/ready
 
 # ピクセル単位のスクリーンショットを取得
 curl -X POST http://localhost:3001/screenshot \\
-  -H 'Content-Type: application/json' \\
-  -d '{}'"
+    -H 'Content-Type: application/json' \\
+    -d '{}'"
         } } }
 
         h3 { "APIエンドポイント一覧" }
@@ -264,7 +264,7 @@ curl -X POST http://localhost:3001/screenshot \\
         p { code { "/batch" }, " を使用して複数の操作を順次実行します：" }
         div { class: "hi-code-block language-bash", pre { code {
             "curl -X POST http://localhost:3001/batch \\
-  -H 'Content-Type: application/json' \\
+    -H 'Content-Type: application/json' \\
   -d '{
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
@@ -297,8 +297,8 @@ curl http://localhost:3001/ready
 
 # 픽셀 단위 스크린샷 캡처
 curl -X POST http://localhost:3001/screenshot \\
-  -H 'Content-Type: application/json' \\
-  -d '{}'"
+    -H 'Content-Type: application/json' \\
+    -d '{}'"
         } } }
 
         h3 { "API 엔드포인트" }
@@ -348,7 +348,7 @@ curl -X POST http://localhost:3001/screenshot \\
         p { code { "/batch" }, " 를 사용하여 여러 작업을 순차적으로 실행합니다：" }
         div { class: "hi-code-block language-bash", pre { code {
             "curl -X POST http://localhost:3001/batch \\
-  -H 'Content-Type: application/json' \\
+    -H 'Content-Type: application/json' \\
   -d '{
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
@@ -380,8 +380,8 @@ curl http://localhost:3001/ready
 
 # Capturer une capture d'écran pixel-parfaite
 curl -X POST http://localhost:3001/screenshot \\
-  -H 'Content-Type: application/json' \\
-  -d '{}'"
+    -H 'Content-Type: application/json' \\
+    -d '{}'"
         } } }
 
         h3 { "Endpoints de l'API" }
@@ -431,7 +431,7 @@ curl -X POST http://localhost:3001/screenshot \\
         p { "Utilisez ", code { "/batch" }, " pour exécuter plusieurs opérations séquentiellement :" }
         div { class: "hi-code-block language-bash", pre { code {
             "curl -X POST http://localhost:3001/batch \\
-  -H 'Content-Type: application/json' \\
+    -H 'Content-Type: application/json' \\
   -d '{
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
@@ -463,8 +463,8 @@ curl http://localhost:3001/ready
 
 # Pixelgenauen Screenshot erstellen
 curl -X POST http://localhost:3001/screenshot \\
-  -H 'Content-Type: application/json' \\
-  -d '{}'"
+    -H 'Content-Type: application/json' \\
+    -d '{}'"
         } } }
 
         h3 { "API-Endpunkte" }
@@ -514,7 +514,7 @@ curl -X POST http://localhost:3001/screenshot \\
         p { "Verwenden Sie ", code { "/batch" }, " für die sequenzielle Ausführung mehrerer Operationen:" }
         div { class: "hi-code-block language-bash", pre { code {
             "curl -X POST http://localhost:3001/batch \\
-  -H 'Content-Type: application/json' \\
+    -H 'Content-Type: application/json' \\
   -d '{
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
@@ -546,8 +546,8 @@ curl http://localhost:3001/ready
 
 # Capturar pantalla pixel-perfecta
 curl -X POST http://localhost:3001/screenshot \\
-  -H 'Content-Type: application/json' \\
-  -d '{}'"
+    -H 'Content-Type: application/json' \\
+    -d '{}'"
         } } }
 
         h3 { "Endpoints de la API" }
@@ -597,7 +597,7 @@ curl -X POST http://localhost:3001/screenshot \\
         p { "Use ", code { "/batch" }, " para ejecutar múltiples operaciones secuencialmente:" }
         div { class: "hi-code-block language-bash", pre { code {
             "curl -X POST http://localhost:3001/batch \\
-  -H 'Content-Type: application/json' \\
+    -H 'Content-Type: application/json' \\
   -d '{
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
@@ -629,8 +629,8 @@ curl http://localhost:3001/ready
 
 # Capturar tela pixel-perfeita
 curl -X POST http://localhost:3001/screenshot \\
-  -H 'Content-Type: application/json' \\
-  -d '{}'"
+    -H 'Content-Type: application/json' \\
+    -d '{}'"
         } } }
 
         h3 { "Endpoints da API" }
@@ -680,7 +680,7 @@ curl -X POST http://localhost:3001/screenshot \\
         p { "Use ", code { "/batch" }, " para executar múltiplas operações sequencialmente:" }
         div { class: "hi-code-block language-bash", pre { code {
             "curl -X POST http://localhost:3001/batch \\
-  -H 'Content-Type: application/json' \\
+    -H 'Content-Type: application/json' \\
   -d '{
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
@@ -697,8 +697,7 @@ curl -X POST http://localhost:3001/screenshot \\
 }
 
 fn shared_examples() -> Vec<VNode> {
-    vec![
-        rsx! { script { r#"
+    vec![rsx! { script { r#"
 (function(){
     var init=false;
     function setup(){
@@ -724,6 +723,5 @@ fn shared_examples() -> Vec<VNode> {
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
     else setup();
 })();
-        "#} },
-    ]
+        "#} }]
 }
