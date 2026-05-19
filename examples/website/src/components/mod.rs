@@ -17,7 +17,7 @@ thread_local! {
 pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
     let name = icon.to_string();
     let data = get(&name).unwrap_or_else(|| {
-        static FALLBACK: hikari_icons::generated::IconData = hikari_icons::generated::IconData {
+        static FALLBACK: hikari_icons::IconData = hikari_icons::IconData {
             view_box: Some("0 0 24 24"),
             width: None,
             height: None,
