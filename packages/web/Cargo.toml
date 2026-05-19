@@ -6,6 +6,13 @@ authors.workspace = true
 license.workspace = true
 edition.workspace = true
 repository.workspace = true
+include = [
+    "src/**/*",
+    "wit/composed/**/*",
+    "build.rs",
+    "Cargo.toml",
+    "README.md",
+]
 
 [dependencies]
 tairitsu = { workspace = true, optional = true }

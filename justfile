@@ -487,6 +487,20 @@ cdn-demo-prod:
     {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist --cdn-mode esm-sh
 
 # ============================================================================
+# WIT sync (packages/web embedded copy)
+# ============================================================================
+
+# Sync composed WIT files from browser-worlds into packages/web
+sync-wit:
+    @{{python}} scripts/sync_wit.py
+
+# Check that embedded WIT files are in sync with browser-worlds
+sync-wit-check:
+    @diff -r packages/browser-worlds/wit/composed packages/web/wit/composed \
+      || (echo "WIT files out of sync! Run: just sync-wit" && exit 1)
+    @echo "WIT files are in sync"
+
+# ============================================================================
 # Utilities
 # ============================================================================
 
