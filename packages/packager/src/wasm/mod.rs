@@ -80,7 +80,23 @@ pub fn build_component(
         pb.set_prefix("[2/5]");
         pb.set_message(&b.step_compile);
         let t = Instant::now();
-        let wasm_path = build_wasm_component(config, release, pb.clone(), verbose)?;
+
+        // Resolve hikari-icons before compiling
+        let workspace_root = find_workspace_root(&config.manifest_dir).ok();
+        let icons_rs = workspace_root.as_ref().and_then(|root| {
+            let icons_txt = root.join("packages/icons/icons.txt");
+            if icons_txt.exists() {
+                let target_dir = root.join("target");
+                match crate::icons::hikari_resolver::resolve(&icons_txt, &target_dir, false) {
+                    Ok(path) => Some(path),
+                    Err(_) => None,
+                }
+            } else {
+                None
+            }
+        });
+
+        let wasm_path = build_wasm_component(config, release, pb.clone(), verbose, icons_rs.as_deref())?;
         crate::log_ok!("{:<20} {:.1?}", b.step_compile, t.elapsed());
         pb.inc(1);
 
@@ -197,6 +213,7 @@ fn build_wasm_component(
     release: bool,
     pb: ProgressBar,
     verbose: bool,
+    icons_rs: Option<&std::path::Path>,
 ) -> crate::Result<std::path::PathBuf> {
     use std::io::BufRead;
     use std::process::Stdio;
@@ -220,6 +237,10 @@ fn build_wasm_component(
         cmd.arg("--release");
     } else {
         cmd.args(["--profile", "dev-wasm"]);
+    }
+
+    if let Some(path) = icons_rs {
+        cmd.env("TAIRITSU_ICONS_RS", path);
     }
 
     cmd.stdout(Stdio::piped());
