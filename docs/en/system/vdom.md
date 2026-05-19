@@ -4,18 +4,14 @@ Tairitsu's Virtual DOM is a platform-agnostic rendering engine. It can drive bro
 
 ## Architecture
 
-```
-Component (your code)
-    │
-    ├─→ rsx! macro → VNode tree
-    │
-    ├─→ Signal changes → mark_dirty()
-    │
-    ▼
-Scheduler ──→ diff(old_vnode, new_vnode) → Vec<Patch>
-    │
-    ▼
-Platform (DomOps) ──→ apply patches → real DOM / HTML string / terminal
+```mermaid
+graph TD
+    COMP["Component (your code)"] --> RSX["rsx! macro → VNode tree"]
+    COMP --> SIG["Signal changes → mark_dirty()"]
+    RSX --> SCHED["Scheduler"]
+    SIG --> SCHED
+    SCHED -->|"diff(old_vnode, new_vnode)"| PATCH["Vec&lt;Patch&gt;"]
+    PATCH --> PLAT["Platform (DomOps) → apply patches → real DOM / HTML string / terminal"]
 ```
 
 ## VNode Types
@@ -50,26 +46,12 @@ pub struct VElement {
 4. **Apply patches** — calls into the Platform trait to execute DOM mutations
 5. **Repeat** — on next signal change
 
-```
-         ┌──────────┐
-         │  Signal   │ ← state change
-         └────┬─────┘
-              ▼
-    ┌─────────────────┐
-    │  mark_dirty()    │ ← schedules re-render
-    └────────┬────────┘
-              ▼
-    ┌─────────────────┐
-    │  Component render│ ← produces new VNode
-    └────────┬────────┘
-              ▼
-    ┌─────────────────┐
-    │  diff(old, new)  │ ← produces Vec<Patch>
-    └────────┬────────┘
-              ▼
-    ┌─────────────────┐
-    │  Platform.apply  │ ← mutates DOM
-    └─────────────────┘
+```mermaid
+graph TD
+    SIG["Signal — state change"] --> MD["mark_dirty() — schedules re-render"]
+    MD --> CR["Component render — produces new VNode"]
+    CR --> DIFF["diff(old, new) — produces Vec&lt;Patch&gt;"]
+    DIFF --> APPLY["Platform.apply — mutates DOM"]
 ```
 
 ## Patch Operations
@@ -92,15 +74,16 @@ pub enum Patch {
 
 The diffing engine (`packages/vdom/src/diff.rs`) compares two VNode trees node-by-node:
 
-```
-diff(old, new):
-  match (old, new):
-    (None, _)          → CreateNode
-    (Text, Text)       → UpdateText (if content differs)
-    (Element, Element) → skip (if tag differs → ReplaceNode)
-                         then diff attributes, styles, events, children
-    (Fragment, Fragment) → diff_children on child lists
-    (_)                → ReplaceNode
+```mermaid
+graph TD
+    START["diff(old, new)"] --> M{"match (old, new)"}
+    M -->|"(None, _)"| CREATE["CreateNode"]
+    M -->|"(Text, Text)"| UPDTXT["UpdateText (if content differs)"]
+    M -->|"(Element, Element)"| CHKTAG{"tag differs?"}
+    CHKTAG -->|Yes| REPLACE["ReplaceNode"]
+    CHKTAG -->|No| DIFFATTR["diff attributes, styles,<br/>events, children"]
+    M -->|"(Fragment, Fragment)"| DIFFCH["diff_children on child lists"]
+    M -->|"(_)"| REPLACE2["ReplaceNode"]
 ```
 
 ### Keyed Child Diffing (planned)
@@ -210,10 +193,12 @@ let shared = StandaloneSignal::new(42);
 
 The scheduler (`packages/vdom/src/runtime.rs`) coalesces multiple signal updates into a single render pass:
 
-```
-Signal A changes ──┐
-Signal B changes ──┤ → Scheduler batches → single diff + patch cycle
-Signal C changes ──┘
+```mermaid
+graph LR
+    SA["Signal A changes"] --> SCHED["Scheduler batches"]
+    SB["Signal B changes"] --> SCHED
+    SC["Signal C changes"] --> SCHED
+    SCHED --> CYCLE["single diff + patch cycle"]
 ```
 
 This is similar to React's automatic batching or microtask-based scheduling in Vue 3.

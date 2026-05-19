@@ -13,13 +13,15 @@ The Tairitsu workspace is organized into four layers. Each layer builds on the o
 | `tairitsu-hooks` | `packages/hooks` | Hooks system: Signal, Effect, Memo, Suspense/Resource, Context, StateMachine, Animation, Interval, Store |
 
 **Dependency graph** (Layer 1):
-```
-tairitsu (runtime)     tairitsu-vdom (VDOM)
-                              ↑
-                         tairitsu-hooks (signals, effects, suspense)
-                              ↑
-tairitsu-macros ──────────────┘ (rsx!, scss!, component)
-tairitsu-style (CSS type system)
+```mermaid
+graph TD
+    RUNTIME["tairitsu (runtime)"]
+    VDOM["tairitsu-vdom (VDOM)"]
+    HOOKS["tairitsu-hooks<br/>(signals, effects, suspense)"]
+    MACROS["tairitsu-macros<br/>(rsx!, scss!, component)"]
+    STYLE["tairitsu-style<br/>(CSS type system)"]
+    HOOKS --> VDOM
+    MACROS --> HOOKS
 ```
 
 ## Layer 2: Protocol & Platform
@@ -32,10 +34,16 @@ tairitsu-style (CSS type system)
 | `tairitsu-browser-wit-resolver` | `packages/browser-wit-resolver` | WIT package resolution: version resolution, cloud fetching, local caching |
 
 **Dependency graph** (Layer 2):
-```
-tairitsu-web ──→ vdom, hooks, macros, style
-     ├──→ tairitsu-ssr ──→ tairitsu (runtime), browser-worlds
-     └──→ browser-wit-resolver
+```mermaid
+graph TD
+    WEB["tairitsu-web"] --> VDOM["vdom"]
+    WEB --> HOOKS["hooks"]
+    WEB --> MACROS["macros"]
+    WEB --> STYLE["style"]
+    WEB --> SSR["tairitsu-ssr"]
+    SSR --> RUNTIME["tairitsu (runtime)"]
+    SSR --> BW["browser-worlds"]
+    WEB --> BWR["browser-wit-resolver"]
 ```
 
 ## Layer 3: Tooling & Delivery

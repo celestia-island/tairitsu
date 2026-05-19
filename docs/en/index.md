@@ -17,30 +17,31 @@ Tairitsu is a full-stack framework powered by the WASM Component Model. Write co
 
 ## Documentation Structure
 
-```
-├── guides/           ← Tutorials, how-tos, migration
-│   ├── getting-started.md
-│   ├── quick-start.md
-│   ├── workspace-map.md
-│   ├── build-test-release.md
-│   ├── migration/
-│   ├── troubleshooting.md
-│   └── glossary.md
-├── system/           ← Architecture deep dives
-│   ├── overview.md
-│   ├── runtime.md
-│   ├── vdom.md
-│   ├── wit-pipeline.md
-│   ├── web-backends.md
-│   ├── browser-glue.md
-│   └── versioning.md
-├── components/       ← Crate reference
-│   ├── index.md
-│   └── packages.md
-├── skills/           ← Advanced usage
-│   └── debug-agent.md
-└── enterprise/       ← Commercial
-    └── support.md
+```mermaid
+graph TD
+    ROOT["docs/"] --> GUIDES["guides/ — Tutorials, how-tos, migration"]
+    ROOT --> SYSTEM["system/ — Architecture deep dives"]
+    ROOT --> COMPONENTS["components/ — Crate reference"]
+    ROOT --> SKILLS["skills/ — Advanced usage"]
+    ROOT --> ENTERPRISE["enterprise/ — Commercial"]
+    GUIDES --> GS["getting-started.md"]
+    GUIDES --> QS["quick-start.md"]
+    GUIDES --> WM["workspace-map.md"]
+    GUIDES --> BTR["build-test-release.md"]
+    GUIDES --> MIG["migration/"]
+    GUIDES --> TS["troubleshooting.md"]
+    GUIDES --> GL["glossary.md"]
+    SYSTEM --> OV["overview.md"]
+    SYSTEM --> RT["runtime.md"]
+    SYSTEM --> VD["vdom.md"]
+    SYSTEM --> WP["wit-pipeline.md"]
+    SYSTEM --> WB["web-backends.md"]
+    SYSTEM --> BG["browser-glue.md"]
+    SYSTEM --> VER["versioning.md"]
+    COMPONENTS --> CI["index.md"]
+    COMPONENTS --> PKG["packages.md"]
+    SKILLS --> DA["debug-agent.md"]
+    ENTERPRISE --> SUP["support.md"]
 ```
 
 ## Other Languages

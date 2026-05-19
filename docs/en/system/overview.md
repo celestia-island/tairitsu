@@ -4,47 +4,49 @@ Tairitsu is a full-stack framework powered by the WASM Component Model. A single
 
 ## The Four Layers
 
-```
-┌──────────────────────────────────────────────────────┐
-│  4. Tooling Layer                                    │
-│     packager, dev server, MCP, visual diff, scripts   │
-├──────────────────────────────────────────────────────┤
-│  3. Platform Layer                                    │
-│     WitPlatform (WIT bindings), WebPlatform (web-sys) │
-│     browser-glue (TypeScript ↔ WIT bridging)          │
-├──────────────────────────────────────────────────────┤
-│  2. Runtime Layer                                     │
-│     Container / Registry / Image lifecycle            │
-│     WIT binding, dynamic invocation (RON + binary)    │
-├──────────────────────────────────────────────────────┤
-│  1. Interface Layer                                   │
-│     WIT world definitions, browser-worlds             │
-│     W3C WebIDL → WIT code generation pipeline          │
-└──────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph L4["4. Tooling Layer"]
+        T1["packager, dev server, MCP, visual diff, scripts"]
+    end
+    subgraph L3["3. Platform Layer"]
+        P1["WitPlatform (WIT bindings)"]
+        P2["WebPlatform (web-sys)"]
+        P3["browser-glue (TypeScript ↔ WIT bridging)"]
+    end
+    subgraph L2["2. Runtime Layer"]
+        R1["Container / Registry / Image lifecycle"]
+        R2["WIT binding, dynamic invocation (RON + binary)"]
+    end
+    subgraph L1["1. Interface Layer"]
+        I1["WIT world definitions, browser-worlds"]
+        I2["W3C WebIDL → WIT code generation pipeline"]
+    end
+    L1 --> L2 --> L3 --> L4
 ```
 
 ## How a Request Flows
 
 ### Browser (Client Path)
 
-```
-User clicks a button
-  → DOM event fires
-  → browser-glue captures event, converts to WIT ABI
-  → WASM component receives typed event (MouseEvent/KeyboardEvent/...)
-  → Signal updates → VDOM diff → Patch operations
-  → Patch applied via DomOps → DOM updated
+```mermaid
+graph TD
+    A["User clicks a button"] --> B["DOM event fires"]
+    B --> C["browser-glue captures event,<br/>converts to WIT ABI"]
+    C --> D["WASM component receives typed event<br/>(MouseEvent / KeyboardEvent / ...)"]
+    D --> E["Signal updates → VDOM diff → Patch operations"]
+    E --> F["Patch applied via DomOps → DOM updated"]
 ```
 
 ### Server (SSR Path)
 
-```
-HTTP request arrives
-  → axum dev server or standalone wasmtime host
-  → Container instantiates WASM component
-  → Component renders VNode tree via WIT calls
-  → SSR engine serializes to HTML string
-  → Streaming response sent to client
+```mermaid
+graph TD
+    A["HTTP request arrives"] --> B["axum dev server or<br/>standalone wasmtime host"]
+    B --> C["Container instantiates WASM component"]
+    C --> D["Component renders VNode tree via WIT calls"]
+    D --> E["SSR engine serializes to HTML string"]
+    E --> F["Streaming response sent to client"]
 ```
 
 ## Core Design Decisions
