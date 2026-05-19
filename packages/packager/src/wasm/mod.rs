@@ -34,6 +34,59 @@ fn find_workspace_root(manifest_dir: &std::path::Path) -> crate::Result<std::pat
     Ok(workspace_root)
 }
 
+fn resolve_hikari_icons(manifest_dir: &std::path::Path, verbose: bool) -> crate::Result<std::path::PathBuf> {
+    let output = std::process::Command::new("cargo")
+        .args([
+            "metadata",
+            "--locked",
+            "--format-version",
+            "1",
+            "--manifest-path",
+            manifest_dir.join("Cargo.toml").to_str().unwrap(),
+        ])
+        .output()?;
+
+    let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)?;
+    let icons_manifest = metadata
+        .get("packages")
+        .and_then(|v| v.as_array())
+        .and_then(|pkgs| {
+            pkgs.iter().find(|p| {
+                p.get("name").and_then(|n| n.as_str()) == Some("hikari-icons")
+            })
+        })
+        .and_then(|p| p.get("manifest_path"))
+        .and_then(|v| v.as_str())
+        .map(std::path::PathBuf::from)
+        .ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError(
+                "hikari-icons not found in cargo metadata".to_string(),
+            )
+        })?;
+
+    let icons_dir = icons_manifest.parent().unwrap();
+    let icons_txt = icons_dir.join("icons.txt");
+    if !icons_txt.exists() {
+        return Err(crate::TairitsuPackagerError::BuildError(format!(
+            "icons.txt not found at {}",
+            icons_txt.display()
+        )));
+    }
+
+    let target_dir = std::path::PathBuf::from(
+        metadata
+            .get("target_directory")
+            .and_then(|v| v.as_str())
+            .unwrap_or("target"),
+    );
+
+    if verbose {
+        eprintln!("  hikari-icons: resolving from {}", icons_txt.display());
+    }
+
+    crate::icons::hikari_resolver::resolve(&icons_txt, &target_dir, false)
+}
+
 /// 构建 wasm32-wasip2 格式的 WASM Component，
 /// 但使用 WIT Component Model 及 tairitsu browser-glue 实现浏览器互操作。
 ///
@@ -82,19 +135,7 @@ pub fn build_component(
         let t = Instant::now();
 
         // Resolve hikari-icons before compiling
-        let workspace_root = find_workspace_root(&config.manifest_dir).ok();
-        let icons_rs = workspace_root.as_ref().and_then(|root| {
-            let icons_txt = root.join("packages/icons/icons.txt");
-            if icons_txt.exists() {
-                let target_dir = root.join("target");
-                match crate::icons::hikari_resolver::resolve(&icons_txt, &target_dir, false) {
-                    Ok(path) => Some(path),
-                    Err(_) => None,
-                }
-            } else {
-                None
-            }
-        });
+        let icons_rs = resolve_hikari_icons(&config.manifest_dir, verbose).ok();
 
         let wasm_path = build_wasm_component(config, release, pb.clone(), verbose, icons_rs.as_deref())?;
         crate::log_ok!("{:<20} {:.1?}", b.step_compile, t.elapsed());
