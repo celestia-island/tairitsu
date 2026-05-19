@@ -16,13 +16,21 @@ thread_local! {
 /// Render an MDI SVG icon as a VNode using VElement builder.
 pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
     let name = icon.to_string();
-    let (view_box, path_d) = match get(&name) {
-        Some(data) => (
-            data.view_box.unwrap_or("0 0 24 24"),
-            data.path.unwrap_or_default(),
-        ),
-        None => ("0 0 24 24", "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"),
-    };
+    let data = get(&name).unwrap_or_else(|| {
+        static FALLBACK: hikari_icons::generated::IconData = hikari_icons::generated::IconData {
+            view_box: Some("0 0 24 24"),
+            width: None,
+            height: None,
+            path: Some("M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"),
+            paths: &[],
+            elements: &[],
+        };
+        &FALLBACK
+    });
+    let (view_box, path_d) = (
+        data.view_box.unwrap_or("0 0 24 24"),
+        data.path.unwrap_or_default(),
+    );
     let full_class = if class.is_empty() {
         "ts-icon".to_string()
     } else {
@@ -50,9 +58,9 @@ fn icon_el(icon: MdiIcon) -> VNode {
                 data.path.unwrap_or_default()
             )
         })
-        .unwrap_or_else(|| String::from(
-            r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>"#
-        ));
+        .unwrap_or_else(|| {
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>"#.to_string()
+        });
     VNode::Element(
         el("span")
             .class("hi-menu-item-icon ts-icon")
