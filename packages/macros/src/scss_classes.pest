@@ -13,7 +13,8 @@ scss_content = {
     | string_single
     | at_rule
     | rule_block
-    | WHITESPACE / NEWLINE
+    | WHITESPACE
+    | NEWLINE
 }
 
 /// Block comment /* ... */ — consume entirely
@@ -35,7 +36,7 @@ at_rule = { "@" ~ IDENT ~ until_semi_or_block }
 rule_block = { selectors ~ "{" ~ scss_content* ~ "}" }
 
 /// One or more selectors separated by commas
-selectors = { selector (~ "," ~ selector)* }
+selectors = { selector ~ ("," ~ selector)* }
 
 /// A single selector — we care about ones containing .class references
 selector = {
@@ -44,10 +45,10 @@ selector = {
 }
 
 combinators = {
-    (simple_selector / combinator_char / WHITESPACE)+
+    (simple_selector | combinator_char | WHITESPACE)+
 }
 
-combinator_char = { [" >+~|"] }
+combinator_char = { " " | ">" | "+" | "~" | "|" }
 
 simple_selector = {
     | class_selector     // ← primary target
@@ -59,10 +60,10 @@ simple_selector = {
 }
 
 /// THE KEY RULE: .class-name (possibly with leading & for SCSS nesting)
-class_selector = { ("&" ~)? ~ "." ~ class_name }
+class_selector = { ("&")? ~ "." ~ class_name }
 
 /// Class name token: identifier chars including hyphens, underscores
-class_name = { (IDENT / "-" / "_" )+ }
+class_name = { (IDENT | "-" | "_")+ }
 
 id_selector = { "#" ~ IDENT }
 universal_selector = { "*" }

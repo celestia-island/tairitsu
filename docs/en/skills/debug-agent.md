@@ -183,17 +183,16 @@ Query DOM elements by CSS selector.
 
 A typical agent session for visual debugging:
 
-```
-1. GET  /health                          → verify server is up
-2. POST /navigate   {"url": "/"}         → go to home page
-3. POST /screenshot {}                   → capture viewport
-4. POST /evaluate  {"expression": "globalThis.__wasmExports ? 'loaded' : 'missing'"}
-                                          → check WASM state
-5. POST /click     {"selector": ".btn-primary"}
-6. POST /screenshot {"selector": "#dialog"} → capture dialog state
-7. GET  /console                         → check for errors
-8. POST /navigate  {"url": "/switch"}    → test another page
-9. POST /screenshot {"full_page": true}  → full-page capture
+```mermaid
+graph TD
+    S1["1. GET /health"] --> S2["2. POST /navigate {url: /}"]
+    S2 --> S3["3. POST /screenshot {}"]
+    S3 --> S4["4. POST /evaluate<br/>(check WASM state)"]
+    S4 --> S5["5. POST /click {selector: .btn-primary}"]
+    S5 --> S6["6. POST /creenshot {selector: #dialog}"]
+    S6 --> S7["7. GET /console"]
+    S7 --> S8["8. POST /navigate {url: /switch}"]
+    S8 --> S9["9. POST /screenshot {full_page: true}"]
 ```
 
 ## Error Handling

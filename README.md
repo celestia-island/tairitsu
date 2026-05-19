@@ -22,22 +22,23 @@ Tairitsu unifies two worlds that are typically separate:
 
 ## Three Faces of Tairitsu
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                                                          │
-│  📦 tairitsu-core    Server runtime                      │
-│     Container / Registry / WIT bindings / Dynamic calls  │
-│      docker-like WASM lifecycle                        │
-│                                                          │
-│  🎨 tairitsu-web     Client framework + SSR              │
-│     VDOM / hooks / rsx! / scss! / Suspense / i18n        │
-│      React-like, compiled to wasm32-wasip2             │
-│                                                          │
-│  🔧 tairitsu-cli     Build / dev / deploy toolchain       │
-│     Dev server / HMR / visual diff / MCP / VTty           │
-│      Vite-like, but understands WIT                    │
-│                                                          │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph CORE["tairitsu-core — Server runtime"]
+        C1["Container / Registry"]
+        C2["WIT bindings"]
+        C3["Dynamic calls"]
+    end
+    subgraph WEB["tairitsu-web — Client framework + SSR"]
+        W1["VDOM / hooks"]
+        W2["rsx! / scss!"]
+        W3["Suspense / i18n"]
+    end
+    subgraph CLI["tairitsu-cli — Build / dev / deploy"]
+        X1["Dev server / HMR"]
+        X2["visual diff / MCP"]
+        X3["VTty terminal"]
+    end
 ```
 
 ---
@@ -93,14 +94,19 @@ Same component, two execution paths:
 
 ## Architecture
 
-```
-┌──────────────┐    WIT interface     ┌──────────────┐
-│  Host (Rust)  │◀══════════════════▶│ Guest (WASM)  │
-│               │                     │               │
-│  Container    │    typed calls      │  Component    │
-│  Registry     │    zero-ser         │  VDOM tree    │
-│  Platform     │                     │  Event logic  │
-└──────────────┘                     └──────────────┘
+```mermaid
+graph LR
+    subgraph HOST["Host (Rust)"]
+        H1["Container"]
+        H2["Registry"]
+        H3["Platform"]
+    end
+    subgraph GUEST["Guest (WASM)"]
+        G1["Component"]
+        G2["VDOM tree"]
+        G3["Event logic"]
+    end
+    HOST <-->|"WIT interface<br/>typed calls · zero-ser"| GUEST
 ```
 
 ---

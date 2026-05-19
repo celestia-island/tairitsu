@@ -22,33 +22,16 @@ fn main() {
     resolve_wit_path(&manifest_dir);
 }
 
-/// Locate the composed WIT directory and generate `wit_bindings_generated.rs` in
-/// `$OUT_DIR`. The generated file contains a `wit_bindgen::generate!` invocation
-/// with the correct absolute path, so it works both in the monorepo and when
-/// `tairitsu-web` is consumed from crates.io.
-///
-/// Resolution order:
-/// 1. `DEP_TAIRITSU_BROWSER_WORLDS_WIT_COMPOSED_DIR` (set by `tairitsu-browser-worlds` build.rs
-///    via `cargo:wit_composed_dir` — available when `links = "tairitsu-browser-worlds"` is set)
-/// 2. Monorepo fallback: `../browser-worlds/wit/composed` (for in-tree development)
 fn resolve_wit_path(manifest_dir: &Path) {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap_or_else(|_| ".".to_string()));
 
-    let wit_composed_dir =
-        if let Ok(dir) = std::env::var("DEP_TAIRITSU_BROWSER_WORLDS_WIT_COMPOSED_DIR") {
-            PathBuf::from(dir)
-        } else {
-            let monorepo_path = manifest_dir.join("../browser-worlds/wit/composed");
-            if monorepo_path.exists() {
-                monorepo_path
-            } else {
-                eprintln!(
-                "[tairitsu-web] Warning: Could not locate browser-worlds WIT composed directory. \
-                 wit-bindings feature may not compile."
-            );
-                return;
-            }
-        };
+    let Some(wit_composed_dir) = resolve_wit_composed_dir(manifest_dir) else {
+        eprintln!(
+            "[tairitsu-web] Warning: Could not locate WIT composed directory. \
+             wit-bindings feature may not compile."
+        );
+        return;
+    };
 
     let escaped_path = wit_composed_dir.to_string_lossy().replace('\\', "\\\\");
 
@@ -63,6 +46,27 @@ fn resolve_wit_path(manifest_dir: &Path) {
     if let Err(e) = fs::write(&dest, &bindings_code) {
         eprintln!("[tairitsu-web] Warning: Failed to write generated WIT bindings file: {e}");
     }
+}
+
+fn resolve_wit_composed_dir(manifest_dir: &Path) -> Option<PathBuf> {
+    let embedded = manifest_dir.join("wit/composed");
+    if embedded.join("browser-full.wit").exists() {
+        return Some(embedded);
+    }
+
+    let monorepo = manifest_dir.join("../browser-worlds/wit/composed");
+    if monorepo.join("browser-full.wit").exists() {
+        return Some(monorepo);
+    }
+
+    if let Ok(dir) = std::env::var("DEP_TAIRITSU_BROWSER_WORLDS_WIT_COMPOSED_DIR") {
+        let path = PathBuf::from(&dir);
+        if path.join("browser-full.wit").exists() {
+            return Some(path);
+        }
+    }
+
+    None
 }
 
 fn resolve_output_dir(cargo_toml: &PathBuf) -> Option<PathBuf> {

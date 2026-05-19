@@ -20,14 +20,10 @@ This guide helps you migrate applications from Dioxus to Tairitsu. Tairitsu is a
 
 ### Dioxus Architecture
 
-```
-Dioxus App
-    |
-    v
-Virtual DOM (RSX)
-    |
-    v
-Renderer (Web/Desktop/Mobile)
+```mermaid
+graph TD
+    APP["Dioxus App"] --> VDOM["Virtual DOM (RSX)"]
+    VDOM --> RENDERER["Renderer<br/>(Web / Desktop / Mobile)"]
 ```
 
 - **RSX Macro**: Compile-time JSX-like syntax
@@ -38,17 +34,11 @@ Renderer (Web/Desktop/Mobile)
 
 ### Tairitsu Architecture
 
-```
-Tairitsu App (WASM Component)
-    |
-    v
-VDOM + Platform Abstraction
-    |
-    v
-Platform Layer (WebPlatform/WitPlatform)
-    |
-    v
-Browser Host (browser-glue) or Native Host
+```mermaid
+graph TD
+    APP["Tairitsu App<br/>(WASM Component)"] --> VDOM["VDOM + Platform Abstraction"]
+    VDOM --> PLAT["Platform Layer<br/>(WebPlatform / WitPlatform)"]
+    PLAT --> HOST["Browser Host<br/>(browser-glue)<br/>or Native Host"]
 ```
 
 - **rsx! Macro**: Declarative UI construction with similar syntax

@@ -24,18 +24,18 @@ A simple single-page guestbook application — server-side rendering with client
 
 Traditional web frameworks keep server and client as separate concerns:
 
-```
-Server (Express/Axum) ←→ JSON API ←→ Client (React/Vue)
-                          ↑
-                  manual type sync
+```mermaid
+graph LR
+    SERVER["Server<br/>(Express/Axum)"] <-->|"JSON API"| CLIENT["Client<br/>(React/Vue/Svelte)"]
+    CLIENT -.->|"manual type sync"| SYNC["⚠ manual sync"]
 ```
 
 Tairitsu uses the WASM Component Model to define a **single WIT interface** that both sides implement:
 
-```
-Host (Rust Container + DOM) ←→ WIT interface ←→ Guest (WASM Component)
-                                  ↑
-                         compile-time type safety
+```mermaid
+graph LR
+    HOST["Host<br/>(Rust Container + DOM)"] <-->|"WIT interface"| GUEST["Guest<br/>(WASM Component)"]
+    GUEST -.->|"compile-time type safety"| SAFE["✓ type safe"]
 ```
 
 The same component renders HTML on the server **and** handles click events in the browser — through the same typed interface.

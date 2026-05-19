@@ -35,13 +35,12 @@ fn glow_card(title: &str, body: &str) -> VNode {
             ))
             .child(VNode::Element(el("p").class("card__body").child(txt(body)))),
     );
-    let wrapped = VNode::Element(
+    VNode::Element(
         el("div")
             .class("hi-glow-wrapper-block hi-glow-blur-medium hi-glow-dim")
             .attr("style", "--glow-x:50%;--glow-y:50%;--glow-color:rgba(20,110,116,0.3);--glow-opacity:0;--glow-intensity-scale:0;--glow-spread:2.4;--glow-base-opacity:0.15;border-radius:var(--hi-card-radius,var(--hi-radius-lg,12px));")
             .child(card),
-    );
-    wrapped
+    )
 }
 
 pub fn render() -> VNode {

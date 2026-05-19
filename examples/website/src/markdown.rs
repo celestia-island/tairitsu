@@ -43,7 +43,7 @@ pub fn render_markdown(md: &str) -> VNode {
                 }
                 Tag::TableRow => stack.push(el("tr")),
                 Tag::TableCell => {
-                    let in_head = stack.last().map_or(false, |p| p.tag == "thead-tr");
+                    let in_head = stack.last().is_some_and(|p| p.tag == "thead-tr");
                     if in_head {
                         stack.push(el("th"))
                     } else {
@@ -140,7 +140,7 @@ fn heading_tag(level: HeadingLevel) -> &'static str {
     }
 }
 
-fn push_child(stack: &mut Vec<VElement>, root: &mut Vec<VNode>, child: VNode) {
+fn push_child(stack: &mut [VElement], root: &mut Vec<VNode>, child: VNode) {
     if let Some(parent) = stack.last_mut() {
         parent.children.push(child);
     } else {

@@ -14,6 +14,7 @@ fn find_workspace_root(manifest_dir: &std::path::Path) -> crate::Result<std::pat
         .args([
             "metadata",
             "--no-deps",
+            "--locked",
             "--format-version",
             "1",
             "--manifest-path",
@@ -205,6 +206,7 @@ fn build_wasm_component(
     let mut cmd = std::process::Command::new("cargo");
     cmd.args([
         "build",
+        "--locked",
         "--target",
         "wasm32-wasip2",
         "--lib",

@@ -18,8 +18,8 @@ pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
     let name = icon.to_string();
     let (view_box, path_d) = match get(&name) {
         Some(data) => (
-            data.view_box.as_deref().unwrap_or("0 0 24 24"),
-            data.path.as_deref().unwrap_or(""),
+            data.view_box.unwrap_or("0 0 24 24"),
+            data.path.unwrap_or_default(),
         ),
         None => ("0 0 24 24", "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"),
     };
@@ -35,7 +35,7 @@ pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
     VNode::Element(
         el("div")
             .class(full_class.as_str())
-            .attr("style", &format!("width:{}px;height:{}px;", size, size))
+            .attr("style", format!("width:{}px;height:{}px;", size, size))
             .safe_svg(SafeSvg::from_static(Box::leak(svg_html.into_boxed_str()))),
     )
 }
@@ -46,8 +46,8 @@ fn icon_el(icon: MdiIcon) -> VNode {
         .map(|data| {
             format!(
                 r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{}" width="14" height="14"><path fill="currentColor" d="{}"/></svg>"#,
-                data.view_box.as_deref().unwrap_or("0 0 24 24"),
-                data.path.as_deref().unwrap_or("")
+                data.view_box.unwrap_or("0 0 24 24"),
+                data.path.unwrap_or_default()
             )
         })
         .unwrap_or_else(|| String::from(
@@ -105,7 +105,7 @@ pub fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -
     VNode::Element(
         el("div")
             .class(format!("hi-glow-wrapper hi-glow-blur-{} hi-glow-{}", blur, intensity).as_str())
-            .attr("style", &format!(
+            .attr("style", format!(
                 "--glow-x:50%;--glow-y:50%;--glow-color:{};--glow-opacity:0;--glow-intensity-scale:0;",
                 color
             ))
@@ -501,7 +501,7 @@ fn submenu_title(label: &str, _level: u32, icon: MdiIcon) -> VNode {
     let arrow = icon_el(icon);
     VNode::Element(
         el("div")
-            .class(format!("hi-submenu-title hi-menu-height-compact"))
+            .class("hi-submenu-title hi-menu-height-compact".to_string())
             .child(arrow)
             .child(txt(label)),
     )
@@ -539,7 +539,7 @@ fn plain_menu_item(href: &str, label: &str, _level: u32, icon: MdiIcon) -> VNode
         "rgba(128,128,128,0.3)",
         VNode::Element(
             el("li")
-                .class(format!("hi-menu-item hi-menu-height-compact"))
+                .class("hi-menu-item hi-menu-height-compact".to_string())
                 .child(inner),
         ),
     )

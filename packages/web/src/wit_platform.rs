@@ -270,7 +270,7 @@ pub mod wasm_impl {
     use tairitsu_vdom::{
         CanvasContext, CanvasOps, ClipboardOps, ContentEditableOps, DomOps, DomRect, EventData,
         EventWitHandle, FileOps, FocusEvent, GenericEvent, GeoOps, IdbOps, InputEvent,
-        KeyboardEvent, LayoutOps, MediaOps, MediaQueryOps, ObserverOps, Platform, QueryOps,
+        KeyboardEvent, LayoutOps, MediaOps, MediaQueryOps, MouseEvent, ObserverOps, QueryOps,
         ScrollOps, TimerOps, VNode,
     };
 
@@ -280,7 +280,7 @@ pub mod wasm_impl {
         static CURRENT_RENDER_COMPONENT: RefCell<Option<tairitsu_vdom::ComponentId>> = RefCell::new(None);
     }
 
-    fn with_render_component<T>(id: tairitsu_vdom::ComponentId, f: impl FnOnce() -> T) -> T {
+    pub fn with_render_component<T>(id: tairitsu_vdom::ComponentId, f: impl FnOnce() -> T) -> T {
         CURRENT_RENDER_COMPONENT.with(|c| {
             *c.borrow_mut() = Some(id);
         });
@@ -533,9 +533,6 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::KeyboardEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
-            let current_target =
-                bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
                 KeyboardEvent::new()
                     .key(data.key)
@@ -546,9 +543,7 @@ pub mod wasm_impl {
                     .alt_key(data.alt_key)
                     .meta_key(data.meta_key)
                     .repeat(data.repeat)
-                    .event_handle(wit_handle)
-                    .target(target.unwrap_or(0))
-                    .current_target(current_target.unwrap_or(0)),
+                    .event_handle(wit_handle),
             );
             dispatch_event(listener_id, "keyboard", event);
         }
@@ -559,15 +554,7 @@ pub mod wasm_impl {
             _data: bindings::exports::tairitsu_browser::full::event_callbacks::FocusEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
-            let current_target =
-                bindings::tairitsu_browser::full::event::get_current_target(event_handle);
-            let event: Box<dyn EventData> = Box::new(
-                FocusEvent::new()
-                    .event_handle(wit_handle)
-                    .target(target.unwrap_or(0))
-                    .current_target(current_target.unwrap_or(0)),
-            );
+            let event: Box<dyn EventData> = Box::new(FocusEvent::new().event_handle(wit_handle));
             dispatch_event(listener_id, "focus", event);
         }
 
@@ -577,15 +564,10 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::InputEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
-            let current_target =
-                bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
                 InputEvent::new()
                     .data(data.data.unwrap_or_default())
-                    .event_handle(wit_handle)
-                    .target(target.unwrap_or(0))
-                    .current_target(current_target.unwrap_or(0)),
+                    .event_handle(wit_handle),
             );
             dispatch_event(listener_id, "input", event);
         }
@@ -601,27 +583,21 @@ pub mod wasm_impl {
             let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
 
             let event: Box<dyn EventData> = match event_type.as_str() {
-                "submit" => Box::new(tairitsu_vdom::SubmitEvent {
-                    target,
-                    form_data: Vec::new(),
-                    event_handle: wit_handle,
-                }),
-                "change" => Box::new(tairitsu_vdom::ChangeEvent {
-                    value: String::new(),
-                    target,
-                    event_handle: wit_handle,
-                }),
-                _ => {
-                    let current_target =
-                        bindings::tairitsu_browser::full::event::get_current_target(event_handle);
-                    Box::new(
-                        GenericEvent::new()
-                            .event_type(&event_type)
-                            .event_handle(wit_handle)
-                            .target(target.unwrap_or(0))
-                            .current_target(current_target.unwrap_or(0)),
-                    )
+                "submit" => {
+                    let mut evt = tairitsu_vdom::SubmitEvent::new();
+                    evt.target = target;
+                    Box::new(evt)
                 }
+                "change" => {
+                    let mut evt = tairitsu_vdom::ChangeEvent::new();
+                    evt.target = target;
+                    Box::new(evt)
+                }
+                _ => Box::new(
+                    GenericEvent::new()
+                        .event_type(&event_type)
+                        .event_handle(wit_handle),
+                ),
             };
             dispatch_event(listener_id, &event_type, event);
         }
@@ -988,6 +964,22 @@ pub mod wasm_impl {
                         m.borrow_mut().remove(&(id as u64));
                     });
                     bindings::tairitsu_browser::full::platform_helpers::clear_timeout(id);
+                },
+                set_interval_fn: |callback: Box<dyn FnMut()>, ms: i32| -> i32 {
+                    let callback_id = next_callback_id();
+                    INTERVAL_CALLBACKS.with(|m| {
+                        m.borrow_mut().insert(callback_id, callback);
+                    });
+                    bindings::tairitsu_browser::full::platform_helpers::set_interval(
+                        callback_id,
+                        ms,
+                    )
+                },
+                clear_interval_fn: |id: i32| {
+                    INTERVAL_CALLBACKS.with(|m| {
+                        m.borrow_mut().remove(&(id as u64));
+                    });
+                    bindings::tairitsu_browser::full::platform_helpers::clear_interval(id);
                 },
                 request_animation_frame_fn: |callback: Box<dyn FnMut(f64)>| -> u32 {
                     let callback_id = next_callback_id();
@@ -2228,6 +2220,21 @@ pub mod wasm_impl {
             Patch::RemoveEvent { name } => {
                 platform.remove_event_listener(element, name);
             }
+
+            Patch::MoveChild { from, to } => {
+                let child = platform.first_child(element);
+                if let Some(_child) = child {
+                    tracing::trace!("MoveChild from {} to {} (stub)", from, to);
+                }
+            }
+
+            Patch::ReorderChildren { removals, moves } => {
+                tracing::trace!(
+                    "ReorderChildren removals={:?} moves={:?} (stub)",
+                    removals,
+                    moves
+                );
+            }
         }
 
         Ok(())
@@ -2285,7 +2292,7 @@ pub mod wasm_impl {
                     let raw = element.as_raw();
                     let name = name.clone();
                     let compute = compute.clone();
-                    let p = *platform;
+                    let p = platform.clone();
                     create_tracked_effect(move || {
                         let value = (compute.borrow_mut())();
                         let el = WitElement::from_raw(raw);
