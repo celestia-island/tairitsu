@@ -110,10 +110,14 @@ fn extract_path_d(svg: &str) -> Option<String> {
 /// Download a URL to a local file.
 #[cfg(feature = "icon-fetch")]
 fn download_to(url: &str, dest: &Path) -> Result<(), String> {
-    let resp = reqwest::blocking::get(url)
-        .map_err(|e| format!("GET {}: {}", url, e))?;
-    let bytes = resp.bytes().map_err(|e| format!("read {}: {}", url, e))?;
-    std::fs::write(dest, &bytes).map_err(|e| format!("write {}: {}", dest.display(), e))?;
+    let out = std::process::Command::new("curl")
+        .args(["-fsSL", "-o", &dest.to_string_lossy(), url])
+        .output()
+        .map_err(|e| format!("spawn curl: {}", e))?;
+    if !out.status.success() {
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        return Err(format!("curl {} failed: {}", url, stderr.trim()));
+    }
     Ok(())
 }
 
