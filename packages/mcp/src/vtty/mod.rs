@@ -929,4 +929,75 @@ mod smoke_pty {
         assert!(combined.contains("50"), "scrollback+screen should contain mid output");
         let _ = session.kill();
     }
+
+    // ── Coverage fill: PTY session edge cases ───────────
+
+    #[test]
+    fn smoke_pty_send_text_with_newline() {
+        let mut session = spawn_session("bash --norc --noprofile");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        session.send_text("echo NL_TEST\n").expect("send_text with newline");
+        let found = wait_for_text(&session, "NL_TEST", 3000);
+        assert!(found, "send_text \\n translation should work, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_has_output() {
+        let mut session = spawn_session("echo detect_output");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        loop {
+            if session.has_output() {
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                panic!("has_output() should return true after echo");
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_manager_ping() {
+        let mgr = VttyManager::new();
+        let info = mgr.launch("sleep 60", 80, 24, "", None, "test").expect("launch");
+        let pinged = mgr.ping(&info.id).expect("ping");
+        assert!(pinged.alive);
+        assert_eq!(pinged.id, info.id);
+        let _ = mgr.kill(&info.id);
+    }
+
+    #[test]
+    fn smoke_pty_write_after_kill_errors() {
+        let mut session = spawn_session("sleep 60");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        session.kill().expect("kill");
+        let result = session.send_text("should fail");
+        assert!(result.is_err(), "write after kill should fail");
+    }
+
+    #[test]
+    fn smoke_pty_drop_without_explicit_kill() {
+        {
+            let session = spawn_session("sleep 60");
+            std::thread::sleep(std::time::Duration::from_millis(300));
+            assert!(session.is_alive());
+        }
+    }
+
+    #[test]
+    fn smoke_pty_launch_with_cwd() {
+        let mut session = VttySession::new(
+            "cwd-test".into(),
+            "test".into(),
+            "pwd".into(),
+            80,
+            24,
+        );
+        session.launch(Some("/tmp")).expect("launch with cwd");
+        let found = wait_for_text(&session, "tmp", 3000);
+        assert!(found, "should see /tmp from pwd, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
 }

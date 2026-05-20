@@ -1208,12 +1208,15 @@ mod smoke {
                 crossterm::style::Print("R0"),
                 crossterm::cursor::MoveTo(0, 4),
                 crossterm::style::Print("R4"),
-                crossterm::cursor::MoveTo(0, 2),
+                crossterm::cursor::MoveToRow(2),
+                crossterm::cursor::MoveToColumn(0),
                 crossterm::style::Print("R2"),
             );
         });
         assert_eq!(s.get_line(0), "R0");
+        assert_eq!(s.get_line(1), "", "row 1 should be empty");
         assert_eq!(s.get_line(2), "R2");
+        assert_eq!(s.get_line(3), "", "row 3 should be empty");
         assert_eq!(s.get_line(4), "R4");
     }
 
@@ -1350,5 +1353,209 @@ mod smoke {
         assert!(s.cursor_col >= 5, "cursor_col should overflow past cols");
         s.process(b"X");
         assert_eq!(s.get_line(1), "X", "next print after overflow should wrap");
+    }
+
+    // ── Coverage fill: CSI f (HVP), CSI S (Scroll Up), ESC 7/8 ───
+
+    #[test]
+    fn test_csi_hvp_positioning() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process(b"\x1b[3;10fHello");
+        assert_eq!(s.get_line(0), "", "row 0 untouched by HVP to row 2");
+        assert_eq!(s.get_line(1), "", "row 1 untouched by HVP to row 2");
+        assert_eq!(s.get_line(2), "         Hello");
+        assert_eq!(s.get_line(3), "", "row 3 untouched");
+        assert_eq!(s.get_line(4), "", "row 4 untouched");
+    }
+
+    #[test]
+    fn smoke_crossterm_scroll_up() {
+        let s = crossterm_render(40, 5, |buf| {
+            for i in 0..5 {
+                queue_cmd!(buf,
+                    crossterm::cursor::MoveTo(0, i as u16),
+                    crossterm::style::Print(format!("row{}", i)),
+                );
+            }
+            queue_cmd!(buf,
+                crossterm::terminal::ScrollUp(2),
+            );
+        });
+        assert_eq!(s.get_line(0), "row2");
+        assert_eq!(s.get_line(1), "row3");
+        assert_eq!(s.get_line(2), "row4");
+        assert_eq!(s.get_line(3), "", "row 3 should be blank after scroll_up");
+        assert_eq!(s.get_line(4), "", "row 4 should be blank after scroll_up");
+        assert!(!s.get_text().contains("row0"), "row0 should be scrolled off");
+        assert!(!s.get_text().contains("row1"), "row1 should be scrolled off");
+    }
+
+    #[test]
+    fn test_esc_save_restore_cursor() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process(b"\x1b[2;5HXY");
+        assert_eq!(s.cursor_row, 1);
+        assert_eq!(s.cursor_col, 6, "XY at col 4+5, cursor should be at col 6");
+        s.process(b"\x1b7");
+        s.process(b"\x1b[4;1HZZ");
+        assert_eq!(s.cursor_row, 3, "should be at row 3 after move");
+        s.process(b"\x1b8");
+        assert_eq!(s.cursor_row, 1, "ESC 8 should restore row to 1");
+        assert_eq!(s.cursor_col, 6, "ESC 8 should restore col to 6");
+        s.process(b"AB");
+        assert_eq!(s.get_line(1), "    XYAB");
+        assert_eq!(s.get_line(3), "ZZ");
+        assert_eq!(s.cursor_col, 8, "after AB at col 6, cursor should be at col 8");
+    }
+
+    // ── Coverage fill: CSI J param 0, CSI K params 1 and 2 ───
+
+    #[test]
+    fn test_clear_from_cursor_down() {
+        let mut s = Vt100Screen::new(10, 5);
+        s.process(b"\x1b[1;1Hrow0");
+        s.process(b"\x1b[2;1Hrow1");
+        s.process(b"\x1b[3;1Hrow2");
+        s.process(b"\x1b[4;1Hrow3");
+        s.process(b"\x1b[5;1Hrow4");
+        s.process(b"\x1b[3;3H\x1b[0J");
+        assert_eq!(s.get_line(0), "row0");
+        assert_eq!(s.get_line(1), "row1");
+        assert_eq!(s.get_line(2), "ro", "row 2 cols 0-1 should survive, col 2+ cleared");
+        assert_eq!(s.get_line(3), "", "row 3 should be fully cleared");
+        assert_eq!(s.get_line(4), "", "row 4 should be fully cleared");
+    }
+
+    #[test]
+    fn test_clear_line_from_start_to_cursor() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"ABCDEFGHIJ");
+        s.process(b"\x1b[1;6H\x1b[1K");
+        let line = s.get_line(0);
+        assert_eq!(&line[..6], "      ", "first 6 cols should be spaces");
+        assert_eq!(&line[6..10], "GHIJ", "cols 6-9 should survive");
+    }
+
+    #[test]
+    fn test_clear_entire_line() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"Hello World");
+        s.process(b"\x1b[1;1H\x1b[2K");
+        assert_eq!(s.get_line(0), "");
+        assert_eq!(s.get_line(1), "", "row 1 was never written to");
+    }
+
+    // ── Coverage fill: SGR reset codes, BG colors, attribute off ───
+
+    #[test]
+    fn test_sgr_reset_fg_to_default() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"\x1b[31mR\x1b[39mD");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Index(1), "R should be red (31)");
+        assert_ne!(rd.grid[0][0].attrs.fg, ColorKind::Default, "R must NOT be default");
+        assert_eq!(rd.grid[0][1].attrs.fg, ColorKind::Default, "D should be default (39)");
+        assert_ne!(rd.grid[0][1].attrs.fg, ColorKind::Index(1), "D must NOT be red");
+    }
+
+    #[test]
+    fn test_sgr_ansi_bg_colors() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"\x1b[44mB\x1b[49mD");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.bg, ColorKind::Index(4), "B should have blue BG (44)");
+        assert_ne!(rd.grid[0][0].attrs.bg, ColorKind::Default, "B must NOT have default BG");
+        assert_eq!(rd.grid[0][1].attrs.bg, ColorKind::Default, "D should have default BG (49)");
+    }
+
+    #[test]
+    fn test_sgr_256_bg_color() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"\x1b[48;5;196mX\x1b[0mY");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.bg, ColorKind::Index(196), "X should have 256 BG");
+        assert_eq!(rd.grid[0][1].attrs.bg, ColorKind::Default, "Y should have default BG after reset");
+    }
+
+    #[test]
+    fn test_sgr_bright_bg_colors() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"\x1b[105mX\x1b[0mY");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.bg, ColorKind::Index(13), "X should have bright magenta BG (105)");
+        assert_eq!(rd.grid[0][1].attrs.bg, ColorKind::Default, "Y should have default BG after reset");
+    }
+
+    #[test]
+    fn test_sgr_explicit_attribute_off() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"\x1b[1;3;4mA\x1b[22mB\x1b[23mC\x1b[24mD");
+        let rd = s.get_render_data();
+        assert!(rd.grid[0][0].attrs.bold, "A should be bold");
+        assert!(rd.grid[0][0].attrs.italic, "A should be italic");
+        assert!(rd.grid[0][0].attrs.underline, "A should be underlined");
+        assert!(!rd.grid[0][1].attrs.bold, "B should NOT be bold (SGR 22)");
+        assert!(rd.grid[0][1].attrs.italic, "B should still be italic");
+        assert!(rd.grid[0][1].attrs.underline, "B should still be underlined");
+        assert!(!rd.grid[0][2].attrs.bold, "C should NOT be bold");
+        assert!(!rd.grid[0][2].attrs.italic, "C should NOT be italic (SGR 23)");
+        assert!(rd.grid[0][2].attrs.underline, "C should still be underlined");
+        assert!(!rd.grid[0][3].attrs.bold, "D should NOT be bold");
+        assert!(!rd.grid[0][3].attrs.italic, "D should NOT be italic");
+        assert!(!rd.grid[0][3].attrs.underline, "D should NOT be underlined (SGR 24)");
+    }
+
+    // ── Coverage fill: edge cases ────────────────────────
+
+    #[test]
+    fn test_backspace_at_col_0() {
+        let mut s = Vt100Screen::new(10, 2);
+        s.process(b"\x08\x08X");
+        assert_eq!(s.cursor_col, 1, "backspace at col 0 should be no-op");
+        assert_eq!(s.cursor_row, 0, "backspace should NOT wrap to previous row");
+        assert_eq!(s.get_line(0), "X");
+    }
+
+    #[test]
+    fn test_tab_at_end_of_row() {
+        let mut s = Vt100Screen::new(10, 2);
+        s.process(b"ABCDEFGH\tX");
+        let line = s.get_line(0);
+        assert_eq!(s.cursor_col, 10, "tab should clamp to cols-1, then X wraps");
+        assert!(!line.contains('\t'), "no raw tab in output");
+        assert_eq!(s.get_line(1), "", "X should be on line 0 not line 1 after tab clamp");
+    }
+
+    #[test]
+    fn test_resize_preserves_scrollback() {
+        let mut s = Vt100Screen::new(10, 3);
+        for i in 0..10 {
+            s.process(format!("L{}\r\n", i).as_bytes());
+        }
+        let sb_before = s.get_scrollback();
+        assert!(sb_before.contains("L0"), "scrollback should start from L0");
+        assert!(sb_before.contains("L5"), "scrollback should include L5");
+        assert!(!sb_before.contains("L9"), "L9 should be in screen, not scrollback");
+        assert!(s.get_text().contains("L9"), "L9 should be visible on screen");
+        s.resize(10, 2);
+        let sb_after = s.get_scrollback();
+        assert!(sb_after.contains("L0"), "original scrollback should survive resize");
+        let combined = s.get_scrollback_with_screen();
+        assert!(combined.contains("L0"), "combined should have earliest content");
+        assert!(combined.contains("L9"), "combined should have latest content");
+    }
+
+    #[test]
+    fn test_csi_with_intermediates_ignored() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process(b"\x1b[3;1HMARK");
+        assert_eq!(s.cursor_row, 2);
+        assert_eq!(s.cursor_col, 4);
+        s.process(b"\x1b[1$H");
+        assert_eq!(s.cursor_row, 2, "CSI with $ intermediate should NOT move cursor row");
+        assert_eq!(s.cursor_col, 4, "CSI with $ intermediate should NOT move cursor col");
+        s.process(b"\x1b[1;1HOK");
+        assert_eq!(s.get_line(0), "OK");
+        assert_eq!(s.get_line(2), "MARK", "row 2 should be untouched by invalid CSI");
     }
 }
