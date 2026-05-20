@@ -27,6 +27,7 @@ pub struct Vt100Screen {
     kitty_state: KittyGraphicsState,
     dcs_kind: DcsKind,
     dcs_buffer: Vec<u8>,
+    parser: vte::Parser,
 }
 
 impl Vt100Screen {
@@ -45,6 +46,7 @@ impl Vt100Screen {
             kitty_state: KittyGraphicsState::new(),
             dcs_kind: DcsKind::None,
             dcs_buffer: Vec::new(),
+            parser: vte::Parser::new(),
         }
     }
 
@@ -224,8 +226,9 @@ impl Vt100Screen {
                 &mut self.image_store,
             );
         }
-        let mut parser = vte::Parser::new();
+        let mut parser = std::mem::replace(&mut self.parser, vte::Parser::new());
         parser.advance(self, data);
+        self.parser = parser;
     }
 }
 
@@ -397,6 +400,27 @@ mod tests {
         s.process(b"\x1b[48;2;0;0;128mX\x1b[0m");
         let rd = s.get_render_data();
         assert_eq!(rd.grid[0][0].attrs.bg, ColorKind::Rgb(0, 0, 128));
+    }
+
+    // ── Split escape sequences ─────────────────────────────
+
+    #[test]
+    fn test_sgr_split_across_reads() {
+        let mut s = Vt100Screen::new(40, 2);
+        s.process(b"\x1b[38;2;255;107;15");
+        s.process(b"7mX\x1b[0m");
+        assert_eq!(s.get_text(), "X");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Rgb(255, 107, 157));
+    }
+
+    #[test]
+    fn test_csi_split_across_reads() {
+        let mut s = Vt100Screen::new(40, 2);
+        s.process(b"AB\x1b[2;");
+        s.process(b"5HXY");
+        assert_eq!(s.get_line(0), "AB");
+        assert_eq!(s.get_line(1), "    XY");
     }
 
     // ── Wide char / CJK ─────────────────────────────────
