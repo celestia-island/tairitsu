@@ -41,5 +41,5 @@ libc = "^0.2"
 
 [features]
 default = ["vtty", "vtty-visual"]
-vtty = ["vte", "portable-pty"]
-vtty-visual = ["vtty", "dep:ab_glyph", "dep:image", "dep:base64", "dep:unicode-width"]
+vtty = ["vte", "portable-pty", "dep:unicode-width"]
+vtty-visual = ["vtty", "dep:ab_glyph", "dep:image", "dep:base64"]

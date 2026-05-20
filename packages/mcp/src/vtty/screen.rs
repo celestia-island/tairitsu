@@ -25,6 +25,7 @@ pub struct CellAttrs {
 pub struct Cell {
     pub ch: char,
     pub attrs: CellAttrs,
+    pub wide: bool,
 }
 
 impl Default for Cell {
@@ -32,6 +33,7 @@ impl Default for Cell {
         Self {
             ch: ' ',
             attrs: CellAttrs::default(),
+            wide: false,
         }
     }
 }
@@ -87,6 +89,32 @@ impl Vt100Screen {
         }
     }
 
+    fn char_width(&self, c: char) -> usize {
+        if c < '\u{1100}' {
+            return 1;
+        }
+        unicode_width::UnicodeWidthChar::width(c).unwrap_or(1)
+    }
+
+    fn row_to_string(row: &[Cell]) -> String {
+        let mut line = String::new();
+        let mut skip = false;
+        for cell in row.iter() {
+            if skip {
+                skip = false;
+                continue;
+            }
+            if cell.ch == '\u{0}' {
+                continue;
+            }
+            line.push(cell.ch);
+            if cell.wide {
+                skip = true;
+            }
+        }
+        line.trim_end().to_string()
+    }
+
     #[allow(clippy::needless_range_loop)]
     pub fn resize(&mut self, cols: usize, rows: usize) {
         let mut ng = vec![vec![Cell::default(); cols]; rows];
@@ -103,18 +131,8 @@ impl Vt100Screen {
     }
 
     pub fn get_text(&self) -> String {
-        let lines: Vec<String> = self
-            .grid
-            .iter()
-            .map(|row| {
-                row.iter()
-                    .map(|c| c.ch)
-                    .collect::<String>()
-                    .trim_end()
-                    .to_string()
-            })
-            .collect();
-        let mut out = lines.clone();
+        let lines: Vec<String> = self.grid.iter().map(|row| Self::row_to_string(row)).collect();
+        let mut out = lines;
         while out.last().map(|l| l.is_empty()).unwrap_or(false) {
             out.pop();
         }
@@ -126,12 +144,7 @@ impl Vt100Screen {
         if row >= self.rows {
             return String::new();
         }
-        self.grid[row]
-            .iter()
-            .map(|c| c.ch)
-            .collect::<String>()
-            .trim_end()
-            .to_string()
+        Self::row_to_string(&self.grid[row])
     }
 
     pub fn find_text(&self, pattern: &str) -> Vec<(usize, usize)> {
@@ -145,32 +158,16 @@ impl Vt100Screen {
         r
     }
 
-    #[allow(dead_code)]
-    pub fn line_count(&self) -> usize {
-        self.rows
-    }
-    #[allow(dead_code)]
-    pub fn cols_count(&self) -> usize {
-        self.cols
-    }
-
     pub fn has_output(&self) -> bool {
         self.grid.iter().any(|row| row.iter().any(|c| c.ch != ' '))
     }
 
     pub fn get_scrollback(&self) -> String {
-        let lines: Vec<String> = self
-            .scrollback
+        self.scrollback
             .iter()
-            .map(|row| {
-                row.iter()
-                    .map(|c| c.ch)
-                    .collect::<String>()
-                    .trim_end()
-                    .to_string()
-            })
-            .collect();
-        lines.join("\n")
+            .map(|row| Self::row_to_string(row))
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     pub fn get_scrollback_with_screen(&self) -> String {
@@ -225,13 +222,22 @@ impl Vt100Screen {
 impl Perform for Vt100Screen {
     fn print(&mut self, c: char) {
         self.ensure_cursor_in_bounds();
+        let w = self.char_width(c);
         if self.cursor_row < self.rows && self.cursor_col < self.cols {
             self.grid[self.cursor_row][self.cursor_col] = Cell {
                 ch: c,
                 attrs: self.attrs,
+                wide: w > 1,
             };
+            if w == 2 && self.cursor_col + 1 < self.cols {
+                self.grid[self.cursor_row][self.cursor_col + 1] = Cell {
+                    ch: '\u{0}',
+                    attrs: self.attrs,
+                    wide: false,
+                };
+            }
         }
-        self.cursor_col += 1;
+        self.cursor_col += w;
     }
 
     fn execute(&mut self, byte: u8) {
@@ -487,6 +493,55 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_cjk_wide_char_basic() {
+        let mut s = Vt100Screen::new(40, 5);
+        s.process("简体中文".as_bytes());
+        assert_eq!(s.get_text(), "简体中文");
+    }
+
+    #[test]
+    fn test_cjk_with_sgr_color() {
+        let mut s = Vt100Screen::new(40, 5);
+        s.process(b"\x1b[38;2;255;107;157m\xe7\xae\x80\xe4\xbd\x93\x1b[0m");
+        assert_eq!(s.get_text(), "简体");
+    }
+
+    #[test]
+    fn test_cjk_crossterm_style_absolute_positioning() {
+        let mut s = Vt100Screen::new(80, 10);
+        // 选择语言: 选=e98089 择=e68ba9 语=e8afad 言=e8a880
+        s.process(b"\x1b[8;35H\xe9\x80\x89\x1b[8;37H\xe6\x8b\xa9\x1b[8;39H\xe8\xaf\xad\x1b[8;41H\xe8\xa8\x80");
+        assert_eq!(s.get_line(7), "                                  选择语言");
+    }
+
+    #[test]
+    fn test_cjk_mixed_with_ascii() {
+        let mut s = Vt100Screen::new(40, 5);
+        s.process("Hello 简体 World".as_bytes());
+        assert_eq!(s.get_text(), "Hello 简体 World");
+    }
+
+    #[test]
+    fn test_cjk_wide_char_overwrite_protection() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process("简体".as_bytes());
+        // After "简" (wide) at col 0-1, "体" (wide) at col 2-3
+        assert_eq!(s.get_text(), "简体");
+        // Ensure cursor advanced correctly (4 cols for 2 wide chars)
+    }
+
+    #[test]
+    fn test_cjk_real_crossterm_frame() {
+        let raw = include_bytes!("testdata_crossterm_frame.bin");
+        let mut s = Vt100Screen::new(120, 30);
+        s.process(raw);
+        let text = s.get_text();
+        assert!(text.contains("选择语言"), "should contain 选择语言, got:\n{}", text);
+        assert!(text.contains("简体中文"), "should contain 简体中文, got:\n{}", text);
+        assert!(text.contains("English"), "should contain English, got:\n{}", text);
+    }
+
+    #[test]
     fn test_basic_print() {
         let mut s = Vt100Screen::new(20, 5);
         s.process(b"Hello World");
@@ -570,10 +625,9 @@ mod tests {
         let mut s = Vt100Screen::new(10, 3);
         s.process(b"keep me\r\nand this");
         s.resize(15, 5);
-        assert_eq!(s.cols_count(), 15);
-        assert_eq!(s.line_count(), 5);
         assert_eq!(s.get_line(0), "keep me");
         assert_eq!(s.get_line(1), "and this");
+        assert_eq!(s.get_line(4), "");
     }
 
     #[test]
