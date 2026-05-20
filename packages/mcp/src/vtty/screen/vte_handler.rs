@@ -216,5 +216,17 @@ impl vte::Perform for Vt100Screen {
         }
     }
 
-    fn esc_dispatch(&mut self, _intermediates: &[u8], _ignore: bool, _byte: u8) {}
+    fn esc_dispatch(&mut self, _intermediates: &[u8], _ignore: bool, byte: u8) {
+        match byte {
+            b'7' => {
+                self.saved_row = self.cursor_row;
+                self.saved_col = self.cursor_col;
+            }
+            b'8' => {
+                self.cursor_row = self.saved_row;
+                self.cursor_col = self.saved_col;
+            }
+            _ => {}
+        }
+    }
 }

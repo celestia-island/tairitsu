@@ -141,6 +141,9 @@ impl UnixPty {
                     break;
                 } else {
                     let err = io::Error::last_os_error();
+                    if err.kind() == io::ErrorKind::Interrupted {
+                        continue;
+                    }
                     if err.kind() != io::ErrorKind::WouldBlock {
                         eprintln!("[vtty-reader] read error on fd={}: {}", read_fd, err);
                         break;

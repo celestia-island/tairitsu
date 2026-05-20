@@ -163,7 +163,7 @@ impl VttySession {
             .unwrap_or_default()
     }
 
-    pub fn resize(&self, new_cols: u16, new_rows: u16) -> Result<(), String> {
+    pub fn resize(&mut self, new_cols: u16, new_rows: u16) -> Result<(), String> {
         {
             let guard = self
                 .pty
@@ -178,6 +178,8 @@ impl VttySession {
             .lock()
             .map_err(|_| "screen lock poisoned")?
             .resize(new_cols as usize, new_rows as usize);
+        self.cols = new_cols;
+        self.rows = new_rows;
         Ok(())
     }
 
@@ -529,5 +531,231 @@ mod tests {
         };
         let json = serde_json::to_string(&info).unwrap();
         assert!(!json.contains("pid"));
+    }
+}
+
+#[cfg(test)]
+#[cfg(unix)]
+mod smoke_pty {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+    use std::sync::Arc;
+
+    fn spawn_session(command: &str) -> VttySession {
+        let mut session = VttySession::new(
+            "test-smoke".into(),
+            "smoke".into(),
+            command.into(),
+            80,
+            24,
+        );
+        session.launch(None).expect("launch should succeed");
+        session
+    }
+
+    fn wait_for_text(session: &VttySession, pattern: &str, timeout_ms: u64) -> bool {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(timeout_ms);
+        while std::time::Instant::now() < deadline {
+            if !session.find_text(pattern).is_empty() {
+                return true;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        false
+    }
+
+    #[test]
+    fn smoke_pty_echo_ascii() {
+        let mut session = spawn_session("echo 'Hello from PTY'");
+        let found = wait_for_text(&session, "Hello from PTY", 3000);
+        assert!(found, "screen should contain echo output, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_printf_cjk() {
+        let mut session = spawn_session("printf '简体中文\\n'");
+        let found = wait_for_text(&session, "简", 3000);
+        assert!(found, "screen should contain CJK text, got:\n{}", session.screenshot());
+        if found {
+            let text = session.screenshot();
+            assert!(text.contains("简体中文"), "full CJK string present, got: {}", text);
+            assert!(!text.contains(';'), "no SGR leak, got: {}", text);
+        }
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_printf_ansi_colors() {
+        let mut session = spawn_session(
+            "printf '\\033[38;2;255;107;157mpink\\033[0m \\033[32mgreen\\033[0m\\n'",
+        );
+        let found = wait_for_text(&session, "pink", 3000);
+        assert!(found, "screen should contain colored text, got:\n{}", session.screenshot());
+        if found {
+            let text = session.screenshot();
+            assert!(text.contains("pink"), "got: {}", text);
+            assert!(text.contains("green"), "got: {}", text);
+            assert!(!text.contains("38;2"), "no SGR fragment, got: {}", text);
+            assert!(!text.contains("32m"), "no raw SGR, got: {}", text);
+        }
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_send_text() {
+        let mut session = spawn_session("cat -v");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+
+        session.send_text("hello").expect("send_text should work");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        let text = session.screenshot();
+        assert!(
+            text.contains("hello"),
+            "screen should echo sent text, got:\n{}",
+            text
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_send_keys_arrow() {
+        let mut session = spawn_session("cat -v");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+
+        session.send_keys("DOWN").expect("send_keys should work");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        let text = session.screenshot();
+        assert!(
+            text.contains("^[[B") || text.contains("\\x1b[B"),
+            "screen should show escape sequence for Down arrow, got:\n{}",
+            text
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_resize() {
+        let mut session = spawn_session("sleep 1");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        session.resize(120, 40).expect("resize should work");
+        assert_eq!(session.cols, 120);
+        assert_eq!(session.rows, 40);
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_lifecycle_kill_is_idempotent() {
+        let mut session = spawn_session("sleep 60");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        assert!(session.is_alive(), "session should be alive");
+        session.kill().expect("first kill should succeed");
+        assert!(!session.is_alive(), "session should be dead after kill");
+        session.kill().expect("second kill should also succeed (idempotent)");
+        assert!(!session.is_alive(), "still dead after second kill");
+    }
+
+    #[test]
+    fn smoke_pty_manager_launch_kill() {
+        let mgr = VttyManager::new();
+
+        let info = mgr
+            .launch("sleep 60", 80, 24, "", None, "test")
+            .expect("launch should succeed");
+        assert!(info.alive);
+        assert!(info.id.starts_with("vtty-"));
+
+        let killed = mgr.kill(&info.id).expect("kill should succeed");
+        assert_eq!(killed.id, info.id);
+
+        let result = mgr.get(&info.id);
+        assert!(result.is_err(), "session should be removed after kill");
+    }
+
+    #[test]
+    fn smoke_pty_manager_drop_cleans_up() {
+        let mgr = VttyManager::new();
+        let info = mgr
+            .launch("sleep 60", 80, 24, "", None, "test")
+            .expect("launch should succeed");
+
+        let sid = info.id.clone();
+        drop(mgr);
+        let mgr2 = VttyManager::new();
+        assert!(
+            mgr2.get(&sid).is_err(),
+            "session should be cleaned up after manager drop"
+        );
+    }
+
+    #[test]
+    fn smoke_pty_multi_session() {
+        let mgr = VttyManager::new();
+
+        let s1 = mgr
+            .launch("echo 'session1'", 80, 24, "", None, "s1")
+            .expect("launch s1");
+        let s2 = mgr
+            .launch("echo 'session2'", 80, 24, "", None, "s2")
+            .expect("launch s2");
+
+        let list = mgr.list();
+        assert_eq!(list.len(), 2, "should have 2 sessions");
+
+        let _ = mgr.kill(&s1.id);
+        let list = mgr.list();
+        assert_eq!(list.len(), 1, "should have 1 session after kill");
+
+        let _ = mgr.kill(&s2.id);
+        let list = mgr.list();
+        assert!(list.is_empty(), "should have 0 sessions");
+    }
+
+    #[test]
+    fn smoke_reader_loop_via_poll() {
+        let handle = pty_unix::UnixPty::spawn("printf 'polltest\\n'", 80, 24, None)
+            .expect("spawn should succeed");
+        let fd = handle.read_fd();
+        let screen = Arc::new(std::sync::Mutex::new(
+            crate::vtty::screen::Vt100Screen::new(80, 24),
+        ));
+        let running = Arc::new(AtomicBool::new(true));
+
+        let screen_clone = screen.clone();
+        let running_clone = running.clone();
+        let h = std::thread::Builder::new()
+            .name("test-reader".into())
+            .stack_size(128 * 1024)
+            .spawn(move || pty_unix::UnixPty::reader_loop(fd, screen_clone, running_clone))
+            .expect("thread should spawn");
+
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            let text = screen.lock().unwrap().get_text();
+            if text.contains("polltest") {
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                panic!(
+                    "reader_loop did not pick up 'polltest' within 5s, got: {}",
+                    text
+                );
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+
+        running.store(false, std::sync::atomic::Ordering::Relaxed);
+        let _ = h.join();
+        let text = screen.lock().unwrap().get_text();
+        assert!(
+            text.contains("polltest"),
+            "screen should have output after reader_loop, got: {}",
+            text
+        );
+        assert!(!text.contains(';'), "no SGR leak, got: {}", text);
     }
 }

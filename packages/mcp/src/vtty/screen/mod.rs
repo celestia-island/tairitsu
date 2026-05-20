@@ -110,7 +110,7 @@ impl Vt100Screen {
     pub fn find_text(&self, pattern: &str) -> Vec<(usize, usize)> {
         let mut r = Vec::new();
         for (i, row) in self.grid.iter().enumerate() {
-            let line: String = row.iter().map(|c| c.ch).collect();
+            let line: String = row.iter().map(|c| c.ch).filter(|&c| c != '\u{0}').collect();
             if let Some(pos) = line.find(pattern) {
                 r.push((i, pos));
             }
@@ -594,5 +594,567 @@ mod tests {
             !rd.image_store.placements().is_empty(),
             "sixel image should be captured"
         );
+    }
+}
+
+#[cfg(test)]
+mod smoke {
+    use super::types::ColorKind;
+    use super::Vt100Screen;
+
+    fn crossterm_render(cols: u16, rows: u16, draw: impl FnOnce(&mut Vec<u8>)) -> Vt100Screen {
+        let mut buf = Vec::new();
+        draw(&mut buf);
+        assert!(!buf.is_empty(), "crossterm produced no output");
+        let mut screen = Vt100Screen::new(cols as usize, rows as usize);
+        screen.process(&buf);
+        screen
+    }
+
+    fn crossterm_render_chunked(
+        cols: u16,
+        rows: u16,
+        chunk_size: usize,
+        draw: impl FnOnce(&mut Vec<u8>),
+    ) -> Vt100Screen {
+        let mut buf = Vec::new();
+        draw(&mut buf);
+        assert!(!buf.is_empty(), "crossterm produced no output");
+        let mut screen = Vt100Screen::new(cols as usize, rows as usize);
+        for chunk in buf.chunks(chunk_size) {
+            screen.process(chunk);
+        }
+        screen
+    }
+
+    macro_rules! queue_cmd {
+        ($buf:expr, $($cmd:expr),+ $(,)?) => {{
+            use crossterm::QueueableCommand;
+            $( $buf.queue($cmd).unwrap(); )+
+        }};
+    }
+
+    #[test]
+    fn smoke_crossterm_basic_ascii() {
+        let s = crossterm_render(40, 5, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::style::Print("Hello World"),
+            );
+        });
+        assert_eq!(s.get_line(0), "Hello World");
+        assert_eq!(s.get_text(), "Hello World");
+    }
+
+    #[test]
+    fn smoke_crossterm_cursor_positioning() {
+        let s = crossterm_render(40, 5, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(5, 2),
+                crossterm::style::Print("XY"),
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::style::Print("AB"),
+                crossterm::cursor::MoveTo(10, 1),
+                crossterm::style::Print("CD"),
+            );
+        });
+        assert_eq!(s.get_line(0), "AB");
+        assert_eq!(s.get_line(1), "          CD");
+        assert_eq!(s.get_line(2), "     XY");
+    }
+
+    #[test]
+    fn smoke_crossterm_move_up_down_left_right() {
+        let s = crossterm_render(40, 5, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(10, 3),
+                crossterm::style::Print("X"),
+                crossterm::cursor::MoveUp(1),
+                crossterm::style::Print("Y"),
+                crossterm::cursor::MoveLeft(1),
+                crossterm::style::Print("Z"),
+                crossterm::cursor::MoveDown(2),
+                crossterm::style::Print("W"),
+                crossterm::cursor::MoveRight(2),
+                crossterm::style::Print("V"),
+            );
+        });
+        assert_eq!(s.get_line(2), "           Z");
+        assert_eq!(s.get_line(3), "          X");
+        assert!(s.get_line(4).contains("W"));
+        assert!(s.get_line(4).contains("V"));
+    }
+
+    #[test]
+    fn smoke_crossterm_truecolor_fg() {
+        let s = crossterm_render(40, 2, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: 255, g: 107, b: 157 }),
+                crossterm::style::Print("pink"),
+                crossterm::style::ResetColor,
+                crossterm::style::Print(" normal"),
+            );
+        });
+        let text = s.get_text();
+        assert!(text.contains("pink"), "text should contain 'pink', got: {}", text);
+        assert!(text.contains("normal"), "text should contain 'normal', got: {}", text);
+        assert!(!text.contains(';'), "SGR parameters should not leak into text, got: {}", text);
+        assert!(
+            !text.contains("\x1b["),
+            "escape sequences should not leak into text, got: {:?}",
+            text
+        );
+
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Rgb(255, 107, 157));
+        assert_eq!(rd.grid[0][4].attrs.fg, ColorKind::Default);
+    }
+
+    #[test]
+    fn smoke_crossterm_truecolor_bg() {
+        let s = crossterm_render(40, 2, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::SetBackgroundColor(crossterm::style::Color::Rgb { r: 18, g: 18, b: 18 }),
+                crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: 255, g: 107, b: 157 }),
+                crossterm::style::Print("styled"),
+                crossterm::style::ResetColor,
+            );
+        });
+        let text = s.get_text();
+        assert_eq!(text, "styled");
+
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Rgb(255, 107, 157));
+        assert_eq!(rd.grid[0][0].attrs.bg, ColorKind::Rgb(18, 18, 18));
+        assert_eq!(rd.grid[0][5].attrs.fg, ColorKind::Rgb(255, 107, 157));
+        assert_eq!(rd.grid[0][5].attrs.bg, ColorKind::Rgb(18, 18, 18));
+    }
+
+    #[test]
+    fn smoke_crossterm_cjk_plain() {
+        let s = crossterm_render(40, 5, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::style::Print("简体中文"),
+            );
+        });
+        let text = s.get_text();
+        assert_eq!(text, "简体中文");
+    }
+
+    #[test]
+    fn smoke_crossterm_cjk_absolute_positioned() {
+        let s = crossterm_render(80, 10, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(34, 6),
+                crossterm::style::Print("选择语言"),
+                crossterm::cursor::MoveTo(32, 7),
+                crossterm::style::Print("简体中文"),
+            );
+        });
+        let text = s.get_text();
+        assert!(text.contains("选择语言"), "should contain title, got:\n{}", text);
+        assert!(text.contains("简体中文"), "should contain menu, got:\n{}", text);
+
+        let line6 = s.get_line(6);
+        assert!(line6.contains("选择语言"), "line 6 should have title, got: {}", line6);
+        let line7 = s.get_line(7);
+        assert!(line7.contains("简体中文"), "line 7 should have menu, got: {}", line7);
+    }
+
+    #[test]
+    fn smoke_crossterm_colored_cjk() {
+        let s = crossterm_render(80, 10, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: 255, g: 107, b: 157 }),
+                crossterm::style::SetBackgroundColor(crossterm::style::Color::Rgb { r: 18, g: 18, b: 18 }),
+                crossterm::cursor::MoveTo(30, 6),
+                crossterm::style::Print("选择语言"),
+                crossterm::style::ResetColor,
+                crossterm::cursor::MoveTo(32, 7),
+                crossterm::style::Print("简体中文"),
+            );
+        });
+        let text = s.get_text();
+        assert!(text.contains("选择语言"), "should contain colored title, got:\n{}", text);
+        assert!(text.contains("简体中文"), "should contain menu, got:\n{}", text);
+        assert!(!text.contains(';'), "no SGR leak, got: {}", text);
+        assert!(
+            !text.contains("38;2"),
+            "no raw SGR fragment, got: {}",
+            text
+        );
+        assert!(
+            !text.contains("48;2"),
+            "no raw SGR fragment, got: {}",
+            text
+        );
+
+        let rd = s.get_render_data();
+        for c in &rd.grid[6][30..34] {
+            assert_eq!(c.attrs.fg, ColorKind::Rgb(255, 107, 157));
+            assert_eq!(c.attrs.bg, ColorKind::Rgb(18, 18, 18));
+        }
+        for c in &rd.grid[7][32..36] {
+            assert_eq!(c.attrs.fg, ColorKind::Default);
+            assert_eq!(c.attrs.bg, ColorKind::Default);
+        }
+    }
+
+    #[test]
+    fn smoke_crossterm_bold_italic_underline() {
+        let s = crossterm_render(40, 2, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::SetAttribute(crossterm::style::Attribute::Bold),
+                crossterm::style::SetAttribute(crossterm::style::Attribute::Italic),
+                crossterm::style::SetAttribute(crossterm::style::Attribute::Underlined),
+                crossterm::style::Print("styled"),
+                crossterm::style::SetAttribute(crossterm::style::Attribute::Reset),
+                crossterm::style::Print(" plain"),
+            );
+        });
+        let text = s.get_text();
+        assert_eq!(text, "styled plain");
+
+        let rd = s.get_render_data();
+        assert!(rd.grid[0][0].attrs.bold);
+        assert!(rd.grid[0][0].attrs.italic);
+        assert!(rd.grid[0][0].attrs.underline);
+        assert!(!rd.grid[0][6].attrs.bold);
+        assert!(!rd.grid[0][6].attrs.italic);
+        assert!(!rd.grid[0][6].attrs.underline);
+    }
+
+    #[test]
+    fn smoke_crossterm_ansi_8bit_color() {
+        let s = crossterm_render(40, 2, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::SetForegroundColor(crossterm::style::Color::AnsiValue(196)),
+                crossterm::style::Print("X"),
+                crossterm::style::ResetColor,
+            );
+        });
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Index(196));
+    }
+
+    #[test]
+    fn smoke_crossterm_clear_screen() {
+        let s = crossterm_render(40, 5, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::Print("should be cleared"),
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::terminal::Clear(crossterm::terminal::ClearType::All),
+                crossterm::style::Print("after clear"),
+            );
+        });
+        let text = s.get_text();
+        assert_eq!(text, "after clear");
+    }
+
+    #[test]
+    fn smoke_crossterm_clear_to_line_end() {
+        let s = crossterm_render(20, 2, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::Print("ABCDEFGHIJ"),
+                crossterm::cursor::MoveTo(3, 0),
+                crossterm::terminal::Clear(crossterm::terminal::ClearType::UntilNewLine),
+                crossterm::style::Print("X"),
+            );
+        });
+        let line = s.get_line(0);
+        assert_eq!(&line[..4], "ABCX");
+    }
+
+    #[test]
+    fn smoke_crossterm_scroll_on_overflow() {
+        let s = crossterm_render(20, 3, |buf| {
+            for i in 0..5 {
+                queue_cmd!(buf,
+                    crossterm::style::Print(format!("line{}", i)),
+                    crossterm::style::Print("\r\n"),
+                );
+            }
+        });
+        assert_eq!(s.get_line(0), "line3");
+        assert_eq!(s.get_line(1), "line4");
+    }
+
+    #[test]
+    fn smoke_crossterm_mixed_cjk_ascii() {
+        let s = crossterm_render(40, 3, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::style::Print("Hello 简体 World"),
+            );
+        });
+        assert_eq!(s.get_line(0), "Hello 简体 World");
+    }
+
+    #[test]
+    fn smoke_crossterm_cjk_cursor_advance() {
+        let s = crossterm_render(20, 3, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::Print("简体"),
+                crossterm::style::Print("X"),
+            );
+        });
+        let text = s.get_text();
+        assert!(text.ends_with("简体X"), "cursor should be at col 4 after 2 wide chars, got: {}", text);
+    }
+
+    #[test]
+    fn smoke_crossterm_full_dialog_frame() {
+        let s = crossterm_render(80, 24, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: 255, g: 107, b: 157 }),
+                crossterm::style::SetBackgroundColor(crossterm::style::Color::Rgb { r: 18, g: 18, b: 18 }),
+                crossterm::cursor::MoveTo(30, 6),
+                crossterm::style::Print("选择语言"),
+                crossterm::style::ResetColor,
+                crossterm::style::SetBackgroundColor(crossterm::style::Color::Rgb { r: 18, g: 18, b: 18 }),
+                crossterm::cursor::MoveTo(30, 8),
+                crossterm::style::Print("┌──────────────┐"),
+                crossterm::cursor::MoveTo(30, 9),
+                crossterm::style::Print("│  简体中文    │"),
+                crossterm::cursor::MoveTo(30, 10),
+                crossterm::style::Print("│  English     │"),
+                crossterm::cursor::MoveTo(30, 11),
+                crossterm::style::Print("└──────────────┘"),
+                crossterm::style::ResetColor,
+            );
+        });
+        let text = s.get_text();
+        assert!(text.contains("选择语言"), "title present, got:\n{}", text);
+        assert!(text.contains("简体中文"), "CJK menu present, got:\n{}", text);
+        assert!(text.contains("English"), "ASCII menu present, got:\n{}", text);
+        assert!(text.contains("┌"), "box corner present, got:\n{}", text);
+        assert!(text.contains("│"), "box side present, got:\n{}", text);
+        assert!(text.contains("└"), "box corner present, got:\n{}", text);
+        assert!(!text.contains("38;2"), "no SGR fragment leak, got:\n{}", text);
+        assert!(!text.contains("48;2"), "no SGR fragment leak, got:\n{}", text);
+        assert!(!text.contains(';'), "no SGR number leak, got:\n{}", text);
+    }
+
+    #[test]
+    fn smoke_crossterm_rapid_color_changes() {
+        let s = crossterm_render(80, 5, |buf| {
+            let colors = [
+                (255, 0, 0),
+                (0, 255, 0),
+                (0, 0, 255),
+                (255, 255, 0),
+                (255, 0, 255),
+            ];
+            for (i, (r, g, b)) in colors.iter().enumerate() {
+                queue_cmd!(buf,
+                    crossterm::cursor::MoveTo(i as u16 * 3, 0),
+                    crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: *r, g: *g, b: *b }),
+                    crossterm::style::Print("XYZ"),
+                );
+            }
+            queue_cmd!(buf, crossterm::style::ResetColor);
+        });
+        let text = s.get_text();
+        assert!(
+            !text.contains(';'),
+            "no SGR parameter leak with rapid color changes, got: {}",
+            text
+        );
+
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Rgb(255, 0, 0));
+        assert_eq!(rd.grid[0][3].attrs.fg, ColorKind::Rgb(0, 255, 0));
+        assert_eq!(rd.grid[0][6].attrs.fg, ColorKind::Rgb(0, 0, 255));
+        assert_eq!(rd.grid[0][9].attrs.fg, ColorKind::Rgb(255, 255, 0));
+        assert_eq!(rd.grid[0][12].attrs.fg, ColorKind::Rgb(255, 0, 255));
+    }
+
+    #[test]
+    fn smoke_crossterm_chunked_feed_1byte() {
+        let s = crossterm_render_chunked(40, 5, 1, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: 255, g: 107, b: 157 }),
+                crossterm::style::SetBackgroundColor(crossterm::style::Color::Rgb { r: 18, g: 18, b: 18 }),
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::style::Print("简体中文"),
+                crossterm::style::ResetColor,
+            );
+        });
+        let text = s.get_text();
+        assert_eq!(text, "简体中文", "1-byte chunked feed should parse correctly");
+        assert!(!text.contains(';'), "no SGR leak with 1-byte chunks, got: {}", text);
+    }
+
+    #[test]
+    fn smoke_crossterm_chunked_feed_3bytes() {
+        let s = crossterm_render_chunked(40, 5, 3, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: 255, g: 107, b: 157 }),
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::style::Print("简体中文"),
+                crossterm::style::ResetColor,
+            );
+        });
+        let text = s.get_text();
+        assert_eq!(text, "简体中文", "3-byte chunked feed should parse correctly");
+    }
+
+    #[test]
+    fn smoke_crossterm_chunked_feed_mid_escape() {
+        let buf = {
+            let mut b = Vec::new();
+            queue_cmd!(b,
+                crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: 255, g: 107, b: 157 }),
+                crossterm::style::Print("简"),
+            );
+            b
+        };
+        let esc_start = buf.windows(2).position(|w| w == b"\x1b[").unwrap();
+        let split_point = esc_start + 5;
+
+        let mut s = Vt100Screen::new(40, 5);
+        s.process(&buf[..split_point]);
+        s.process(&buf[split_point..]);
+
+        let text = s.get_text();
+        assert_eq!(text, "简", "split mid-escape should still parse correctly");
+        assert!(!text.contains(';'), "no SGR leak, got: {}", text);
+    }
+
+    #[test]
+    fn smoke_crossterm_many_lines_scrolling() {
+        let s = crossterm_render(40, 5, |buf| {
+            for i in 0..20 {
+                queue_cmd!(buf,
+                    crossterm::style::Print(format!("Line {:02}", i)),
+                    crossterm::style::Print("\r\n"),
+                );
+            }
+        });
+        assert_eq!(s.get_line(0), "Line 16");
+        assert_eq!(s.get_line(1), "Line 17");
+        assert_eq!(s.get_line(2), "Line 18");
+        assert_eq!(s.get_line(3), "Line 19");
+
+        let sb = s.get_scrollback();
+        assert!(sb.contains("Line 00"), "scrollback should have old content");
+    }
+
+    #[test]
+    fn smoke_crossterm_save_restore_cursor() {
+        let s = crossterm_render(40, 5, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(5, 2),
+                crossterm::cursor::SavePosition,
+                crossterm::style::Print("A"),
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::style::Print("B"),
+                crossterm::cursor::RestorePosition,
+            );
+        });
+        assert_eq!(s.get_line(0), "B");
+        let line2 = s.get_line(2);
+        assert!(
+            line2.contains("A"),
+            "line 2 should contain A at restored position, got: '{}'",
+            line2
+        );
+        assert_eq!(s.cursor_col, 5);
+        assert_eq!(s.cursor_row, 2);
+    }
+
+    #[test]
+    fn smoke_crossterm_tab_stops() {
+        let s = crossterm_render(40, 2, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::Print("A"),
+                crossterm::style::Print("\t"),
+                crossterm::style::Print("B"),
+            );
+        });
+        let line = s.get_line(0);
+        assert_eq!(line.as_bytes()[0], b'A');
+        assert_eq!(line.as_bytes()[8], b'B');
+    }
+
+    #[test]
+    fn smoke_crossterm_backspace() {
+        let s = crossterm_render(40, 2, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::Print("abc"),
+                crossterm::cursor::MoveLeft(1),
+                crossterm::style::Print("X"),
+            );
+        });
+        assert_eq!(s.get_line(0), "abX");
+    }
+
+    #[test]
+    fn smoke_crossterm_hide_cursor_and_size() {
+        let s = crossterm_render(60, 15, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::Hide,
+                crossterm::cursor::MoveTo(29, 7),
+                crossterm::style::Print("centered"),
+                crossterm::cursor::Show,
+            );
+        });
+        let line = s.get_line(7);
+        assert!(line.contains("centered"), "got: {}", line);
+    }
+
+    #[test]
+    fn smoke_crossterm_find_text_after_render() {
+        let s = crossterm_render(80, 24, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(30, 6),
+                crossterm::style::Print("选择语言"),
+                crossterm::cursor::MoveTo(32, 7),
+                crossterm::style::Print("简体中文"),
+            );
+        });
+        let hits = s.find_text("选择");
+        assert!(!hits.is_empty(), "find_text should locate CJK substring");
+        assert_eq!(hits[0].0, 6);
+
+        let hits2 = s.find_text("简体");
+        assert!(!hits2.is_empty(), "find_text should locate CJK substring");
+        assert_eq!(hits2[0].0, 7);
+    }
+
+    #[test]
+    fn smoke_no_control_leaks_comprehensive() {
+        let s = crossterm_render(80, 24, |buf| {
+            queue_cmd!(buf,
+                crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: 255, g: 107, b: 157 }),
+                crossterm::style::SetBackgroundColor(crossterm::style::Color::Rgb { r: 18, g: 18, b: 18 }),
+                crossterm::cursor::MoveTo(10, 5),
+                crossterm::style::SetAttribute(crossterm::style::Attribute::Bold),
+                crossterm::style::Print("Hello"),
+                crossterm::style::SetAttribute(crossterm::style::Attribute::Italic),
+                crossterm::style::Print(" World"),
+                crossterm::style::SetAttribute(crossterm::style::Attribute::Underlined),
+                crossterm::style::Print(" 简体"),
+                crossterm::style::SetAttribute(crossterm::style::Attribute::Reset),
+                crossterm::cursor::MoveTo(10, 7),
+                crossterm::style::SetForegroundColor(crossterm::style::Color::AnsiValue(196)),
+                crossterm::style::Print("colored text"),
+                crossterm::style::ResetColor,
+            );
+        });
+        let text = s.get_text();
+        for forbidden in &["38;", "48;", "m\x1b", ";\x1b", "0m\x1b", "107;"] {
+            assert!(
+                !text.contains(forbidden),
+                "text should not contain '{}', got: {}",
+                forbidden,
+                text
+            );
+        }
+        assert!(text.contains("Hello"));
+        assert!(text.contains("World"));
+        assert!(text.contains("简体"));
+        assert!(text.contains("colored text"));
     }
 }

@@ -789,7 +789,7 @@ impl Server {
             .vtty
             .get(&args.session_id)
             .map_err(|e| McpError::internal_error(e, None))?;
-        let guard = session
+        let mut guard = session
             .lock()
             .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
         let old = (guard.cols, guard.rows);
