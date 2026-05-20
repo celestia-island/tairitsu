@@ -36,6 +36,22 @@ fn make_nonblocking(fd: RawFd) -> io::Result<()> {
     Ok(())
 }
 
+fn set_master_raw(fd: RawFd) -> io::Result<()> {
+    let mut termios: libc::termios = unsafe { std::mem::zeroed() };
+    if unsafe { libc::tcgetattr(fd, &mut termios) } < 0 {
+        return Err(io::Error::last_os_error());
+    }
+    termios.c_iflag = 0;
+    termios.c_oflag = 0;
+    termios.c_lflag = 0;
+    termios.c_cc[libc::VMIN] = 1;
+    termios.c_cc[libc::VTIME] = 0;
+    if unsafe { libc::tcsetattr(fd, libc::TCSANOW, &termios) } < 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(())
+}
+
 fn extract_master_fd(master: &dyn MasterPty) -> RawFd {
     let fd = master.as_raw_fd().expect("master should have a raw fd");
     let duped = unsafe { libc::dup(fd) };
@@ -57,6 +73,7 @@ impl UnixPty {
         let pair = pty_system.openpty(size).map_err(to_io)?;
 
         let read_fd = extract_master_fd(&*pair.master);
+        set_master_raw(read_fd)?;
         make_nonblocking(read_fd)?;
 
         let mut cmd = CommandBuilder::new("/bin/bash");
