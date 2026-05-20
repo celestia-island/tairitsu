@@ -59,6 +59,7 @@ impl UnixPty {
         let mut cmd = CommandBuilder::new("/bin/bash");
         cmd.arg("-c");
         cmd.arg(command);
+        cmd.env("TERM", "xterm-256color");
         if let Some(dir) = cwd {
             cmd.cwd(dir);
         }
@@ -84,7 +85,9 @@ impl UnixPty {
             *guard = Some(self.master.take_writer().map_err(to_io)?);
         }
         if let Some(ref mut w) = *guard {
-            w.write(data)
+            w.write_all(data)?;
+            w.flush()?;
+            Ok(data.len())
         } else {
             Err(to_io("no writer"))
         }
