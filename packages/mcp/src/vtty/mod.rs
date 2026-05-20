@@ -123,10 +123,6 @@ impl VttySession {
         self.write(&encoded)
     }
 
-    pub fn read_and_update(&self) -> Result<usize, String> {
-        Ok(0)
-    }
-
     pub fn screenshot(&self) -> String {
         self.screen.lock().map(|s| s.get_text()).unwrap_or_default()
     }
@@ -236,6 +232,12 @@ impl VttySession {
     }
 }
 
+impl Drop for VttySession {
+    fn drop(&mut self) {
+        let _ = self.kill();
+    }
+}
+
 // ─────────────────────────────────────────────────────
 // VttyManager — owns all sessions, thread-safe
 // ─────────────────────────────────────────────────────
@@ -293,7 +295,9 @@ impl VttyManager {
             .lock()
             .map_err(|_| "session lock poisoned".to_string())?;
         let info = guard.info();
-        let _ = guard.kill();
+        if let Err(e) = guard.kill() {
+            eprintln!("[vtty] warning: kill session '{}': {}", sid, e);
+        }
         drop(guard);
         self.sessions
             .lock()
@@ -303,15 +307,14 @@ impl VttyManager {
     }
 
     pub fn list(&self) -> Vec<SessionInfo> {
-        self.sessions
-            .lock()
-            .map(|g| {
-                g.values()
-                    .filter_map(|s| s.lock().ok())
-                    .map(|s| s.info())
-                    .collect()
-            })
-            .unwrap_or_default()
+        let arcs: Vec<Arc<Mutex<VttySession>>> = match self.sessions.lock() {
+            Ok(g) => g.values().cloned().collect(),
+            Err(_) => return Vec::new(),
+        };
+        arcs.iter()
+            .filter_map(|s| s.lock().ok())
+            .map(|s| s.info())
+            .collect()
     }
 
     pub fn ping(&self, sid: &str) -> Result<SessionInfo, String> {
@@ -326,6 +329,20 @@ impl VttyManager {
 impl Default for VttyManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Drop for VttyManager {
+    fn drop(&mut self) {
+        let sessions: Vec<Arc<Mutex<VttySession>>> = match self.sessions.lock() {
+            Ok(mut g) => g.drain().map(|(_, v)| v).collect(),
+            Err(_) => return,
+        };
+        for session in sessions {
+            if let Ok(mut guard) = session.lock() {
+                let _ = guard.kill();
+            }
+        }
     }
 }
 
