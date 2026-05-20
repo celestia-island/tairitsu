@@ -32,6 +32,8 @@ pub struct Vt100Screen {
 
 impl Vt100Screen {
     pub fn new(cols: usize, rows: usize) -> Self {
+        let cols = cols.max(1);
+        let rows = rows.max(1);
         Self {
             cols,
             rows,
@@ -1557,5 +1559,138 @@ mod smoke {
         s.process(b"\x1b[1;1HOK");
         assert_eq!(s.get_line(0), "OK");
         assert_eq!(s.get_line(2), "MARK", "row 2 should be untouched by invalid CSI");
+    }
+
+    // ── Bug fix: wide char residue on overwrite ───────────
+
+    #[test]
+    fn test_overwrite_wide_char_first_half_clears_padding() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process("简体".as_bytes());
+        s.process(b"\x1b[1;1HX");
+        let line = s.get_line(0);
+        assert!(!line.contains('\u{0}'), "no null residue, got: {:?}", line.as_bytes());
+        assert!(line.starts_with("X"), "X should be at col 0, got: {}", line);
+        let rd = s.get_render_data();
+        assert!(!rd.grid[0][0].wide, "col 0 should not be wide after overwrite");
+        assert_eq!(rd.grid[0][1].ch, ' ', "col 1 should be cleared, not null padding");
+        assert!(rd.grid[0][2].wide, "col 2 should still have 体");
+    }
+
+    #[test]
+    fn test_overwrite_wide_char_padding_clears_first_half() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process(b"\x1b[1;5H");
+        s.process("简".as_bytes());
+        let rd = s.get_render_data();
+        assert!(rd.grid[0][4].wide, "col 4 should be wide char");
+        assert_eq!(rd.grid[0][5].ch, '\u{0}', "col 5 should be padding");
+        s.process(b"\x1b[1;6HY");
+        let line = s.get_line(0);
+        assert!(!line.contains('\u{0}'), "no null after overwriting padding cell");
+        assert!(line.contains("Y"), "Y should be present");
+        let rd2 = s.get_render_data();
+        assert!(!rd2.grid[0][4].wide, "col 4 should no longer be wide");
+        assert_eq!(rd2.grid[0][4].ch, ' ', "col 4 should be cleared (was wide char first half)");
+    }
+
+    #[test]
+    fn test_overwrite_wide_with_wide() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process("简".as_bytes());
+        s.process(b"\x1b[1;1H");
+        s.process("体".as_bytes());
+        let text = s.get_text();
+        assert_eq!(text, "体", "should have new wide char, not old");
+        assert!(!text.contains('\u{0}'), "no null residue");
+        assert!(!text.contains("简"), "old wide char should be gone");
+    }
+
+    // ── Bug fix: zero-size screen safety ────────────────
+
+    #[test]
+    fn test_zero_size_screen_clamps_to_1x1() {
+        let s = Vt100Screen::new(0, 0);
+        assert_eq!(s.cols, 1, "cols should clamp to 1");
+        assert_eq!(s.rows, 1, "rows should clamp to 1");
+    }
+
+    #[test]
+    fn test_zero_cols_screen_clamps() {
+        let s = Vt100Screen::new(0, 10);
+        assert_eq!(s.cols, 1);
+        assert_eq!(s.rows, 10);
+    }
+
+    #[test]
+    fn test_print_on_clamped_screen_no_panic() {
+        let mut s = Vt100Screen::new(0, 0);
+        s.process(b"Hello World");
+        let text = s.get_text();
+        assert_eq!(text, "d", "1x1 screen shows last char written (scrolls each char)");
+        assert!(!text.contains('\u{0}'), "no null in output");
+    }
+
+    // ── Additional edge cases ────────────────────────────
+
+    #[test]
+    fn test_esc8_without_prior_esc7_uses_defaults() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process(b"\x1b[3;10HMARK");
+        assert_eq!(s.cursor_row, 2);
+        assert_eq!(s.cursor_col, 13);
+        s.process(b"\x1b8");
+        assert_eq!(s.cursor_row, 0, "ESC 8 without ESC 7 should restore default (0,0)");
+        assert_eq!(s.cursor_col, 0);
+    }
+
+    #[test]
+    fn test_scroll_up_pushes_to_scrollback() {
+        let mut s = Vt100Screen::new(10, 3);
+        s.process(b"R0\r\nR1\r\nR2\r\nR3\r\nR4\r\nR5");
+        let sb = s.get_scrollback();
+        assert!(sb.contains("R0"), "R0 should be in scrollback");
+        assert!(sb.contains("R2"), "R2 should be in scrollback");
+        assert!(!sb.contains("R3"), "R3 should be on screen, not scrollback");
+        assert!(s.get_text().contains("R5"), "R5 should be on screen");
+        assert!(!s.get_scrollback().contains("R5"), "R5 should NOT be in scrollback");
+    }
+
+    #[test]
+    fn test_find_text_returns_correct_positions() {
+        let mut s = Vt100Screen::new(20, 3);
+        s.process(b"\x1b[1;1Hfoo\x1b[2;1Hbar\x1b[3;1Hbaz");
+        let hits = s.find_text("bar");
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0], (1, 0), "bar should be at row 1, col 0");
+        let hits2 = s.find_text("xxx");
+        assert!(hits2.is_empty(), "no match for xxx");
+    }
+
+    #[test]
+    fn test_multiple_sgr_codes_in_one_sequence() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"\x1b[1;38;5;196;48;2;18;18;18mX\x1b[0mY");
+        let rd = s.get_render_data();
+        assert!(rd.grid[0][0].attrs.bold, "X should be bold");
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Index(196), "X should have 256 FG");
+        assert_eq!(rd.grid[0][0].attrs.bg, ColorKind::Rgb(18, 18, 18), "X should have RGB BG");
+        assert!(!rd.grid[0][1].attrs.bold, "Y should NOT be bold after SGR 0");
+        assert_eq!(rd.grid[0][1].attrs.fg, ColorKind::Default, "Y should have default FG");
+        assert_eq!(rd.grid[0][1].attrs.bg, ColorKind::Default, "Y should have default BG");
+    }
+
+    #[test]
+    fn test_resize_expand_preserves_content() {
+        let mut s = Vt100Screen::new(10, 3);
+        s.process(b"ROW0\r\nROW1\r\nROW2");
+        s.resize(20, 5);
+        assert_eq!(s.get_line(0), "ROW0");
+        assert_eq!(s.get_line(1), "ROW1");
+        assert_eq!(s.get_line(2), "ROW2");
+        assert_eq!(s.get_line(3), "", "new row 3 should be empty");
+        assert_eq!(s.get_line(4), "", "new row 4 should be empty");
+        assert_eq!(s.cols, 20);
+        assert_eq!(s.rows, 5);
     }
 }

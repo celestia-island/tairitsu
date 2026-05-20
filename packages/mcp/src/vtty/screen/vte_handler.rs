@@ -17,6 +17,14 @@ impl vte::Perform for Vt100Screen {
             }
         }
         if self.cursor_row < self.rows && self.cursor_col < self.cols {
+            if self.grid[self.cursor_row][self.cursor_col].wide
+                && self.cursor_col + 1 < self.cols
+            {
+                self.grid[self.cursor_row][self.cursor_col + 1] = Cell::default();
+            }
+            if self.cursor_col > 0 && self.grid[self.cursor_row][self.cursor_col - 1].wide {
+                self.grid[self.cursor_row][self.cursor_col - 1] = Cell::default();
+            }
             self.grid[self.cursor_row][self.cursor_col] = Cell {
                 ch: c,
                 attrs: self.attrs,
