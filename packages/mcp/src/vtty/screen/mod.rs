@@ -84,6 +84,24 @@ impl Vt100Screen {
                 ng[r][c] = self.grid[r][c].clone();
             }
         }
+        if rows < self.rows {
+            for r in rows..self.rows {
+                self.scrollback.push(self.grid[r].clone());
+            }
+            while self.scrollback.len() > 1000 {
+                self.scrollback.remove(0);
+            }
+        }
+        for r in 0..rows {
+            for c in 0..cols {
+                if ng[r][c].wide && c + 1 >= cols {
+                    ng[r][c] = Cell::default();
+                }
+                if ng[r][c].ch == '\u{0}' && (c == 0 || !ng[r][c - 1].wide) {
+                    ng[r][c] = Cell::default();
+                }
+            }
+        }
         self.grid = ng;
         self.cols = cols;
         self.rows = rows;
@@ -160,6 +178,13 @@ impl Vt100Screen {
         }
         while self.scrollback.len() > 1000 {
             self.scrollback.remove(0);
+        }
+    }
+
+    fn scroll_down(&mut self, n: usize) {
+        for _ in 0..n {
+            self.grid.pop();
+            self.grid.insert(0, vec![Cell::default(); self.cols]);
         }
     }
 
@@ -1156,5 +1181,174 @@ mod smoke {
         assert!(text.contains("World"));
         assert!(text.contains("简体"));
         assert!(text.contains("colored text"));
+    }
+
+    // ── New: CSI G (CHA), CSI d (VPA) via crossterm ───────
+
+    #[test]
+    fn smoke_crossterm_move_to_column() {
+        let s = crossterm_render(40, 5, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveToColumn(10),
+                crossterm::style::Print("A"),
+                crossterm::cursor::MoveToColumn(20),
+                crossterm::style::Print("B"),
+                crossterm::cursor::MoveToColumn(0),
+                crossterm::style::Print("X"),
+            );
+        });
+        assert_eq!(s.get_line(0), "X         A         B");
+    }
+
+    #[test]
+    fn smoke_crossterm_move_to_row() {
+        let s = crossterm_render(40, 5, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::style::Print("R0"),
+                crossterm::cursor::MoveTo(0, 4),
+                crossterm::style::Print("R4"),
+                crossterm::cursor::MoveTo(0, 2),
+                crossterm::style::Print("R2"),
+            );
+        });
+        assert_eq!(s.get_line(0), "R0");
+        assert_eq!(s.get_line(2), "R2");
+        assert_eq!(s.get_line(4), "R4");
+    }
+
+    // ── New: CSI 1 J / CSI 1 K via crossterm ────────────
+
+    #[test]
+    fn smoke_crossterm_clear_from_cursor_up() {
+        let s = crossterm_render(40, 5, |buf| {
+            queue_cmd!(buf,
+                crossterm::cursor::MoveTo(0, 0),
+                crossterm::style::Print("line0"),
+                crossterm::cursor::MoveTo(0, 1),
+                crossterm::style::Print("line1"),
+                crossterm::cursor::MoveTo(0, 2),
+                crossterm::style::Print("line2"),
+                crossterm::cursor::MoveTo(0, 3),
+                crossterm::style::Print("line3"),
+                crossterm::cursor::MoveTo(3, 1),
+                crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorUp),
+            );
+        });
+        assert_eq!(s.get_line(0), "");
+        assert_eq!(s.get_line(1), "    1");
+        assert!(s.get_line(2).contains("line2"));
+        assert!(s.get_line(3).contains("line3"));
+    }
+
+    #[test]
+    fn smoke_crossterm_scroll_down() {
+        let s = crossterm_render(40, 5, |buf| {
+            for i in 0..5 {
+                queue_cmd!(buf,
+                    crossterm::cursor::MoveTo(0, i as u16),
+                    crossterm::style::Print(format!("row{}", i)),
+                );
+            }
+            queue_cmd!(buf,
+                crossterm::terminal::ScrollDown(2),
+            );
+        });
+        assert_eq!(s.get_line(0), "");
+        assert_eq!(s.get_line(1), "");
+        assert_eq!(s.get_line(2), "row0");
+        assert_eq!(s.get_line(3), "row1");
+    }
+
+    // ── New: wide char edge cases ────────────────────────
+
+    #[test]
+    fn test_cjk_wrap_at_right_edge() {
+        let mut s = Vt100Screen::new(6, 5);
+        s.process(b"ABCDE");
+        assert_eq!(s.cursor_col, 5);
+        s.process("简".as_bytes());
+        assert_eq!(s.cursor_col, 2, "wide char should wrap to next line col=0 then advance by 2");
+        assert_eq!(s.get_line(0), "ABCDE");
+        assert!(s.get_line(1).starts_with("简"), "line 1 should start with wide char, got: {:?}", s.get_line(1));
+    }
+
+    #[test]
+    fn test_cjk_wrap_at_right_edge_exact() {
+        let mut s = Vt100Screen::new(4, 5);
+        s.process(b"ABC");
+        s.process("简".as_bytes());
+        let text = s.get_text();
+        assert!(text.contains("ABC"), "ABC should be intact, got: {}", text);
+        assert!(text.contains("简"), "wide char should wrap, got: {}", text);
+        assert_eq!(s.get_line(0), "ABC");
+        assert!(s.get_line(1).starts_with("简"), "got: {:?}", s.get_line(1));
+    }
+
+    #[test]
+    fn test_resize_shrink_with_wide_char() {
+        let mut s = Vt100Screen::new(10, 3);
+        s.process("AB简体CD".as_bytes());
+        assert!(s.get_text().contains("简体"));
+        s.resize(3, 3);
+        let text = s.get_text();
+        assert!(!text.contains('\u{0}'), "no null chars after resize, got: {:?}", text);
+    }
+
+    // ── New: stress tests ────────────────────────────────
+
+    #[test]
+    fn test_massive_output_no_panic() {
+        let mut s = Vt100Screen::new(80, 24);
+        let mut buf = Vec::with_capacity(512 * 1024);
+        for i in 0..10000 {
+            buf.extend(format!("\x1b[{};{}Hline{:04}\r\n", (i % 24) + 1, (i % 40) + 1, i).as_bytes());
+            if i % 10 == 0 {
+                buf.extend(b"\x1b[38;2;255;0;0m");
+            }
+            if i % 20 == 0 {
+                buf.extend(b"\x1b[0m");
+            }
+        }
+        buf.extend("DONE".as_bytes());
+        s.process(&buf);
+        let text = s.get_text();
+        assert!(text.contains("DONE"), "should contain DONE after massive output");
+        assert!(!text.contains("38;2"), "no SGR leak after massive output");
+    }
+
+    #[test]
+    fn test_rapid_resize_cycles() {
+        let mut s = Vt100Screen::new(80, 24);
+        s.process(b"Hello World");
+        for cols in [10, 120, 40, 200, 80, 5, 80] {
+            for rows in [5, 50, 24, 1, 100, 24] {
+                s.resize(cols, rows);
+            }
+        }
+        s.resize(80, 24);
+        s.process(b" AFTER");
+        let text = s.get_text();
+        assert!(text.contains("AFTER"), "should still work after resize cycles");
+        assert!(!text.contains('\u{0}'), "no null chars after resize cycles");
+    }
+
+    #[test]
+    fn test_single_column_screen() {
+        let mut s = Vt100Screen::new(1, 3);
+        s.process(b"A");
+        assert_eq!(s.get_line(0), "A");
+        s.process("简".as_bytes());
+        let text = s.get_text();
+        assert!(!text.contains('\u{0}'), "no null on 1-col screen");
+    }
+
+    #[test]
+    fn test_cursor_col_overflow_after_print() {
+        let mut s = Vt100Screen::new(5, 3);
+        s.process(b"ABCDE");
+        assert!(s.cursor_col >= 5, "cursor_col should overflow past cols");
+        s.process(b"X");
+        assert_eq!(s.get_line(1), "X", "next print after overflow should wrap");
     }
 }

@@ -758,4 +758,175 @@ mod smoke_pty {
         );
         assert!(!text.contains(';'), "no SGR leak, got: {}", text);
     }
+
+    // ── Real-world PTY stress tests ─────────────────────
+
+    #[test]
+    fn smoke_pty_bash_prompt() {
+        let mut session = spawn_session("bash --norc --noprofile -i");
+        let found = wait_for_text(&session, "$", 5000);
+        assert!(found, "bash prompt should appear, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_process_self_exit() {
+        let session = spawn_session("echo done_here");
+        let found = wait_for_text(&session, "done_here", 3000);
+        assert!(found, "should see output before exit, got:\n{}", session.screenshot());
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        assert!(!session.is_alive(), "process should have exited on its own");
+    }
+
+    #[test]
+    fn smoke_pty_ctrl_c_interrupt() {
+        let session = spawn_session("sleep 60");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        assert!(session.is_alive(), "sleep should be running");
+        session.send_keys("CTRL+C").expect("send CTRL+C");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        loop {
+            if !session.is_alive() {
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        assert!(!session.is_alive(), "sleep should be killed by CTRL+C");
+    }
+
+    #[test]
+    fn smoke_pty_large_output() {
+        let mut session = spawn_session("seq 1 200");
+        let found = wait_for_text(&session, "200", 5000);
+        assert!(found, "should see last line of large output, got:\n{}", session.screenshot());
+        let text = session.screenshot();
+        assert!(text.contains("1"), "should contain first number in scrollback/screen");
+        assert!(!text.contains("38;2"), "no SGR leak");
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_binary_resilience() {
+        let mut session = spawn_session("head -c 256 /dev/urandom | xxd | head -5");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            let text = session.screenshot();
+            if !text.trim().is_empty() {
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        let text = session.screenshot();
+        assert!(!text.trim().is_empty(), "xxd should produce hex output");
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_long_line_output() {
+        let mut session = spawn_session("printf '%0.s.' {1..200}");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let mut found = false;
+        loop {
+            let text = session.screenshot();
+            if text.contains("....") {
+                found = true;
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        assert!(found, "long line should wrap, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_unicode_roundtrip() {
+        let mut session = spawn_session("cat -v");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        session.send_text("简体中文").expect("send unicode");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        let text = session.screenshot();
+        assert!(
+            text.contains("简") || text.contains("M-"),
+            "should echo unicode or high-byte representation, got:\n{}",
+            text
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_resize_during_output() {
+        let mut session = spawn_session("seq 1 100");
+        let found = wait_for_text(&session, "100", 5000);
+        assert!(found, "seq should complete, got:\n{}", session.screenshot());
+        session.resize(40, 10).expect("resize during output");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        session.resize(120, 30).expect("resize back");
+        assert_eq!(session.cols, 120);
+        assert_eq!(session.rows, 30);
+        let scrollback = session.scrollback();
+        let screen = session.screenshot();
+        let combined = format!("{}\n{}", scrollback, screen);
+        assert!(combined.contains("100"), "output should survive resize in scrollback+screen, got:\n{}", combined);
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_error_command() {
+        let mut session = spawn_session("nonexistent_command_xyz_12345");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        let mut found = false;
+        loop {
+            let text = session.screenshot();
+            if text.contains("nonexistent") || text.contains("not found") || text.contains("No such") {
+                found = true;
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        assert!(found, "error message should appear, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_multi_command_sequence() {
+        let mut session = spawn_session("bash --norc --noprofile");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+
+        session.send_text("echo CMD1").expect("send cmd1");
+        session.send_keys("ENTER").expect("enter");
+        let found1 = wait_for_text(&session, "CMD1", 3000);
+        assert!(found1, "should see CMD1 output, got:\n{}", session.screenshot());
+
+        session.send_text("echo CMD2").expect("send cmd2");
+        session.send_keys("ENTER").expect("enter");
+        let found2 = wait_for_text(&session, "CMD2", 3000);
+        assert!(found2, "should see CMD2 output, got:\n{}", session.screenshot());
+
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_scrollback_with_large_output() {
+        let mut session = spawn_session("seq 1 100");
+        let found = wait_for_text(&session, "100", 5000);
+        assert!(found, "should complete, got:\n{}", session.screenshot());
+        let scrollback = session.scrollback();
+        let screen = session.screenshot();
+        let combined = format!("{}\n{}", scrollback, screen);
+        assert!(combined.contains("1"), "scrollback+screen should contain early output");
+        assert!(combined.contains("50"), "scrollback+screen should contain mid output");
+        let _ = session.kill();
+    }
 }

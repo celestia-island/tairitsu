@@ -25,22 +25,6 @@ impl Drop for UnixPty {
     }
 }
 
-fn set_master_raw(fd: RawFd) -> io::Result<()> {
-    let mut termios: libc::termios = unsafe { std::mem::zeroed() };
-    if unsafe { libc::tcgetattr(fd, &mut termios) } < 0 {
-        return Err(io::Error::last_os_error());
-    }
-    termios.c_iflag = 0;
-    termios.c_oflag = 0;
-    termios.c_lflag = 0;
-    termios.c_cc[libc::VMIN] = 1;
-    termios.c_cc[libc::VTIME] = 0;
-    if unsafe { libc::tcsetattr(fd, libc::TCSANOW, &termios) } < 0 {
-        return Err(io::Error::last_os_error());
-    }
-    Ok(())
-}
-
 impl UnixPty {
     pub fn spawn(command: &str, cols: u16, rows: u16, cwd: Option<&str>) -> io::Result<Self> {
         let pty_system = native_pty_system();
@@ -56,8 +40,6 @@ impl UnixPty {
             .master
             .as_raw_fd()
             .ok_or_else(|| to_io("master has no raw fd"))?;
-
-        set_master_raw(master_fd)?;
 
         let read_fd = unsafe { libc::dup(master_fd) };
         if read_fd < 0 {
@@ -151,6 +133,22 @@ impl UnixPty {
                 }
             }
             if pfd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL) != 0 {
+                loop {
+                    let n = unsafe {
+                        libc::read(
+                            read_fd,
+                            buf.as_mut_ptr() as *mut libc::c_void,
+                            buf.len(),
+                        )
+                    };
+                    if n > 0 {
+                        if let Ok(mut s) = screen.lock() {
+                            s.process(&buf[..n as usize]);
+                        }
+                    } else {
+                        break;
+                    }
+                }
                 eprintln!(
                     "[vtty-reader] poll hangup/error on fd={}, revents={}",
                     read_fd, pfd.revents

@@ -8,6 +8,14 @@ impl vte::Perform for Vt100Screen {
     fn print(&mut self, c: char) {
         self.ensure_cursor_in_bounds();
         let w = self.char_width(c);
+        if w == 2 && self.cursor_col + 1 >= self.cols {
+            self.cursor_col = 0;
+            self.cursor_row += 1;
+            if self.cursor_row >= self.rows {
+                self.scroll_up(1);
+                self.cursor_row = self.rows - 1;
+            }
+        }
         if self.cursor_row < self.rows && self.cursor_col < self.cols {
             self.grid[self.cursor_row][self.cursor_col] = Cell {
                 ch: c,
@@ -121,6 +129,16 @@ impl vte::Perform for Vt100Screen {
                         }
                     }
                 }
+                1 => {
+                    for r in 0..self.cursor_row {
+                        for c in 0..self.cols {
+                            self.grid[r][c] = Cell::default();
+                        }
+                    }
+                    for c in 0..=self.cursor_col.min(self.cols.saturating_sub(1)) {
+                        self.grid[self.cursor_row][c] = Cell::default();
+                    }
+                }
                 2 => {
                     self.grid.clear();
                     self.grid
@@ -131,6 +149,11 @@ impl vte::Perform for Vt100Screen {
             'K' => match p(0) {
                 0 => {
                     for c in self.cursor_col..self.cols {
+                        self.grid[self.cursor_row][c] = Cell::default();
+                    }
+                }
+                1 => {
+                    for c in 0..=self.cursor_col.min(self.cols.saturating_sub(1)) {
                         self.grid[self.cursor_row][c] = Cell::default();
                     }
                 }
@@ -211,7 +234,14 @@ impl vte::Perform for Vt100Screen {
                 self.cursor_row = self.saved_row;
                 self.cursor_col = self.saved_col;
             }
+            'G' => {
+                self.cursor_col = (p1(0) as usize).saturating_sub(1).min(self.cols.saturating_sub(1));
+            }
+            'd' => {
+                self.cursor_row = (p1(0) as usize).saturating_sub(1).min(self.rows.saturating_sub(1));
+            }
             'S' => self.scroll_up(p1(0) as usize),
+            'T' => self.scroll_down(p1(0) as usize),
             _ => {}
         }
     }
