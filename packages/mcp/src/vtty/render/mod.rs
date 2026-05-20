@@ -1,328 +1,24 @@
+mod colors;
+mod fonts;
+
+pub use colors::{get_scheme, ColorScheme};
+#[cfg(test)]
+pub use colors::scheme_names;
+pub use fonts::Fonts;
+
 use std::io::Cursor;
 
-use ab_glyph::{point, Font, FontVec, GlyphId, PxScale, ScaleFont};
+use ab_glyph::{point, Font, GlyphId, PxScale, ScaleFont};
 use image::{ImageBuffer, Rgba};
 
-use super::screen::{Cell, ColorKind, RenderData};
+use super::graphics::{ImagePlacement, InlineImageStore};
+use super::screen::{Cell, RenderData};
+#[cfg(test)]
+use super::screen::ColorKind;
 
-// ─── Color Schemes ──────────────────────────────────────────────────────────
-
-pub struct ColorScheme {
-    #[allow(dead_code)]
-    pub name: &'static str,
-    pub fg: [u8; 3],
-    pub bg: [u8; 3],
-    pub cursor: [u8; 3],
-    pub palette: [[u8; 3]; 16],
-}
-
-pub const SOLARIZED_DARK: ColorScheme = ColorScheme {
-    name: "solarized-dark",
-    fg: [147, 161, 161],
-    bg: [0, 43, 54],
-    cursor: [220, 50, 47],
-    palette: [
-        [7, 54, 66],     // 0  Black
-        [220, 50, 47],   // 1  Red
-        [133, 153, 0],   // 2  Green
-        [181, 137, 0],   // 3  Yellow
-        [38, 139, 210],  // 4  Blue
-        [211, 54, 130],  // 5  Magenta
-        [42, 161, 152],  // 6  Cyan
-        [238, 232, 213], // 7  White
-        [0, 43, 54],     // 8  Bright Black
-        [203, 75, 22],   // 9  Bright Red
-        [88, 110, 117],  // 10 Bright Green
-        [101, 123, 131], // 11 Bright Yellow
-        [131, 148, 150], // 12 Bright Blue
-        [108, 113, 196], // 13 Bright Magenta
-        [147, 161, 161], // 14 Bright Cyan
-        [253, 246, 227], // 15 Bright White
-    ],
-};
-
-pub const SOLARIZED_LIGHT: ColorScheme = ColorScheme {
-    name: "solarized-light",
-    fg: [101, 123, 131],
-    bg: [253, 246, 227],
-    cursor: [220, 50, 47],
-    palette: [
-        [7, 54, 66],
-        [220, 50, 47],
-        [133, 153, 0],
-        [181, 137, 0],
-        [38, 139, 210],
-        [211, 54, 130],
-        [42, 161, 152],
-        [238, 232, 213],
-        [0, 43, 54],
-        [203, 75, 22],
-        [88, 110, 117],
-        [101, 123, 131],
-        [131, 148, 150],
-        [108, 113, 196],
-        [147, 161, 161],
-        [253, 246, 227],
-    ],
-};
-
-pub const ONE_HALF_DARK: ColorScheme = ColorScheme {
-    name: "one-half-dark",
-    fg: [220, 223, 228],
-    bg: [40, 44, 52],
-    cursor: [198, 120, 221],
-    palette: [
-        [40, 44, 52],
-        [224, 108, 117],
-        [152, 195, 121],
-        [229, 192, 123],
-        [97, 175, 239],
-        [198, 120, 221],
-        [86, 182, 194],
-        [220, 223, 228],
-        [92, 99, 112],
-        [224, 108, 117],
-        [152, 195, 121],
-        [229, 192, 123],
-        [97, 175, 239],
-        [198, 120, 221],
-        [86, 182, 194],
-        [220, 223, 228],
-    ],
-};
-
-pub const ONE_HALF_LIGHT: ColorScheme = ColorScheme {
-    name: "one-half-light",
-    fg: [56, 58, 66],
-    bg: [250, 250, 250],
-    cursor: [152, 52, 115],
-    palette: [
-        [56, 58, 66],
-        [228, 86, 73],
-        [80, 161, 79],
-        [204, 143, 44],
-        [0, 82, 164],
-        [152, 52, 115],
-        [19, 135, 141],
-        [250, 250, 250],
-        [92, 99, 112],
-        [228, 86, 73],
-        [80, 161, 79],
-        [204, 143, 44],
-        [0, 82, 164],
-        [152, 52, 115],
-        [19, 135, 141],
-        [220, 223, 228],
-    ],
-};
-
-pub const IBM_5153: ColorScheme = ColorScheme {
-    name: "ibm-5153",
-    fg: [51, 255, 0],
-    bg: [0, 0, 0],
-    cursor: [51, 255, 0],
-    palette: [
-        [0, 0, 0],
-        [170, 0, 0],
-        [0, 170, 0],
-        [170, 85, 0],
-        [0, 0, 170],
-        [170, 0, 170],
-        [0, 170, 170],
-        [170, 170, 170],
-        [85, 85, 85],
-        [255, 85, 85],
-        [85, 255, 85],
-        [255, 255, 85],
-        [85, 85, 255],
-        [255, 85, 255],
-        [85, 255, 255],
-        [255, 255, 255],
-    ],
-};
-
-pub fn get_scheme(name: &str) -> &'static ColorScheme {
-    match name {
-        "solarized-dark" => &SOLARIZED_DARK,
-        "solarized-light" => &SOLARIZED_LIGHT,
-        "one-half-dark" => &ONE_HALF_DARK,
-        "one-half-light" => &ONE_HALF_LIGHT,
-        "ibm-5153" => &IBM_5153,
-        _ => &SOLARIZED_DARK,
-    }
-}
-
-#[allow(dead_code)]
-pub fn scheme_names() -> &'static [&'static str] {
-    &[
-        "solarized-dark",
-        "solarized-light",
-        "one-half-dark",
-        "one-half-light",
-        "ibm-5153",
-    ]
-}
-
-// ─── Font Loading ───────────────────────────────────────────────────────────
-
-struct Fonts {
-    mono: FontVec,
-    cjk: Option<FontVec>,
-}
-
-static MONO_CANDIDATES: &[&str] = &[
-    "FiraCodeNerdFontMono-Regular.ttf",
-    "FiraCodeNerdFont-Regular.ttf",
-    "JetBrainsMonoNerdFontMono-Regular.ttf",
-    "DejaVuSansMono.ttf",
-    "NotoSansMono-Regular.ttf",
-    "LiberationMono-Regular.ttf",
-    "UbuntuMono-Regular.ttf",
-    "Consolas.ttf",
-];
-
-static CJK_CANDIDATES: &[&str] = &[
-    "NotoSansCJKsc-Regular.otf",
-    "NotoSansCJK-Regular.ttc",
-    "NotoSansSC-Regular.otf",
-    "NotoSansSC-Regular.ttf",
-    "WenQuanYiMicroHei.ttf",
-    "wqy-microhei.ttc",
-    "SimHei.ttf",
-    "simhei.ttf",
-    "SourceHanSansSC-Regular.otf",
-    "PingFang.ttc",
-    "HiraginoSansGB.ttc",
-    "DroidSansFallbackFull.ttf",
-];
-
-#[cfg(unix)]
-fn font_search_dirs() -> Vec<std::path::PathBuf> {
-    let home = std::env::var("HOME").unwrap_or_default();
-    let mut dirs = vec![
-        std::path::PathBuf::from("/usr/share/fonts"),
-        std::path::PathBuf::from("/usr/local/share/fonts"),
-    ];
-    if !home.is_empty() {
-        dirs.push(std::path::PathBuf::from(format!(
-            "{}/.local/share/fonts",
-            home
-        )));
-        dirs.push(std::path::PathBuf::from(format!("{}/.fonts", home)));
-    }
-    dirs.push(std::path::PathBuf::from("/System/Library/Fonts"));
-    dirs.push(std::path::PathBuf::from("/Library/Fonts"));
-    dirs
-}
-
-#[cfg(windows)]
-fn font_search_dirs() -> Vec<std::path::PathBuf> {
-    let windir = std::env::var("WINDIR").unwrap_or_else(|_| "C:\\Windows".into());
-    vec![std::path::PathBuf::from(windir).join("Fonts")]
-}
-
-fn find_font_file(candidates: &[&str]) -> Option<std::path::PathBuf> {
-    let dirs = font_search_dirs();
-    for dir in &dirs {
-        if !dir.exists() {
-            continue;
-        }
-        if let Ok(entries) = std::fs::read_dir(dir) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if path.is_file() {
-                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                        if candidates.contains(&name) {
-                            return Some(path);
-                        }
-                    }
-                } else if path.is_dir() {
-                    if let Ok(sub) = std::fs::read_dir(&path) {
-                        for se in sub.flatten() {
-                            let sp = se.path();
-                            if sp.is_file() {
-                                if let Some(name) = sp.file_name().and_then(|n| n.to_str()) {
-                                    if candidates.contains(&name) {
-                                        return Some(sp);
-                                    }
-                                }
-                            }
-                            if sp.is_dir() {
-                                if let Ok(l3) = std::fs::read_dir(&sp) {
-                                    for l3e in l3.flatten() {
-                                        let l3p = l3e.path();
-                                        if l3p.is_file() {
-                                            if let Some(name) =
-                                                l3p.file_name().and_then(|n| n.to_str())
-                                            {
-                                                if candidates.contains(&name) {
-                                                    return Some(l3p);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    None
-}
-
-fn load_font_from(path: &std::path::Path) -> Result<FontVec, String> {
-    let data = std::fs::read(path).map_err(|e| format!("read {}: {}", path.display(), e))?;
-    FontVec::try_from_vec(data).map_err(|e| format!("parse font {}: {}", path.display(), e))
-}
-
-impl Fonts {
-    fn load() -> Result<Self, String> {
-        let mono_path = find_font_file(MONO_CANDIDATES).ok_or_else(|| {
-            format!(
-                "No monospace font found. Searched for: {}",
-                MONO_CANDIDATES.join(", ")
-            )
-        })?;
-        let mono = load_font_from(&mono_path)?;
-        let cjk = find_font_file(CJK_CANDIDATES).and_then(|p| load_font_from(&p).ok());
-        Ok(Self { mono, cjk })
-    }
-}
-
-// ─── 256-Color Lookup ───────────────────────────────────────────────────────
-
-fn index_to_rgb(index: u8, scheme: &ColorScheme) -> [u8; 3] {
-    match index {
-        0..=15 => scheme.palette[index as usize],
-        16..=231 => {
-            let i = (index - 16) as usize;
-            let cube = [0u8, 95, 135, 175, 215, 255];
-            [cube[i / 36], cube[(i % 36) / 6], cube[i % 6]]
-        }
-        232..=255 => {
-            let v = 8 + (index - 232) * 10;
-            [v, v, v]
-        }
-    }
-}
-
-fn resolve_color(color: ColorKind, scheme: &ColorScheme, is_fg: bool) -> [u8; 3] {
-    match color {
-        ColorKind::Default => {
-            if is_fg {
-                scheme.fg
-            } else {
-                scheme.bg
-            }
-        }
-        ColorKind::Index(i) => index_to_rgb(i, scheme),
-        ColorKind::Rgb(r, g, b) => [r, g, b],
-    }
-}
-
-// ─── Rendering ──────────────────────────────────────────────────────────────
+use colors::resolve_color;
+#[cfg(test)]
+use colors::index_to_rgb;
 
 type ImgBuf = ImageBuffer<Rgba<u8>, Vec<u8>>;
 
@@ -369,8 +65,8 @@ pub fn render_terminal(data: &RenderData, theme: &str) -> Result<Vec<u8>, String
         scheme,
     };
 
-    let mut placements_below: Vec<(i32, &super::graphics::ImagePlacement)> = Vec::new();
-    let mut placements_above: Vec<(i32, &super::graphics::ImagePlacement)> = Vec::new();
+    let mut placements_below: Vec<(i32, &ImagePlacement)> = Vec::new();
+    let mut placements_above: Vec<(i32, &ImagePlacement)> = Vec::new();
 
     for p in data.image_store.placements() {
         if p.z_index < 0 {
@@ -544,8 +240,8 @@ fn render_cursor(img: &mut ImgBuf, cursor_row: usize, cursor_col: usize, ctx: &R
 
 fn composite_placement(
     img: &mut ImgBuf,
-    placement: &super::graphics::ImagePlacement,
-    store: &super::graphics::InlineImageStore,
+    placement: &ImagePlacement,
+    store: &InlineImageStore,
     ctx: &RenderCtx,
 ) {
     let source = match store.get_image(placement.image_id) {
@@ -622,7 +318,6 @@ mod tests {
         let png = render_terminal(&data, "solarized-dark").unwrap();
         assert!(!png.is_empty());
         assert!(png.len() > 100);
-        // PNG magic bytes
         assert_eq!(&png[0..4], &[0x89, 0x50, 0x4E, 0x47]);
     }
 
@@ -651,13 +346,10 @@ mod tests {
         let s = get_scheme("solarized-dark");
         assert_eq!(index_to_rgb(0, s), [7, 54, 66]);
         assert_eq!(index_to_rgb(1, s), [220, 50, 47]);
-        // 256-color cube: index 196 = r=5,g=0,b=0 -> [255, 0, 0]
         let c = index_to_rgb(196, s);
         assert_eq!(c, [255, 0, 0]);
-        // Grayscale: index 232 = 8
         let g = index_to_rgb(232, s);
         assert_eq!(g, [8, 8, 8]);
-        // Grayscale: index 255 = 8 + 23*10 = 238
         let g2 = index_to_rgb(255, s);
         assert_eq!(g2, [238, 238, 238]);
     }
