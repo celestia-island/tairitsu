@@ -1,28 +1,44 @@
-# Tairitsu Documentation Hub (English)
+# مركز توثيق Tairitsu (العربية)
 
-> Generic WASM Component Runtime Engine
+> إطار عمل متكامل يعتمد على نموذج مكونات WASM
 
-This is the complete English documentation baseline for Tairitsu.
+## البدء
 
-## Navigation
+| المستند | الوصف |
+|:--|:--|
+| [دليل المبتدئين](getting-started.md) | من الصفر إلى تطبيق متكامل يعمل. يغطي `tairitsu new`، أول مكوّن، تشغيل الخادم + المتصفح، والنشر. |
+| [البدء السريع](quick-start.md) | الإعداد والتحقق في 5 دقائق. |
+| [خريطة مساحة العمل](workspace-map.md) | جولة في هيكل المستودع الموحد. |
+| [البناء والاختبار والإصدار](build-test-release.md) | كيفية استخدام وصفات `just` لسير عمل التطوير. |
 
-### Guides
-- [Quick Start](./quick-start.md)
-- [Workspace Map](./workspace-map.md)
-- [Build, Test, and Release](./build-test-release.md)
-- [Migration from web-sys to WIT bindings](./migration.md)
-- [Troubleshooting](./troubleshooting.md)
-- [Glossary](./glossary.md)
+## الانتقال
 
-### System
-- [System Overview](../system/overview.md)
-- [Runtime and Container Model](../system/runtime.md)
-- [Browser Glue Architecture](../system/browser-glue.md)
-- [W3C WebIDL to WIT Pipeline](../system/wit-pipeline.md)
-- [Dual Web Backends](../system/web-backends.md)
-- [Versioning Strategy](../system/versioning.md)
+| المستند | الوصف |
+|:--|:--|
+| [من web-sys إلى روابط WIT](migration.md) | الانتقال من `wasm-bindgen`/`web-sys` إلى روابط WIT لنموذج المكونات. |
 
-### Components
-- [Layered Package Overview](../components/index.md)
-- [Workspace Package List](../components/packages.md)
+## مرجع
 
+| المستند | الوصف |
+|:--|:--|
+| [المسرد](glossary.md) | المصطلحات الأساسية: WIT، نموذج المكونات، VNode، Signal، Platform، Container، إلخ. |
+| [استكشاف الأخطاء](troubleshooting.md) | المشاكل الشائعة والحلول. |
+
+## البنية
+
+| المستند | الوصف |
+|:--|:--|
+| [نظرة عامة على النظام](../system/overview.md) | بنية من أربع طبقات: Interface → Runtime → Platform → Tooling |
+| [وقت التشغيل ونموذج الحاوية](../system/runtime.md) | دورة حياة Image/Container/Registry، روابط WIT، الاستدعاء الديناميكي |
+| [VDOM والعرض](../system/vdom.md) | مقارنة DOM الافتراضي، التصحيح، نظام الأحداث، المجدول التفاعلي |
+| [خط أنابيب W3C WebIDL → WIT](../system/wit-pipeline.md) | كيف تصبح 50+ مواصفة WebID واجهات WIT |
+| [الخلفيات المزدوجة للويب](../system/web-backends.md) | استراتيجية WitPlatform مقابل WebPlatform |
+| [بنية Browser Glue](../system/browser-glue.md) | طبقة TypeScript التي تربط WIT ABI بـ DOM |
+| [استراتيجية الإصدارات](../system/versioning.md) | الإصدارات الدلالية في مساحة العمل متعددة الحزم |
+
+## مرجع الحزم
+
+| المستند | الوصف |
+|:--|:--|
+| [نظرة عامة على الحزم الطبقية](../components/index.md) | التسلسل الهرمي للحزم من أربع طبقات مع رسم الاعتماديات |
+| [قائمة حزم مساحة العمل](../components/packages.md) | وصف تفصيلي لكل حزمة |

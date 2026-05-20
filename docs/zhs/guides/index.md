@@ -1,43 +1,52 @@
 # Tairitsu 文档中心（简体中文）
 
-> 泛型 WASM Component Runtime 引擎
+> 基于 WASM Component Model 的全栈框架
 
-本目录是 Tairitsu 的简体中文主文档，覆盖从入门到架构、从开发到发布的完整链路。
+## 入门
 
-## 文档导航
+| 文档 | 说明 |
+|:--|:--|
+| [入门教程](getting-started.md) | 从零开始构建全栈应用。涵盖 `tairitsu new`、第一个组件、服务端+浏览器运行、部署。 |
+| [快速开始](quick-start.md) | 5 分钟安装与验证。 |
+| [工作区导览](workspace-map.md) | Monorepo 结构一览。 |
+| [构建、测试与发布](build-test-release.md) | 如何使用 `just` 命令进行开发工作流。 |
 
-### Guides
+## 迁移
 
-- [快速开始](./quick-start.md)
-- [工作区地图](./workspace-map.md)
-- [构建、测试与发布](./build-test-release.md)
-- [从 web-sys 迁移到 WIT 绑定](./migration.md)
-- [从 Dioxus 迁移到 Tairitsu](./migration/dioxus-to-tairitsu.md)
-- [故障排除指南](./troubleshooting.md)
-- [术语对照表](./glossary.md)
+| 文档 | 说明 |
+|:--|:--|
+| [从 web-sys 迁移到 WIT 绑定](migration.md) | 从 `wasm-bindgen`/`web-sys` 迁移到 Component Model WIT 绑定。 |
+| [从 Dioxus 迁移到 Tairitsu](migration/dioxus-to-tairitsu.md) | API 对比：组件、Hooks、事件、路由、状态管理、条件渲染。 |
 
-### System
+## 参考
 
-- [系统总览](../system/overview.md)
-- [运行时与容器模型](../system/runtime.md)
-- [W3C WebIDL → WIT 生成流水线](../system/wit-pipeline.md)
-- [Web 平台双后端（web / wit-bindings）](../system/web-backends.md)
-- [Browser Glue 架构](../system/browser-glue.md)
-- [版本与兼容性策略](../system/versioning.md)
+| 文档 | 说明 |
+|:--|:--|
+| [术语对照表](glossary.md) | 核心术语：WIT、Component Model、VNode、Signal、Platform、Container 等 |
+| [故障排除](troubleshooting.md) | 常见问题与解决方案。 |
 
-### Components
+## 架构
 
-- [包分层与职责总览](../components/index.md)
-- [Workspace 包清单](../components/packages.md)
+| 文档 | 说明 |
+|:--|:--|
+| [系统总览](../system/overview.md) | 四层架构：Interface → Runtime → Platform → Tooling |
+| [运行时与容器模型](../system/runtime.md) | Image/Container/Registry 生命周期、WIT 绑定、动态调用 |
+| [VDOM 与渲染](../system/vdom.md) | 虚拟 DOM 差分、修补、事件系统、响应式调度器 |
+| [W3C WebIDL → WIT 流水线](../system/wit-pipeline.md) | 50+ WebIDL 规格如何转换为 WIT 接口 |
+| [Web 平台双后端](../system/web-backends.md) | WitPlatform 与 WebPlatform 策略 |
+| [Browser Glue 架构](../system/browser-glue.md) | 桥接 WIT ABI 与 DOM 的 TypeScript 层 |
+| [版本与兼容性策略](../system/versioning.md) | 多 Crate 工作区的语义化版本管理 |
 
-## 目标读者
+## 包参考
 
-- 想快速跑通示例与测试的新贡献者
-- 需要定制 WIT 接口并托管 WASM 组件的工程师
-- 计划将浏览器接口从 `wasm-bindgen` 迁移到 WIT Component Model 的团队
+| 文档 | 说明 |
+|:--|:--|
+| [包分层与职责总览](../components/index.md) | 四层 Crate 层级与依赖图 |
+| [Workspace 包清单](../components/packages.md) | 各 Crate 的详细说明 |
 
-## 推荐阅读路径
+## 高级
 
-1. 新用户：快速开始 → 系统总览 → 运行时与容器模型
-2. 浏览器方向：迁移说明 → Web 平台双后端 → WIT 流水线
-3. 维护者：工作区地图 → 包清单 → 版本策略
+| 文档 | 说明 |
+|:--|:--|
+| [调试代理](../skills/debug-agent.md) | 使用 MCP 服务器进行 AI 辅助调试 |
+| [企业支持](../enterprise/support.md) | 商业支持选项 |
