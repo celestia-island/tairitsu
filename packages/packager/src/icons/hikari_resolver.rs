@@ -53,6 +53,16 @@ pub fn resolve(
         }
     }
 
+    if entries.is_empty() && !icon_names.is_empty() {
+        return Err(crate::TairitsuPackagerError::IconFetchError(
+            if offline {
+                "No cached icons found. Run without --offline to download.".to_string()
+            } else {
+                "Failed to resolve any icons.".to_string()
+            },
+        ));
+    }
+
     crate::log_info!("Resolved {}/{} hikari icons", entries.len(), icon_names.len());
     write_impl_icons(target_dir, &entries)
 }

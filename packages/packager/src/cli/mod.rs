@@ -120,6 +120,12 @@ enum Commands {
         routes: Vec<String>,
     },
 
+    /// Pre-check and resolve build dependencies (icons, WIT, etc.)
+    Check {
+        #[command(subcommand)]
+        action: CheckCommands,
+    },
+
     /// Package application for distribution
     Package {
         /// Target platform (windows, macos, linux, all)
@@ -260,6 +266,30 @@ enum Commands {
 #[derive(Subcommand)]
 enum McpCommands {}
 
+#[derive(Clone, Subcommand)]
+enum CheckCommands {
+    /// Resolve hikari-icons data (download SVGs, generate impl_icons! code)
+    Icons {
+        /// Use only cached SVGs, skip network downloads
+        #[arg(long)]
+        offline: bool,
+    },
+
+    /// Fetch and verify WIT packages
+    Wit {
+        /// Use only cached packages, skip network downloads
+        #[arg(long)]
+        offline: bool,
+    },
+
+    /// Run all checks (icons, WIT, etc.)
+    All {
+        /// Use only cached resources, skip network downloads
+        #[arg(long)]
+        offline: bool,
+    },
+}
+
 #[derive(Subcommand)]
 enum WitCommands {
     /// Fetch WIT packages from the registry and store in target/tairitsu-wit
@@ -364,6 +394,58 @@ enum ResourcesCommands {
     },
 }
 
+fn run_check(action: CheckCommands, manifest_path: &Option<PathBuf>, verbose: u8) -> crate::Result<()> {
+    let manifest_path = resolve_manifest_dir(manifest_path);
+
+    match action {
+        CheckCommands::Icons { offline } => {
+            crate::log_progress!("Resolving hikari-icons...");
+            let path = crate::wasm::resolve_hikari_icons(&manifest_path, offline, verbose > 0)?;
+            crate::log_ok!("hikari-icons resolved → {}", path.display());
+        }
+        CheckCommands::Wit { offline: _ } => {
+            crate::log_progress!("Checking WIT packages...");
+            crate::log_info!("(WIT check not yet implemented)");
+        }
+        CheckCommands::All { offline } => {
+            let mut ok = true;
+
+            crate::log_progress!("[1/2] Resolving hikari-icons...");
+            match crate::wasm::resolve_hikari_icons(&manifest_path, offline, verbose > 0) {
+                Ok(path) => crate::log_ok!("[1/2] hikari-icons → {}", path.display()),
+                Err(e) => {
+                    crate::log_fail!("[1/2] hikari-icons: {}", e);
+                    ok = false;
+                }
+            }
+
+            crate::log_progress!("[2/2] Checking WIT packages...");
+            crate::log_info!("[2/2] (WIT check not yet implemented)");
+
+            if !ok {
+                return Err(crate::TairitsuPackagerError::DoctorError(
+                    "Some checks failed".to_string(),
+                ));
+            }
+            crate::log_ok!("All checks passed.");
+        }
+    }
+    Ok(())
+}
+
+fn resolve_manifest_dir(path: &Option<PathBuf>) -> PathBuf {
+    match path {
+        Some(p) => {
+            if p.is_dir() {
+                p.clone()
+            } else {
+                p.parent().map(|d| d.to_path_buf()).unwrap_or_else(|| p.clone())
+            }
+        }
+        None => std::path::PathBuf::from("."),
+    }
+}
+
 /// Handle synchronous daemon operations (status, shutdown, parent fork).
 /// Returns `Some(result)` if the operation was handled synchronously (process should exit).
 /// Returns `None` if we should proceed to async/tokio mode (daemon child or foreground).
@@ -449,6 +531,14 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
     if cli.daemon && cli.dry_run {
         let _ = daemon::print_daemon_status();
         return SYNC_OK;
+    }
+
+    // `check` is fully synchronous — no tokio needed
+    match cli.command {
+        Some(Commands::Check { action }) => {
+            return Some(run_check(action, &cli.manifest_path, cli.verbose));
+        }
+        _ => {}
     }
 
     // Not a sync daemon operation — proceed to async mode
@@ -1221,6 +1311,9 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 );
                 std::process::exit(1);
             }
+        }
+        Some(Commands::Check { .. }) => {
+            crate::log_info!("Check completed in synchronous phase.");
         }
         None => {
             if cli.status || cli.shutdown || cli.daemon {

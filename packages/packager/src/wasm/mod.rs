@@ -34,7 +34,7 @@ fn find_workspace_root(manifest_dir: &std::path::Path) -> crate::Result<std::pat
     Ok(workspace_root)
 }
 
-fn resolve_hikari_icons(manifest_dir: &std::path::Path, verbose: bool) -> crate::Result<std::path::PathBuf> {
+pub fn resolve_hikari_icons(manifest_dir: &std::path::Path, offline: bool, verbose: bool) -> crate::Result<std::path::PathBuf> {
     let output = std::process::Command::new("cargo")
         .args([
             "metadata",
@@ -84,7 +84,7 @@ fn resolve_hikari_icons(manifest_dir: &std::path::Path, verbose: bool) -> crate:
         eprintln!("  hikari-icons: resolving from {}", icons_txt.display());
     }
 
-    crate::icons::hikari_resolver::resolve(&icons_txt, &target_dir, false)
+    crate::icons::hikari_resolver::resolve(&icons_txt, &target_dir, offline)
 }
 
 /// 构建 wasm32-wasip2 格式的 WASM Component，
@@ -135,7 +135,7 @@ pub fn build_component(
         let t = Instant::now();
 
         // Resolve hikari-icons before compiling
-        let icons_rs = resolve_hikari_icons(&config.manifest_dir, verbose).ok();
+        let icons_rs = resolve_hikari_icons(&config.manifest_dir, false, verbose).ok();
 
         let wasm_path = build_wasm_component(config, release, pb.clone(), verbose, icons_rs.as_deref())?;
         crate::log_ok!("{:<20} {:.1?}", b.step_compile, t.elapsed());
