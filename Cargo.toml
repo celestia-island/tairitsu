@@ -53,7 +53,7 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
-version = "0.5.6"
+version = "0.5.7"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"

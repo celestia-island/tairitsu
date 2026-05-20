@@ -24,6 +24,7 @@
 
 mod fetcher;
 mod generator;
+pub mod hikari_resolver;
 mod metadata;
 
 use std::path::PathBuf;
