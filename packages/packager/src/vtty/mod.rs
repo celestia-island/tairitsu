@@ -210,7 +210,7 @@ impl VttySession {
             .lock()
             .map_err(|_| "PTY lock poisoned".to_string())?;
         if let Some(mut pty) = guard.take() {
-            pty.kill().map_err(|e| format!("PTY kill failed: {}", e))?;
+            pty.kill_and_reap().map_err(|e| format!("PTY kill failed: {}", e))?;
         }
         Ok(())
     }

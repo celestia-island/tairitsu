@@ -89,7 +89,7 @@ impl VttySession {
             let running = self.reader_running.clone();
             let handle = std::thread::Builder::new()
                 .name(format!("vtty-reader-{}", self.id))
-                .stack_size(32 * 1024)
+                .stack_size(128 * 1024)
                 .spawn(move || {
                     pty_unix::UnixPty::reader_loop(read_fd, screen, running);
                 })
@@ -124,65 +124,7 @@ impl VttySession {
     }
 
     pub fn read_and_update(&self) -> Result<usize, String> {
-        #[cfg(unix)]
-        {
-            let guard = self
-                .pty
-                .lock()
-                .map_err(|_| "PTY lock poisoned".to_string())?;
-            if let Some(ref pty) = *guard {
-                let mut buf = [0u8; 4096];
-                let mut total = 0;
-                loop {
-                    match pty.read_nonblocking(&mut buf) {
-                        Ok(0) => break,
-                        Ok(n) => {
-                            self.screen
-                                .lock()
-                                .map_err(|_| "screen lock poisoned")?
-                                .process(&buf[..n]);
-                            total += n;
-                        }
-                        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
-                        Err(e) => return Err(format!("PTY read error: {}", e)),
-                    }
-                }
-                Ok(total)
-            } else {
-                Ok(0)
-            }
-        }
-        #[cfg(windows)]
-        {
-            let mut buf = vec![0u8; 65536];
-            let mut total = 0;
-            loop {
-                let n = {
-                    let guard = self
-                        .pty
-                        .lock()
-                        .map_err(|_| "PTY lock poisoned".to_string())?;
-                    if let Some(ref pty) = *guard {
-                        match pty.read_nonblocking(&mut buf) {
-                            Ok(0) => break,
-                            Ok(n) => n,
-                            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
-                            Err(e) => return Err(format!("PTY read error: {}", e)),
-                        }
-                    } else {
-                        break;
-                    }
-                };
-                if n > 0 {
-                    self.screen
-                        .lock()
-                        .map_err(|_| "screen lock poisoned")?
-                        .process(&buf[..n]);
-                    total += n;
-                }
-            }
-            Ok(total)
-        }
+        Ok(0)
     }
 
     pub fn screenshot(&self) -> String {
@@ -276,7 +218,7 @@ impl VttySession {
             .lock()
             .map_err(|_| "PTY lock poisoned".to_string())?;
         if let Some(mut pty) = guard.take() {
-            pty.kill().map_err(|e| format!("PTY kill failed: {}", e))?;
+            pty.kill_and_reap().map_err(|e| format!("PTY kill failed: {}", e))?;
         }
         Ok(())
     }
@@ -377,8 +319,6 @@ impl VttyManager {
         let guard = session
             .lock()
             .map_err(|_| "session lock poisoned".to_string())?;
-        // Trigger a read to refresh screen state
-        let _ = guard.read_and_update();
         Ok(guard.info())
     }
 }
