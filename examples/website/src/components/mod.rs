@@ -16,20 +16,8 @@ thread_local! {
 /// Render an MDI SVG icon as a VNode using VElement builder.
 pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
     let name = icon.to_string();
-    let data = get(&name).unwrap_or_else(|| {
-        static FALLBACK: hikari_icons::IconData = hikari_icons::IconData {
-            view_box: Some("0 0 24 24"),
-            width: None,
-            height: None,
-            path: Some("M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"),
-            paths: &[],
-            elements: &[],
-        };
-        &FALLBACK
-    });
-    let (view_box, path_d) = (
-        data.view_box.unwrap_or("0 0 24 24"),
-        data.path.unwrap_or_default(),
+    let path_d = get(&name).unwrap_or(
+        "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
     );
     let full_class = if class.is_empty() {
         "ts-icon".to_string()
@@ -37,8 +25,8 @@ pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
         format!("ts-icon {}", class)
     };
     let svg_html = format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{}"><path fill="currentColor" d="{}"/></svg>"#,
-        view_box, path_d
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="{}"/></svg>"#,
+        path_d
     );
     VNode::Element(
         el("div")
@@ -51,11 +39,9 @@ pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
 fn icon_el(icon: MdiIcon) -> VNode {
     let icon_name = icon.to_string();
     let svg_str = get(&icon_name)
-        .map(|data| {
+        .map(|path_d| {
             format!(
-                r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{}" width="14" height="14"><path fill="currentColor" d="{}"/></svg>"#,
-                data.view_box.unwrap_or("0 0 24 24"),
-                data.path.unwrap_or_default()
+                r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="{path_d}"/></svg>"#
             )
         })
         .unwrap_or_else(|| {
@@ -257,7 +243,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
             },
             NavSubcategory {
                 label_key: "sidebar_debug_api",
-                icon: MdiIcon::Code,
+                icon: MdiIcon::CodeBraces,
                 href: "/guides/debug-api",
                 items: &[],
             },
@@ -309,7 +295,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
                     },
                     NavItem {
                         label_key: "sidebar_reactive_hooks",
-                        icon: MdiIcon::Code,
+                        icon: MdiIcon::CodeBraces,
                         href: "/packages",
                     },
                 ],
@@ -353,7 +339,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
                     },
                     NavItem {
                         label_key: "sidebar_browser_glue",
-                        icon: MdiIcon::Code,
+                        icon: MdiIcon::CodeBraces,
                         href: "/system/runtime",
                     },
                     NavItem {
