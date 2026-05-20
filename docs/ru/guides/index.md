@@ -1,27 +1,44 @@
-# Tairitsu Documentation Hub (English)
+# Центр документации Tairitsu (Русский)
 
-> Generic WASM Component Runtime Engine
+> Полнофункциональный фреймворк на базе модели компонентов WASM
 
-This is the complete English documentation baseline for Tairitsu.
+## Начало работы
 
-## Navigation
+| Документ | Описание |
+|:--|:--|
+| [Руководство для начинающих](getting-started.md) | От нуля до работающего полнофункционального приложения. Охватывает `tairitsu new`, первый компонент, серверный и клиентский запуск, развёртывание. |
+| [Быстрый старт](quick-start.md) | Установка и проверка за 5 минут. |
+| [Карта workspace](workspace-map.md) | Обзор структуры монорепозитория. |
+| [Сборка, тестирование и релиз](build-test-release.md) | Как использовать рецепты `just` для рабочего процесса разработки. |
 
-### Guides
-- [Quick Start](./quick-start.md)
-- [Workspace Map](./workspace-map.md)
-- [Build, Test, and Release](./build-test-release.md)
-- [Migration from web-sys to WIT bindings](./migration.md)
-- [Troubleshooting](./troubleshooting.md)
-- [Glossary](./glossary.md)
+## Миграция
 
-### System
-- [System Overview](../system/overview.md)
-- [Runtime and Container Model](../system/runtime.md)
-- [W3C WebIDL to WIT Pipeline](../system/wit-pipeline.md)
-- [Dual Web Backends](../system/web-backends.md)
-- [Versioning Strategy](../system/versioning.md)
+| Документ | Описание |
+|:--|:--|
+| [С web-sys на WIT-привязки](migration.md) | Переход с `wasm-bindgen`/`web-sys` на WIT-привязки Component Model. |
 
-### Components
-- [Layered Package Overview](../components/index.md)
-- [Workspace Package List](../components/packages.md)
+## Справочник
 
+| Документ | Описание |
+|:--|:--|
+| [Глоссарий](glossary.md) | Ключевые термины: WIT, Component Model, VNode, Signal, Platform, Container и др. |
+| [Устранение неполадок](troubleshooting.md) | Распространённые проблемы и решения. |
+
+## Архитектура
+
+| Документ | Описание |
+|:--|:--|
+| [Обзор системы](../system/overview.md) | Четырёхуровневая архитектура: Interface → Runtime → Platform → Tooling |
+| [Среда выполнения и модель контейнера](../system/runtime.md) | Жизненный цикл Image/Container/Registry, WIT-привязки, динамический вызов |
+| [VDOM и рендеринг](../system/vdom.md) | Сравнение виртуального DOM, патчинг, система событий, реактивный планировщик |
+| [Конвейер W3C WebIDL → WIT](../system/wit-pipeline.md) | Как 50+ спецификаций WebIDL становятся интерфейсами WIT |
+| [Двойные веб-бэкенды](../system/web-backends.md) | Стратегия WitPlatform vs WebPlatform |
+| [Архитектура Browser Glue](../system/browser-glue.md) | Слой TypeScript, связывающий WIT ABI с DOM |
+| [Стратегия версионирования](../system/versioning.md) | Семантическое версионирование в мульт crate workspace |
+
+## Справочник пакетов
+
+| Документ | Описание |
+|:--|:--|
+| [Обзор пакетов по уровням](../components/index.md) | Четырёхуровневая иерархия Crate с графом зависимостей |
+| [Список пакетов workspace](../components/packages.md) | Подробное описание каждого Crate |
