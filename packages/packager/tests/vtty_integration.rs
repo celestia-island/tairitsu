@@ -24,9 +24,9 @@ fn test_pty_spawn_and_kill() {
     let alive = pty.is_alive();
     eprintln!("is_alive after 300ms: {}", alive);
 
-    match pty.kill() {
-        Ok(()) => eprintln!("kill succeeded"),
-        Err(e) => eprintln!("kill error (may have already exited): {}", e),
+    match pty.kill_and_reap() {
+        Ok(()) => eprintln!("kill_and_reap succeeded"),
+        Err(e) => eprintln!("kill_and_reap error (may have already exited): {}", e),
     }
     assert!(!pty.is_alive(), "PTY should be dead after kill attempt");
 }
@@ -78,7 +78,7 @@ fn test_pty_write_and_read() {
         output
     );
 
-    pty.kill().ok();
+    pty.kill_and_reap().ok();
 }
 
 #[cfg(windows)]
@@ -111,7 +111,7 @@ fn test_pty_write_and_read() {
         output
     );
 
-    pty.kill().ok();
+    pty.kill_and_reap().ok();
 }
 
 #[cfg(unix)]
@@ -121,7 +121,7 @@ fn test_pty_resize() {
         .expect("spawn failed");
 
     pty.resize(120, 40).expect("resize failed");
-    pty.kill().ok();
+    pty.kill_and_reap().ok();
 }
 
 #[cfg(windows)]
@@ -143,7 +143,7 @@ fn test_pty_pid() {
     assert!(pid > 0, "PID should be positive");
     assert!(pty.is_alive(), "PTY should be alive after spawn");
 
-    pty.kill().ok();
+    pty.kill_and_reap().ok();
 }
 
 #[cfg(windows)]

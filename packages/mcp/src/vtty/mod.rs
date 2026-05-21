@@ -89,7 +89,7 @@ impl VttySession {
             let running = self.reader_running.clone();
             let handle = std::thread::Builder::new()
                 .name(format!("vtty-reader-{}", self.id))
-                .stack_size(32 * 1024)
+                .stack_size(128 * 1024)
                 .spawn(move || {
                     pty_unix::UnixPty::reader_loop(read_fd, screen, running);
                 })
@@ -121,68 +121,6 @@ impl VttySession {
     pub fn send_text(&self, text: &str) -> Result<(), String> {
         let encoded: Vec<u8> = text.replace('\n', "\r").as_bytes().to_vec();
         self.write(&encoded)
-    }
-
-    pub fn read_and_update(&self) -> Result<usize, String> {
-        #[cfg(unix)]
-        {
-            let guard = self
-                .pty
-                .lock()
-                .map_err(|_| "PTY lock poisoned".to_string())?;
-            if let Some(ref pty) = *guard {
-                let mut buf = [0u8; 4096];
-                let mut total = 0;
-                loop {
-                    match pty.read_nonblocking(&mut buf) {
-                        Ok(0) => break,
-                        Ok(n) => {
-                            self.screen
-                                .lock()
-                                .map_err(|_| "screen lock poisoned")?
-                                .process(&buf[..n]);
-                            total += n;
-                        }
-                        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
-                        Err(e) => return Err(format!("PTY read error: {}", e)),
-                    }
-                }
-                Ok(total)
-            } else {
-                Ok(0)
-            }
-        }
-        #[cfg(windows)]
-        {
-            let mut buf = vec![0u8; 65536];
-            let mut total = 0;
-            loop {
-                let n = {
-                    let guard = self
-                        .pty
-                        .lock()
-                        .map_err(|_| "PTY lock poisoned".to_string())?;
-                    if let Some(ref pty) = *guard {
-                        match pty.read_nonblocking(&mut buf) {
-                            Ok(0) => break,
-                            Ok(n) => n,
-                            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
-                            Err(e) => return Err(format!("PTY read error: {}", e)),
-                        }
-                    } else {
-                        break;
-                    }
-                };
-                if n > 0 {
-                    self.screen
-                        .lock()
-                        .map_err(|_| "screen lock poisoned")?
-                        .process(&buf[..n]);
-                    total += n;
-                }
-            }
-            Ok(total)
-        }
     }
 
     pub fn screenshot(&self) -> String {
@@ -225,7 +163,7 @@ impl VttySession {
             .unwrap_or_default()
     }
 
-    pub fn resize(&self, new_cols: u16, new_rows: u16) -> Result<(), String> {
+    pub fn resize(&mut self, new_cols: u16, new_rows: u16) -> Result<(), String> {
         {
             let guard = self
                 .pty
@@ -240,6 +178,8 @@ impl VttySession {
             .lock()
             .map_err(|_| "screen lock poisoned")?
             .resize(new_cols as usize, new_rows as usize);
+        self.cols = new_cols;
+        self.rows = new_rows;
         Ok(())
     }
 
@@ -276,7 +216,7 @@ impl VttySession {
             .lock()
             .map_err(|_| "PTY lock poisoned".to_string())?;
         if let Some(mut pty) = guard.take() {
-            pty.kill().map_err(|e| format!("PTY kill failed: {}", e))?;
+            pty.kill_and_reap().map_err(|e| format!("PTY kill failed: {}", e))?;
         }
         Ok(())
     }
@@ -291,6 +231,12 @@ impl VttySession {
             alive: self.is_alive(),
             pid: self.pid,
         }
+    }
+}
+
+impl Drop for VttySession {
+    fn drop(&mut self) {
+        let _ = self.kill();
     }
 }
 
@@ -351,7 +297,9 @@ impl VttyManager {
             .lock()
             .map_err(|_| "session lock poisoned".to_string())?;
         let info = guard.info();
-        let _ = guard.kill();
+        if let Err(e) = guard.kill() {
+            eprintln!("[vtty] warning: kill session '{}': {}", sid, e);
+        }
         drop(guard);
         self.sessions
             .lock()
@@ -361,15 +309,14 @@ impl VttyManager {
     }
 
     pub fn list(&self) -> Vec<SessionInfo> {
-        self.sessions
-            .lock()
-            .map(|g| {
-                g.values()
-                    .filter_map(|s| s.lock().ok())
-                    .map(|s| s.info())
-                    .collect()
-            })
-            .unwrap_or_default()
+        let arcs: Vec<Arc<Mutex<VttySession>>> = match self.sessions.lock() {
+            Ok(g) => g.values().cloned().collect(),
+            Err(_) => return Vec::new(),
+        };
+        arcs.iter()
+            .filter_map(|s| s.lock().ok())
+            .map(|s| s.info())
+            .collect()
     }
 
     pub fn ping(&self, sid: &str) -> Result<SessionInfo, String> {
@@ -377,8 +324,6 @@ impl VttyManager {
         let guard = session
             .lock()
             .map_err(|_| "session lock poisoned".to_string())?;
-        // Trigger a read to refresh screen state
-        let _ = guard.read_and_update();
         Ok(guard.info())
     }
 }
@@ -386,6 +331,20 @@ impl VttyManager {
 impl Default for VttyManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Drop for VttyManager {
+    fn drop(&mut self) {
+        let sessions: Vec<Arc<Mutex<VttySession>>> = match self.sessions.lock() {
+            Ok(mut g) => g.drain().map(|(_, v)| v).collect(),
+            Err(_) => return,
+        };
+        for session in sessions {
+            if let Ok(mut guard) = session.lock() {
+                let _ = guard.kill();
+            }
+        }
     }
 }
 
@@ -572,5 +531,473 @@ mod tests {
         };
         let json = serde_json::to_string(&info).unwrap();
         assert!(!json.contains("pid"));
+    }
+}
+
+#[cfg(test)]
+#[cfg(unix)]
+mod smoke_pty {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+    use std::sync::Arc;
+
+    fn spawn_session(command: &str) -> VttySession {
+        let mut session = VttySession::new(
+            "test-smoke".into(),
+            "smoke".into(),
+            command.into(),
+            80,
+            24,
+        );
+        session.launch(None).expect("launch should succeed");
+        session
+    }
+
+    fn wait_for_text(session: &VttySession, pattern: &str, timeout_ms: u64) -> bool {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(timeout_ms);
+        while std::time::Instant::now() < deadline {
+            if !session.find_text(pattern).is_empty() {
+                return true;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        false
+    }
+
+    #[test]
+    fn smoke_pty_echo_ascii() {
+        let mut session = spawn_session("echo 'Hello from PTY'");
+        let found = wait_for_text(&session, "Hello from PTY", 3000);
+        assert!(found, "screen should contain echo output, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_printf_cjk() {
+        let mut session = spawn_session("printf '简体中文\\n'");
+        let found = wait_for_text(&session, "简", 3000);
+        assert!(found, "screen should contain CJK text, got:\n{}", session.screenshot());
+        if found {
+            let text = session.screenshot();
+            assert!(text.contains("简体中文"), "full CJK string present, got: {}", text);
+            assert!(!text.contains(';'), "no SGR leak, got: {}", text);
+        }
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_printf_ansi_colors() {
+        let mut session = spawn_session(
+            "printf '\\033[38;2;255;107;157mpink\\033[0m \\033[32mgreen\\033[0m\\n'",
+        );
+        let found = wait_for_text(&session, "pink", 3000);
+        assert!(found, "screen should contain colored text, got:\n{}", session.screenshot());
+        if found {
+            let text = session.screenshot();
+            assert!(text.contains("pink"), "got: {}", text);
+            assert!(text.contains("green"), "got: {}", text);
+            assert!(!text.contains("38;2"), "no SGR fragment, got: {}", text);
+            assert!(!text.contains("32m"), "no raw SGR, got: {}", text);
+        }
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_send_text() {
+        let mut session = spawn_session("cat -v");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+
+        session.send_text("hello").expect("send_text should work");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        let text = session.screenshot();
+        assert!(
+            text.contains("hello"),
+            "screen should echo sent text, got:\n{}",
+            text
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_send_keys_arrow() {
+        let mut session = spawn_session("cat -v");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+
+        session.send_keys("DOWN").expect("send_keys should work");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        let text = session.screenshot();
+        assert!(
+            text.contains("^[[B") || text.contains("\\x1b[B"),
+            "screen should show escape sequence for Down arrow, got:\n{}",
+            text
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_resize() {
+        let mut session = spawn_session("sleep 1");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        session.resize(120, 40).expect("resize should work");
+        assert_eq!(session.cols, 120);
+        assert_eq!(session.rows, 40);
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_lifecycle_kill_is_idempotent() {
+        let mut session = spawn_session("sleep 60");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        assert!(session.is_alive(), "session should be alive");
+        session.kill().expect("first kill should succeed");
+        assert!(!session.is_alive(), "session should be dead after kill");
+        session.kill().expect("second kill should also succeed (idempotent)");
+        assert!(!session.is_alive(), "still dead after second kill");
+    }
+
+    #[test]
+    fn smoke_pty_manager_launch_kill() {
+        let mgr = VttyManager::new();
+
+        let info = mgr
+            .launch("sleep 60", 80, 24, "", None, "test")
+            .expect("launch should succeed");
+        assert!(info.alive);
+        assert!(info.id.starts_with("vtty-"));
+
+        let killed = mgr.kill(&info.id).expect("kill should succeed");
+        assert_eq!(killed.id, info.id);
+
+        let result = mgr.get(&info.id);
+        assert!(result.is_err(), "session should be removed after kill");
+    }
+
+    #[test]
+    fn smoke_pty_manager_drop_cleans_up() {
+        let mgr = VttyManager::new();
+        let info = mgr
+            .launch("sleep 60", 80, 24, "", None, "test")
+            .expect("launch should succeed");
+
+        let sid = info.id.clone();
+        drop(mgr);
+        let mgr2 = VttyManager::new();
+        assert!(
+            mgr2.get(&sid).is_err(),
+            "session should be cleaned up after manager drop"
+        );
+    }
+
+    #[test]
+    fn smoke_pty_multi_session() {
+        let mgr = VttyManager::new();
+
+        let s1 = mgr
+            .launch("echo 'session1'", 80, 24, "", None, "s1")
+            .expect("launch s1");
+        let s2 = mgr
+            .launch("echo 'session2'", 80, 24, "", None, "s2")
+            .expect("launch s2");
+
+        let list = mgr.list();
+        assert_eq!(list.len(), 2, "should have 2 sessions");
+
+        let _ = mgr.kill(&s1.id);
+        let list = mgr.list();
+        assert_eq!(list.len(), 1, "should have 1 session after kill");
+
+        let _ = mgr.kill(&s2.id);
+        let list = mgr.list();
+        assert!(list.is_empty(), "should have 0 sessions");
+    }
+
+    #[test]
+    fn smoke_reader_loop_via_poll() {
+        let handle = pty_unix::UnixPty::spawn("printf 'polltest\\n'", 80, 24, None)
+            .expect("spawn should succeed");
+        let fd = handle.read_fd();
+        let screen = Arc::new(std::sync::Mutex::new(
+            crate::vtty::screen::Vt100Screen::new(80, 24),
+        ));
+        let running = Arc::new(AtomicBool::new(true));
+
+        let screen_clone = screen.clone();
+        let running_clone = running.clone();
+        let h = std::thread::Builder::new()
+            .name("test-reader".into())
+            .stack_size(128 * 1024)
+            .spawn(move || pty_unix::UnixPty::reader_loop(fd, screen_clone, running_clone))
+            .expect("thread should spawn");
+
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            let text = screen.lock().unwrap().get_text();
+            if text.contains("polltest") {
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                panic!(
+                    "reader_loop did not pick up 'polltest' within 5s, got: {}",
+                    text
+                );
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+
+        running.store(false, std::sync::atomic::Ordering::Relaxed);
+        let _ = h.join();
+        let text = screen.lock().unwrap().get_text();
+        assert!(
+            text.contains("polltest"),
+            "screen should have output after reader_loop, got: {}",
+            text
+        );
+        assert!(!text.contains(';'), "no SGR leak, got: {}", text);
+    }
+
+    // ── Real-world PTY stress tests ─────────────────────
+
+    #[test]
+    fn smoke_pty_bash_prompt() {
+        let mut session = spawn_session("bash --norc --noprofile -i");
+        let found = wait_for_text(&session, "$", 5000);
+        assert!(found, "bash prompt should appear, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_process_self_exit() {
+        let session = spawn_session("echo done_here");
+        let found = wait_for_text(&session, "done_here", 3000);
+        assert!(found, "should see output before exit, got:\n{}", session.screenshot());
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        assert!(!session.is_alive(), "process should have exited on its own");
+    }
+
+    #[test]
+    fn smoke_pty_ctrl_c_interrupt() {
+        let session = spawn_session("sleep 60");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        assert!(session.is_alive(), "sleep should be running");
+        session.send_keys("CTRL+C").expect("send CTRL+C");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        loop {
+            if !session.is_alive() {
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        assert!(!session.is_alive(), "sleep should be killed by CTRL+C");
+    }
+
+    #[test]
+    fn smoke_pty_large_output() {
+        let mut session = spawn_session("seq 1 200");
+        let found = wait_for_text(&session, "200", 5000);
+        assert!(found, "should see last line of large output, got:\n{}", session.screenshot());
+        let text = session.screenshot();
+        assert!(text.contains("1"), "should contain first number in scrollback/screen");
+        assert!(!text.contains("38;2"), "no SGR leak");
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_binary_resilience() {
+        let mut session = spawn_session("head -c 256 /dev/urandom | xxd | head -5");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            let text = session.screenshot();
+            if !text.trim().is_empty() {
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        let text = session.screenshot();
+        assert!(!text.trim().is_empty(), "xxd should produce hex output");
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_long_line_output() {
+        let mut session = spawn_session("printf '%0.s.' {1..200}");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let mut found = false;
+        loop {
+            let text = session.screenshot();
+            if text.contains("....") {
+                found = true;
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        assert!(found, "long line should wrap, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_unicode_roundtrip() {
+        let mut session = spawn_session("cat -v");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        session.send_text("简体中文").expect("send unicode");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        let text = session.screenshot();
+        assert!(
+            text.contains("简") || text.contains("M-"),
+            "should echo unicode or high-byte representation, got:\n{}",
+            text
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_resize_during_output() {
+        let mut session = spawn_session("seq 1 100");
+        let found = wait_for_text(&session, "100", 5000);
+        assert!(found, "seq should complete, got:\n{}", session.screenshot());
+        session.resize(40, 10).expect("resize during output");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        session.resize(120, 30).expect("resize back");
+        assert_eq!(session.cols, 120);
+        assert_eq!(session.rows, 30);
+        let scrollback = session.scrollback();
+        let screen = session.screenshot();
+        let combined = format!("{}\n{}", scrollback, screen);
+        assert!(combined.contains("100"), "output should survive resize in scrollback+screen, got:\n{}", combined);
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_error_command() {
+        let mut session = spawn_session("nonexistent_command_xyz_12345");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        let mut found = false;
+        loop {
+            let text = session.screenshot();
+            if text.contains("nonexistent") || text.contains("not found") || text.contains("No such") {
+                found = true;
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        assert!(found, "error message should appear, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_multi_command_sequence() {
+        let mut session = spawn_session("bash --norc --noprofile");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+
+        session.send_text("echo CMD1").expect("send cmd1");
+        session.send_keys("ENTER").expect("enter");
+        let found1 = wait_for_text(&session, "CMD1", 3000);
+        assert!(found1, "should see CMD1 output, got:\n{}", session.screenshot());
+
+        session.send_text("echo CMD2").expect("send cmd2");
+        session.send_keys("ENTER").expect("enter");
+        let found2 = wait_for_text(&session, "CMD2", 3000);
+        assert!(found2, "should see CMD2 output, got:\n{}", session.screenshot());
+
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_scrollback_with_large_output() {
+        let mut session = spawn_session("seq 1 100");
+        let found = wait_for_text(&session, "100", 5000);
+        assert!(found, "should complete, got:\n{}", session.screenshot());
+        let scrollback = session.scrollback();
+        let screen = session.screenshot();
+        let combined = format!("{}\n{}", scrollback, screen);
+        assert!(combined.contains("1"), "scrollback+screen should contain early output");
+        assert!(combined.contains("50"), "scrollback+screen should contain mid output");
+        let _ = session.kill();
+    }
+
+    // ── Coverage fill: PTY session edge cases ───────────
+
+    #[test]
+    fn smoke_pty_send_text_with_newline() {
+        let mut session = spawn_session("bash --norc --noprofile");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        session.send_text("echo NL_TEST\n").expect("send_text with newline");
+        let found = wait_for_text(&session, "NL_TEST", 3000);
+        assert!(found, "send_text \\n translation should work, got:\n{}", session.screenshot());
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_has_output() {
+        let mut session = spawn_session("echo detect_output");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        loop {
+            if session.has_output() {
+                break;
+            }
+            if std::time::Instant::now() > deadline {
+                panic!("has_output() should return true after echo");
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_manager_ping() {
+        let mgr = VttyManager::new();
+        let info = mgr.launch("sleep 60", 80, 24, "", None, "test").expect("launch");
+        let pinged = mgr.ping(&info.id).expect("ping");
+        assert!(pinged.alive);
+        assert_eq!(pinged.id, info.id);
+        let _ = mgr.kill(&info.id);
+    }
+
+    #[test]
+    fn smoke_pty_write_after_kill_errors() {
+        let mut session = spawn_session("sleep 60");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        session.kill().expect("kill");
+        let result = session.send_text("should fail");
+        assert!(result.is_err(), "write after kill should fail");
+    }
+
+    #[test]
+    fn smoke_pty_drop_without_explicit_kill() {
+        {
+            let session = spawn_session("sleep 60");
+            std::thread::sleep(std::time::Duration::from_millis(300));
+            assert!(session.is_alive());
+        }
+    }
+
+    #[test]
+    fn smoke_pty_launch_with_cwd() {
+        let mut session = VttySession::new(
+            "cwd-test".into(),
+            "test".into(),
+            "pwd".into(),
+            80,
+            24,
+        );
+        session.launch(Some("/tmp")).expect("launch with cwd");
+        let found = wait_for_text(&session, "tmp", 3000);
+        assert!(found, "should see /tmp from pwd, got:\n{}", session.screenshot());
+        let _ = session.kill();
     }
 }

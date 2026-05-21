@@ -535,12 +535,6 @@ impl Server {
                 .map_err(|e| McpError::internal_error(e, None))?;
         }
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        {
-            let guard = session
-                .lock()
-                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-            let _ = guard.read_and_update();
-        }
         Ok(Self::tool_result(
             json!({"session_id": args.session_id, "keys": args.keys, "sent": true}).to_string(),
         ))
@@ -566,12 +560,6 @@ impl Server {
                 .map_err(|e| McpError::internal_error(e, None))?;
         }
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        {
-            let guard = session
-                .lock()
-                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-            let _ = guard.read_and_update();
-        }
         Ok(Self::tool_result(
             json!({"session_id": args.session_id, "length": args.text.len(), "sent": true})
                 .to_string(),
@@ -689,7 +677,6 @@ impl Server {
                     if !guard.is_alive() {
                         false
                     } else {
-                        let _ = guard.read_and_update();
                         let f = !guard.find_text(&pattern).is_empty();
                         if f {
                             found = true;
@@ -715,7 +702,6 @@ impl Server {
                     if !guard.is_alive() {
                         false
                     } else {
-                        let _ = guard.read_and_update();
                         guard.is_alive()
                     }
                 };
@@ -728,7 +714,6 @@ impl Server {
                 let guard = session
                     .lock()
                     .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                let _ = guard.read_and_update();
                 alive = guard.is_alive();
             }
             Ok(Self::tool_result(
@@ -804,7 +789,7 @@ impl Server {
             .vtty
             .get(&args.session_id)
             .map_err(|e| McpError::internal_error(e, None))?;
-        let guard = session
+        let mut guard = session
             .lock()
             .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
         let old = (guard.cols, guard.rows);

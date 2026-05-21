@@ -1,4 +1,4 @@
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 use std::os::unix::io::RawFd;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -19,27 +19,10 @@ pub struct UnixPty {
 
 impl Drop for UnixPty {
     fn drop(&mut self) {
-        unsafe { libc::close(self.read_fd) };
+        if self.read_fd >= 0 {
+            unsafe { libc::close(self.read_fd) };
+        }
     }
-}
-
-fn make_nonblocking(fd: RawFd) -> io::Result<()> {
-    let flags = unsafe { libc::fcntl(fd, libc::F_GETFL, 0) };
-    if flags < 0 {
-        return Err(io::Error::last_os_error());
-    }
-    if unsafe { libc::fcntl(fd, libc::F_SETFL, flags | libc::O_NONBLOCK) } < 0 {
-        return Err(io::Error::last_os_error());
-    }
-    Ok(())
-}
-
-fn extract_master_fd(master: &dyn MasterPty) -> RawFd {
-    use std::os::unix::io::IntoRawFd;
-    let reader: Box<dyn Read + Send> = master.try_clone_reader().expect("clone PTY reader");
-    let raw: *mut dyn Read = Box::into_raw(reader);
-    let file: Box<std::fs::File> = unsafe { Box::from_raw(raw as *mut std::fs::File) };
-    file.into_raw_fd()
 }
 
 impl UnixPty {
@@ -53,8 +36,15 @@ impl UnixPty {
         };
         let pair = pty_system.openpty(size).map_err(to_io)?;
 
-        let read_fd = extract_master_fd(&*pair.master);
-        make_nonblocking(read_fd)?;
+        let master_fd = pair
+            .master
+            .as_raw_fd()
+            .ok_or_else(|| to_io("master has no raw fd"))?;
+
+        let read_fd = unsafe { libc::dup(master_fd) };
+        if read_fd < 0 {
+            return Err(io::Error::last_os_error());
+        }
 
         let mut cmd = CommandBuilder::new("/bin/bash");
         cmd.arg("-c");
@@ -93,49 +83,80 @@ impl UnixPty {
         }
     }
 
-    pub fn read_nonblocking(&self, buf: &mut [u8]) -> io::Result<usize> {
-        let n = unsafe {
-            libc::read(
-                self.read_fd,
-                buf.as_mut_ptr() as *mut libc::c_void,
-                buf.len(),
-            )
-        };
-        if n >= 0 {
-            Ok(n as usize)
-        } else {
-            let err = io::Error::last_os_error();
-            if err.kind() == io::ErrorKind::WouldBlock {
-                Ok(0)
-            } else {
-                Err(err)
-            }
-        }
-    }
-
     pub fn reader_loop(
         read_fd: RawFd,
         screen: Arc<std::sync::Mutex<super::screen::Vt100Screen>>,
         running: Arc<AtomicBool>,
     ) {
+        eprintln!("[vtty-reader] started, fd={}", read_fd);
         let mut buf = vec![0u8; 65536];
+        let mut pfd = libc::pollfd {
+            fd: read_fd,
+            events: libc::POLLIN,
+            revents: 0,
+        };
         while running.load(Ordering::Relaxed) {
-            let n =
-                unsafe { libc::read(read_fd, buf.as_mut_ptr() as *mut libc::c_void, buf.len()) };
-            if n > 0 {
-                if let Ok(mut s) = screen.lock() {
-                    s.process(&buf[..n as usize]);
-                }
-            } else if n == 0 {
-                break;
-            } else {
+            pfd.revents = 0;
+            let ready = unsafe { libc::poll(&mut pfd, 1, 100) };
+            if ready < 0 {
                 let err = io::Error::last_os_error();
-                if err.kind() != io::ErrorKind::WouldBlock {
+                if err.kind() == io::ErrorKind::Interrupted {
+                    continue;
+                }
+                eprintln!("[vtty-reader] poll error on fd={}: {}", read_fd, err);
+                break;
+            }
+            if ready > 0 && (pfd.revents & libc::POLLIN) != 0 {
+                let n = unsafe {
+                    libc::read(
+                        read_fd,
+                        buf.as_mut_ptr() as *mut libc::c_void,
+                        buf.len(),
+                    )
+                };
+                if n > 0 {
+                    if let Ok(mut s) = screen.lock() {
+                        s.process(&buf[..n as usize]);
+                    }
+                } else if n == 0 {
+                    eprintln!("[vtty-reader] EOF on fd={}", read_fd);
                     break;
+                } else {
+                    let err = io::Error::last_os_error();
+                    if err.kind() == io::ErrorKind::Interrupted {
+                        continue;
+                    }
+                    if err.kind() != io::ErrorKind::WouldBlock {
+                        eprintln!("[vtty-reader] read error on fd={}: {}", read_fd, err);
+                        break;
+                    }
                 }
             }
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            if pfd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL) != 0 {
+                loop {
+                    let n = unsafe {
+                        libc::read(
+                            read_fd,
+                            buf.as_mut_ptr() as *mut libc::c_void,
+                            buf.len(),
+                        )
+                    };
+                    if n > 0 {
+                        if let Ok(mut s) = screen.lock() {
+                            s.process(&buf[..n as usize]);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                eprintln!(
+                    "[vtty-reader] poll hangup/error on fd={}, revents={}",
+                    read_fd, pfd.revents
+                );
+                break;
+            }
         }
+        eprintln!("[vtty-reader] exiting, fd={}", read_fd);
     }
 
     pub fn read_fd(&self) -> RawFd {
@@ -165,8 +186,29 @@ impl UnixPty {
         }
     }
 
-    pub fn kill(&mut self) -> io::Result<()> {
-        self.killer.kill()
+    pub fn kill_and_reap(&mut self) -> io::Result<()> {
+        self.killer.kill()?;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            let mut guard = match self.child.lock() {
+                Ok(g) => g,
+                Err(_) => break,
+            };
+            match guard.try_wait() {
+                Ok(Some(_)) => break,
+                Ok(None) => {
+                    if std::time::Instant::now() > deadline {
+                        let _ = self.killer.kill();
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        let _ = guard.try_wait();
+                        break;
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
+                Err(_) => break,
+            }
+        }
+        Ok(())
     }
 
     pub fn pid(&self) -> u32 {
