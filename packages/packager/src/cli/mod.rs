@@ -336,35 +336,24 @@ enum WitCommands {
 
 #[derive(Subcommand)]
 enum IconsCommands {
-    /// Fetch icons from the configured source and cache them
+    /// Fetch icon sets and cache them locally
     Fetch {
-        /// Icon source (mdi, lucide, custom)
-        #[arg(short, long, default_value = "mdi")]
-        source: String,
+        /// Icon set name(s) to fetch (comma-separated, default: all configured)
+        #[arg(short, long)]
+        sets: Option<String>,
 
-        /// Force refresh (ignore cache)
+        /// Force refresh (re-download even if cached)
         #[arg(short, long)]
         force: bool,
+
+        /// Offline mode: skip network fetch, use cache only
+        #[arg(long)]
+        offline: bool,
     },
 
-    /// Build icon module from cached icons
-    Build {
-        /// Output file path (overrides Cargo.toml setting)
-        #[arg(short, long)]
-        output: Option<PathBuf>,
-
-        /// Icon names to include (comma-separated)
-        #[arg(short, long)]
-        icons: Option<String>,
-
-        /// Tags to include (comma-separated)
-        #[arg(short, long)]
-        tags: Option<String>,
-    },
-
-    /// List available icons (optionally filter by source/tag)
+    /// List available icons from cache (optionally filter by source/tag)
     List {
-        /// Icon source (mdi, lucide)
+        /// Icon source (mdi, lucide, etc.)
         #[arg(short = 'S', long, default_value = "mdi")]
         source: String,
 
@@ -375,6 +364,10 @@ enum IconsCommands {
         /// Search query
         #[arg(short = 'q', long)]
         search: Option<String>,
+
+        /// Offline mode
+        #[arg(long)]
+        offline: bool,
     },
 
     /// Resolve icons from consumer Cargo.toml metadata (fetch + generate .dat)
@@ -907,110 +900,98 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             } else {
                 manifest_path.parent().map(|p| p.to_path_buf()).unwrap_or(manifest_path)
             };
+            let cache_root = if let Ok(root) = std::env::var("HIKARI_ICONS_CACHE") {
+                PathBuf::from(root).join("icons")
+            } else {
+                let target_dir = find_workspace_target_dir(&manifest_path);
+                target_dir.join("tairitsu-cache").join("icons")
+            };
             match action {
-            IconsCommands::Fetch { source, force } => {
-                crate::log_info!("Fetching icons from {}...", source);
-                let target_dir = std::path::PathBuf::from("target");
-                let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
-                let cache_dir = target_dir
-                    .join(crate::icons::ICON_CACHE_DIR)
-                    .join(icon_source.to_string());
+            IconsCommands::Fetch { sets, force, offline } => {
+                let meta = crate::icons::read_consumer_metadata(&manifest_path)?;
+                let set_names: Vec<String> = sets
+                    .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
+                    .unwrap_or_else(|| meta.sets.clone());
 
-                if force {
-                    crate::icons::force_fetch_icons(&icon_source, &cache_dir)?;
-                } else {
-                    crate::icons::fetch_icons(&icon_source, &cache_dir)?;
+                if set_names.is_empty() {
+                    crate::log_info!("No icon sets configured. Use --sets or configure [package.metadata.hikari.icons]");
+                    return Ok(());
                 }
-                crate::log_info!("Icons cached successfully.");
-            }
-            IconsCommands::Build {
-                output,
-                icons,
-                tags,
-            } => {
-                crate::log_info!("Building icon module...");
 
-                // Load Cargo.toml to get configuration
-                let cargo_toml_path = if manifest_path.is_dir() {
-                    manifest_path.join("Cargo.toml")
-                } else {
-                    manifest_path.clone()
-                };
+                let cache = crate::icons::IconCache::new(cache_root, offline);
 
-                let content = std::fs::read_to_string(&cargo_toml_path)?;
-                let manifest: toml::Value = toml::from_str(&content)?;
-                let icons_config = crate::icons::parse_icons_config(&manifest)?;
+                for set_name in &set_names {
+                    let source = match crate::icons::sources::find_source(set_name) {
+                        Some(s) => s,
+                        None => {
+                            crate::log_fail!("Unknown icon set: '{}'", set_name);
+                            continue;
+                        }
+                    };
+                    let version = "latest".to_string();
 
-                let output_path = output.unwrap_or_else(|| {
-                    icons_config
-                        .output
-                        .as_ref()
-                        .map(std::path::PathBuf::from)
-                        .unwrap_or_else(|| std::path::PathBuf::from("src/generated/icons.rs"))
-                });
+                    if !force && cache.has_cache(set_name, &version) {
+                        crate::log_ok!("{} already cached", set_name);
+                        continue;
+                    }
 
-                let icon_names: Vec<String> = icons
-                    .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
-                    .unwrap_or_else(|| icons_config.icons.clone());
-
-                let tag_names: Vec<String> = tags
-                    .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
-                    .unwrap_or_else(|| icons_config.tags.clone());
-
-                let icon_config = crate::icons::IconConfig {
-                    source: icons_config
-                        .source
-                        .as_ref()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or_default(),
-                    names: icon_names,
-                    tags: tag_names,
-                    styles: vec![crate::icons::IconStyle::Filled],
-                    output: output_path,
-                };
-
-                let target_dir = std::path::PathBuf::from("target");
-                let result = crate::icons::build_icons(&icon_config, &target_dir)?;
-
-                crate::log_info!(
-                    "Generated {} icons to {}",
-                    result.icons_count,
-                    result.output_path.display()
-                );
+                    let mut fake_meta = crate::icons::HikariIconsMetadata::default();
+                    fake_meta.sets = vec![set_name.clone()];
+                    let result = crate::icons::resolve(&fake_meta, &cache)?;
+                    if result.sets.is_empty() {
+                        crate::log_fail!("{} — failed to fetch", set_name);
+                    } else {
+                        crate::log_ok!("{} — {} icons cached", set_name, result.sets[0].icons.len());
+                    }
+                }
             }
             IconsCommands::List {
                 source,
                 tag,
                 search,
+                offline,
             } => {
-                crate::log_info!("Listing icons from {}...", source);
+                let source_def = match crate::icons::sources::find_source(&source) {
+                    Some(s) => s,
+                    None => {
+                        crate::log_fail!("Unknown icon set: '{}'. Use 'tairitsu icons sets' to list available.", source);
+                        return Ok(());
+                    }
+                };
 
-                let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
-                let target_dir = std::path::PathBuf::from("target");
-                let cache_dir = target_dir
-                    .join(crate::icons::ICON_CACHE_DIR)
-                    .join(icon_source.to_string());
+                let cache = crate::icons::IconCache::new(cache_root, offline);
+                let manifest = cache.load_manifest(&source, "latest");
 
-                let metadata = crate::icons::fetch_icons(&icon_source, &cache_dir)?;
-
-                let icons = if let Some(query) = search {
-                    metadata.search(&query)
-                } else if let Some(tag_filter) = tag {
-                    metadata.filter_icons(&[], &[tag_filter])
-                } else {
-                    metadata.filter_icons(&[], &[])
+                let icons: Vec<(String, String, Vec<String>)> = match manifest {
+                    Some(m) => {
+                        let mut icons: Vec<(String, String, Vec<String>)> = m.icons.iter()
+                            .map(|(n, d)| (n.clone(), d.tags.join(", "), d.tags.clone()))
+                            .collect();
+                        if let Some(ref query) = search {
+                            let q = query.to_lowercase();
+                            icons.retain(|(name, _, tags)| {
+                                name.to_lowercase().contains(&q)
+                                    || tags.iter().any(|t| t.to_lowercase().contains(&q))
+                            });
+                        } else if let Some(ref tag_filter) = tag {
+                            icons.retain(|(_, _, tags)| {
+                                tags.iter().any(|t| t.eq_ignore_ascii_case(tag_filter))
+                            });
+                        }
+                        icons.sort_by(|a, b| a.0.cmp(&b.0));
+                        icons
+                    }
+                    None => {
+                        crate::log_fail!("No cache for '{}'. Run 'tairitsu icons fetch' first.", source);
+                        return Ok(());
+                    }
                 };
 
                 crate::log_ok!("Found {} icons:", icons.len());
-                for icon in icons.iter().take(100) {
-                    let tags_str = if icon.tags.is_empty() {
-                        String::new()
-                    } else {
-                        format!(" [{}]", icon.tags.join(", "))
-                    };
-                    crate::log_info!("  {}{}", icon.name, tags_str);
+                for (name, tags_str, _) in icons.iter().take(100) {
+                    let tags = if tags_str.is_empty() { String::new() } else { format!(" [{}]", tags_str) };
+                    crate::log_info!("  {}{}", name, tags);
                 }
-
                 if icons.len() > 100 {
                     crate::log_info!("  ... and {} more", icons.len() - 100);
                 }
@@ -1030,12 +1011,6 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
 
                 crate::log_info!("Configured sets: {:?}", meta.sets);
 
-                let cache_root = if let Ok(root) = std::env::var("HIKARI_ICONS_CACHE") {
-                    PathBuf::from(root).join("icons")
-                } else {
-                    let target_dir = find_workspace_target_dir(&manifest_path);
-                    target_dir.join("tairitsu-cache").join("icons")
-                };
                 let cache = crate::icons::IconCache::new(cache_root, offline);
                 let result = crate::icons::resolve(&meta, &cache)?;
 
