@@ -337,6 +337,19 @@
 
             fixSvgNamespaces();
 
+            // Clear the initial #app loading styles — WASM replaces its content
+            // but leaves the inline style (display:flex, align-items:center, etc.)
+            const appEl = document.getElementById('app');
+            if (appEl) appEl.removeAttribute('style');
+
+            // Sync data-theme attribute so CSS custom properties resolve
+            // correctly for dark mode (spa.css uses [data-theme=dark]).
+            const tsApp = document.getElementById('ts-app');
+            if (tsApp && tsApp.classList.contains('hi-layout-dark')) {
+                document.documentElement.setAttribute('data-theme', 'tairitsu');
+                document.body.classList.add('hi-layout-dark');
+            }
+
             if (typeof navigate === 'function') {
                 navigate();
             } else {
