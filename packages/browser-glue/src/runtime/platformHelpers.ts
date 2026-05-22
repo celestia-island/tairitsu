@@ -18,6 +18,12 @@ if (!globalThis.__tairitsuAnimState) {
   };
 }
 
+if (!globalThis.__tairitsuWsState) {
+  globalThis.__tairitsuWsState = {
+    nextCallbackId: 1n,
+  };
+}
+
 export const platformHelpers_exports = {
   innerWidth() {
     return window.innerWidth;
@@ -637,5 +643,45 @@ export const platformHelpers_exports = {
         globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]?.on_idb_error?.(callbackId, e.message);
       }
     }
+  },
+
+  connectWebSocket(url: string) {
+    const ws = new WebSocket(url);
+    const handle = globalThis.__storeElement(ws);
+
+    const s = globalThis.__tairitsuWsState;
+    const openCbId = s.nextCallbackId++;
+    const msgCbId = s.nextCallbackId++;
+    const closeCbId = s.nextCallbackId++;
+    const errCbId = s.nextCallbackId++;
+
+    if (!globalThis.__tairitsuWsCallbacks) {
+      globalThis.__tairitsuWsCallbacks = new Map();
+    }
+    globalThis.__tairitsuWsCallbacks.set(handle, { openCbId, msgCbId, closeCbId, errCbId });
+
+    ws.onopen = () => {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]) {
+        globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]?.on_web_socket_open?.(openCbId);
+      }
+    };
+    ws.onmessage = (ev: MessageEvent) => {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]) {
+        const data = typeof ev.data === "string" ? ev.data : JSON.stringify(ev.data);
+        globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]?.on_web_socket_message?.(msgCbId, data);
+      }
+    };
+    ws.onclose = (ev: CloseEvent) => {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]) {
+        globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]?.on_web_socket_close?.(closeCbId, ev.code, ev.reason || "");
+      }
+    };
+    ws.onerror = () => {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]) {
+        globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]?.on_web_socket_error?.(errCbId);
+      }
+    };
+
+    return handle;
   },
 };

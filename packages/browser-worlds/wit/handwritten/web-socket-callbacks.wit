@@ -1,0 +1,9 @@
+/// WebSocket event callbacks — exported by the WASM component.
+///
+/// The browser-glue host calls these functions when WebSocket events fire.
+interface web-socket-callbacks {
+    on-web-socket-open: func(callback-id: u64);
+    on-web-socket-message: func(callback-id: u64, data: string);
+    on-web-socket-close: func(callback-id: u64, code: u16, reason: string);
+    on-web-socket-error: func(callback-id: u64);
+}

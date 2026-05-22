@@ -373,6 +373,14 @@ pub mod wasm_impl {
 
     type IntervalCallback = Box<dyn FnMut()>;
 
+    struct WsHandleEntry {
+        handle: u64,
+        on_open_cb_id: u64,
+        on_message_cb_id: u64,
+        on_close_cb_id: u64,
+        on_error_cb_id: u64,
+    }
+
     thread_local! {
         static EVENT_CALLBACKS: RefCell<EventCallbackMap> = RefCell::new(HashMap::new());
         static ELEMENT_LISTENERS: RefCell<HashMap<(u64, String), u64>>
@@ -391,6 +399,11 @@ pub mod wasm_impl {
         static FILE_READER_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
         static FILE_READER_BIN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<Vec<u8>, String>)>>> = RefCell::new(HashMap::new());
         static IDB_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
+        static WS_OPEN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
+        static WS_MESSAGE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnMut(String)>>> = RefCell::new(HashMap::new());
+        static WS_CLOSE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(u16, String)>>> = RefCell::new(HashMap::new());
+        static WS_ERROR_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
+        static WS_HANDLE_MAP: RefCell<HashMap<u64, WsHandleEntry>> = RefCell::new(HashMap::new());
     }
 
     // -- WIT binding generation -------------------------------------------
@@ -843,6 +856,40 @@ pub mod wasm_impl {
             FILE_READER_CALLBACKS.with(|m| {
                 if let Some(callback) = m.borrow_mut().remove(&callback_id) {
                     callback(Err(error));
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::web_socket_callbacks::Guest for BrowserComponent {
+        fn on_web_socket_open(callback_id: u64) {
+            WS_OPEN_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback();
+                }
+            });
+        }
+
+        fn on_web_socket_message(callback_id: u64, data: String) {
+            WS_MESSAGE_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().get_mut(&callback_id) {
+                    callback(data);
+                }
+            });
+        }
+
+        fn on_web_socket_close(callback_id: u64, code: u16, reason: String) {
+            WS_CLOSE_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback(code, reason);
+                }
+            });
+        }
+
+        fn on_web_socket_error(callback_id: u64) {
+            WS_ERROR_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback();
                 }
             });
         }
@@ -2560,6 +2607,127 @@ pub fn get_parent_element(platform: &WitPlatform, element: &WitElement) -> Optio
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub fn prevent_event_default(event_handle: u64) {
     wasm_impl::prevent_event_default(event_handle)
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub struct WsConnection {
+    handle: u64,
+    on_message_cb_id: u64,
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+impl WsConnection {
+    pub fn send(&self, data: &str) {
+        wasm_impl::bindings::tairitsu_browser::full::web_socket::send(self.handle, data);
+    }
+
+    pub fn close(&self, code: Option<u16>, reason: Option<&str>) {
+        wasm_impl::bindings::tairitsu_browser::full::web_socket::close(
+            self.handle,
+            code,
+            reason.map(|s| s.to_string()),
+        );
+    }
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+impl Drop for WsConnection {
+    fn drop(&mut self) {
+        wasm_impl::WS_HANDLE_MAP.with(|m| {
+            m.borrow_mut().remove(&self.handle);
+        });
+        wasm_impl::WS_MESSAGE_CALLBACKS.with(|m| {
+            m.borrow_mut().remove(&self.on_message_cb_id);
+        });
+    }
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn ws_connect(
+    url: &str,
+    on_open: Box<dyn FnOnce()>,
+    on_message: Box<dyn FnMut(String)>,
+    on_close: Box<dyn FnOnce(u16, String)>,
+    on_error: Box<dyn FnOnce()>,
+) -> WsConnection {
+    let handle = wasm_impl::bindings::tairitsu_browser::full::platform_helpers::connect_web_socket(
+        url.to_string(),
+    );
+
+    let on_open_cb_id = wasm_impl::WS_HANDLE_MAP.with(|m| {
+        let next = (m.borrow().len() as u64) * 4 + 1;
+        let msg_cb_id = next + 1;
+        let close_cb_id = next + 2;
+        let err_cb_id = next + 3;
+        m.borrow_mut().insert(
+            handle,
+            wasm_impl::WsHandleEntry {
+                handle,
+                on_open_cb_id: next,
+                on_message_cb_id: msg_cb_id,
+                on_close_cb_id: close_cb_id,
+                on_error_cb_id: err_cb_id,
+            },
+        );
+        next
+    });
+    let msg_cb_id = on_open_cb_id + 1;
+    let close_cb_id = on_open_cb_id + 2;
+    let err_cb_id = on_open_cb_id + 3;
+
+    wasm_impl::WS_OPEN_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(on_open_cb_id, on_open);
+    });
+    wasm_impl::WS_MESSAGE_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(msg_cb_id, on_message);
+    });
+    wasm_impl::WS_CLOSE_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(close_cb_id, on_close);
+    });
+    wasm_impl::WS_ERROR_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(err_cb_id, on_error);
+    });
+
+    WsConnection {
+        handle,
+        on_message_cb_id: msg_cb_id,
+    }
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn ws_send(conn: &WsConnection, data: &str) {
+    conn.send(data);
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn ws_close(conn: &WsConnection, code: Option<u16>, reason: Option<&str>) {
+    conn.close(code, reason);
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn fetch_text(url: &str, on_complete: Box<dyn FnOnce(Result<String, String>)>) {
+    let promise_id = wasm_impl::bindings::tairitsu_browser::full::platform_helpers::fetch_promise(
+        url.to_string(),
+        None,
+    );
+    wasm_impl::PROMISE_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(promise_id, on_complete);
+    });
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn fetch_text_with_options(
+    url: &str,
+    options: &str,
+    on_complete: Box<dyn FnOnce(Result<String, String>)>,
+) {
+    let promise_id = wasm_impl::bindings::tairitsu_browser::full::platform_helpers::fetch_promise(
+        url.to_string(),
+        Some(options.to_string()),
+    );
+    wasm_impl::PROMISE_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(promise_id, on_complete);
+    });
 }
 
 #[cfg(test)]
