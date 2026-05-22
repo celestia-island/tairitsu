@@ -2,11 +2,9 @@
 //!
 //! Similar to JsonBinding but using RON for better Rust type compatibility.
 
-use std::collections::HashMap;
-use std::sync::Arc;
-
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, sync::Arc};
 
 /// RON binding utilities for WIT types
 pub struct RonBinding;

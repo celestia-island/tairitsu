@@ -4,8 +4,9 @@ use std::cell::Cell;
 
 use hikari_icons::{get, MdiIcon};
 use tairitsu_macros::rsx;
-use tairitsu_vdom::svg::SafeSvg;
-use tairitsu_vdom::{el, get_bounding_client_rect, set_style, txt, DomHandle, VElement, VNode};
+use tairitsu_vdom::{
+    el, get_bounding_client_rect, set_style, svg::SafeSvg, txt, DomHandle, VElement, VNode,
+};
 
 use crate::i18n::{self, Language};
 

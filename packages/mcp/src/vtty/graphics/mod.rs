@@ -2,13 +2,12 @@ mod kitty;
 mod osc1337;
 mod sixel;
 
-pub use kitty::{process_kitty_apc, KittyGraphicsState};
-pub use osc1337::process_osc_1337;
-pub use sixel::process_sixel;
-
 use std::collections::HashMap;
 
 use image::{ImageBuffer, Rgba};
+pub use kitty::{process_kitty_apc, KittyGraphicsState};
+pub use osc1337::process_osc_1337;
+pub use sixel::process_sixel;
 
 type ImgBuf = ImageBuffer<Rgba<u8>, Vec<u8>>;
 

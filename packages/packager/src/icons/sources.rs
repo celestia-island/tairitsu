@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone)]
 pub struct IconSourceDef {
     pub name: &'static str,

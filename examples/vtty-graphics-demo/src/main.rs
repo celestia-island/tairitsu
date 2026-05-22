@@ -1,7 +1,6 @@
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use std::io::Write;
 
-use base64::engine::general_purpose::STANDARD as BASE64;
-use base64::Engine;
 use image::{ImageBuffer, Rgba};
 
 fn generate_logo() -> ImageBuffer<Rgba<u8>, Vec<u8>> {

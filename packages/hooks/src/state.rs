@@ -1,5 +1,4 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 pub fn use_state<T: Clone + Default + 'static>(initial: T) -> (Rc<RefCell<T>>, impl Fn(T)) {
     let state = Rc::new(RefCell::new(initial));

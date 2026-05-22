@@ -1,10 +1,11 @@
 //! Registry - Manages Images and Containers (similar to Docker registry/daemon)
 
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-
 use anyhow::{Context, Result};
 use bytes::Bytes;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use crate::{Container, Image};
 

@@ -37,7 +37,7 @@ pub use cli::run;
 pub use config::{Config, TairitsuMetadata};
 pub use icons::{
     generate_woff_subset, is_hb_subset_available, CacheManifest, HikariIconsMetadata, IconCache,
-    ResolvedSet, ResolveResult, SetConfig, Subscript,
+    ResolveResult, ResolvedSet, SetConfig, Subscript,
 };
 pub use resources::{
     ResourceIndex, ResourceIndexer, ScssResource, ScssUtils, SvgResource, SvgUtils,

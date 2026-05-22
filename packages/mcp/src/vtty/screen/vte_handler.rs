@@ -1,8 +1,10 @@
 use vte::Params;
 
-use super::super::graphics::{process_osc_1337, process_sixel};
-use super::types::{Cell, CellAttrs, ColorKind};
-use super::{DcsKind, Vt100Screen};
+use super::{
+    super::graphics::{process_osc_1337, process_sixel},
+    types::{Cell, CellAttrs, ColorKind},
+    DcsKind, Vt100Screen,
+};
 
 impl vte::Perform for Vt100Screen {
     fn print(&mut self, c: char) {

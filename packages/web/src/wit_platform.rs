@@ -27,6 +27,7 @@
 //! ```
 
 use anyhow::Result;
+
 #[cfg(feature = "wit-bindings")]
 use tairitsu_vdom::{ElementHandle, EventHandle};
 

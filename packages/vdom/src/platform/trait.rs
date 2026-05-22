@@ -1,17 +1,9 @@
-use super::canvas::CanvasOps;
-use super::clipboard::ClipboardOps;
-use super::content_editable::ContentEditableOps;
-use super::dom::DomOps;
-use super::file::FileOps;
-use super::geo::GeoOps;
-use super::idb::IdbOps;
-use super::layout::LayoutOps;
-use super::media::MediaOps;
-use super::media_query::MediaQueryOps;
-use super::observer::ObserverOps;
-use super::query::QueryOps;
-use super::scroll::ScrollOps;
-use super::timer::TimerOps;
+use super::{
+    canvas::CanvasOps, clipboard::ClipboardOps, content_editable::ContentEditableOps, dom::DomOps,
+    file::FileOps, geo::GeoOps, idb::IdbOps, layout::LayoutOps, media::MediaOps,
+    media_query::MediaQueryOps, observer::ObserverOps, query::QueryOps, scroll::ScrollOps,
+    timer::TimerOps,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DomRect {

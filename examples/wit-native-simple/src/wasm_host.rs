@@ -24,10 +24,10 @@
 //! - `process(input)` - Process requests
 //! - `get_info()` - Get guest information
 
-use std::path::PathBuf;
-
 use anyhow::Result;
 use log::info;
+use std::path::PathBuf;
+
 use tairitsu_web::{Container, Registry};
 
 fn main() -> Result<()> {

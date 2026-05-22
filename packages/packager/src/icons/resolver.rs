@@ -1,10 +1,13 @@
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-
 use serde::Deserialize;
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
-use super::cache::{CacheManifest, IconCache, IconData};
-use super::sources::{self, IconOrigin, IconSourceDef};
+use super::{
+    cache::{CacheManifest, IconCache, IconData},
+    sources::{self, IconOrigin, IconSourceDef},
+};
 
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct HikariIconsMetadata {
@@ -85,15 +88,8 @@ pub fn read_consumer_metadata(manifest_dir: &Path) -> crate::Result<HikariIconsM
     }
 }
 
-pub fn resolve(
-    metadata: &HikariIconsMetadata,
-    cache: &IconCache,
-) -> crate::Result<ResolveResult> {
-    let mode = metadata
-        .mode
-        .as_deref()
-        .unwrap_or("embed-svg")
-        .to_string();
+pub fn resolve(metadata: &HikariIconsMetadata, cache: &IconCache) -> crate::Result<ResolveResult> {
+    let mode = metadata.mode.as_deref().unwrap_or("embed-svg").to_string();
 
     if metadata.sets.is_empty() {
         return Ok(ResolveResult {
@@ -124,9 +120,7 @@ pub fn resolve(
         let formats = set_cfg
             .map(|c| c.formats.clone())
             .unwrap_or_else(|| vec!["svg".to_string()]);
-        let subscripts = set_cfg
-            .map(|c| c.subscripts.clone())
-            .unwrap_or_default();
+        let subscripts = set_cfg.map(|c| c.subscripts.clone()).unwrap_or_default();
 
         let manifest = if cache.has_cache(set_name, &version) {
             cache.load_manifest(set_name, &version)
@@ -183,7 +177,10 @@ pub fn resolve(
         });
     }
 
-    Ok(ResolveResult { sets: resolved, mode })
+    Ok(ResolveResult {
+        sets: resolved,
+        mode,
+    })
 }
 
 fn apply_subscripts(
@@ -367,14 +364,18 @@ fn fetch_from_npm(
         let registry_url = format!("https://registry.npmjs.org/{}", pkg_url);
         let resp = reqwest::blocking::get(&registry_url)
             .map_err(|e| crate::TairitsuPackagerError::HttpError(e.to_string()))?;
-        let json: serde_json::Value = resp.json()
+        let json: serde_json::Value = resp
+            .json()
             .map_err(|e| crate::TairitsuPackagerError::HttpError(e.to_string()))?;
         json.pointer(&format!("/versions/{}/dist/tarball", version))
             .and_then(|v| v.as_str())
             .map(|s| s.to_string())
             .unwrap_or_else(|| {
                 let name = pkg.split('/').last().unwrap_or(pkg);
-                format!("https://registry.npmjs.org/{}/-/{}-{}.tgz", pkg, name, version)
+                format!(
+                    "https://registry.npmjs.org/{}/-/{}-{}.tgz",
+                    pkg, name, version
+                )
             })
     };
     let dir = cache.set_dir(source.name, version);
@@ -443,12 +444,7 @@ fn fetch_from_github_mirror(
     let dir = cache.set_dir(source.name, version);
     let zip_path = dir.join("source.zip");
 
-    crate::log_info!(
-        "Downloading {}/{} from mirror {}...",
-        owner,
-        repo,
-        mirror
-    );
+    crate::log_info!("Downloading {}/{} from mirror {}...", owner, repo, mirror);
 
     download_file(&archive_url, &zip_path)?;
 
@@ -729,7 +725,12 @@ fn extract_tgz(tgz_path: &Path, dest: &Path) -> crate::Result<()> {
         use std::process::Command;
 
         let output = Command::new("tar")
-            .args(["xzf", &tgz_path.to_string_lossy(), "-C", &dest.to_string_lossy()])
+            .args([
+                "xzf",
+                &tgz_path.to_string_lossy(),
+                "-C",
+                &dest.to_string_lossy(),
+            ])
             .output()
             .map_err(|e| crate::TairitsuPackagerError::IconFetchError(e.to_string()))?;
 
@@ -799,10 +800,7 @@ fn extract_zip(zip_path: &Path, dest: &Path) -> crate::Result<()> {
 
 fn find_extracted_dir(base: &Path) -> PathBuf {
     if let Ok(entries) = std::fs::read_dir(base) {
-        let mut dirs: Vec<_> = entries
-            .flatten()
-            .filter(|e| e.path().is_dir())
-            .collect();
+        let mut dirs: Vec<_> = entries.flatten().filter(|e| e.path().is_dir()).collect();
         if dirs.len() == 1 {
             return dirs.remove(0).path();
         }
@@ -862,18 +860,20 @@ mod tests {
 
     #[test]
     fn test_extract_path_d_fill_first() {
-        let svg = r#"<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4V4z"/></svg>"#;
-        assert_eq!(
-            extract_path_d(svg),
-            Some("M4 4h16v16H4V4z".to_string())
-        );
+        let svg =
+            r#"<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4V4z"/></svg>"#;
+        assert_eq!(extract_path_d(svg), Some("M4 4h16v16H4V4z".to_string()));
     }
 
     #[test]
     fn test_read_consumer_metadata_empty() {
         let tmp = tempfile::tempdir().unwrap();
         let cargo_toml = tmp.path().join("Cargo.toml");
-        std::fs::write(&cargo_toml, "[package]\nname = \"test\"\nversion = \"0.1.0\"\n").unwrap();
+        std::fs::write(
+            &cargo_toml,
+            "[package]\nname = \"test\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
         let meta = read_consumer_metadata(tmp.path()).unwrap();
         assert!(meta.sets.is_empty());
     }

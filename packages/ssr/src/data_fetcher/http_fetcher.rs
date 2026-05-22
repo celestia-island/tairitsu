@@ -6,10 +6,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use super::cache::Cache;
-use super::error::FetchError;
-use super::fetcher::Fetcher;
-use super::FetchConfig;
+use super::{cache::Cache, error::FetchError, fetcher::Fetcher, FetchConfig};
 
 /// HTTP fetcher for making HTTP requests with caching support
 #[derive(Clone)]

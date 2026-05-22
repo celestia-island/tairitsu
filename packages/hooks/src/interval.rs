@@ -30,8 +30,7 @@
 //! | `use_interval` | Fixed period (ms)    | `FnMut()`         | Polling, countdowns   |
 //! | `use_animation`| vsync (rAF)          | `FnMut(f64)`      | CSS transitions, gl   |
 
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 /// Handle to a running interval, returned by [`use_interval`].
 ///

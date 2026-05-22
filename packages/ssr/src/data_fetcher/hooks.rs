@@ -1,14 +1,12 @@
 //! React hooks for data fetching
 
-use std::cell::RefCell;
-use std::rc::Rc;
 #[cfg(feature = "data-fetcher")]
 use std::sync::Arc;
+use std::{cell::RefCell, rc::Rc};
 
 use tairitsu_vdom::runtime;
 
-use super::http_fetcher::HttpFetcher;
-use super::{Fetcher, Resource};
+use super::{http_fetcher::HttpFetcher, Fetcher, Resource};
 
 /// Hook for fetching data from a URL
 ///

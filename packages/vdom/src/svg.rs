@@ -23,8 +23,7 @@
 //! let element = VElement::new("div").safe_svg(svg);
 //! ```
 
-use std::path::Path;
-use std::{fs, io};
+use std::{fs, io, path::Path};
 
 /// A sanitized SVG content wrapper that provides XSS protection.
 ///

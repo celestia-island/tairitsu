@@ -1,19 +1,17 @@
 #[cfg(feature = "vtty")]
 mod vtty;
 
-use std::sync::Arc;
-
 use anyhow::Result;
-use rmcp::handler::server::wrapper::Parameters;
-use rmcp::model::*;
-use rmcp::service::RequestContext;
-use rmcp::{
-    tool, tool_handler, tool_router, ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
-};
-use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::json;
+use std::sync::Arc;
 use tokio::sync::RwLock;
+
+use rmcp::{
+    handler::server::wrapper::Parameters, model::*, service::RequestContext, tool, tool_handler,
+    tool_router, ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
+};
+use schemars::JsonSchema;
 
 struct Server {
     base_url: Arc<RwLock<String>>,

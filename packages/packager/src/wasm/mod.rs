@@ -2,8 +2,7 @@ use std::time::{Duration, Instant};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
-use crate::config::Config;
-use crate::daemon;
+use crate::{config::Config, daemon};
 
 fn locale() -> &'static crate::i18n::Translations {
     crate::i18n::translations()
@@ -56,7 +55,11 @@ pub fn resolve_hikari_icons(
         return crate::icons::hikari_resolver::resolve_stub(&target_dir);
     }
 
-    let output = manifest_dir.join("target").join("tairitsu").join("generated").join("hikari_icons.rs");
+    let output = manifest_dir
+        .join("target")
+        .join("tairitsu")
+        .join("generated")
+        .join("hikari_icons.rs");
     if let Some(parent) = output.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -70,10 +73,15 @@ pub fn resolve_hikari_icons(
         let view_box = resolved.source.view_box;
         let set_ident = resolved.source.name.replace('-', "_").to_uppercase();
         let mut icons: Vec<_> = resolved.icons.iter().collect();
-        icons.sort_by_key(|(name, _)| name.clone());
+        icons.sort_by(|a, b| a.0.cmp(b.0));
         for (name, data) in &icons {
             let safe = name.replace('-', "_").to_uppercase();
-            let safe = if safe.as_bytes().first().map(|b| b.is_ascii_digit()).unwrap_or(false) {
+            let safe = if safe
+                .as_bytes()
+                .first()
+                .map(|b| b.is_ascii_digit())
+                .unwrap_or(false)
+            {
                 format!("_{}", safe)
             } else {
                 safe
@@ -88,7 +96,11 @@ pub fn resolve_hikari_icons(
     }
     writeln!(f, "}}")?;
 
-    crate::log_info!("Generated {} → {} icon sets", output.display(), result.sets.len());
+    crate::log_info!(
+        "Generated {} → {} icon sets",
+        output.display(),
+        result.sets.len()
+    );
     Ok(output)
 }
 
@@ -641,65 +653,6 @@ fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> c
     Ok(())
 }
 
-#[allow(dead_code)]
-fn resolve_import_to_modules(
-    _full_import: &str,
-    symbols_str: &str,
-    sym_map: &std::collections::HashMap<String, String>,
-    single_quote: bool,
-) -> String {
-    let q = if single_quote { '\'' } else { '"' };
-
-    let symbols: Vec<&str> = symbols_str.split(',').map(|s| s.trim()).collect();
-
-    let mut module_imports: std::collections::BTreeMap<String, Vec<String>> =
-        std::collections::BTreeMap::new();
-
-    for sym in &symbols {
-        let clean = sym.split_whitespace().next().unwrap_or(sym);
-        if clean.is_empty() {
-            continue;
-        }
-        // Exact match first
-        if let Some(mod_name) = sym_map.get(clean) {
-            module_imports
-                .entry(mod_name.clone())
-                .or_default()
-                .push(clean.to_string());
-        } else if let Some((alias_mod, _)) = sym_map.iter().find(|(k, _)| {
-            let clean_str: &str = clean;
-            k.ends_with(clean_str) && k.len() > clean_str.len()
-        }) {
-            module_imports
-                .entry(alias_mod.clone())
-                .or_default()
-                .push(clean.to_string());
-        } else {
-            crate::log_warn!(
-                "Glue symbol '{}' not found in any module (map has {} symbols)",
-                clean,
-                sym_map.len()
-            );
-        }
-    }
-
-    if module_imports.is_empty() {
-        return String::new();
-    }
-
-    let mut lines = Vec::new();
-    for (mod_name, syms) in &module_imports {
-        lines.push(format!(
-            "import {{ {} }} from {}../browser-glue/glue/{}.js{}",
-            syms.join(", "),
-            q,
-            mod_name,
-            q
-        ));
-    }
-    lines.join("\n  ")
-}
-
 fn flatten_barrel_exports(barrel_path: &std::path::Path) -> crate::Result<()> {
     let content = std::fs::read_to_string(barrel_path).map_err(|e| {
         crate::TairitsuPackagerError::BuildError(format!(
@@ -845,77 +798,6 @@ fn build_symbol_module_map(
         }
     }
     map.into_iter().map(|(k, (v, _))| (k, v)).collect()
-}
-
-#[allow(dead_code)]
-fn rewrite_glue_import_line(
-    import_line: &str,
-    sym_map: &std::collections::HashMap<String, String>,
-    single_quote: bool,
-) -> String {
-    let re_symbols = regex::Regex::new(r"\{([^}]+)\}").unwrap();
-    let _re_source = if single_quote {
-        regex::Regex::new(r"'@tairitsu-glue/[^']*'").unwrap()
-    } else {
-        regex::Regex::new(r#""@tairitsu-glue/[^"]*""#).unwrap()
-    };
-
-    let symbols_str = re_symbols
-        .captures(import_line)
-        .and_then(|c| c.get(1))
-        .map(|m| m.as_str())
-        .unwrap_or("");
-
-    let symbols: Vec<&str> = symbols_str.split(',').map(|s| s.trim()).collect();
-
-    let mut module_imports: std::collections::BTreeMap<String, Vec<String>> =
-        std::collections::BTreeMap::new();
-    let mut unknown = Vec::new();
-
-    for sym in &symbols {
-        let clean = sym.split_whitespace().next().unwrap_or(sym);
-        if clean.is_empty() {
-            continue;
-        }
-        if let Some(mod_name) = sym_map.get(clean) {
-            module_imports
-                .entry(mod_name.clone())
-                .or_default()
-                .push(clean.to_string());
-        } else if let Some((alias_mod, _)) = sym_map.iter().find(|(k, _)| {
-            let clean_str: &str = clean;
-            k.ends_with(clean_str) && k.len() > clean_str.len()
-        }) {
-            module_imports
-                .entry(alias_mod.clone())
-                .or_default()
-                .push(clean.to_string());
-        } else {
-            unknown.push(clean.to_string());
-        }
-    }
-
-    let q = if single_quote { "'" } else { "\"" };
-    let mut lines = Vec::new();
-    for (mod_name, syms) in &module_imports {
-        if syms.is_empty() {
-            continue;
-        }
-        lines.push(format!(
-            "import {{ {} }} from {}../browser-glue/glue/{}.js{}",
-            syms.join(", "),
-            q,
-            mod_name,
-            q
-        ));
-    }
-    // Drop unknown symbols silently — they're likely unimplemented WIT stubs
-    // that would cause module load failures if imported.
-    if lines.is_empty() {
-        String::new()
-    } else {
-        lines.join("\n  ")
-    }
 }
 
 fn copy_browser_glue_with_output_dir(

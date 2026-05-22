@@ -1,10 +1,12 @@
-use std::collections::HashMap;
-use std::fs;
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::HashMap,
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use sha2::{Digest, Sha256};
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheManifest {
@@ -113,7 +115,11 @@ impl IconCache {
         Ok(path)
     }
 
-    pub fn load_svg_data(&self, set_name: &str, version: &str) -> std::io::Result<Vec<(String, String)>> {
+    pub fn load_svg_data(
+        &self,
+        set_name: &str,
+        version: &str,
+    ) -> std::io::Result<Vec<(String, String)>> {
         let path = self.svg_data_path(set_name, version);
         let content = fs::read_to_string(path)?;
         let mut entries = Vec::new();
@@ -143,7 +149,9 @@ pub fn resolve_cache_root(manifest_dir: Option<&Path>) -> PathBuf {
         return dir.join("target").join("tairitsu-cache").join("icons");
     }
     if let Ok(target_dir) = std::env::var("CARGO_TARGET_DIR") {
-        return PathBuf::from(target_dir).join("tairitsu-cache").join("icons");
+        return PathBuf::from(target_dir)
+            .join("tairitsu-cache")
+            .join("icons");
     }
     if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
         let mut dir = PathBuf::from(&manifest_dir);
@@ -160,7 +168,10 @@ pub fn resolve_cache_root(manifest_dir: Option<&Path>) -> PathBuf {
                 break;
             }
         }
-        return PathBuf::from(manifest_dir).join("target").join("tairitsu-cache").join("icons");
+        return PathBuf::from(manifest_dir)
+            .join("target")
+            .join("tairitsu-cache")
+            .join("icons");
     }
     let base = std::env::var("XDG_CACHE_HOME")
         .map(PathBuf::from)

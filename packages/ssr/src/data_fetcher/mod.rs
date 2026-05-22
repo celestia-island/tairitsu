@@ -5,8 +5,7 @@
 
 #![warn(missing_docs)]
 
-use std::collections::HashMap;
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 // Re-exports for convenience
 pub use cache::Cache;

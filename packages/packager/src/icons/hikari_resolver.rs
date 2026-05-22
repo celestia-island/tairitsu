@@ -1,5 +1,4 @@
-use std::io::Write;
-use std::path::Path;
+use std::{io::Write, path::Path};
 
 pub fn resolve_stub(target_dir: &Path) -> crate::Result<std::path::PathBuf> {
     let gen_dir = target_dir.join("tairitsu").join("generated");

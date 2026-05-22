@@ -2,14 +2,9 @@
 //!
 //! Provides background service for compilation with hot-reload capabilities.
 
-use std::io::IsTerminal;
-use std::path::PathBuf;
-use std::process::Command;
-use std::sync::OnceLock;
-use std::{env, fs};
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::{env, fs, io::IsTerminal, path::PathBuf, process::Command, sync::OnceLock};
 
 static PROJECT_ROOT: OnceLock<PathBuf> = OnceLock::new();
 

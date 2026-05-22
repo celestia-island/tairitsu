@@ -3,8 +3,10 @@
 use hikari_icons::MdiIcon;
 use tairitsu_vdom::{el, txt, VElement, VNode};
 
-use crate::components::{glow_wrapper, svg_icon};
-use crate::i18n::{self, Language};
+use crate::{
+    components::{glow_wrapper, svg_icon},
+    i18n::{self, Language},
+};
 
 fn glow_btn(href: &str, class: &str, text: &str, arrow: Option<&str>) -> VNode {
     let mut btn = VElement::new("a")

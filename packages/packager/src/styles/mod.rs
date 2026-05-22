@@ -2,9 +2,9 @@ mod compiler;
 mod extractor;
 mod injector;
 
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-use anyhow::Result;
 pub use compiler::{CompilerOptions, ScssCompiler};
 pub use extractor::CssExtractor;
 pub use injector::StyleInjector;

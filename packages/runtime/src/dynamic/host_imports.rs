@@ -3,10 +3,9 @@
 //! This module provides a registry for host functions that WASM components import,
 //! allowing dynamic invocation similar to guest exports.
 
-use std::collections::HashMap;
-use std::sync::Arc;
-
 use anyhow::Result;
+use std::{collections::HashMap, sync::Arc};
+
 use wasmtime::component::{Type, Val};
 
 /// Host import function registry

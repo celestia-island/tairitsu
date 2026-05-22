@@ -1,6 +1,4 @@
-use std::io::Write;
-use std::path::Path;
-use std::process::Command;
+use std::{io::Write, path::Path, process::Command};
 
 use super::sources::IconSourceDef;
 
@@ -12,10 +10,12 @@ pub fn generate_woff_subset(
 ) -> crate::Result<()> {
     let font_file = match source.font_file {
         Some(f) => f,
-        None => return Err(crate::TairitsuPackagerError::IconFetchError(format!(
-            "Icon set '{}' has no font file configured",
-            source.name
-        ))),
+        None => {
+            return Err(crate::TairitsuPackagerError::IconFetchError(format!(
+                "Icon set '{}' has no font file configured",
+                source.name
+            )))
+        }
     };
 
     let font_family = source.font_family.unwrap_or(source.name);
@@ -72,7 +72,10 @@ pub fn generate_woff_subset(
                         .to_string(),
                 )
             } else {
-                crate::TairitsuPackagerError::IconFetchError(format!("Failed to run hb-subset: {}", e))
+                crate::TairitsuPackagerError::IconFetchError(format!(
+                    "Failed to run hb-subset: {}",
+                    e
+                ))
             }
         })?;
 

@@ -1,12 +1,14 @@
 //! CLI module
 
+use anyhow::Result;
 use std::path::PathBuf;
 
-use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use crate::browser::{detect_platform, BrowserCache, BrowserDownloader};
-use crate::runner::{TestHarness, TestHarnessConfig};
+use crate::{
+    browser::{detect_platform, BrowserCache, BrowserDownloader},
+    runner::{TestHarness, TestHarnessConfig},
+};
 
 /// Tairitsu Browser Test CLI
 #[derive(Parser, Debug)]
