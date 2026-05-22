@@ -34,7 +34,11 @@ fn find_workspace_root(manifest_dir: &std::path::Path) -> crate::Result<std::pat
     Ok(workspace_root)
 }
 
-pub fn resolve_hikari_icons(manifest_dir: &std::path::Path, offline: bool, verbose: bool) -> crate::Result<std::path::PathBuf> {
+pub fn resolve_hikari_icons(
+    manifest_dir: &std::path::Path,
+    offline: bool,
+    verbose: bool,
+) -> crate::Result<std::path::PathBuf> {
     let output = std::process::Command::new("cargo")
         .args([
             "metadata",
@@ -51,9 +55,8 @@ pub fn resolve_hikari_icons(manifest_dir: &std::path::Path, offline: bool, verbo
         .get("packages")
         .and_then(|v| v.as_array())
         .and_then(|pkgs| {
-            pkgs.iter().find(|p| {
-                p.get("name").and_then(|n| n.as_str()) == Some("hikari-icons")
-            })
+            pkgs.iter()
+                .find(|p| p.get("name").and_then(|n| n.as_str()) == Some("hikari-icons"))
         })
         .and_then(|p| p.get("manifest_path"))
         .and_then(|v| v.as_str())
@@ -137,7 +140,8 @@ pub fn build_component(
         // Resolve hikari-icons before compiling
         let icons_rs = resolve_hikari_icons(&config.manifest_dir, false, verbose).ok();
 
-        let wasm_path = build_wasm_component(config, release, pb.clone(), verbose, icons_rs.as_deref())?;
+        let wasm_path =
+            build_wasm_component(config, release, pb.clone(), verbose, icons_rs.as_deref())?;
         crate::log_ok!("{:<20} {:.1?}", b.step_compile, t.elapsed());
         pb.inc(1);
 
@@ -1075,19 +1079,9 @@ fn prepare_component_wrapper_fallback(
     Ok(())
 }
 
-const WASI_SHIM_MODULES: &[&str] = &[
-    "io",
-    "cli",
-    "random",
-    "clocks",
-    "filesystem",
-    "sockets",
-];
+const WASI_SHIM_MODULES: &[&str] = &["io", "cli", "random", "clocks", "filesystem", "sockets"];
 
-fn bundle_local_wasi_shim(
-    output_dir: &std::path::Path,
-    pb: &ProgressBar,
-) -> crate::Result<bool> {
+fn bundle_local_wasi_shim(output_dir: &std::path::Path, pb: &ProgressBar) -> crate::Result<bool> {
     let shim_dir = output_dir.join("wasi-shim");
     if shim_dir.exists() {
         let marker = shim_dir.join(".tairitsu-bundled");
@@ -1120,13 +1114,13 @@ fn bundle_local_wasi_shim(
         }
         Ok(_) => {
             pb.println(
-                "⚠  Could not bundle WASI shim locally (npm unavailable?). Falling back to CDN.".to_string()
+                "⚠  Could not bundle WASI shim locally (npm unavailable?). Falling back to CDN.",
             );
             Ok(false)
         }
         Err(_) => {
             pb.println(
-                "⚠  Could not bundle WASI shim locally (node not found?). Falling back to CDN.".to_string()
+                "⚠  Could not bundle WASI shim locally (node not found?). Falling back to CDN.",
             );
             Ok(false)
         }
@@ -1165,14 +1159,8 @@ fn rewrite_wrapper_imports(
 
         let content = std::fs::read_to_string(&path)?;
         let mut patched = content
-            .replace(
-                "'@bytecodealliance/preview2-shim/",
-                local_prefix,
-            )
-            .replace(
-                "\"@bytecodealliance/preview2-shim/",
-                local_prefix_dq,
-            );
+            .replace("'@bytecodealliance/preview2-shim/", local_prefix)
+            .replace("\"@bytecodealliance/preview2-shim/", local_prefix_dq);
 
         if local_shim_available {
             patched = patched
@@ -1572,10 +1560,12 @@ fn generate_component_html_with_output_dir(
 
     let mut tera = tera::Tera::default();
     tera.add_raw_template("index.html", include_str!("index.html.template"))
-        .map_err(|e| crate::TairitsuPackagerError::BuildError(format!("Template parse error: {e}")))?;
-    let html = tera
-        .render("index.html", &ctx)
-        .map_err(|e| crate::TairitsuPackagerError::BuildError(format!("Template render error: {e}")))?;
+        .map_err(|e| {
+            crate::TairitsuPackagerError::BuildError(format!("Template parse error: {e}"))
+        })?;
+    let html = tera.render("index.html", &ctx).map_err(|e| {
+        crate::TairitsuPackagerError::BuildError(format!("Template render error: {e}"))
+    })?;
 
     let mut html = html;
 

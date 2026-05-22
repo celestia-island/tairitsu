@@ -216,7 +216,8 @@ impl VttySession {
             .lock()
             .map_err(|_| "PTY lock poisoned".to_string())?;
         if let Some(mut pty) = guard.take() {
-            pty.kill_and_reap().map_err(|e| format!("PTY kill failed: {}", e))?;
+            pty.kill_and_reap()
+                .map_err(|e| format!("PTY kill failed: {}", e))?;
         }
         Ok(())
     }
@@ -542,13 +543,8 @@ mod smoke_pty {
     use std::sync::Arc;
 
     fn spawn_session(command: &str) -> VttySession {
-        let mut session = VttySession::new(
-            "test-smoke".into(),
-            "smoke".into(),
-            command.into(),
-            80,
-            24,
-        );
+        let mut session =
+            VttySession::new("test-smoke".into(), "smoke".into(), command.into(), 80, 24);
         session.launch(None).expect("launch should succeed");
         session
     }
@@ -568,7 +564,11 @@ mod smoke_pty {
     fn smoke_pty_echo_ascii() {
         let mut session = spawn_session("echo 'Hello from PTY'");
         let found = wait_for_text(&session, "Hello from PTY", 3000);
-        assert!(found, "screen should contain echo output, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "screen should contain echo output, got:\n{}",
+            session.screenshot()
+        );
         let _ = session.kill();
     }
 
@@ -576,10 +576,18 @@ mod smoke_pty {
     fn smoke_pty_printf_cjk() {
         let mut session = spawn_session("printf '简体中文\\n'");
         let found = wait_for_text(&session, "简", 3000);
-        assert!(found, "screen should contain CJK text, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "screen should contain CJK text, got:\n{}",
+            session.screenshot()
+        );
         if found {
             let text = session.screenshot();
-            assert!(text.contains("简体中文"), "full CJK string present, got: {}", text);
+            assert!(
+                text.contains("简体中文"),
+                "full CJK string present, got: {}",
+                text
+            );
             assert!(!text.contains(';'), "no SGR leak, got: {}", text);
         }
         let _ = session.kill();
@@ -587,11 +595,14 @@ mod smoke_pty {
 
     #[test]
     fn smoke_printf_ansi_colors() {
-        let mut session = spawn_session(
-            "printf '\\033[38;2;255;107;157mpink\\033[0m \\033[32mgreen\\033[0m\\n'",
-        );
+        let mut session =
+            spawn_session("printf '\\033[38;2;255;107;157mpink\\033[0m \\033[32mgreen\\033[0m\\n'");
         let found = wait_for_text(&session, "pink", 3000);
-        assert!(found, "screen should contain colored text, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "screen should contain colored text, got:\n{}",
+            session.screenshot()
+        );
         if found {
             let text = session.screenshot();
             assert!(text.contains("pink"), "got: {}", text);
@@ -655,7 +666,9 @@ mod smoke_pty {
         assert!(session.is_alive(), "session should be alive");
         session.kill().expect("first kill should succeed");
         assert!(!session.is_alive(), "session should be dead after kill");
-        session.kill().expect("second kill should also succeed (idempotent)");
+        session
+            .kill()
+            .expect("second kill should also succeed (idempotent)");
         assert!(!session.is_alive(), "still dead after second kill");
     }
 
@@ -765,7 +778,11 @@ mod smoke_pty {
     fn smoke_pty_bash_prompt() {
         let mut session = spawn_session("bash --norc --noprofile -i");
         let found = wait_for_text(&session, "$", 5000);
-        assert!(found, "bash prompt should appear, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "bash prompt should appear, got:\n{}",
+            session.screenshot()
+        );
         let _ = session.kill();
     }
 
@@ -773,7 +790,11 @@ mod smoke_pty {
     fn smoke_pty_process_self_exit() {
         let session = spawn_session("echo done_here");
         let found = wait_for_text(&session, "done_here", 3000);
-        assert!(found, "should see output before exit, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "should see output before exit, got:\n{}",
+            session.screenshot()
+        );
         std::thread::sleep(std::time::Duration::from_millis(500));
         assert!(!session.is_alive(), "process should have exited on its own");
     }
@@ -801,9 +822,16 @@ mod smoke_pty {
     fn smoke_pty_large_output() {
         let mut session = spawn_session("seq 1 200");
         let found = wait_for_text(&session, "200", 5000);
-        assert!(found, "should see last line of large output, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "should see last line of large output, got:\n{}",
+            session.screenshot()
+        );
         let text = session.screenshot();
-        assert!(text.contains("1"), "should contain first number in scrollback/screen");
+        assert!(
+            text.contains("1"),
+            "should contain first number in scrollback/screen"
+        );
         assert!(!text.contains("38;2"), "no SGR leak");
         let _ = session.kill();
     }
@@ -843,7 +871,11 @@ mod smoke_pty {
             }
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
-        assert!(found, "long line should wrap, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "long line should wrap, got:\n{}",
+            session.screenshot()
+        );
         let _ = session.kill();
     }
 
@@ -875,7 +907,11 @@ mod smoke_pty {
         let scrollback = session.scrollback();
         let screen = session.screenshot();
         let combined = format!("{}\n{}", scrollback, screen);
-        assert!(combined.contains("100"), "output should survive resize in scrollback+screen, got:\n{}", combined);
+        assert!(
+            combined.contains("100"),
+            "output should survive resize in scrollback+screen, got:\n{}",
+            combined
+        );
         let _ = session.kill();
     }
 
@@ -886,7 +922,10 @@ mod smoke_pty {
         let mut found = false;
         loop {
             let text = session.screenshot();
-            if text.contains("nonexistent") || text.contains("not found") || text.contains("No such") {
+            if text.contains("nonexistent")
+                || text.contains("not found")
+                || text.contains("No such")
+            {
                 found = true;
                 break;
             }
@@ -895,7 +934,11 @@ mod smoke_pty {
             }
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
-        assert!(found, "error message should appear, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "error message should appear, got:\n{}",
+            session.screenshot()
+        );
         let _ = session.kill();
     }
 
@@ -907,12 +950,20 @@ mod smoke_pty {
         session.send_text("echo CMD1").expect("send cmd1");
         session.send_keys("ENTER").expect("enter");
         let found1 = wait_for_text(&session, "CMD1", 3000);
-        assert!(found1, "should see CMD1 output, got:\n{}", session.screenshot());
+        assert!(
+            found1,
+            "should see CMD1 output, got:\n{}",
+            session.screenshot()
+        );
 
         session.send_text("echo CMD2").expect("send cmd2");
         session.send_keys("ENTER").expect("enter");
         let found2 = wait_for_text(&session, "CMD2", 3000);
-        assert!(found2, "should see CMD2 output, got:\n{}", session.screenshot());
+        assert!(
+            found2,
+            "should see CMD2 output, got:\n{}",
+            session.screenshot()
+        );
 
         let _ = session.kill();
     }
@@ -925,8 +976,14 @@ mod smoke_pty {
         let scrollback = session.scrollback();
         let screen = session.screenshot();
         let combined = format!("{}\n{}", scrollback, screen);
-        assert!(combined.contains("1"), "scrollback+screen should contain early output");
-        assert!(combined.contains("50"), "scrollback+screen should contain mid output");
+        assert!(
+            combined.contains("1"),
+            "scrollback+screen should contain early output"
+        );
+        assert!(
+            combined.contains("50"),
+            "scrollback+screen should contain mid output"
+        );
         let _ = session.kill();
     }
 
@@ -936,9 +993,15 @@ mod smoke_pty {
     fn smoke_pty_send_text_with_newline() {
         let mut session = spawn_session("bash --norc --noprofile");
         std::thread::sleep(std::time::Duration::from_millis(500));
-        session.send_text("echo NL_TEST\n").expect("send_text with newline");
+        session
+            .send_text("echo NL_TEST\n")
+            .expect("send_text with newline");
         let found = wait_for_text(&session, "NL_TEST", 3000);
-        assert!(found, "send_text \\n translation should work, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "send_text \\n translation should work, got:\n{}",
+            session.screenshot()
+        );
         let _ = session.kill();
     }
 
@@ -961,7 +1024,9 @@ mod smoke_pty {
     #[test]
     fn smoke_pty_manager_ping() {
         let mgr = VttyManager::new();
-        let info = mgr.launch("sleep 60", 80, 24, "", None, "test").expect("launch");
+        let info = mgr
+            .launch("sleep 60", 80, 24, "", None, "test")
+            .expect("launch");
         let pinged = mgr.ping(&info.id).expect("ping");
         assert!(pinged.alive);
         assert_eq!(pinged.id, info.id);
@@ -988,16 +1053,14 @@ mod smoke_pty {
 
     #[test]
     fn smoke_pty_launch_with_cwd() {
-        let mut session = VttySession::new(
-            "cwd-test".into(),
-            "test".into(),
-            "pwd".into(),
-            80,
-            24,
-        );
+        let mut session = VttySession::new("cwd-test".into(), "test".into(), "pwd".into(), 80, 24);
         session.launch(Some("/tmp")).expect("launch with cwd");
         let found = wait_for_text(&session, "tmp", 3000);
-        assert!(found, "should see /tmp from pwd, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "should see /tmp from pwd, got:\n{}",
+            session.screenshot()
+        );
         let _ = session.kill();
     }
 }

@@ -398,7 +398,11 @@ enum ResourcesCommands {
     },
 }
 
-fn run_check(action: CheckCommands, manifest_path: &Option<PathBuf>, verbose: u8) -> crate::Result<()> {
+fn run_check(
+    action: CheckCommands,
+    manifest_path: &Option<PathBuf>,
+    verbose: u8,
+) -> crate::Result<()> {
     let manifest_path = resolve_manifest_dir(manifest_path);
 
     match action {
@@ -443,7 +447,9 @@ fn resolve_manifest_dir(path: &Option<PathBuf>) -> PathBuf {
             if p.is_dir() {
                 p.clone()
             } else {
-                p.parent().map(|d| d.to_path_buf()).unwrap_or_else(|| p.clone())
+                p.parent()
+                    .map(|d| d.to_path_buf())
+                    .unwrap_or_else(|| p.clone())
             }
         }
         None => std::path::PathBuf::from("."),
@@ -538,11 +544,8 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
     }
 
     // `check` is fully synchronous — no tokio needed
-    match cli.command {
-        Some(Commands::Check { action }) => {
-            return Some(run_check(action, &cli.manifest_path, cli.verbose));
-        }
-        _ => {}
+    if let Some(Commands::Check { action }) = cli.command {
+        return Some(run_check(action, &cli.manifest_path, cli.verbose));
     }
 
     // Not a sync daemon operation — proceed to async mode

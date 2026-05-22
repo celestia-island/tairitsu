@@ -7,9 +7,8 @@ use tairitsu_vdom::{runtime, Classes, Signal, Style, VNode};
 /// re-renders when its value changes.
 pub fn use_signal<T: Clone + 'static, F: FnOnce() -> T>(initial: F) -> ReactiveSignal<T> {
     let signal = Signal::new(initial());
-    let component_id = runtime::active_component_id().unwrap_or_else(|| {
-        runtime::use_component(|| tairitsu_vdom::VNode::empty())
-    });
+    let component_id = runtime::active_component_id()
+        .unwrap_or_else(|| runtime::use_component(tairitsu_vdom::VNode::empty));
 
     ReactiveSignal {
         signal,
@@ -19,9 +18,8 @@ pub fn use_signal<T: Clone + 'static, F: FnOnce() -> T>(initial: F) -> ReactiveS
 
 pub fn use_standalone_signal<T: Clone + 'static>(initial: T) -> StandaloneSignal<T> {
     let signal = Signal::new(initial);
-    let component_id = runtime::active_component_id().unwrap_or_else(|| {
-        runtime::use_component(VNode::empty)
-    });
+    let component_id =
+        runtime::active_component_id().unwrap_or_else(|| runtime::use_component(VNode::empty));
 
     StandaloneSignal {
         signal,

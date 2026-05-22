@@ -108,11 +108,7 @@ impl UnixPty {
             }
             if ready > 0 && (pfd.revents & libc::POLLIN) != 0 {
                 let n = unsafe {
-                    libc::read(
-                        read_fd,
-                        buf.as_mut_ptr() as *mut libc::c_void,
-                        buf.len(),
-                    )
+                    libc::read(read_fd, buf.as_mut_ptr() as *mut libc::c_void, buf.len())
                 };
                 if n > 0 {
                     if let Ok(mut s) = screen.lock() {
@@ -135,11 +131,7 @@ impl UnixPty {
             if pfd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL) != 0 {
                 loop {
                     let n = unsafe {
-                        libc::read(
-                            read_fd,
-                            buf.as_mut_ptr() as *mut libc::c_void,
-                            buf.len(),
-                        )
+                        libc::read(read_fd, buf.as_mut_ptr() as *mut libc::c_void, buf.len())
                     };
                     if n > 0 {
                         if let Ok(mut s) = screen.lock() {

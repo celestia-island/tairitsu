@@ -17,9 +17,7 @@ impl vte::Perform for Vt100Screen {
             }
         }
         if self.cursor_row < self.rows && self.cursor_col < self.cols {
-            if self.grid[self.cursor_row][self.cursor_col].wide
-                && self.cursor_col + 1 < self.cols
-            {
+            if self.grid[self.cursor_row][self.cursor_col].wide && self.cursor_col + 1 < self.cols {
                 self.grid[self.cursor_row][self.cursor_col + 1] = Cell::default();
             }
             if self.cursor_col > 0 && self.grid[self.cursor_row][self.cursor_col - 1].wide {
@@ -243,10 +241,14 @@ impl vte::Perform for Vt100Screen {
                 self.cursor_col = self.saved_col;
             }
             'G' => {
-                self.cursor_col = (p1(0) as usize).saturating_sub(1).min(self.cols.saturating_sub(1));
+                self.cursor_col = (p1(0) as usize)
+                    .saturating_sub(1)
+                    .min(self.cols.saturating_sub(1));
             }
             'd' => {
-                self.cursor_row = (p1(0) as usize).saturating_sub(1).min(self.rows.saturating_sub(1));
+                self.cursor_row = (p1(0) as usize)
+                    .saturating_sub(1)
+                    .min(self.rows.saturating_sub(1));
             }
             'S' => self.scroll_up(p1(0) as usize),
             'T' => self.scroll_down(p1(0) as usize),
