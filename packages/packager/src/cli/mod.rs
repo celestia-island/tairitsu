@@ -1,3 +1,4 @@
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
@@ -375,6 +376,28 @@ enum IconsCommands {
         #[arg(short, long)]
         search: Option<String>,
     },
+
+    /// Resolve icons from consumer Cargo.toml metadata (fetch + generate .dat)
+    Resolve {
+        /// Output directory for generated .dat files (default: hikari-icons package root)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+
+        /// Offline mode: skip network fetch, use cache only
+        #[arg(long)]
+        offline: bool,
+
+        /// Also generate woff2 subsets for sets that have fonts
+        #[arg(long)]
+        with_fonts: bool,
+
+        /// Static files output directory for woff2/CSS (default: target/tairitsu-dist/static)
+        #[arg(long)]
+        static_dir: Option<PathBuf>,
+    },
+
+    /// Show available icon sets and their sources
+    Sets,
 }
 
 #[derive(Subcommand)]
@@ -966,6 +989,101 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
 
                 if icons.len() > 100 {
                     crate::log_info!("  ... and {} more", icons.len() - 100);
+                }
+            }
+            IconsCommands::Resolve {
+                output,
+                offline,
+                with_fonts,
+                static_dir,
+            } => {
+                let meta = crate::icons::read_consumer_metadata(&manifest_path)?;
+
+                if meta.sets.is_empty() {
+                    crate::log_info!("No icon sets configured in [package.metadata.hikari.icons]");
+                    return Ok(());
+                }
+
+                crate::log_info!("Configured sets: {:?}", meta.sets);
+
+                let cache = crate::icons::IconCache::new(
+                    crate::icons::cache::default_cache_root(),
+                    offline,
+                );
+                let result = crate::icons::resolve(&meta, &cache)?;
+
+                if result.sets.is_empty() {
+                    crate::log_fail!("No icon sets resolved");
+                    return Ok(());
+                }
+
+                let output_dir = output.unwrap_or_else(|| manifest_path.join("packages/icons"));
+                std::fs::create_dir_all(&output_dir)?;
+
+                for resolved in &result.sets {
+                    let dat_path = output_dir.join(format!("{}_data.dat", resolved.source.name));
+                    let mut icons: Vec<_> = resolved.icons.iter().collect();
+                    icons.sort_by_key(|(name, _)| name.clone());
+
+                    let mut f = std::fs::File::create(&dat_path)?;
+                    for (name, data) in &icons {
+                        writeln!(f, "{}\t{}", name, data.path_d)?;
+                    }
+
+                    crate::log_ok!(
+                        "  {} → {} icons → {}",
+                        resolved.source.name,
+                        icons.len(),
+                        dat_path.display()
+                    );
+
+                    if with_fonts && resolved.source.font_file.is_some() {
+                        let static_out = static_dir
+                            .clone()
+                            .unwrap_or_else(|| {
+                                std::path::PathBuf::from("target/tairitsu-dist/static/fonts")
+                            });
+                        let icon_names: Vec<String> = resolved.icons.keys().cloned().collect();
+                        let cache_dir = cache.set_dir(resolved.source.name, &resolved.version);
+                        let extracted_dir = cache_dir.join("extracted");
+
+                        match crate::icons::generate_woff_subset(
+                            resolved.source,
+                            &icon_names,
+                            &extracted_dir,
+                            &static_out,
+                        ) {
+                            Ok(()) => {
+                                crate::log_ok!(
+                                    "  {} → woff2 → {}",
+                                    resolved.source.name,
+                                    static_out.display()
+                                );
+                            }
+                            Err(e) => {
+                                crate::log_warn!("  {} → woff skipped: {}", resolved.source.name, e);
+                            }
+                        }
+                    }
+                }
+
+                crate::log_ok!(
+                    "Resolved {} icon sets (mode: {})",
+                    result.sets.len(),
+                    result.mode
+                );
+            }
+            IconsCommands::Sets => {
+                use crate::icons::sources::ICON_SOURCES;
+                crate::log_ok!("Available icon sets ({}):", ICON_SOURCES.len());
+                for source in ICON_SOURCES {
+                    let font = if source.font_file.is_some() { " [+font]" } else { "" };
+                    crate::log_info!(
+                        "  {} — {}{}",
+                        source.name,
+                        source.display,
+                        font
+                    );
                 }
             }
         },
