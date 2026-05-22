@@ -1728,6 +1728,7 @@ pub async fn dev_server(
     verbose: bool,
     debug: bool,
     debug_port: Option<u16>,
+    clean: bool,
 ) -> crate::Result<()> {
     use axum::response::Html;
     use axum::routing::get;
@@ -1816,6 +1817,18 @@ pub async fn dev_server(
     }
 
     let (reload_tx, _) = tokio::sync::broadcast::channel::<()>(8);
+
+    if clean {
+        let dist_dir = if config.build.output_dir.is_relative() {
+            config.manifest_dir.join(&config.build.output_dir)
+        } else {
+            config.build.output_dir.clone()
+        };
+        if dist_dir.exists() {
+            crate::log_info!("Cleaning output directory: {}", dist_dir.display());
+            let _ = std::fs::remove_dir_all(&dist_dir);
+        }
+    }
 
     let initial_started = Instant::now();
     crate::log_progress!(

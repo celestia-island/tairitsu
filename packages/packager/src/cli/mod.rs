@@ -99,6 +99,10 @@ enum Commands {
         /// Port for debug API server (default: same as dev port + 1, or 3001)
         #[arg(long)]
         debug_port: Option<u16>,
+
+        /// Clean output directory before building
+        #[arg(long)]
+        clean: bool,
     },
 
     /// Build for production
@@ -691,6 +695,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             ssr,
             debug,
             debug_port,
+            clean,
         }) => {
             let config = crate::config::Config::load(&manifest_path)?;
             if ssr {
@@ -721,6 +726,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                         cli.verbose > 0,
                         debug,
                         debug_port,
+                        clean,
                     )
                     .await?;
                 }
