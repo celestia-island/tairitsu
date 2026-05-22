@@ -55,7 +55,7 @@ pub fn render_overview() -> VNode {
     VNode::Element(
         VElement::new("div")
             .attr("id", "page-packages-overview")
-            .class("ts-page")
+            .class("hikari-page")
             .children(vec![
                 breadcrumb(&[("Home", "/"), ("Packages", "")]),
                 VNode::Element(
@@ -136,7 +136,7 @@ pub fn render_list() -> VNode {
     VNode::Element(
         VElement::new("div")
             .attr("id", "page-packages-list")
-            .class("ts-page")
+            .class("hikari-page")
             .children(vec![
                 breadcrumb(&[
                     ("Home", "/"),

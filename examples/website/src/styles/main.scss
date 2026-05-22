@@ -947,15 +947,6 @@ body {
   overflow-x: hidden;
 }
 
-// SPA page visibility — JS router toggles .is-active on .ts-page divs.
-.ts-page {
-  display: none;
-}
-
-.ts-page.is-active {
-  display: block;
-}
-
 a {
   color: var(--hi-color-primary);
   text-decoration: none;

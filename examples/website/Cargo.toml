@@ -221,7 +221,7 @@ head = """
     }
 
     function hideAllPages() {
-        document.querySelectorAll('.ts-page').forEach(function(p) {
+        document.querySelectorAll('.hikari-page').forEach(function(p) {
             p.classList.remove('is-active');
             p.setAttribute('aria-hidden', 'true');
         });
