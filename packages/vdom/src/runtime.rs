@@ -173,6 +173,11 @@ pub fn with_component<T>(id: ComponentId, f: impl FnOnce() -> T) -> T {
     })
 }
 
+/// Get the ID of the currently active component, if any.
+pub fn active_component_id() -> Option<ComponentId> {
+    RUNTIME.with(|runtime| runtime.borrow().active_component)
+}
+
 /// Track a signal dependency for the current component.
 pub fn track_signal(signal_ptr: usize) {
     RUNTIME.with(|runtime| {
@@ -325,15 +330,18 @@ pub fn subscribe_component(signal_ptr: usize, component_id: ComponentId) {
 
 /// Notify all dependent components that a signal has changed.
 pub fn notify_signal(signal_ptr: usize) {
-    RUNTIME.with(|runtime| {
-        let rt = runtime.borrow();
-
-        if let Some(components) = rt.signal_dependencies.get(&signal_ptr) {
-            for &component_id in components {
-                mark_dirty(component_id);
-            }
-        }
+    let components: Vec<ComponentId> = RUNTIME.with(|runtime| {
+        runtime
+            .borrow()
+            .signal_dependencies
+            .get(&signal_ptr)
+            .cloned()
+            .unwrap_or_default()
     });
+
+    for component_id in components {
+        mark_dirty(component_id);
+    }
 }
 
 /// Cleanup resources for a component.

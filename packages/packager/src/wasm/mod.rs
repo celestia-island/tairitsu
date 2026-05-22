@@ -1069,16 +1069,89 @@ fn prepare_component_wrapper_fallback(
         ));
     }
 
-    rewrite_wrapper_imports_to_esm(output_dir)?;
+    let local_shim_available = bundle_local_wasi_shim(output_dir, pb)?;
+    rewrite_wrapper_imports(output_dir, local_shim_available)?;
 
     Ok(())
 }
 
-fn rewrite_wrapper_imports_to_esm(output_dir: &std::path::Path) -> crate::Result<()> {
+const WASI_SHIM_MODULES: &[&str] = &[
+    "io",
+    "cli",
+    "random",
+    "clocks",
+    "filesystem",
+    "sockets",
+];
+
+fn bundle_local_wasi_shim(
+    output_dir: &std::path::Path,
+    pb: &ProgressBar,
+) -> crate::Result<bool> {
+    let shim_dir = output_dir.join("wasi-shim");
+    if shim_dir.exists() {
+        let marker = shim_dir.join(".tairitsu-bundled");
+        if marker.exists() {
+            return Ok(true);
+        }
+    }
+
+    let node = if cfg!(windows) { "node.exe" } else { "node" };
+    let script = include_str!("bundle-wasi-shim.js");
+
+    let temp_script = output_dir.join("_wasi_shim_bundle.js");
+    std::fs::write(&temp_script, script)?;
+
+    let result = std::process::Command::new(node)
+        .arg(&temp_script)
+        .arg(shim_dir.to_str().unwrap_or("."))
+        .output();
+
+    let _ = std::fs::remove_file(&temp_script);
+
+    match result {
+        Ok(output) if output.status.success() => {
+            let count = WASI_SHIM_MODULES.len();
+            pb.println(format!(
+                "✓  Bundled {} WASI preview2-shim modules locally",
+                count
+            ));
+            Ok(true)
+        }
+        Ok(_) => {
+            pb.println(
+                "⚠  Could not bundle WASI shim locally (npm unavailable?). Falling back to CDN.".to_string()
+            );
+            Ok(false)
+        }
+        Err(_) => {
+            pb.println(
+                "⚠  Could not bundle WASI shim locally (node not found?). Falling back to CDN.".to_string()
+            );
+            Ok(false)
+        }
+    }
+}
+
+fn rewrite_wrapper_imports(
+    output_dir: &std::path::Path,
+    local_shim_available: bool,
+) -> crate::Result<()> {
     let wrapper_dir = output_dir.join("component-wrapper");
     if !wrapper_dir.exists() {
         return Ok(());
     }
+
+    let local_prefix = if local_shim_available {
+        "'/wasi-shim/"
+    } else {
+        "'https://esm.sh/@bytecodealliance/preview2-shim/"
+    };
+    let local_prefix_dq = if local_shim_available {
+        "\"/wasi-shim/"
+    } else {
+        "\"https://esm.sh/@bytecodealliance/preview2-shim/"
+    };
 
     for entry in std::fs::read_dir(&wrapper_dir)? {
         let entry = entry?;
@@ -1094,11 +1167,11 @@ fn rewrite_wrapper_imports_to_esm(output_dir: &std::path::Path) -> crate::Result
         let patched = content
             .replace(
                 "'@bytecodealliance/preview2-shim/",
-                "'https://esm.sh/@bytecodealliance/preview2-shim/",
+                local_prefix,
             )
             .replace(
                 "\"@bytecodealliance/preview2-shim/",
-                "\"https://esm.sh/@bytecodealliance/preview2-shim/",
+                local_prefix_dq,
             );
 
         if patched != content {
@@ -1470,477 +1543,17 @@ fn generate_component_html_with_output_dir(
     // Browser glue bundle path (relative to output directory)
     let glue_bundle_path = &config.build.browser_glue_path;
 
-    let html = format!(
-        r#"<!DOCTYPE html>
-<html lang="{lang}">
-<head>
-    <meta charset="{charset}">
-    <meta name="viewport" content="{viewport}">
-    <title>{title}</title>
-    {favicon_link}
-    {head}
-</head>
-<body class="{body_class}" data-booting>
-    <style>[data-booting] {{ visibility: hidden !important; }}</style>
-    <script>setTimeout(function(){{document.body.removeAttribute('data-booting')}},10000)</script>
-    <div id="app">Loading...</div>
-    <!-- Import map (WASI preview2-shim + tairitsu-glue interfaces) is created
-         dynamically by __tairitsu_glue__.js, which runs synchronously before
-         any module scripts, guaranteeing a single complete import map. -->
-    <script src="{glue_bundle_path}?v={v}"></script>
-    <script type="module">
-        const bootError = (msg, err) => {{
-            console.error('[tairitsu] Boot failed:', msg, err || '');
-            const appRoot = document.getElementById('app');
-            if (appRoot) appRoot.innerHTML =
-                '<div style="padding:2em;font-family:monospace;color:#e06c75">' +
-                '<b>Tairitsu boot error</b><br><pre style="margin-top:.5em;white-space:pre-wrap">' +
-                (err ? String(err.message || err) : String(msg)) +
-                '</pre></div>';
-            document.body.removeAttribute('data-booting');
-        }};
-
-        try {{
-        const {{ instantiateWithWrapper }} = await import('/component-wrapper-loader.js?v={v}');
-
-        const appRoot = document.getElementById('app');
-        const setAppStatus = (text) => {{
-            if (!appRoot) return;
-            const current = (appRoot.textContent || '').trim();
-            if (current === 'Loading...') {{
-                appRoot.textContent = text;
-            }}
-        }};
-
-        const clearLoadingIfUnchanged = () => {{
-            if (!appRoot) return;
-            const current = (appRoot.textContent || '').trim();
-            if (current === 'Loading...') {{
-                appRoot.textContent = '';
-            }}
-        }};
-
-        const tryInvokeBootExports = async (result) => {{
-            const normalizeBootName = (name) => {{
-                const lowered = String(name || '').toLowerCase();
-                if (lowered === 'run') return 'run';
-                if (lowered === 'main') return 'main';
-                if (lowered === 'init') return 'init';
-                if (lowered === 'start') return 'start';
-                return null;
-            }};
-
-            const seenObjects = new Set();
-            const seenFunctions = new Set();
-            const discovered = [];
-
-            const collect = (obj, depth = 0) => {{
-                if (!obj || typeof obj !== 'object' || depth > 3) return;
-                if (seenObjects.has(obj)) return;
-                seenObjects.add(obj);
-
-                for (const [name, value] of Object.entries(obj)) {{
-                    if (typeof value !== 'function') continue;
-                    const kind = normalizeBootName(name);
-                    if (!kind) continue;
-                    if (seenFunctions.has(value)) continue;
-                    seenFunctions.add(value);
-                    discovered.push({{ kind, fn: value }});
-                }}
-
-                for (const [, value] of Object.entries(obj)) {{
-                    if (value && typeof value === 'object') {{
-                        collect(value, depth + 1);
-                    }}
-                }}
-            }};
-
-            const targets = [
-                result,
-                result && result.instance,
-                result && result.exports,
-                result && result.instance && result.instance.exports,
-            ];
-
-            for (const target of targets) {{
-                collect(target);
-                if (target && target.exports) collect(target.exports);
-            }}
-
-            let invoked = false;
-
-            for (const preferred of ['run', 'main', 'init']) {{
-                for (const entry of discovered) {{
-                    if (entry.kind !== preferred) continue;
-                    await entry.fn();
-                    invoked = true;
-                }}
-            }}
-
-            if (!invoked) {{
-                const fallbackStart = discovered.find((entry) => entry.kind === 'start');
-                if (fallbackStart) {{
-                    await fallbackStart.fn();
-                    invoked = true;
-                }}
-            }}
-
-            return invoked;
-        }};
-
-        // Build imports object from registered browser glue interfaces
-        // plus WASI preview2 shim (required for wasm32-wasip2 components).
-        const buildImports = async () => {{
-            const imports = {{}};
-
-            // Browser glue interfaces
-            if (globalThis.__TAIRITSU_GLUE__ && globalThis.__TAIRITSU_GLUE__.INTERFACES) {{
-                for (const [shortName, exports] of Object.entries(globalThis.__TAIRITSU_GLUE__.INTERFACES)) {{
-                    const ifaceName = shortName.replace('@tairitsu-glue/', '');
-                    const fullName = `tairitsu-browser:full/${{ifaceName}}@0.2.0`;
-                    imports[fullName] = exports;
-                }}
-            }}
-
-            // WASI preview2 shim — needed for direct WASM component instantiation
-            // when no jco wrapper is available.  The shim is loaded from esm.sh CDN.
-            if (!globalThis.__wasiShimModules) {{
-                try {{
-                    const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('CDN import timed out')), ms))]);
-                    const [
-                        wasiIo,
-                        wasiCli,
-                        wasiRandom,
-                        wasiClocks,
-                        wasiFilesystem,
-                        wasiSockets,
-                    ] = await withTimeout(Promise.all([
-                        import('https://esm.sh/@bytecodealliance/preview2-shim/io'),
-                        import('https://esm.sh/@bytecodealliance/preview2-shim/cli'),
-                        import('https://esm.sh/@bytecodealliance/preview2-shim/random'),
-                        import('https://esm.sh/@bytecodealliance/preview2-shim/clocks'),
-                        import('https://esm.sh/@bytecodealliance/preview2-shim/filesystem'),
-                        import('https://esm.sh/@bytecodealliance/preview2-shim/sockets'),
-                    ]), 15000);
-                    globalThis.__wasiShimModules = {{ wasiIo: wasiIo, wasiCli: wasiCli, wasiRandom: wasiRandom, wasiClocks: wasiClocks, wasiFilesystem: wasiFilesystem, wasiSockets: wasiSockets }};
-                }} catch (e) {{
-                    console.warn('[tairitsu] Could not load WASI preview2 shim:', e);
-                }}
-            }}
-            if (globalThis.__wasiShimModules) {{
-                const s = globalThis.__wasiShimModules;
-                imports['wasi:cli/environment@0.2.0'] = s.wasiCli.environment;
-                imports['wasi:cli/exit@0.2.0'] = s.wasiCli.exit;
-                imports['wasi:cli/stdin@0.2.0'] = s.wasiCli.stdin;
-                imports['wasi:cli/stdout@0.2.0'] = s.wasiCli.stdout;
-                imports['wasi:cli/stderr@0.2.0'] = s.wasiCli.stderr;
-                imports['wasi:clocks/monotonic-clock@0.2.0'] = s.wasiClocks.monotonicClock;
-                imports['wasi:clocks/wall-clock@0.2.0'] = s.wasiClocks.wallClock;
-                imports['wasi:filesystem/preopens@0.2.0'] = s.wasiFilesystem.preopens;
-                imports['wasi:io/error@0.2.0'] = s.wasiIo.error;
-                imports['wasi:io/poll@0.2.0'] = s.wasiIo.poll;
-                imports['wasi:io/streams@0.2.0'] = s.wasiIo.streams;
-                imports['wasi:random/random@0.2.0'] = s.wasiRandom.random;
-                imports['wasi:sockets/tcp@0.2.0'] = s.wasiSockets.tcp;
-                imports['wasi:sockets/udp@0.2.0'] = s.wasiSockets.udp;
-                imports['wasi:sockets/network@0.2.0'] = s.wasiSockets.network;
-                imports['wasi:sockets/instance-network@0.2.0'] = s.wasiSockets.instanceNetwork;
-            }}
-
-            return imports;
-        }};
-
-        let bootInvoked = false;
-
-        // Strategy: always try the jco component wrapper first (avoids a
-        // redundant 50MB fetch of the raw WASM just to inspect magic bytes).
-        // The wrapper internally fetches only the core module it needs.
-        // Fall back to direct WASM loading only if no wrapper is available.
-        try {{
-            const imports = await buildImports();
-            const wrapperResult = await instantiateWithWrapper(imports);
-            if (globalThis.__setWasmExports && wrapperResult) {{
-                globalThis.__setWasmExports(wrapperResult);
-            }}
-            bootInvoked = await tryInvokeBootExports(wrapperResult);
-        }} catch (wrapperErr) {{
-            console.error('[tairitsu] Component wrapper failed, falling back to direct WASM load:', wrapperErr);
-            try {{
-                const imports = await buildImports();
-                const response = await fetch('/{wasm_file}');
-                const bytes = await response.arrayBuffer();
-                const magic = new Uint8Array(bytes, 0, 8);
-                const isWasm =
-                    magic[0] === 0x00 && magic[1] === 0x61 && magic[2] === 0x73 && magic[3] === 0x6d;
-                const isComponent = isWasm &&
-                    magic[4] === 0x0d && magic[5] === 0x00 && magic[6] === 0x01 && magic[7] === 0x00;
-
-                if (isComponent && typeof WebAssembly.Component === 'function') {{
-                    const component = new WebAssembly.Component(bytes);
-                    const componentResult = await WebAssembly.instantiate(component, imports);
-                    if (globalThis.__setWasmExports && componentResult) {{
-                        globalThis.__setWasmExports(componentResult);
-                    }}
-                    bootInvoked = await tryInvokeBootExports(componentResult);
-                }} else if (isComponent) {{
-                    console.error('[tairitsu] WASM Component detected but WebAssembly.Component is not supported.');
-                    setAppStatus('Failed to load: WASM Components require the jco wrapper. Check console.');
-                }} else {{
-                    const module = await WebAssembly.compile(bytes);
-                    const moduleResult = await WebAssembly.instantiate(module, imports);
-                    if (globalThis.__setWasmExports && moduleResult) {{
-                        globalThis.__setWasmExports(moduleResult);
-                    }}
-                    bootInvoked = await tryInvokeBootExports(moduleResult);
-                }}
-            }} catch (directErr) {{
-                bootError('Direct WASM load failed', directErr);
-            }}
-        }}
-
-        if (!bootInvoked) {{
-            setAppStatus('Component initialized (no exported run/start entry found).');
-        }} else {{
-            clearLoadingIfUnchanged();
-        }}
-
-        // Wait for all stylesheets to finish loading before running any
-        // post-boot DOM fixups.  CSS <link>s in <head> block rendering but
-        // a deferred module script can execute before every stylesheet has
-        // fully parsed (edge-case on slow networks / large bundles).
-        const stylesReady = () => {{
-            if (!document.styleSheets) return Promise.resolve();
-            const pending = [];
-            for (const sheet of document.styleSheets) {{
-                try {{ void sheet.cssRules; }} catch (_) {{
-                    // cssRules throws when the stylesheet is still loading
-                    // (cross-origin sheets always throw, but those are fine
-                    // since they are not our component styles).
-                    pending.push(sheet);
-                }}
-            }}
-            if (pending.length === 0) return Promise.resolve();
-            return new Promise(resolve => {{
-                let count = 0;
-                const check = () => {{
-                    count++;
-                    if (count > 50) {{ resolve(); return; }}
-                    let stillPending = 0;
-                    for (const s of pending) {{
-                        try {{ void s.cssRules; }} catch (_) {{ stillPending++; }}
-                    }}
-                    if (stillPending === 0) resolve();
-                    else setTimeout(check, 40);
-                }};
-                check();
-            }});
-        }};
-
-        // Fix SVG elements created with wrong namespace (HTML instead of SVG).
-        // WIT document::createElement always creates HTML-namespaced elements,
-        // which makes SVG graphics invisible. This post-process step replaces
-        // any HTML-namespaced <svg> elements with proper SVG namespaced ones.
-        const fixSvgNamespaces = () => {{
-            const SVG_NS = 'http://www.w3.org/2000/svg';
-            document.querySelectorAll('svg').forEach(svg => {{
-                if (svg.namespaceURI === SVG_NS) return;
-                const parent = svg.parentNode;
-                if (!parent) return;
-                const newSvg = document.createElementNS(SVG_NS, 'svg');
-                for (const attr of svg.attributes) {{
-                    if (attr.name.toLowerCase() === 'viewbox') {{
-                        newSvg.setAttribute('viewBox', attr.value);
-                    }} else {{
-                        newSvg.setAttribute(attr.name, attr.value);
-                    }}
-                }}
-                newSvg.innerHTML = svg.innerHTML;
-                parent.replaceChild(newSvg, svg);
-            }});
-        }};
-
-        // WASM just replaced #app content; re-run SPA router so the
-        // correct page is activated for the current URL path.
-        // The WASM boot function may spawn async DOM work (rAF, setTimeout,
-        // etc.) that finishes *after* the await resolves.  A single rAF
-        // is not enough — we wait for DOM mutations inside #app to settle
-        // before calling navigate(), so every .ts-page element exists.
-        const waitForDomSettle = (root, maxWait) => {{
-            return new Promise(resolve => {{
-                const deadline = Date.now() + maxWait;
-                let timer = null;
-                let settled = false;
-
-                const tryResolve = () => {{
-                    if (settled) return;
-                    settled = true;
-                    if (timer) {{ clearTimeout(timer); timer = null; }}
-                    observer.disconnect();
-                    resolve();
-                }};
-
-                const observer = new MutationObserver(() => {{
-                    // mutations happening — reset the settle timer
-                    if (timer) clearTimeout(timer);
-                    if (Date.now() >= deadline) {{ tryResolve(); return; }}
-                    timer = setTimeout(tryResolve, 80);
-                }});
-
-                observer.observe(root, {{
-                    childList: true,
-                    subtree: true,
-                    attributes: false,
-                }});
-
-                // If no mutations fire within a short window, resolve.
-                timer = setTimeout(tryResolve, 120);
-
-                // Absolute safety net.
-                setTimeout(tryResolve, maxWait);
-            }});
-        }};
-
-        (async () => {{
-            await stylesReady();
-
-            const appRoot = document.getElementById('app');
-            if (appRoot) {{
-                await waitForDomSettle(appRoot, 2000);
-            }}
-
-            fixSvgNamespaces();
-
-            if (typeof navigate === 'function') {{
-                navigate();
-            }} else {{
-                window.dispatchEvent(new PopStateEvent('popstate'));
-            }}
-
-            document.body.removeAttribute('data-booting');
-            document.documentElement.dataset.tairitsuReady='hydrated';
-        }})();
-        (function initGlow() {{
-            let rafId = null;
-            const activeGlow = new Map();
-
-            document.addEventListener('mouseenter', function(e) {{
-                const glow = e.target.closest ? e.target.closest('[data-glow]') : null;
-                if (!glow || activeGlow.has(glow)) return;
-                activeGlow.set(glow, {{ x: 50, y: 50 }});
-                if (!rafId) scheduleFrame();
-            }}, true);
-
-            document.addEventListener('mousemove', function(e) {{
-                const glow = e.target.closest ? e.target.closest('[data-glow]') : null;
-                if (!glow || !activeGlow.has(glow)) return;
-                const rect = glow.getBoundingClientRect();
-                if (rect.width > 0 && rect.height > 0) {{
-                    activeGlow.get(glow).x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-                    activeGlow.get(glow).y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-                }}
-            }}, true);
-
-            document.addEventListener('mouseleave', function(e) {{
-                const glow = e.target.closest ? e.target.closest('[data-glow]') : null;
-                if (!glow) return;
-                activeGlow.delete(glow);
-                glow.style.setProperty('--glow-x', '50%');
-                glow.style.setProperty('--glow-y', '50%');
-            }}, true);
-
-            function scheduleFrame() {{
-                rafId = requestAnimationFrame(function tick() {{
-                    for (const [el, pos] of activeGlow) {{
-                        el.style.setProperty('--glow-x', pos.x + '%');
-                        el.style.setProperty('--glow-y', pos.y + '%');
-                    }}
-                    if (activeGlow.size > 0) {{
-                        rafId = requestAnimationFrame(tick);
-                    }} else {{
-                        rafId = null;
-                    }}
-                }});
-            }}
-        }})();
-
-        // Hot-reload client: connects to dev server SSE endpoint.
-        // On rebuild notification, reloads the page. Gives up after 3
-        // consecutive failures and suggests using release builds.
-        (function initHotReload() {{
-            let failures = 0;
-            const MAX_FAILURES = 3;
-            function connect() {{
-                const es = new EventSource('/__tairitsu_reload');
-                es.onmessage = function(ev) {{
-                    if (ev.data === 'reload') {{
-                        console.log('[tairitsu] rebuild detected, reloading…');
-                        location.reload();
-                    }}
-                }};
-                es.onerror = function() {{
-                    failures++;
-                    es.close();
-                    if (failures >= MAX_FAILURES) {{
-                        console.warn(
-                            '[tairitsu] hot-reload connection failed ' + MAX_FAILURES +
-                            ' times. Dev server may not be running.' +
-                            '\\nFor production builds, use: tairitsu build --release'
-                        );
-                        return;
-                    }}
-                    setTimeout(connect, 3000);
-                }};
-            }}
-            connect();
-        }})();
-
-        // Scrollbar auto-retract: track expands to 8px on scroll,
-        // retracts to 4px with CSS transition after ~1s of inactivity.
-        (function initScrollbarAutoRetract() {{
-            var RETRACT_DELAY = 1000;
-            var timers = new WeakMap();
-            function setupTrack(contentEl) {{
-                var wrapper = contentEl.closest('.custom-scrollbar-wrapper');
-                if (!wrapper) return;
-                var track = wrapper.querySelector('.custom-scrollbar-track');
-                if (!track) return;
-                if (timers.has(track)) return;
-                timers.set(track, null);
-                contentEl.addEventListener('scroll', function() {{
-                    track.style.width = '8px';
-                    track.style.transition = 'none';
-                    var t = timers.get(track);
-                    if (t) clearTimeout(t);
-                    timers.set(track, setTimeout(function() {{
-                        track.style.transition = 'width 300ms cubic-bezier(0.25, 0.1, 0.25, 1)';
-                        track.style.width = '4px';
-                        timers.set(track, null);
-                    }}, RETRACT_DELAY));
-                }}, {{ passive: true }});
-            }}
-            function initAll() {{
-                document.querySelectorAll('.custom-scrollbar-content').forEach(setupTrack);
-            }}
-            initAll();
-            new MutationObserver(initAll).observe(document.body, {{ childList: true, subtree: true }});
-        }})();
-
-        }} catch (topErr) {{
-            bootError('Unhandled error', topErr);
-        }}
-    </script>
-</body>
-</html>"#,
-        lang = config.html.lang,
-        charset = config.html.charset,
-        viewport = config.html.viewport,
-        title = title,
-        favicon_link = favicon_link,
-        head = config.html.head,
-        body_class = config.html.body_class,
-        wasm_file = wasm_file,
-        v = v,
-    );
+    let html = include_str!("index.html.template")
+        .replace("{{TAIRITSU_LANG}}", &config.html.lang)
+        .replace("{{TAIRITSU_CHARSET}}", &config.html.charset)
+        .replace("{{TAIRITSU_VIEWPORT}}", &config.html.viewport)
+        .replace("{{TAIRITSU_TITLE}}", &title)
+        .replace("{{TAIRITSU_FAVICON}}", &favicon_link)
+        .replace("{{TAIRITSU_HEAD}}", &config.html.head)
+        .replace("{{TAIRITSU_BODY_CLASS}}", &config.html.body_class)
+        .replace("{{TAIRITSU_WASM_FILE}}", &wasm_file)
+        .replace("{{TAIRITSU_GLUE_BUNDLE}}", glue_bundle_path)
+        .replace("{{TAIRITSU_V}}", &v.to_string());
 
     let mut html = html;
 
@@ -2017,8 +1630,8 @@ fn generate_route_html_files(
 
         let preload = route_preload_script(&route.path);
         let route_html = base_html.replace(
-            "<div id=\"app\">Loading...</div>",
-            &format!("<div id=\"app\">Loading...</div>\n    {}", preload),
+            "<div id=\"app\">Loading…</div>",
+            &format!("<div id=\"app\" style=\"display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,sans-serif;color:rgba(255,255,255,.7)\"><div>Loading…</div></div>\n    {}", preload),
         );
 
         let route_file = route_dir.join("index.html");

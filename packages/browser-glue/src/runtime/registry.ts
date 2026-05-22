@@ -115,36 +115,28 @@ if (!globalThis.__tairitsuAnimState) {
 }
 
 export function registerImportMap() {
-  // Start with static external URLs for WASI preview2-shim
-  const imports = {
-    // WASI preview2-shim (static external CDN URLs required by jco-transpiled wrappers)
-    "@bytecodealliance/preview2-shim/cli": "https://esm.sh/@bytecodealliance/preview2-shim/cli",
-    "@bytecodealliance/preview2-shim/filesystem": "https://esm.sh/@bytecodealliance/preview2-shim/filesystem",
-    "@bytecodealliance/preview2-shim/io": "https://esm.sh/@bytecodealliance/preview2-shim/io",
-    "@bytecodealliance/preview2-shim/random": "https://esm.sh/@bytecodealliance/preview2-shim/random",
-  };
+  const imports: Record<string, string> = {};
 
   for (const [ifacePath, exports] of Object.entries(INTERFACES)) {
     const code = generateModuleCode(exports);
     const blob = new Blob([code], { type: "application/javascript" });
     const blobUrl = URL.createObjectURL(blob);
-    // Add bare module specifier (e.g., "@tairitsu-glue/console")
     imports[ifacePath] = blobUrl;
-    // Also add the full WIT package name (e.g., "tairitsu-browser:full/console@0.2.0")
     const ifaceName = ifacePath.replace("@tairitsu-glue/", "");
     imports[`tairitsu-browser:full/${ifaceName}@0.2.0`] = blobUrl;
   }
 
-  // Remove any pre-existing import map to avoid the browser's one-import-map
-  // limitation in Chrome < 127, where a second importmap is silently ignored.
+  const shimModules = ["cli", "filesystem", "io", "random", "clocks", "sockets"];
+  for (const mod of shimModules) {
+    const spec = `@bytecodealliance/preview2-shim/${mod}`;
+    imports[spec] = `/wasi-shim/${mod}.js`;
+  }
+
   const existingMap = document.querySelector('script[type="importmap"]');
   if (existingMap) {
     existingMap.remove();
   }
 
-  // Create and prepend the single, complete import map (WASI + tairitsu-glue).
-  // This script runs synchronously before any <script type="module"> is loaded,
-  // so the import map is guaranteed to be registered first.
   const script = document.createElement("script");
   script.type = "importmap";
   script.textContent = JSON.stringify({ imports });
