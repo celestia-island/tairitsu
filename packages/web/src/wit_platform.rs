@@ -374,11 +374,11 @@ pub mod wasm_impl {
     type IntervalCallback = Box<dyn FnMut()>;
 
     pub(super) struct WsHandleEntry {
-        handle: u64,
-        on_open_cb_id: u64,
-        on_message_cb_id: u64,
-        on_close_cb_id: u64,
-        on_error_cb_id: u64,
+        pub handle: u64,
+        pub on_open_cb_id: u64,
+        pub on_message_cb_id: u64,
+        pub on_close_cb_id: u64,
+        pub on_error_cb_id: u64,
     }
 
     thread_local! {
@@ -2625,7 +2625,7 @@ impl WsConnection {
         wasm_impl::bindings::tairitsu_browser::full::web_socket::close(
             self.handle,
             code,
-            reason.map(|s| s.to_string()),
+            reason,
         );
     }
 }
@@ -2651,7 +2651,7 @@ pub fn ws_connect(
     on_error: Box<dyn FnOnce()>,
 ) -> WsConnection {
     let handle = wasm_impl::bindings::tairitsu_browser::full::platform_helpers::connect_web_socket(
-        url.to_string(),
+        url,
     );
 
     let on_open_cb_id = wasm_impl::WS_HANDLE_MAP.with(|m| {
@@ -2707,7 +2707,7 @@ pub fn ws_close(conn: &WsConnection, code: Option<u16>, reason: Option<&str>) {
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub fn fetch_text(url: &str, on_complete: Box<dyn FnOnce(Result<String, String>)>) {
     let promise_id = wasm_impl::bindings::tairitsu_browser::full::platform_helpers::fetch_promise(
-        url.to_string(),
+        url,
         None,
     );
     wasm_impl::PROMISE_CALLBACKS.with(|m| {
@@ -2722,8 +2722,8 @@ pub fn fetch_text_with_options(
     on_complete: Box<dyn FnOnce(Result<String, String>)>,
 ) {
     let promise_id = wasm_impl::bindings::tairitsu_browser::full::platform_helpers::fetch_promise(
-        url.to_string(),
-        Some(options.to_string()),
+        url,
+        Some(options),
     );
     wasm_impl::PROMISE_CALLBACKS.with(|m| {
         m.borrow_mut().insert(promise_id, on_complete);
