@@ -1,9 +1,11 @@
 //! Browser cache management
 
-use std::fs;
-use std::path::{Path, PathBuf};
-
 use anyhow::{Context, Result};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
+
 use tracing::info;
 
 use super::platform::Platform;

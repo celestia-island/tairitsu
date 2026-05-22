@@ -1,24 +1,22 @@
 mod colors;
 mod fonts;
 
+use std::io::Cursor;
+
+use ab_glyph::{point, Font, GlyphId, PxScale, ScaleFont};
+#[cfg(test)]
+use colors::index_to_rgb;
+use colors::resolve_color;
 #[cfg(test)]
 pub use colors::scheme_names;
 pub use colors::{get_scheme, ColorScheme};
 pub use fonts::Fonts;
-
-use std::io::Cursor;
-
-use ab_glyph::{point, Font, GlyphId, PxScale, ScaleFont};
 use image::{ImageBuffer, Rgba};
 
 use super::graphics::{ImagePlacement, InlineImageStore};
 #[cfg(test)]
 use super::screen::ColorKind;
 use super::screen::{Cell, RenderData};
-
-#[cfg(test)]
-use colors::index_to_rgb;
-use colors::resolve_color;
 
 type ImgBuf = ImageBuffer<Rgba<u8>, Vec<u8>>;
 

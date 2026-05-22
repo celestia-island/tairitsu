@@ -1,5 +1,7 @@
-use std::ops::{Deref, DerefMut};
-use std::rc::Rc;
+use std::{
+    ops::{Deref, DerefMut},
+    rc::Rc,
+};
 
 /// A smart pointer wrapping `Fn(T) -> R` for event handling.
 ///

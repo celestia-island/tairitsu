@@ -2,9 +2,8 @@
 
 use anyhow::{Context as AnyhowContext, Result};
 use bytes::Bytes;
-use wasmtime::component::Component;
-use wasmtime::error::Context;
-use wasmtime::{Config, Engine};
+
+use wasmtime::{component::Component, error::Context, Config, Engine};
 use wit_component::ComponentEncoder;
 
 // Include the WASI adapter binary at compile time

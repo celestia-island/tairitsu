@@ -4,6 +4,7 @@
 //! without generating code, useful for introspection and tooling.
 
 use anyhow::Result;
+
 use wit_parser::Resolve;
 
 /// WIT definition loader

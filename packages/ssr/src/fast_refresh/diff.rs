@@ -3,9 +3,8 @@
 //! This module provides utilities for comparing component definitions
 //! to determine if state can be preserved during hot reload.
 
-use std::collections::HashSet;
-
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 use super::ComponentSignature;
 

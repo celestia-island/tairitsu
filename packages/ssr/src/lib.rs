@@ -17,7 +17,9 @@ pub mod stubs;
 pub mod virtual_dom;
 
 use anyhow::Result;
+
 use bindings::BrowserFull;
+
 // Re-export sign_component for the sign_component_macro! to work
 pub use fast_refresh::sign_component;
 pub use host_state::{SsrConfig, SsrHostState};

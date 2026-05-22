@@ -3,15 +3,11 @@
 //! This module provides the runtime infrastructure for tracking signal
 //! dependencies and scheduling re-renders when signals change.
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use tracing::trace;
 
-use crate::patch::Patch;
-use crate::reactive::EffectHandle;
-use crate::VNode;
+use crate::{patch::Patch, reactive::EffectHandle, VNode};
 
 /// Component ID - unique identifier for each component instance
 pub type ComponentId = usize;

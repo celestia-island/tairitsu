@@ -4,12 +4,16 @@ pub mod pty_unix;
 pub mod pty_win;
 pub mod screen;
 
-use std::collections::HashMap;
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::{Arc, Mutex};
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::HashMap,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc, Mutex,
+    },
+};
 
 use screen::Vt100Screen;
-use serde::{Deserialize, Serialize};
 
 static SESSION_COUNTER: AtomicU32 = AtomicU32::new(0);
 

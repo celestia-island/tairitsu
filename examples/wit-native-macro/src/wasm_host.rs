@@ -49,10 +49,10 @@
 //! * No runtime serialization overhead
 //! * Easy composable interfaces
 
-use std::path::PathBuf;
-
 use anyhow::Result;
 use log::info;
+use std::path::PathBuf;
+
 use tairitsu_web::{Container, Registry};
 
 fn main() -> Result<()> {

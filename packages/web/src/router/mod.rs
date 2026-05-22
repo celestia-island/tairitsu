@@ -22,9 +22,7 @@
 
 pub mod segment;
 
-use std::collections::HashMap;
-use std::fmt;
-use std::sync::Arc;
+use std::{collections::HashMap, fmt, sync::Arc};
 
 pub use segment::{RouteSegment, SegmentType};
 use tairitsu_vdom::VNode;

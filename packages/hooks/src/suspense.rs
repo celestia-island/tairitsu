@@ -44,12 +44,14 @@
 //! - Automatic re-rendering via the runtime
 //! - Thread-safe state updates for async operations
 
-use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
-use std::fmt;
-use std::future::Future;
-use std::rc::Rc;
-use std::sync::Arc;
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    fmt,
+    future::Future,
+    rc::Rc,
+    sync::Arc,
+};
 
 use tairitsu_vdom::{runtime, VNode};
 

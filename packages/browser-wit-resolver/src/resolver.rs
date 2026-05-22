@@ -3,15 +3,13 @@
 //! Combines cache look-up, optional network fetch, and fallback to embedded
 //! WIT content (provided by `tairitsu-browser-worlds`).
 
-use std::path::{Path, PathBuf};
-
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
+
 use tracing::{debug, info};
 
-use crate::cache::Cache;
-use crate::fetch::FetchClient;
-use crate::DEFAULT_REGISTRY;
+use crate::{cache::Cache, fetch::FetchClient, DEFAULT_REGISTRY};
 
 /// A fully-resolved WIT package ready for use.
 #[derive(Debug, Clone)]

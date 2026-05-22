@@ -3,8 +3,7 @@
 //! Caches opaque handles (u64) to avoid repeated WIT calls for frequently
 //! accessed DOM objects like style declarations.
 
-use std::cell::RefCell;
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap};
 
 /// Cache for element-related handles to avoid repeated WIT calls.
 ///

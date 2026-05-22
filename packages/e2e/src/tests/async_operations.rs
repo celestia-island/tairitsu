@@ -8,9 +8,9 @@
 //! - RequestAnimationFrame
 //! - Clipboard operations (copy/read)
 
+use anyhow::Result;
 use std::time::{Duration, Instant};
 
-use anyhow::Result;
 use thirtyfour::{By, WebDriver};
 use tracing::info;
 

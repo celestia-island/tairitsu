@@ -3,12 +3,9 @@
 //! Tests for the `tairitsu doctor` command which checks project compatibility
 //! and environment setup.
 
-use std::fs;
-use std::path::PathBuf;
-use std::process::Command;
-use std::time::Instant;
-
 use anyhow::Result;
+use std::{fs, path::PathBuf, process::Command, time::Instant};
+
 use tempfile::TempDir;
 use thirtyfour::WebDriver;
 use tracing::info;

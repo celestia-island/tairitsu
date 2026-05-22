@@ -1,6 +1,5 @@
-use std::path::{Path, PathBuf};
-
 use anyhow::{Context, Result};
+use std::path::{Path, PathBuf};
 
 pub struct ScssCompiler {
     options: CompilerOptions,

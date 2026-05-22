@@ -3,10 +3,11 @@
 //! Validates that every function in every imported interface of `browser-full.wit`
 //! has a corresponding implementation in the browser-glue layer.
 
-use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
-
 use anyhow::{bail, Context, Result};
+use std::{
+    collections::{HashMap, HashSet},
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug)]
 pub struct InterfaceCoverage {

@@ -4,9 +4,12 @@
 //! Users need to implement WIT interface bindings and initialization themselves.
 
 use anyhow::{Context as AnyhowContext, Result};
-use wasmtime::component::{Component, Linker};
-use wasmtime::error::Context;
-use wasmtime::Store;
+
+use wasmtime::{
+    component::{Component, Linker},
+    error::Context,
+    Store,
+};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 #[cfg(feature = "dynamic")]

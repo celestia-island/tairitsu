@@ -28,9 +28,7 @@
 //! }
 //! ```
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 /// Unique identifier for a store instance
 pub type StoreId = usize;

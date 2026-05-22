@@ -1,7 +1,5 @@
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use std::collections::HashMap;
-
-use base64::engine::general_purpose::STANDARD as BASE64;
-use base64::Engine;
 
 use super::{decode_png, decode_rgb, decode_rgba, InlineImageStore};
 

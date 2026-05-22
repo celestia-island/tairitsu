@@ -1,7 +1,9 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::parse::{Parse, ParseStream};
-use syn::{Expr, ExprLit, Ident, Lit, LitStr, Pat, Token};
+use syn::{
+    parse::{Parse, ParseStream},
+    Expr, ExprLit, Ident, Lit, LitStr, Pat, Token,
+};
 
 pub struct RsxElement {
     pub tag: Ident,

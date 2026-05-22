@@ -3,9 +3,9 @@
 //! Provides the `ResourceIndexer` struct for scanning directories and building
 //! a resource index with content hashes for cache busting.
 
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tracing::debug;
 

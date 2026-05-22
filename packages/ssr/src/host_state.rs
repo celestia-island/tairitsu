@@ -4,8 +4,10 @@
 
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
-use crate::bindings::{DomRect, ResizeObserverEntryHost, ResizeObserverSizeHost};
-use crate::virtual_dom::SsrDom;
+use crate::{
+    bindings::{DomRect, ResizeObserverEntryHost, ResizeObserverSizeHost},
+    virtual_dom::SsrDom,
+};
 
 /// SSR configuration
 #[derive(Debug, Clone)]

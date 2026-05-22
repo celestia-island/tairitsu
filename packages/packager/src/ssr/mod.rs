@@ -6,9 +6,9 @@
 
 pub mod prerender;
 
+use anyhow::Result;
 use std::path::PathBuf;
 
-use anyhow::Result;
 #[cfg(feature = "ssr")]
 use tracing::error;
 #[cfg(feature = "dev-server")]
