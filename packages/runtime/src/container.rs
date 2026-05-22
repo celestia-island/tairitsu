@@ -110,6 +110,20 @@ impl GuestInstance {
         }
     }
 
+    /// Create a new guest instance with a dynamic invocation handle.
+    ///
+    /// When the guest instance is a raw [`wasmtime::component::Instance`]
+    /// (as opposed to a WIT-bindgen-generated wrapper), pass it as both
+    /// arguments so that [`Container::call_guest_raw_desc`] and friends work
+    /// without a typed WIT binding layer.
+    #[cfg(feature = "dynamic")]
+    pub fn new_dynamic(instance: wasmtime::component::Instance) -> Self {
+        Self {
+            inner: Box::new(instance),
+            dynamic_instance: Some(instance),
+        }
+    }
+
     /// Get the underlying instance
     ///
     /// # Type Parameters
@@ -1012,5 +1026,38 @@ mod tests {
             builder
         });
         assert!(state.is_ok());
+    }
+
+    #[test]
+    fn test_container_state_transitions() {
+        let created = ContainerState::Created;
+        let running = ContainerState::Running;
+        let stopped = ContainerState::Stopped;
+        let error = ContainerState::Error("trap".to_string());
+
+        assert_eq!(created, ContainerState::Created);
+        assert_eq!(running, ContainerState::Running);
+        assert_eq!(stopped, ContainerState::Stopped);
+        assert!(matches!(error, ContainerState::Error(msg) if msg == "trap"));
+    }
+
+    #[test]
+    fn test_container_state_equality() {
+        assert_eq!(ContainerState::Created, ContainerState::Created);
+        assert_ne!(ContainerState::Created, ContainerState::Running);
+        assert_ne!(ContainerState::Running, ContainerState::Stopped);
+        assert_ne!(
+            ContainerState::Error("a".into()),
+            ContainerState::Error("b".into())
+        );
+    }
+
+    #[test]
+    fn test_container_state_clone_debug() {
+        let state = ContainerState::Error("oom".to_string());
+        let cloned = state.clone();
+        assert_eq!(state, cloned);
+        let debug = format!("{:?}", state);
+        assert!(debug.contains("oom"));
     }
 }
