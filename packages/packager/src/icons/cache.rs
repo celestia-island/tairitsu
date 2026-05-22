@@ -139,20 +139,38 @@ pub fn default_cache_root() -> PathBuf {
     std::env::var("HIKARI_ICONS_CACHE")
         .map(PathBuf::from)
         .unwrap_or_else(|_| {
-            std::env::var("OUT_DIR")
-                .map(|d| PathBuf::from(d).join("../../../hikari-icons-cache"))
-                .unwrap_or_else(|_| {
-                    dirs_cache_root()
-                })
+            workspace_cache_root().join("icons")
         })
 }
 
-fn dirs_cache_root() -> PathBuf {
-    let base = std::env::var("XDG_CACHE_HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-            PathBuf::from(home).join(".cache")
-        });
-    base.join("hikari-icons")
+pub fn workspace_cache_root() -> PathBuf {
+    if let Ok(target_dir) = std::env::var("CARGO_TARGET_DIR") {
+        PathBuf::from(target_dir).join("tairitsu-cache")
+    } else if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let manifest_path = PathBuf::from(&manifest_dir);
+        let mut dir = manifest_path.clone();
+        loop {
+            if dir.join("Cargo.toml").exists() {
+                let target = dir.join("target").join("tairitsu-cache");
+                if let Some(parent) = dir.parent() {
+                    if parent.join("Cargo.toml").exists() || parent.join("Cargo.lock").exists() {
+                        return parent.join("target").join("tairitsu-cache");
+                    }
+                }
+                return target;
+            }
+            if !dir.pop() {
+                break;
+            }
+        }
+        PathBuf::from(manifest_dir).join("target").join("tairitsu-cache")
+    } else {
+        let base = std::env::var("XDG_CACHE_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+                PathBuf::from(home).join(".cache")
+            });
+        base.join("tairitsu-cache")
+    }
 }
