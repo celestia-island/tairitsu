@@ -1164,7 +1164,7 @@ fn rewrite_wrapper_imports(
         }
 
         let content = std::fs::read_to_string(&path)?;
-        let patched = content
+        let mut patched = content
             .replace(
                 "'@bytecodealliance/preview2-shim/",
                 local_prefix,
@@ -1173,6 +1173,22 @@ fn rewrite_wrapper_imports(
                 "\"@bytecodealliance/preview2-shim/",
                 local_prefix_dq,
             );
+
+        if local_shim_available {
+            patched = patched
+                .replace("'/wasi-shim/io'", "'/wasi-shim/io.js'")
+                .replace("'/wasi-shim/cli'", "'/wasi-shim/cli.js'")
+                .replace("'/wasi-shim/random'", "'/wasi-shim/random.js'")
+                .replace("'/wasi-shim/clocks'", "'/wasi-shim/clocks.js'")
+                .replace("'/wasi-shim/filesystem'", "'/wasi-shim/filesystem.js'")
+                .replace("'/wasi-shim/sockets'", "'/wasi-shim/sockets.js'")
+                .replace("\"/wasi-shim/io\"", "\"/wasi-shim/io.js\"")
+                .replace("\"/wasi-shim/cli\"", "\"/wasi-shim/cli.js\"")
+                .replace("\"/wasi-shim/random\"", "\"/wasi-shim/random.js\"")
+                .replace("\"/wasi-shim/clocks\"", "\"/wasi-shim/clocks.js\"")
+                .replace("\"/wasi-shim/filesystem\"", "\"/wasi-shim/filesystem.js\"")
+                .replace("\"/wasi-shim/sockets\"", "\"/wasi-shim/sockets.js\"");
+        }
 
         if patched != content {
             std::fs::write(&path, patched)?;
