@@ -1556,20 +1556,26 @@ fn generate_component_html_with_output_dir(
         .map(|href| format!("<link rel=\"icon\" href=\"./{}\">", href))
         .unwrap_or_default();
 
-    // Browser glue bundle path (relative to output directory)
     let glue_bundle_path = &config.build.browser_glue_path;
 
-    let html = include_str!("index.html.template")
-        .replace("{{TAIRITSU_LANG}}", &config.html.lang)
-        .replace("{{TAIRITSU_CHARSET}}", &config.html.charset)
-        .replace("{{TAIRITSU_VIEWPORT}}", &config.html.viewport)
-        .replace("{{TAIRITSU_TITLE}}", &title)
-        .replace("{{TAIRITSU_FAVICON}}", &favicon_link)
-        .replace("{{TAIRITSU_HEAD}}", &config.html.head)
-        .replace("{{TAIRITSU_BODY_CLASS}}", &config.html.body_class)
-        .replace("{{TAIRITSU_WASM_FILE}}", &wasm_file)
-        .replace("{{TAIRITSU_GLUE_BUNDLE}}", glue_bundle_path)
-        .replace("{{TAIRITSU_V}}", &v.to_string());
+    let mut ctx = tera::Context::new();
+    ctx.insert("lang", &config.html.lang);
+    ctx.insert("charset", &config.html.charset);
+    ctx.insert("viewport", &config.html.viewport);
+    ctx.insert("title", &title);
+    ctx.insert("favicon", &favicon_link);
+    ctx.insert("head", &config.html.head);
+    ctx.insert("body_class", &config.html.body_class);
+    ctx.insert("wasm_file", &wasm_file);
+    ctx.insert("glue_bundle", glue_bundle_path);
+    ctx.insert("v", &v.to_string());
+
+    let mut tera = tera::Tera::default();
+    tera.add_raw_template("index.html", include_str!("index.html.template"))
+        .map_err(|e| crate::TairitsuPackagerError::BuildError(format!("Template parse error: {e}")))?;
+    let html = tera
+        .render("index.html", &ctx)
+        .map_err(|e| crate::TairitsuPackagerError::BuildError(format!("Template render error: {e}")))?;
 
     let mut html = html;
 

@@ -70,6 +70,7 @@ zip = { version = "^2", default-features = false, features = [
 image = { version = "^0.25", optional = true }
 base64 = { version = "^0.22", optional = true }
 include_dir = "^0.7"
+tera = "^1"
 vte = { version = "^0.15", optional = true }
 portable-pty = { version = "^0.8", optional = true }
 

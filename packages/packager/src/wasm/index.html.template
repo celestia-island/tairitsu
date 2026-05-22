@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="{{TAIRITSU_LANG}}">
+<html lang="{{ lang }}">
 <head>
-    <meta charset="{{TAIRITSU_CHARSET}}">
-    <meta name="viewport" content="{{TAIRITSU_VIEWPORT}}">
-    <title>{{TAIRITSU_TITLE}}</title>
-    {{TAIRITSU_FAVICON}}
-    {{TAIRITSU_HEAD}}
+    <meta charset="{{ charset }}">
+    <meta name="viewport" content="{{ viewport }}">
+    <title>{{ title }}</title>
+    {{ favicon | safe }}
+    {{ head | safe }}
 </head>
-<body class="{{TAIRITSU_BODY_CLASS}}" data-booting>
-    <style>[data-booting] { visibility: hidden !important; }</style>
+<body class="{{ body_class }}" data-booting>
+    <style>[data-booting] { visibility: hidden !important; } .tairitsu-boot-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:system-ui,sans-serif; color:rgba(255,255,255,.7); }</style>
     <script>setTimeout(function(){document.body.removeAttribute('data-booting')},10000)</script>
-    <div id="app" style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,sans-serif;color:rgba(255,255,255,.7)"><div>Loading…</div></div>
-    <script src="{{TAIRITSU_GLUE_BUNDLE}}?v={{TAIRITSU_V}}"></script>
+    <div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>
+    <script src="{{ glue_bundle }}?v={{ v }}"></script>
     <script type="module">
         const bootError = (msg, err) => {
             console.error('[tairitsu] Boot failed:', msg, err || '');
@@ -25,7 +25,7 @@
         };
 
         try {
-        const { instantiateWithWrapper } = await import('/component-wrapper-loader.js?v={{TAIRITSU_V}}');
+        const { instantiateWithWrapper } = await import('/component-wrapper-loader.js?v={{ v }}');
 
         const appRoot = document.getElementById('app');
         const setAppStatus = (text) => {
@@ -194,7 +194,7 @@
             console.error('[tairitsu] Component wrapper failed, falling back to direct WASM load:', wrapperErr);
             try {
                 const imports = await buildImports();
-                const response = await fetch('/{{TAIRITSU_WASM_FILE}}');
+                const response = await fetch('/{{ wasm_file }}');
                 const bytes = await response.arrayBuffer();
                 const magic = new Uint8Array(bytes, 0, 8);
                 const isWasm =
@@ -337,10 +337,8 @@
 
             fixSvgNamespaces();
 
-            // Clear the initial #app loading styles — WASM replaces its content
-            // but leaves the inline style (display:flex, align-items:center, etc.)
             const appEl = document.getElementById('app');
-            if (appEl) appEl.removeAttribute('style');
+            if (appEl) appEl.classList.remove('tairitsu-boot-screen');
 
             // Sync data-theme attribute so CSS custom properties resolve
             // correctly for dark mode (spa.css uses [data-theme=dark]).
