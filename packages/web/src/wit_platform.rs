@@ -373,7 +373,7 @@ pub mod wasm_impl {
 
     type IntervalCallback = Box<dyn FnMut()>;
 
-    struct WsHandleEntry {
+    pub(super) struct WsHandleEntry {
         handle: u64,
         on_open_cb_id: u64,
         on_message_cb_id: u64,
@@ -394,16 +394,16 @@ pub mod wasm_impl {
         static SCROLL_CALLBACKS: RefCell<HashMap<u64, ScrollCallback>> = RefCell::new(HashMap::new());
         static WINDOW_RESIZE_CALLBACKS: RefCell<HashMap<u64, WindowResizeCallback>> = RefCell::new(HashMap::new());
         static VIDEO_FRAME_CALLBACKS: RefCell<HashMap<u64, VideoFrameCallback>> = RefCell::new(HashMap::new());
-        static PROMISE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
+        pub(super) static PROMISE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
         static GEO_CALLBACKS: RefCell<HashMap<u64, GeoCallback>> = RefCell::new(HashMap::new());
         static FILE_READER_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
         static FILE_READER_BIN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<Vec<u8>, String>)>>> = RefCell::new(HashMap::new());
         static IDB_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
-        static WS_OPEN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
-        static WS_MESSAGE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnMut(String)>>> = RefCell::new(HashMap::new());
-        static WS_CLOSE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(u16, String)>>> = RefCell::new(HashMap::new());
-        static WS_ERROR_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
-        static WS_HANDLE_MAP: RefCell<HashMap<u64, WsHandleEntry>> = RefCell::new(HashMap::new());
+        pub(super) static WS_OPEN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_MESSAGE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnMut(String)>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_CLOSE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(u16, String)>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_ERROR_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_HANDLE_MAP: RefCell<HashMap<u64, WsHandleEntry>> = RefCell::new(HashMap::new());
     }
 
     // -- WIT binding generation -------------------------------------------
