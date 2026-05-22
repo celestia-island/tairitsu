@@ -8,7 +8,7 @@ use crate::i18n::{self, Language};
 pub fn render() -> VNode {
     let t = i18n::text(Language::ENGLISH);
     rsx! {
-        div { id: "page-not-found", class: "ts-page",
+        div { id: "page-not-found", class: "hikari-page",
             div { class: "hi-container hi-container-md",
                 section { class: "hi-section hi-section-lg",
                     div { class: "hi-section-body",

@@ -130,8 +130,8 @@ pub(crate) fn decode_rgb(data: &[u8], w: u32, h: u32) -> Option<ImgBuf> {
 
 #[cfg(test)]
 mod tests {
-    use base64::Engine;
     use super::*;
+    use base64::Engine;
 
     #[test]
     fn test_sixel_simple_red_pixel() {

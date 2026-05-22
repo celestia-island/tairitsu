@@ -11,7 +11,7 @@ use tairitsu_vdom::{DomHandle, MouseEvent, VNode, get_bounding_client_rect, set_
 /// Render the DOM operations test page.
 pub fn render() -> VNode {
     rsx! {
-        div { class: "ts-page",
+        div { class: "hikari-page",
             h1 { "DOM Operations Test (Phase 0.2)" }
             p { "Tests DOM operations in event callbacks for Glow component support." }
 

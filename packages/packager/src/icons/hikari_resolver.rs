@@ -15,11 +15,7 @@ const MDI_SVG_URL_PREFIX: &str =
 ///
 /// Reads `icons.txt` (list of icon kebab names), downloads SVGs from GitHub,
 /// caches them locally, extracts path data, and writes `impl_icons!` code.
-pub fn resolve(
-    icons_txt: &Path,
-    target_dir: &Path,
-    offline: bool,
-) -> crate::Result<PathBuf> {
+pub fn resolve(icons_txt: &Path, target_dir: &Path, offline: bool) -> crate::Result<PathBuf> {
     let icon_names = read_icon_names(icons_txt)?;
     if icon_names.is_empty() {
         crate::log_warn!("No icon names in {}", icons_txt.display());
@@ -48,22 +44,28 @@ pub fn resolve(
         if let Ok(svg) = std::fs::read_to_string(&svg_path) {
             if let Some(d) = extract_path_d(&svg) {
                 let const_name = name.replace('-', "_").to_uppercase();
-                entries.push(IconEntry { kebab: name.clone(), const_name, path: d });
+                entries.push(IconEntry {
+                    kebab: name.clone(),
+                    const_name,
+                    path: d,
+                });
             }
         }
     }
 
     if entries.is_empty() && !icon_names.is_empty() {
-        return Err(crate::TairitsuPackagerError::IconFetchError(
-            if offline {
-                "No cached icons found. Run without --offline to download.".to_string()
-            } else {
-                "Failed to resolve any icons.".to_string()
-            },
-        ));
+        return Err(crate::TairitsuPackagerError::IconFetchError(if offline {
+            "No cached icons found. Run without --offline to download.".to_string()
+        } else {
+            "Failed to resolve any icons.".to_string()
+        }));
     }
 
-    crate::log_info!("Resolved {}/{} hikari icons", entries.len(), icon_names.len());
+    crate::log_info!(
+        "Resolved {}/{} hikari icons",
+        entries.len(),
+        icon_names.len()
+    );
     write_impl_icons(target_dir, &entries)
 }
 
@@ -76,7 +78,9 @@ struct IconEntry {
 fn read_icon_names(path: &Path) -> crate::Result<Vec<String>> {
     let content = std::fs::read_to_string(path).map_err(|e| {
         crate::TairitsuPackagerError::IconFetchError(format!(
-            "Failed to read {}: {}", path.display(), e
+            "Failed to read {}: {}",
+            path.display(),
+            e
         ))
     })?;
     Ok(content

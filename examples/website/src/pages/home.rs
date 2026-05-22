@@ -114,7 +114,7 @@ pub fn render() -> VNode {
     VNode::Element(
         el("div")
             .attr("id", "page-home")
-            .class("ts-page is-active")
+            .class("hikari-page is-active")
             .children(vec![hero_section, section]),
     )
 }

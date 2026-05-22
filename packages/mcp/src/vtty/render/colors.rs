@@ -169,7 +169,11 @@ pub fn index_to_rgb(index: u8, scheme: &ColorScheme) -> [u8; 3] {
     }
 }
 
-pub fn resolve_color(color: crate::vtty::screen::ColorKind, scheme: &ColorScheme, is_fg: bool) -> [u8; 3] {
+pub fn resolve_color(
+    color: crate::vtty::screen::ColorKind,
+    scheme: &ColorScheme,
+    is_fg: bool,
+) -> [u8; 3] {
     match color {
         crate::vtty::screen::ColorKind::Default => {
             if is_fg {
