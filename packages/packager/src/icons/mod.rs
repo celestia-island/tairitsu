@@ -22,18 +22,28 @@
 //! tairitsu icons list     # List available icons
 //! ```
 
+pub mod cache;
 mod fetcher;
+mod font;
 mod generator;
 pub mod hikari_resolver;
 mod metadata;
+pub mod resolver;
+pub mod sources;
 
 use std::path::PathBuf;
 
+pub use cache::{CacheManifest, IconCache};
 pub use fetcher::{fetch_icons, force_fetch_icons, IconFetcher};
+pub use font::{generate_woff_subset, is_hb_subset_available};
 pub use generator::{generate_icon_module, IconBuildResult};
 pub use metadata::{
     parse_icons_config, parse_mdi_metadata, IconEntry, IconMetadata, IconsConfig, MdiIconMeta,
     MdiMetadata,
+};
+pub use resolver::{
+    read_consumer_metadata, resolve, HikariIconsMetadata, ResolvedSet, ResolveResult, SetConfig,
+    Subscript,
 };
 use serde::{Deserialize, Serialize};
 

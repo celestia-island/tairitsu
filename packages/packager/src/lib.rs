@@ -36,8 +36,9 @@ pub mod wit_plugin;
 pub use cli::run;
 pub use config::{Config, TairitsuMetadata};
 pub use icons::{
-    IconBuildResult, IconConfig, IconMetadata, IconSource, IconStyle, IconsConfig, MdiIconMeta,
-    MdiMetadata,
+    generate_woff_subset, is_hb_subset_available, CacheManifest, HikariIconsMetadata,
+    IconBuildResult, IconCache, IconConfig, IconMetadata, IconSource, IconStyle, IconsConfig,
+    MdiIconMeta, MdiMetadata, ResolvedSet, ResolveResult, SetConfig, Subscript,
 };
 pub use resources::{
     ResourceIndex, ResourceIndexer, ScssResource, ScssUtils, SvgResource, SvgUtils,
