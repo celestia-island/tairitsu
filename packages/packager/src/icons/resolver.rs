@@ -134,8 +134,8 @@ pub fn resolve(
             None
         };
 
-        let icons = match manifest {
-            Some(m) => m.icons,
+        let (resolved_version, icons) = match manifest {
+            Some(m) => (version.clone(), m.icons),
             None => {
                 if cache.is_offline() {
                     crate::log_warn!(
@@ -147,7 +147,7 @@ pub fn resolve(
                 }
 
                 match fetch_set(source, &version, cache) {
-                    Ok(icons) => icons,
+                    Ok(result) => result,
                     Err(e) => {
                         crate::log_warn!(
                             "Failed to fetch icon set '{}' v{}: {} — skipping",
@@ -176,7 +176,7 @@ pub fn resolve(
 
         resolved.push(ResolvedSet {
             source,
-            version,
+            version: resolved_version,
             formats,
             subscripts,
             icons: filtered,
@@ -230,7 +230,7 @@ fn apply_subscripts(
 }
 
 fn glob_match(pattern: &str, name: &str) -> bool {
-    if !pattern.contains('*') && !pattern.contains('?') {
+    if !pattern.contains('*') {
         return pattern == name;
     }
 
@@ -286,18 +286,18 @@ fn fetch_set(
     source: &IconSourceDef,
     version: &str,
     cache: &IconCache,
-) -> crate::Result<HashMap<String, IconData>> {
-    cache.ensure_dir(source.name, version)?;
-
+) -> crate::Result<(String, HashMap<String, IconData>)> {
     let ver = if version == "latest" {
         resolve_latest_version(source)?
     } else {
         version.to_string()
     };
 
+    cache.ensure_dir(source.name, &ver)?;
+
     for origin in source.origins {
         match try_fetch_from_origin(source, origin, &ver, cache) {
-            Ok(icons) => return Ok(icons),
+            Ok(icons) => return Ok((ver, icons)),
             Err(e) => {
                 crate::log_warn!(
                     "Failed to fetch '{}' from {:?}: {} — trying next origin",
@@ -328,7 +328,10 @@ fn resolve_latest_version(source: &IconSourceDef) -> crate::Result<String> {
             }
         }
     }
-    Ok("latest".to_string())
+    Err(crate::TairitsuPackagerError::IconFetchError(format!(
+        "Could not resolve latest version for '{}' — all registry lookups failed",
+        source.name
+    )))
 }
 
 fn try_fetch_from_origin(
@@ -357,7 +360,7 @@ fn fetch_from_npm(
 ) -> crate::Result<HashMap<String, IconData>> {
     let tarball_url = {
         let pkg_url = if pkg.starts_with('@') {
-            format!("%2F{}", pkg.replace('/', "%2F"))
+            pkg.replace('/', "%2F")
         } else {
             pkg.to_string()
         };
@@ -558,20 +561,67 @@ fn scan_svg_dir(
 }
 
 fn extract_path_d(svg: &str) -> Option<String> {
-    let start = svg.find("<path")?;
-    let rest = &svg[start..];
+    let mut paths = Vec::new();
+    let mut search_from = 0;
+    while let Some(offset) = svg[search_from..].find("<path") {
+        let abs_start = search_from + offset;
+        let rest = &svg[abs_start..];
 
-    let d_attr = rest.find("d=\"")?;
-    let d_start = d_attr + 3;
-    let d_rest = &rest[d_start..];
-    let d_end = d_rest.find('"')?;
-    let path_d = &d_rest[..d_end];
+        let tag_end = rest.find('>').unwrap_or(rest.len());
+        let tag_content = &rest[..tag_end];
 
-    if path_d.is_empty() {
-        return None;
+        let mut attr_search = 0;
+        let mut found = false;
+        while let Some(pos) = tag_content[attr_search..].find("d=\"") {
+            let abs_pos = attr_search + pos;
+            if abs_pos == 0
+                || tag_content.as_bytes().get(abs_pos - 1) == Some(&b' ')
+                || tag_content.as_bytes().get(abs_pos - 1) == Some(&b'\t')
+            {
+                let d_start = abs_pos + 3;
+                let d_rest = &tag_content[d_start..];
+                if let Some(d_end) = d_rest.find('"') {
+                    let path_d = &d_rest[..d_end];
+                    if !path_d.is_empty() {
+                        paths.push(path_d.to_string());
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            attr_search = abs_pos + 1;
+        }
+
+        if !found {
+            let mut attr_search = 0;
+            while let Some(pos) = tag_content[attr_search..].find("d='") {
+                let abs_pos = attr_search + pos;
+                if abs_pos == 0
+                    || tag_content.as_bytes().get(abs_pos - 1) == Some(&b' ')
+                    || tag_content.as_bytes().get(abs_pos - 1) == Some(&b'\t')
+                {
+                    let d_start = abs_pos + 3;
+                    let d_rest = &tag_content[d_start..];
+                    if let Some(d_end) = d_rest.find('\'') {
+                        let path_d = &d_rest[..d_end];
+                        if !path_d.is_empty() {
+                            paths.push(path_d.to_string());
+                            break;
+                        }
+                    }
+                }
+                attr_search = abs_pos + 1;
+            }
+        }
+
+        search_from = abs_start + 6;
     }
 
-    Some(path_d.to_string())
+    if paths.is_empty() {
+        None
+    } else {
+        Some(paths.join(" "))
+    }
 }
 
 fn load_meta_tags(meta_path: &Path, icons: &mut HashMap<String, IconData>, _set_name: &str) {

@@ -937,7 +937,16 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 };
 
                 let cache = crate::icons::IconCache::new(cache_root, offline);
-                let manifest = cache.load_manifest(&source, "latest");
+                let manifest = {
+                    let set_dir = cache.set_dir(&source, "");
+                    std::fs::read_dir(&set_dir).ok()
+                        .and_then(|entries| {
+                            entries.flatten().find_map(|e| {
+                                let ver = e.file_name().to_str()?.to_string();
+                                cache.load_manifest(&source, &ver)
+                            })
+                        })
+                };
 
                 let icons: Vec<(String, String, Vec<String>)> = match manifest {
                     Some(m) => {

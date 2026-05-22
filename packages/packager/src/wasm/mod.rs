@@ -72,7 +72,13 @@ pub fn resolve_hikari_icons(
         let mut icons: Vec<_> = resolved.icons.iter().collect();
         icons.sort_by_key(|(name, _)| name.clone());
         for (name, data) in &icons {
-            let const_name = format!("{}_{}", set_ident, name.replace('-', "_").to_uppercase());
+            let safe = name.replace('-', "_").to_uppercase();
+            let safe = if safe.as_bytes().first().map(|b| b.is_ascii_digit()).unwrap_or(false) {
+                format!("_{}", safe)
+            } else {
+                safe
+            };
+            let const_name = format!("{}_{}", set_ident, safe);
             writeln!(
                 f,
                 "    {:?} => {{ ident: {}, path: {:?}, view_box: {:?} }},",
