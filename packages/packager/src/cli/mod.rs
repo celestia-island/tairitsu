@@ -365,7 +365,7 @@ enum IconsCommands {
     /// List available icons (optionally filter by source/tag)
     List {
         /// Icon source (mdi, lucide)
-        #[arg(short, long, default_value = "mdi")]
+        #[arg(short = 'S', long, default_value = "mdi")]
         source: String,
 
         /// Filter by tag
@@ -373,7 +373,7 @@ enum IconsCommands {
         tag: Option<String>,
 
         /// Search query
-        #[arg(short, long)]
+        #[arg(short = 'q', long)]
         search: Option<String>,
     },
 
@@ -477,6 +477,24 @@ fn resolve_manifest_dir(path: &Option<PathBuf>) -> PathBuf {
         }
         None => std::path::PathBuf::from("."),
     }
+}
+
+fn find_workspace_target_dir(manifest_dir: &Path) -> PathBuf {
+    let mut dir = manifest_dir.to_path_buf();
+    loop {
+        if dir.join("Cargo.toml").exists() {
+            if let Some(parent) = dir.parent() {
+                if parent.join("Cargo.toml").exists() || parent.join("Cargo.lock").exists() {
+                    return parent.join("target");
+                }
+            }
+            return dir.join("target");
+        }
+        if !dir.pop() {
+            break;
+        }
+    }
+    manifest_dir.join("target")
 }
 
 /// Handle synchronous daemon operations (status, shutdown, parent fork).
@@ -883,7 +901,13 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
             }
         },
-        Some(Commands::Icons { action }) => match action {
+        Some(Commands::Icons { action }) => {
+            let manifest_path = if manifest_path.is_dir() {
+                manifest_path
+            } else {
+                manifest_path.parent().map(|p| p.to_path_buf()).unwrap_or(manifest_path)
+            };
+            match action {
             IconsCommands::Fetch { source, force } => {
                 crate::log_info!("Fetching icons from {}...", source);
                 let target_dir = std::path::PathBuf::from("target");
@@ -1006,10 +1030,13 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
 
                 crate::log_info!("Configured sets: {:?}", meta.sets);
 
-                let cache = crate::icons::IconCache::new(
-                    crate::icons::cache::default_cache_root(),
-                    offline,
-                );
+                let cache_root = if let Ok(root) = std::env::var("HIKARI_ICONS_CACHE") {
+                    PathBuf::from(root).join("icons")
+                } else {
+                    let target_dir = find_workspace_target_dir(&manifest_path);
+                    target_dir.join("tairitsu-cache").join("icons")
+                };
+                let cache = crate::icons::IconCache::new(cache_root, offline);
                 let result = crate::icons::resolve(&meta, &cache)?;
 
                 if result.sets.is_empty() {
@@ -1086,7 +1113,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     );
                 }
             }
-        },
+        }},
         #[allow(unused_variables)]
         Some(Commands::Ssr {
             port,
