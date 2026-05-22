@@ -18,7 +18,7 @@ pub mod hikari_resolver;
 pub mod resolver;
 pub mod sources;
 
-pub use cache::{CacheManifest, IconCache};
+pub use cache::{CacheManifest, IconCache, resolve_cache_root};
 pub use font::{generate_woff_subset, is_hb_subset_available};
 pub use resolver::{
     read_consumer_metadata, resolve, HikariIconsMetadata, ResolvedSet, ResolveResult, SetConfig,

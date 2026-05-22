@@ -46,12 +46,7 @@ pub fn resolve_hikari_icons(
         return crate::icons::hikari_resolver::resolve_stub(&target_dir);
     }
 
-    let cache_root = if let Ok(root) = std::env::var("HIKARI_ICONS_CACHE") {
-        std::path::PathBuf::from(root)
-    } else {
-        let target_dir = manifest_dir.join("target");
-        target_dir.join("tairitsu-cache").join("icons")
-    };
+    let cache_root = crate::icons::resolve_cache_root(Some(manifest_dir));
 
     let cache = crate::icons::IconCache::new(cache_root, offline);
     let result = crate::icons::resolve(&meta, &cache)?;
@@ -72,14 +67,16 @@ pub fn resolve_hikari_icons(
     writeln!(f)?;
     writeln!(f, "crate::impl_icons! {{")?;
     for resolved in &result.sets {
+        let view_box = resolved.source.view_box;
+        let set_ident = resolved.source.name.replace('-', "_").to_uppercase();
         let mut icons: Vec<_> = resolved.icons.iter().collect();
         icons.sort_by_key(|(name, _)| name.clone());
         for (name, data) in &icons {
-            let const_name = name.replace('-', "_").to_uppercase();
+            let const_name = format!("{}_{}", set_ident, name.replace('-', "_").to_uppercase());
             writeln!(
                 f,
-                "    {:?} => {{ ident: {}, path: {:?}, view_box: \"0 0 24 24\" }},",
-                name, const_name, data.path_d
+                "    {:?} => {{ ident: {}, path: {:?}, view_box: {:?} }},",
+                name, const_name, data.path_d, view_box
             )?;
         }
     }

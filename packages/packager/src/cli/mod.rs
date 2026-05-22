@@ -472,24 +472,6 @@ fn resolve_manifest_dir(path: &Option<PathBuf>) -> PathBuf {
     }
 }
 
-fn find_workspace_target_dir(manifest_dir: &Path) -> PathBuf {
-    let mut dir = manifest_dir.to_path_buf();
-    loop {
-        if dir.join("Cargo.toml").exists() {
-            if let Some(parent) = dir.parent() {
-                if parent.join("Cargo.toml").exists() || parent.join("Cargo.lock").exists() {
-                    return parent.join("target");
-                }
-            }
-            return dir.join("target");
-        }
-        if !dir.pop() {
-            break;
-        }
-    }
-    manifest_dir.join("target")
-}
-
 /// Handle synchronous daemon operations (status, shutdown, parent fork).
 /// Returns `Some(result)` if the operation was handled synchronously (process should exit).
 /// Returns `None` if we should proceed to async/tokio mode (daemon child or foreground).
@@ -900,12 +882,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             } else {
                 manifest_path.parent().map(|p| p.to_path_buf()).unwrap_or(manifest_path)
             };
-            let cache_root = if let Ok(root) = std::env::var("HIKARI_ICONS_CACHE") {
-                PathBuf::from(root).join("icons")
-            } else {
-                let target_dir = find_workspace_target_dir(&manifest_path);
-                target_dir.join("tairitsu-cache").join("icons")
-            };
+            let cache_root = crate::icons::resolve_cache_root(Some(&manifest_path));
             match action {
             IconsCommands::Fetch { sets, force, offline } => {
                 let meta = crate::icons::read_consumer_metadata(&manifest_path)?;

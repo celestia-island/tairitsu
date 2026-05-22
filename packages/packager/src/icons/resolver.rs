@@ -355,7 +355,25 @@ fn fetch_from_npm(
     version: &str,
     cache: &IconCache,
 ) -> crate::Result<HashMap<String, IconData>> {
-    let tarball_url = format!("https://registry.npmjs.org/{}/-/{}-{}.tgz", pkg, pkg.replace('/', "-"), version);
+    let tarball_url = {
+        let pkg_url = if pkg.starts_with('@') {
+            format!("%2F{}", pkg.replace('/', "%2F"))
+        } else {
+            pkg.to_string()
+        };
+        let registry_url = format!("https://registry.npmjs.org/{}", pkg_url);
+        let resp = reqwest::blocking::get(&registry_url)
+            .map_err(|e| crate::TairitsuPackagerError::HttpError(e.to_string()))?;
+        let json: serde_json::Value = resp.json()
+            .map_err(|e| crate::TairitsuPackagerError::HttpError(e.to_string()))?;
+        json.pointer(&format!("/versions/{}/dist/tarball", version))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| {
+                let name = pkg.split('/').last().unwrap_or(pkg);
+                format!("https://registry.npmjs.org/{}/-/{}-{}.tgz", pkg, name, version)
+            })
+    };
     let dir = cache.set_dir(source.name, version);
     let tgz_path = dir.join("package.tgz");
 

@@ -135,42 +135,38 @@ impl IconCache {
     }
 }
 
-pub fn default_cache_root() -> PathBuf {
-    std::env::var("HIKARI_ICONS_CACHE")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            workspace_cache_root().join("icons")
-        })
-}
-
-pub fn workspace_cache_root() -> PathBuf {
+pub fn resolve_cache_root(manifest_dir: Option<&Path>) -> PathBuf {
+    if let Ok(root) = std::env::var("HIKARI_ICONS_CACHE") {
+        return PathBuf::from(root);
+    }
+    if let Some(dir) = manifest_dir {
+        return dir.join("target").join("tairitsu-cache").join("icons");
+    }
     if let Ok(target_dir) = std::env::var("CARGO_TARGET_DIR") {
-        PathBuf::from(target_dir).join("tairitsu-cache")
-    } else if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let manifest_path = PathBuf::from(&manifest_dir);
-        let mut dir = manifest_path.clone();
+        return PathBuf::from(target_dir).join("tairitsu-cache").join("icons");
+    }
+    if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let mut dir = PathBuf::from(&manifest_dir);
         loop {
             if dir.join("Cargo.toml").exists() {
-                let target = dir.join("target").join("tairitsu-cache");
                 if let Some(parent) = dir.parent() {
                     if parent.join("Cargo.toml").exists() || parent.join("Cargo.lock").exists() {
-                        return parent.join("target").join("tairitsu-cache");
+                        return parent.join("target").join("tairitsu-cache").join("icons");
                     }
                 }
-                return target;
+                return dir.join("target").join("tairitsu-cache").join("icons");
             }
             if !dir.pop() {
                 break;
             }
         }
-        PathBuf::from(manifest_dir).join("target").join("tairitsu-cache")
-    } else {
-        let base = std::env::var("XDG_CACHE_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| {
-                let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-                PathBuf::from(home).join(".cache")
-            });
-        base.join("tairitsu-cache")
+        return PathBuf::from(manifest_dir).join("target").join("tairitsu-cache").join("icons");
     }
+    let base = std::env::var("XDG_CACHE_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+            PathBuf::from(home).join(".cache")
+        });
+    base.join("tairitsu-cache").join("icons")
 }
