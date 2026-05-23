@@ -285,12 +285,13 @@ fn fetch_set(
     cache: &IconCache,
 ) -> crate::Result<(String, HashMap<String, IconData>)> {
     #[cfg(feature = "icon-fetch")]
-    {
     let ver = if version == "latest" {
         resolve_latest_version(source)?
     } else {
         version.to_string()
     };
+    #[cfg(not(feature = "icon-fetch"))]
+    let ver = version.to_string();
 
     cache.ensure_dir(source.name, &ver)?;
 
@@ -312,14 +313,26 @@ fn fetch_set(
         "Could not fetch '{}' — all origins failed",
         source.name
     )))
+}
+
+#[cfg(feature = "icon-fetch")]
+fn resolve_latest_version(source: &IconSourceDef) -> crate::Result<String> {
+    for origin in source.origins {
+        if let Some(pkg) = origin.npm_package() {
+            let url = format!("https://registry.npmjs.org/{}/latest", pkg);
+            if let Ok(resp) = reqwest::blocking::get(&url) {
+                if let Ok(json) = resp.json::<serde_json::Value>() {
+                    if let Some(v) = json.get("version").and_then(|v| v.as_str()) {
+                        return Ok(v.to_string());
+                    }
+                }
+            }
+        }
     }
-    #[cfg(not(feature = "icon-fetch"))]
-    {
-        let _ = (source, version, cache);
-        Err(crate::TairitsuPackagerError::IconFetchError(
-            "icon-fetch feature not enabled".to_string(),
-        ))
-    }
+    Err(crate::TairitsuPackagerError::IconFetchError(format!(
+        "Could not resolve latest version for '{}' — all registry lookups failed",
+        source.name
+    )))
 }
 
 fn try_fetch_from_origin(

@@ -302,7 +302,7 @@ dev-debug *FLAGS="":
 # Build web demo for production (using tairitsu-packager + CDN demo)
 build-web: init
     @echo "Building website demo with tairitsu-packager..."
-    @{{python}} scripts/install_packager.py --quick || (cargo build --release --package tairitsu-packager && {{python}} scripts/install_packager.py)
+    @tairitsu --help > /dev/null 2>&1 || (cargo build --release --package tairitsu-packager && {{python}} scripts/install_packager.py)
     tairitsu --manifest-path examples/website build --release
     @echo "Building CDN modular demo..."
     {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist
