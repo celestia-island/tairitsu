@@ -65,33 +65,33 @@ interface dom-string-list {
     contains: func(self: dom-string-list-handle, %string: string) -> bool;
 }
 
-interface html-or-svg-element {
-    /// Opaque handle to a host-side `HTMLOrSVGElement` instance.
-    type html-or-svg-element-handle = u64;
+interface html-or-svg-or-math-ml-element {
+    /// Opaque handle to a host-side `HTMLOrSVGOrMathMLElement` instance.
+    type html-or-svg-or-math-ml-element-handle = u64;
 
     /// `dataset` attribute — getter.
-    get-dataset: func(self: html-or-svg-element-handle) -> u64;
+    get-dataset: func(self: html-or-svg-or-math-ml-element-handle) -> u64;
 
     /// `nonce` attribute — getter.
-    get-nonce: func(self: html-or-svg-element-handle) -> string;
+    get-nonce: func(self: html-or-svg-or-math-ml-element-handle) -> string;
     /// `nonce` attribute — setter.
-    set-nonce: func(self: html-or-svg-element-handle, value: string);
+    set-nonce: func(self: html-or-svg-or-math-ml-element-handle, value: string);
 
     /// `autofocus` attribute — getter.
-    get-autofocus: func(self: html-or-svg-element-handle) -> bool;
+    get-autofocus: func(self: html-or-svg-or-math-ml-element-handle) -> bool;
     /// `autofocus` attribute — setter.
-    set-autofocus: func(self: html-or-svg-element-handle, value: bool);
+    set-autofocus: func(self: html-or-svg-or-math-ml-element-handle, value: bool);
 
     /// `tabIndex` attribute — getter.
-    get-tab-index: func(self: html-or-svg-element-handle) -> s32;
+    get-tab-index: func(self: html-or-svg-or-math-ml-element-handle) -> s32;
     /// `tabIndex` attribute — setter.
-    set-tab-index: func(self: html-or-svg-element-handle, value: s32);
+    set-tab-index: func(self: html-or-svg-or-math-ml-element-handle, value: s32);
 
     /// `focus()` operation.
-    focus: func(self: html-or-svg-element-handle, options: option<u64>);
+    focus: func(self: html-or-svg-or-math-ml-element-handle, options: option<u64>);
 
     /// `blur()` operation.
-    blur: func(self: html-or-svg-element-handle);
+    blur: func(self: html-or-svg-or-math-ml-element-handle);
 }
 
 interface dom-string-map {
@@ -481,11 +481,6 @@ interface html-anchor-element {
     /// Opaque handle to a host-side `HTMLAnchorElement` instance.
     type html-anchor-element-handle = u64;
 
-    /// `target` attribute — getter.
-    get-target: func(self: html-anchor-element-handle) -> string;
-    /// `target` attribute — setter.
-    set-target: func(self: html-anchor-element-handle, value: string);
-
     /// `download` attribute — getter.
     get-download: func(self: html-anchor-element-handle) -> string;
     /// `download` attribute — setter.
@@ -503,16 +498,6 @@ interface html-anchor-element {
 
     /// `relList` attribute — getter.
     get-rel-list: func(self: html-anchor-element-handle) -> u64;
-
-    /// `hreflang` attribute — getter.
-    get-hreflang: func(self: html-anchor-element-handle) -> string;
-    /// `hreflang` attribute — setter.
-    set-hreflang: func(self: html-anchor-element-handle, value: string);
-
-    /// `type` attribute — getter.
-    get-type: func(self: html-anchor-element-handle) -> string;
-    /// `type` attribute — setter.
-    set-type: func(self: html-anchor-element-handle, value: string);
 
     /// `text` attribute — getter.
     get-text: func(self: html-anchor-element-handle) -> string;
@@ -631,6 +616,16 @@ interface hyperlink-element-utils {
     get-hash: func(self: hyperlink-element-utils-handle) -> string;
     /// `hash` attribute — setter.
     set-hash: func(self: hyperlink-element-utils-handle, value: string);
+
+    /// `hreflang` attribute — getter.
+    get-hreflang: func(self: hyperlink-element-utils-handle) -> string;
+    /// `hreflang` attribute — setter.
+    set-hreflang: func(self: hyperlink-element-utils-handle, value: string);
+
+    /// `type` attribute — getter.
+    get-type: func(self: hyperlink-element-utils-handle) -> string;
+    /// `type` attribute — setter.
+    set-type: func(self: hyperlink-element-utils-handle, value: string);
 }
 
 interface html-hyperlink-element-utils {
@@ -641,6 +636,11 @@ interface html-hyperlink-element-utils {
     get-href: func(self: html-hyperlink-element-utils-handle) -> string;
     /// `href` attribute — setter.
     set-href: func(self: html-hyperlink-element-utils-handle, value: string);
+
+    /// `target` attribute — getter.
+    get-target: func(self: html-hyperlink-element-utils-handle) -> string;
+    /// `target` attribute — setter.
+    set-target: func(self: html-hyperlink-element-utils-handle, value: string);
 }
 
 interface html-mod-element {
@@ -1445,11 +1445,6 @@ interface html-area-element {
     get-shape: func(self: html-area-element-handle) -> string;
     /// `shape` attribute — setter.
     set-shape: func(self: html-area-element-handle, value: string);
-
-    /// `target` attribute — getter.
-    get-target: func(self: html-area-element-handle) -> string;
-    /// `target` attribute — setter.
-    set-target: func(self: html-area-element-handle, value: string);
 
     /// `download` attribute — getter.
     get-download: func(self: html-area-element-handle) -> string;
@@ -2868,6 +2863,11 @@ interface html-template-element {
     get-shadow-root-delegates-focus: func(self: html-template-element-handle) -> bool;
     /// `shadowRootDelegatesFocus` attribute — setter.
     set-shadow-root-delegates-focus: func(self: html-template-element-handle, value: bool);
+
+    /// `shadowRootSlotAssignment` attribute — getter.
+    get-shadow-root-slot-assignment: func(self: html-template-element-handle) -> string;
+    /// `shadowRootSlotAssignment` attribute — setter.
+    set-shadow-root-slot-assignment: func(self: html-template-element-handle, value: string);
 
     /// `shadowRootClonable` attribute — getter.
     get-shadow-root-clonable: func(self: html-template-element-handle) -> bool;

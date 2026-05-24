@@ -5,7 +5,7 @@
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
 /// Version: 0.2.0
-/// Generated: 2026-04-04 13:11:31 UTC
+/// Generated: 2026-05-24 03:36:01 UTC
 ///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
@@ -872,19 +872,6 @@ interface svg-use-element {
     get-animated-instance-root: func(self: svg-use-element-handle) -> option<u64>;
 }
 
-/// WebIDL interface: `SVGElementInstance`
-/// Source: https://github.com/w3c/webref/tree/main/ed/idl/SVG.idl
-interface svg-element-instance {
-    /// Opaque handle to a host-side `SVGElementInstance` instance.
-    type svg-element-instance-handle = u64;
-
-    /// `correspondingElement` attribute — getter.
-    get-corresponding-element: func(self: svg-element-instance-handle) -> option<u64>;
-
-    /// `correspondingUseElement` attribute — getter.
-    get-corresponding-use-element: func(self: svg-element-instance-handle) -> option<u64>;
-}
-
 /// WebIDL interface: `ShadowAnimation`
 /// Inherits: `Animation`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/SVG.idl
@@ -1524,7 +1511,7 @@ interface svga-element {
     set-referrer-policy: func(self: svga-element-handle, value: string);
 }
 
-/// Browser svg world — all 53 auto-generated interfaces.
+/// Browser svg world — all 52 auto-generated interfaces.
 world svg-world {
     import svg-element;
     import svg-graphics-element;
@@ -1551,7 +1538,6 @@ world svg-world {
     import document;
     import svgsvg-element;
     import svg-use-element;
-    import svg-element-instance;
     import shadow-animation;
     import get-svg-document;
     import svg-style-element;
