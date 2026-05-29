@@ -7,8 +7,8 @@
 /// Regenerate with: just wit-gen
 package tairitsu-browser:full@0.2.0;
 
-/// Full browser world — 575 interfaces total
-/// (18 handwritten + 557 W3C auto-generated).
+/// Full browser world — 574 interfaces total
+/// (18 handwritten + 556 W3C auto-generated).
 world browser-full {
     import event-callbacks;
     import timer-callbacks;
@@ -199,7 +199,7 @@ world browser-full {
     import radio-node-list;
     import html-options-collection;
     import dom-string-list;
-    import html-or-svg-element;
+    import html-or-svg-or-math-ml-element;
     import dom-string-map;
     import html-html-element;
     import html-title-element;
@@ -514,7 +514,6 @@ world browser-full {
     import document;
     import svgsvg-element;
     import svg-use-element;
-    import svg-element-instance;
     import shadow-animation;
     import get-svg-document;
     import svg-style-element;
@@ -574,6 +573,7 @@ world browser-full {
     import rtc-error-event;
     import web-socket;
     import close-event;
+    import web-socket-callbacks;
     import service-worker-container;
     import navigation-preload-manager;
     import client;
@@ -599,5 +599,6 @@ world browser-full {
     export geolocation-callbacks;
     export idb-callbacks;
     export file-reader-callbacks;
+    export web-socket-callbacks;
 }
 

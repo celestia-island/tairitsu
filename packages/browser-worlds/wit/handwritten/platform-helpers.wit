@@ -101,6 +101,13 @@ interface platform-helpers {
     /// Read a blob/file as ArrayBuffer asynchronously.
     file-reader-read-as-array-buffer: func(blob: u64, callback-id: u64);
 
+    // -- WebSocket (constructor not in auto-generated WIT) --
+
+    /// Create a new WebSocket connection to the given URL.
+    /// Returns a web-socket-handle (u64).
+    /// Events are delivered via the web-socket-callbacks export interface.
+    connect-web-socket: func(url: string) -> u64;
+
     // -- IndexedDB convenience (callback-based) --
 
     /// Open an IndexedDB database.

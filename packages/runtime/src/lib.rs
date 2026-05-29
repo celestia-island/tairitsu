@@ -64,7 +64,8 @@ pub mod dynamic;
 // Re-export common types
 pub use anyhow::{Error, Result};
 pub use container::{
-    Container, ExportInfo, GuestHandlerContext, GuestInstance, HostState, HostStateImpl, ImportInfo,
+    Container, ContainerState, ExportInfo, GuestHandlerContext, GuestInstance, HostState,
+    HostStateImpl, ImportInfo,
 };
 // Dynamic invocation exports (requires 'dynamic' feature)
 #[cfg(feature = "dynamic")]
@@ -80,7 +81,8 @@ pub use tairitsu_macros::{
     export_wit, wit_guest_impl, wit_interface, wit_world, AsTool, WitCommand,
 };
 // Re-export wasmtime types for user convenience
-pub use wasmtime::{Engine, Store};
+pub use wasmtime::component::Component;
+pub use wasmtime::{Config, Engine, Linker, Store};
 pub use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 pub use wit::{FunctionInfo, WitLoader};
 pub use wit_helper::GuestInfo;

@@ -2856,6 +2856,11 @@ interface html-image-element {
     /// `isMap` attribute — setter.
     set-is-map: func(self: html-image-element-handle, value: bool);
 
+    /// `controls` attribute — getter.
+    get-controls: func(self: html-image-element-handle) -> bool;
+    /// `controls` attribute — setter.
+    set-controls: func(self: html-image-element-handle, value: bool);
+
     /// `width` attribute — getter.
     get-width: func(self: html-image-element-handle) -> u32;
     /// `width` attribute — setter.
@@ -4763,6 +4768,9 @@ interface wheel-event {
 
     /// `deltaMode` attribute — getter.
     get-delta-mode: func(self: wheel-event-handle) -> u32;
+
+    /// `momentum` attribute — getter.
+    get-momentum: func(self: wheel-event-handle) -> bool;
 }
 
 interface touch {
@@ -5745,33 +5753,33 @@ interface dom-string-list {
     contains: func(self: dom-string-list-handle, %string: string) -> bool;
 }
 
-interface html-or-svg-element {
-    /// Opaque handle to a host-side `HTMLOrSVGElement` instance.
-    type html-or-svg-element-handle = u64;
+interface html-or-svg-or-math-ml-element {
+    /// Opaque handle to a host-side `HTMLOrSVGOrMathMLElement` instance.
+    type html-or-svg-or-math-ml-element-handle = u64;
 
     /// `dataset` attribute — getter.
-    get-dataset: func(self: html-or-svg-element-handle) -> u64;
+    get-dataset: func(self: html-or-svg-or-math-ml-element-handle) -> u64;
 
     /// `nonce` attribute — getter.
-    get-nonce: func(self: html-or-svg-element-handle) -> string;
+    get-nonce: func(self: html-or-svg-or-math-ml-element-handle) -> string;
     /// `nonce` attribute — setter.
-    set-nonce: func(self: html-or-svg-element-handle, value: string);
+    set-nonce: func(self: html-or-svg-or-math-ml-element-handle, value: string);
 
     /// `autofocus` attribute — getter.
-    get-autofocus: func(self: html-or-svg-element-handle) -> bool;
+    get-autofocus: func(self: html-or-svg-or-math-ml-element-handle) -> bool;
     /// `autofocus` attribute — setter.
-    set-autofocus: func(self: html-or-svg-element-handle, value: bool);
+    set-autofocus: func(self: html-or-svg-or-math-ml-element-handle, value: bool);
 
     /// `tabIndex` attribute — getter.
-    get-tab-index: func(self: html-or-svg-element-handle) -> s32;
+    get-tab-index: func(self: html-or-svg-or-math-ml-element-handle) -> s32;
     /// `tabIndex` attribute — setter.
-    set-tab-index: func(self: html-or-svg-element-handle, value: s32);
+    set-tab-index: func(self: html-or-svg-or-math-ml-element-handle, value: s32);
 
     /// `focus()` operation.
-    focus: func(self: html-or-svg-element-handle, options: option<u64>);
+    focus: func(self: html-or-svg-or-math-ml-element-handle, options: option<u64>);
 
     /// `blur()` operation.
-    blur: func(self: html-or-svg-element-handle);
+    blur: func(self: html-or-svg-or-math-ml-element-handle);
 }
 
 interface dom-string-map {
@@ -6161,11 +6169,6 @@ interface html-anchor-element {
     /// Opaque handle to a host-side `HTMLAnchorElement` instance.
     type html-anchor-element-handle = u64;
 
-    /// `target` attribute — getter.
-    get-target: func(self: html-anchor-element-handle) -> string;
-    /// `target` attribute — setter.
-    set-target: func(self: html-anchor-element-handle, value: string);
-
     /// `download` attribute — getter.
     get-download: func(self: html-anchor-element-handle) -> string;
     /// `download` attribute — setter.
@@ -6183,16 +6186,6 @@ interface html-anchor-element {
 
     /// `relList` attribute — getter.
     get-rel-list: func(self: html-anchor-element-handle) -> u64;
-
-    /// `hreflang` attribute — getter.
-    get-hreflang: func(self: html-anchor-element-handle) -> string;
-    /// `hreflang` attribute — setter.
-    set-hreflang: func(self: html-anchor-element-handle, value: string);
-
-    /// `type` attribute — getter.
-    get-type: func(self: html-anchor-element-handle) -> string;
-    /// `type` attribute — setter.
-    set-type: func(self: html-anchor-element-handle, value: string);
 
     /// `text` attribute — getter.
     get-text: func(self: html-anchor-element-handle) -> string;
@@ -6311,6 +6304,16 @@ interface hyperlink-element-utils {
     get-hash: func(self: hyperlink-element-utils-handle) -> string;
     /// `hash` attribute — setter.
     set-hash: func(self: hyperlink-element-utils-handle, value: string);
+
+    /// `hreflang` attribute — getter.
+    get-hreflang: func(self: hyperlink-element-utils-handle) -> string;
+    /// `hreflang` attribute — setter.
+    set-hreflang: func(self: hyperlink-element-utils-handle, value: string);
+
+    /// `type` attribute — getter.
+    get-type: func(self: hyperlink-element-utils-handle) -> string;
+    /// `type` attribute — setter.
+    set-type: func(self: hyperlink-element-utils-handle, value: string);
 }
 
 interface html-hyperlink-element-utils {
@@ -6321,6 +6324,11 @@ interface html-hyperlink-element-utils {
     get-href: func(self: html-hyperlink-element-utils-handle) -> string;
     /// `href` attribute — setter.
     set-href: func(self: html-hyperlink-element-utils-handle, value: string);
+
+    /// `target` attribute — getter.
+    get-target: func(self: html-hyperlink-element-utils-handle) -> string;
+    /// `target` attribute — setter.
+    set-target: func(self: html-hyperlink-element-utils-handle, value: string);
 }
 
 interface html-mod-element {
@@ -7125,11 +7133,6 @@ interface html-area-element {
     get-shape: func(self: html-area-element-handle) -> string;
     /// `shape` attribute — setter.
     set-shape: func(self: html-area-element-handle, value: string);
-
-    /// `target` attribute — getter.
-    get-target: func(self: html-area-element-handle) -> string;
-    /// `target` attribute — setter.
-    set-target: func(self: html-area-element-handle, value: string);
 
     /// `download` attribute — getter.
     get-download: func(self: html-area-element-handle) -> string;
@@ -8548,6 +8551,11 @@ interface html-template-element {
     get-shadow-root-delegates-focus: func(self: html-template-element-handle) -> bool;
     /// `shadowRootDelegatesFocus` attribute — setter.
     set-shadow-root-delegates-focus: func(self: html-template-element-handle, value: bool);
+
+    /// `shadowRootSlotAssignment` attribute — getter.
+    get-shadow-root-slot-assignment: func(self: html-template-element-handle) -> string;
+    /// `shadowRootSlotAssignment` attribute — setter.
+    set-shadow-root-slot-assignment: func(self: html-template-element-handle, value: string);
 
     /// `shadowRootClonable` attribute — getter.
     get-shadow-root-clonable: func(self: html-template-element-handle) -> bool;
@@ -11044,6 +11052,11 @@ interface speech-recognition {
     get-interim-results: func(self: speech-recognition-handle) -> bool;
     /// `interimResults` attribute — setter.
     set-interim-results: func(self: speech-recognition-handle, value: bool);
+
+    /// `unspokenPunctuation` attribute — getter.
+    get-unspoken-punctuation: func(self: speech-recognition-handle) -> bool;
+    /// `unspokenPunctuation` attribute — setter.
+    set-unspoken-punctuation: func(self: speech-recognition-handle, value: bool);
 
     /// `maxAlternatives` attribute — getter.
     get-max-alternatives: func(self: speech-recognition-handle) -> u32;
@@ -13926,17 +13939,6 @@ interface svg-use-element {
     get-animated-instance-root: func(self: svg-use-element-handle) -> option<u64>;
 }
 
-interface svg-element-instance {
-    /// Opaque handle to a host-side `SVGElementInstance` instance.
-    type svg-element-instance-handle = u64;
-
-    /// `correspondingElement` attribute — getter.
-    get-corresponding-element: func(self: svg-element-instance-handle) -> option<u64>;
-
-    /// `correspondingUseElement` attribute — getter.
-    get-corresponding-use-element: func(self: svg-element-instance-handle) -> option<u64>;
-}
-
 interface shadow-animation {
     /// Opaque handle to a host-side `ShadowAnimation` instance.
     type shadow-animation-handle = u64;
@@ -15524,7 +15526,7 @@ interface cache-storage {
     /// `keys()` operation.
     keys: func(self: cache-storage-handle) -> u64;
 }
-/// W3C WebIDL world — 557 interfaces.
+/// W3C WebIDL world — 556 interfaces.
 world w3c-idl-full {
     import event-callbacks;
     import timer-callbacks;
@@ -15715,7 +15717,7 @@ world w3c-idl-full {
     import radio-node-list;
     import html-options-collection;
     import dom-string-list;
-    import html-or-svg-element;
+    import html-or-svg-or-math-ml-element;
     import dom-string-map;
     import html-html-element;
     import html-title-element;
@@ -16030,7 +16032,6 @@ world w3c-idl-full {
     import document;
     import svgsvg-element;
     import svg-use-element;
-    import svg-element-instance;
     import shadow-animation;
     import get-svg-document;
     import svg-style-element;

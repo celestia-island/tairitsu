@@ -787,17 +787,6 @@ interface svg-use-element {
     get-animated-instance-root: func(self: svg-use-element-handle) -> option<u64>;
 }
 
-interface svg-element-instance {
-    /// Opaque handle to a host-side `SVGElementInstance` instance.
-    type svg-element-instance-handle = u64;
-
-    /// `correspondingElement` attribute — getter.
-    get-corresponding-element: func(self: svg-element-instance-handle) -> option<u64>;
-
-    /// `correspondingUseElement` attribute — getter.
-    get-corresponding-use-element: func(self: svg-element-instance-handle) -> option<u64>;
-}
-
 interface shadow-animation {
     /// Opaque handle to a host-side `ShadowAnimation` instance.
     type shadow-animation-handle = u64;

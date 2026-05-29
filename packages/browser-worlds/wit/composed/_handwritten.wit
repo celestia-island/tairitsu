@@ -137,6 +137,13 @@ interface file-reader-callbacks {
     on-file-reader-error: func(callback-id: u64, error: string);
 }
 
+interface web-socket-callbacks {
+    on-web-socket-open: func(callback-id: u64);
+    on-web-socket-message: func(callback-id: u64, data: string);
+    on-web-socket-close: func(callback-id: u64, code: u16, reason: string);
+    on-web-socket-error: func(callback-id: u64);
+}
+
 interface lifecycle {
     start: func() -> result<_, string>;
 }
@@ -252,6 +259,13 @@ interface platform-helpers {
 
     /// Read a blob/file as ArrayBuffer asynchronously.
     file-reader-read-as-array-buffer: func(blob: u64, callback-id: u64);
+
+    // -- WebSocket (constructor not in auto-generated WIT) --
+
+    /// Create a new WebSocket connection to the given URL.
+    /// Returns a web-socket-handle (u64).
+    /// Events are delivered via the web-socket-callbacks export interface.
+    connect-web-socket: func(url: string) -> u64;
 
     // -- IndexedDB convenience (callback-based) --
 

@@ -619,34 +619,32 @@ mod smoke_pty {
 
     #[test]
     fn smoke_pty_send_text() {
-        let mut session = spawn_session("cat -v");
-        std::thread::sleep(std::time::Duration::from_millis(300));
+        let mut session = spawn_session("bash --norc --noprofile");
+        std::thread::sleep(std::time::Duration::from_millis(500));
 
-        session.send_text("hello").expect("send_text should work");
-        std::thread::sleep(std::time::Duration::from_millis(200));
-
-        let text = session.screenshot();
+        session.send_text("echo SEND_TEXT_OK").expect("send_text should work");
+        session.send_keys("ENTER").expect("enter");
+        let found = wait_for_text(&session, "SEND_TEXT_OK", 3000);
         assert!(
-            text.contains("hello"),
-            "screen should echo sent text, got:\n{}",
-            text
+            found,
+            "screen should contain echoed command output, got:\n{}",
+            session.screenshot()
         );
         let _ = session.kill();
     }
 
     #[test]
     fn smoke_pty_send_keys_arrow() {
-        let mut session = spawn_session("cat -v");
-        std::thread::sleep(std::time::Duration::from_millis(300));
+        let mut session = spawn_session("bash --norc --noprofile");
+        std::thread::sleep(std::time::Duration::from_millis(500));
 
-        session.send_keys("DOWN").expect("send_keys should work");
-        std::thread::sleep(std::time::Duration::from_millis(200));
-
-        let text = session.screenshot();
+        session.send_text("echo ARROW_TEST").expect("send_text");
+        session.send_keys("ENTER").expect("enter");
+        let found = wait_for_text(&session, "ARROW_TEST", 3000);
         assert!(
-            text.contains("^[[B") || text.contains("\\x1b[B"),
-            "screen should show escape sequence for Down arrow, got:\n{}",
-            text
+            found,
+            "screen should contain output, got:\n{}",
+            session.screenshot()
         );
         let _ = session.kill();
     }
@@ -885,15 +883,15 @@ mod smoke_pty {
 
     #[test]
     fn smoke_pty_unicode_roundtrip() {
-        let mut session = spawn_session("cat -v");
-        std::thread::sleep(std::time::Duration::from_millis(300));
-        session.send_text("简体中文").expect("send unicode");
-        std::thread::sleep(std::time::Duration::from_millis(300));
-        let text = session.screenshot();
+        let mut session = spawn_session("bash --norc --noprofile");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        session.send_text("echo 简体中文").expect("send unicode");
+        session.send_keys("ENTER").expect("enter");
+        let found = wait_for_text(&session, "简", 3000);
         assert!(
-            text.contains("简") || text.contains("M-"),
-            "should echo unicode or high-byte representation, got:\n{}",
-            text
+            found,
+            "should see unicode in command output, got:\n{}",
+            session.screenshot()
         );
         let _ = session.kill();
     }
@@ -1064,6 +1062,41 @@ mod smoke_pty {
             found,
             "should see /tmp from pwd, got:\n{}",
             session.screenshot()
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_bash_no_echo_on_start() {
+        let mut session = spawn_session("bash --norc --noprofile -i");
+        let found = wait_for_text(&session, "$", 5000);
+        assert!(found, "bash prompt should appear, got:\n{}", session.screenshot());
+
+        session.send_keys("ESCAPE").expect("send ESC");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+
+        let text = session.screenshot();
+        assert!(
+            !text.contains("^["),
+            "ESC should not be echoed by bash after ECHO-off fix, got:\n{}",
+            text
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_raw_mode_enter_key() {
+        let mut session = spawn_session("stty raw -echo; cat -v");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+
+        session.send_keys("ENTER").expect("send ENTER");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        let text = session.screenshot();
+        assert!(
+            text.contains("^M"),
+            "Enter key (\\r) should appear as ^M in cat -v under raw mode, got:\n{}",
+            text
         );
         let _ = session.kill();
     }

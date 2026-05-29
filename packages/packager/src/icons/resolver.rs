@@ -284,11 +284,14 @@ fn fetch_set(
     version: &str,
     cache: &IconCache,
 ) -> crate::Result<(String, HashMap<String, IconData>)> {
+    #[cfg(feature = "icon-fetch")]
     let ver = if version == "latest" {
         resolve_latest_version(source)?
     } else {
         version.to_string()
     };
+    #[cfg(not(feature = "icon-fetch"))]
+    let ver = version.to_string();
 
     cache.ensure_dir(source.name, &ver)?;
 
@@ -307,11 +310,12 @@ fn fetch_set(
     }
 
     Err(crate::TairitsuPackagerError::IconFetchError(format!(
-        "All origins failed for icon set '{}'",
+        "Could not fetch '{}' — all origins failed",
         source.name
     )))
 }
 
+#[cfg(feature = "icon-fetch")]
 fn resolve_latest_version(source: &IconSourceDef) -> crate::Result<String> {
     for origin in source.origins {
         if let Some(pkg) = origin.npm_package() {
@@ -337,17 +341,28 @@ fn try_fetch_from_origin(
     version: &str,
     cache: &IconCache,
 ) -> crate::Result<HashMap<String, IconData>> {
-    match origin {
-        IconOrigin::Npm(pkg, subpath) => fetch_from_npm(source, pkg, subpath, version, cache),
-        IconOrigin::Github(owner, repo, branch) => {
-            fetch_from_github(source, owner, repo, branch, version, cache)
+    #[cfg(feature = "icon-fetch")]
+    {
+        match origin {
+            IconOrigin::Npm(pkg, subpath) => fetch_from_npm(source, pkg, subpath, version, cache),
+            IconOrigin::Github(owner, repo, branch) => {
+                fetch_from_github(source, owner, repo, branch, version, cache)
+            }
+            IconOrigin::GithubMirror(mirror, owner, repo, branch) => {
+                fetch_from_github_mirror(source, mirror, owner, repo, branch, version, cache)
+            }
         }
-        IconOrigin::GithubMirror(mirror, owner, repo, branch) => {
-            fetch_from_github_mirror(source, mirror, owner, repo, branch, version, cache)
-        }
+    }
+    #[cfg(not(feature = "icon-fetch"))]
+    {
+        let _ = (source, origin, version, cache);
+        Err(crate::TairitsuPackagerError::IconFetchError(
+            "icon-fetch feature not enabled".to_string(),
+        ))
     }
 }
 
+#[cfg(feature = "icon-fetch")]
 fn fetch_from_npm(
     source: &IconSourceDef,
     pkg: &str,
@@ -397,6 +412,7 @@ fn fetch_from_npm(
     scan_and_build_cache(source, &package_dir, version, cache)
 }
 
+#[cfg(feature = "icon-fetch")]
 fn fetch_from_github(
     source: &IconSourceDef,
     owner: &str,
@@ -428,6 +444,7 @@ fn fetch_from_github(
     scan_and_build_cache(source, &base_dir, version, cache)
 }
 
+#[cfg(feature = "icon-fetch")]
 fn fetch_from_github_mirror(
     source: &IconSourceDef,
     mirror: &str,
@@ -679,6 +696,7 @@ fn load_meta_tags(meta_path: &Path, icons: &mut HashMap<String, IconData>, _set_
     }
 }
 
+#[cfg(feature = "icon-fetch")]
 fn download_file(url: &str, dest: &Path) -> crate::Result<()> {
     #[cfg(feature = "icon-fetch")]
     {

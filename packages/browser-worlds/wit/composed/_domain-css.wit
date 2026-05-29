@@ -1449,6 +1449,11 @@ interface html-image-element {
     /// `isMap` attribute — setter.
     set-is-map: func(self: html-image-element-handle, value: bool);
 
+    /// `controls` attribute — getter.
+    get-controls: func(self: html-image-element-handle) -> bool;
+    /// `controls` attribute — setter.
+    set-controls: func(self: html-image-element-handle, value: bool);
+
     /// `width` attribute — getter.
     get-width: func(self: html-image-element-handle) -> u32;
     /// `width` attribute — setter.

@@ -59,6 +59,14 @@ impl UnixPty {
         }
         let child = pair.slave.spawn_command(cmd).map_err(to_io)?;
 
+        {
+            let mut termios: libc::termios = unsafe { std::mem::zeroed() };
+            if unsafe { libc::tcgetattr(master_fd, &mut termios) } == 0 {
+                termios.c_lflag &= !(libc::ECHO | libc::ECHONL);
+                unsafe { libc::tcsetattr(master_fd, libc::TCSANOW, &termios) };
+            }
+        }
+
         let killer = child.clone_killer();
 
         Ok(Self {

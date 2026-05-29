@@ -6,33 +6,56 @@ use bytes::Bytes;
 use wasmtime::{component::Component, error::Context, Config, Engine};
 use wit_component::ComponentEncoder;
 
-// Include the WASI adapter binary at compile time
 static WASI_ADAPTER: &[u8] = include_bytes!("../res/wasi_snapshot_preview1.reactor.wasm");
 
 /// An Image represents a compiled WASM component that can be instantiated
 /// into one or more Containers. Similar to Docker images, an Image is immutable
 /// and can be used to create multiple Container instances.
+///
+/// For resource-limited execution (fuel, memory, epoch interruption), use
+/// [`Image::new_with_config`] or [`Image::from_component_with_config`] with a
+/// suitably configured [`Config`].
+///
+/// # Example — fuel metering
+/// ```ignore
+/// let mut config = tairitsu::Config::new();
+/// config.wasm_component_model(true);
+/// config.consume_fuel(true);
+///
+/// let image = Image::new_with_config(wasm_binary, config)?;
+/// let container = Container::builder(image)
+///     .with_fuel_limit(1_000_000)
+///     .with_guest_initializer(|ctx| { /* ... */ })
+///     .build()?;
+/// ```
 #[derive(Clone)]
 pub struct Image {
     engine: Engine,
     component: Component,
 }
 
+fn apply_config_defaults(config: &mut Config) {
+    config.wasm_component_model(true);
+}
+
 impl Image {
-    /// Create a new Image from WASM binary
-    ///
-    /// # Arguments
-    /// * `wasm_binary` - The compiled WASM binary (core module format)
-    ///
-    /// # Returns
-    /// A new Image that can be used to create Containers
+    /// Create a new Image from WASM binary with default engine configuration.
     pub fn new(wasm_binary: Bytes) -> Result<Self> {
-        let mut config = Config::new();
-        config.wasm_component_model(true);
+        Self::new_with_config(wasm_binary, Config::new())
+    }
+
+    /// Create a new Image from WASM binary with a custom [`Config`].
+    ///
+    /// The component-model feature is always enabled regardless of the passed config.
+    ///
+    /// Use this when you need fuel metering (`consume_fuel`), epoch interruption
+    /// (`epoch_interruption`), memory limits (`with_store_limits`), or any other
+    /// engine-level configuration.
+    pub fn new_with_config(wasm_binary: Bytes, mut config: Config) -> Result<Self> {
+        apply_config_defaults(&mut config);
 
         let engine = Engine::new(&config).context("Failed to create WASM engine")?;
 
-        // Convert core WASM module to component with WASI adapter
         let component_binary = ComponentEncoder::default()
             .module(wasm_binary.as_ref())
             .context("Failed to parse WASM module")?
@@ -48,13 +71,18 @@ impl Image {
         Ok(Self { engine, component })
     }
 
-    /// Create a new Image from a WIT component binary
-    ///
-    /// # Arguments
-    /// * `component_binary` - A pre-compiled WIT component binary
+    /// Create a new Image from a pre-compiled WIT component binary with default
+    /// engine configuration.
     pub fn from_component(component_binary: Bytes) -> Result<Self> {
-        let mut config = Config::new();
-        config.wasm_component_model(true);
+        Self::from_component_with_config(component_binary, Config::new())
+    }
+
+    /// Create a new Image from a pre-compiled WIT component binary with a custom
+    /// [`Config`].
+    ///
+    /// The component-model feature is always enabled regardless of the passed config.
+    pub fn from_component_with_config(component_binary: Bytes, mut config: Config) -> Result<Self> {
+        apply_config_defaults(&mut config);
 
         let engine = Engine::new(&config).context("Failed to create WASM engine")?;
 

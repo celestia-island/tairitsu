@@ -124,6 +124,9 @@ interface wheel-event {
 
     /// `deltaMode` attribute — getter.
     get-delta-mode: func(self: wheel-event-handle) -> u32;
+
+    /// `momentum` attribute — getter.
+    get-momentum: func(self: wheel-event-handle) -> bool;
 }
 
 interface touch {

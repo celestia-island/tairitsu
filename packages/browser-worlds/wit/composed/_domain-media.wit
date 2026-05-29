@@ -380,6 +380,11 @@ interface speech-recognition {
     /// `interimResults` attribute — setter.
     set-interim-results: func(self: speech-recognition-handle, value: bool);
 
+    /// `unspokenPunctuation` attribute — getter.
+    get-unspoken-punctuation: func(self: speech-recognition-handle) -> bool;
+    /// `unspokenPunctuation` attribute — setter.
+    set-unspoken-punctuation: func(self: speech-recognition-handle, value: bool);
+
     /// `maxAlternatives` attribute — getter.
     get-max-alternatives: func(self: speech-recognition-handle) -> u32;
     /// `maxAlternatives` attribute — setter.

@@ -518,8 +518,16 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
         }
         let was_running = daemon::is_daemon_running();
         if was_running {
-            crate::log_progress!("Restarting daemon...");
+            let killed_pid = daemon::read_pid().unwrap_or(0);
+            if cli.force {
+                crate::log_progress!("Force-restarting daemon...");
+            } else {
+                crate::log_progress!("Restarting daemon...");
+            }
             let _ = daemon::kill_daemon();
+            if cli.force && killed_pid > 0 {
+                crate::log_warn!("--force: killed previous daemon (PID {})", killed_pid);
+            }
             crate::log_ok!("Old daemon stopped.");
         } else {
             crate::log_progress!("Starting daemon...");
