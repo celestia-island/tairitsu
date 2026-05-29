@@ -222,3 +222,75 @@ tairitsu-runtime = { path = "../tairitsu/packages/runtime" }
 ```
 
 And create a `packages/shared/plugin_host/` crate that wraps tairitsu-runtime with entelecheia-specific host functions (HTTP client, event forwarding, AI query, KV store).
+
+---
+
+## VTTY: Fix PTY ECHO for Interactive TUI (crossterm) Keyboard Input
+
+### Problem
+
+VTTY creates a real PTY (`/dev/pts/N`) with `TERM=xterm-256color`. Raw mode (`cfmakeraw` / `tcsetattr`) works correctly on the PTY slave (verified via `stty raw -echo` + `dd` test). A minimal crossterm program (`enable_raw_mode()` + `event::poll()` + `event::read()`) correctly detects Enter key (`\r`) sent via `vtty_send_keys`.
+
+**However**: interactive crossterm-based TUIs (like entelecheia-tui's splash screen modal dialogs) do not respond to keyboard input via VTTY. The language selection dialog, checklist confirmations, and other modal interactions are unresponsive to `Enter`, `Escape`, `Tab`, and arrow keys — even though those keys are confirmed to arrive at the PTY.
+
+### Root Cause Analysis
+
+Evidence from debugging entelecheia-tui splash screen (language dialog):
+
+1. **Keys arrive at the PTY**: Sending `Escape` via `vtty_send_keys` causes `^[` to appear in VTTY's screen output below the dialog. This is the raw ESC byte (`\x1b`) being rendered by VTTY's VTE screen emulator.
+2. **ECHO is likely ON on the PTY slave**: In a properly raw-mode PTY, `ECHO` should be off — input bytes should never appear in the output stream. The presence of `^[` in VTTY's screen capture means the PTY slave's line discipline is echoing input back through the master, which the VTE parser then renders.
+3. **Echoed escape sequences corrupt crossterm's event stream**: crossterm's `InternalEventReader` thread reads raw bytes from stdin (the PTY slave). If the terminal driver echoes input bytes back to the output stream, they become visible in VTTY's screen but do NOT affect crossterm's event reading directly. However, the TUI's complex event loop (30ms poll + frame rendering) may encounter timing issues where the echoed bytes appear between event reads, or the terminal's output buffer gets polluted in ways that affect the rendering pipeline.
+4. **Minimal crossterm test works**: The test sends Enter, disables raw mode, and prints result. It's a single-shot read with no rendering loop. The TUI has a continuous event-render loop that's more sensitive to buffer state.
+
+### Fix: Ensure PTY Slave Starts With ECHO Off
+
+The `portable-pty` crate opens the PTY pair via `native_pty_system().openpty(size)`. After `pair.slave.spawn_command(cmd)`, the child process inherits the PTY slave's default termios state, which typically has `ECHO` enabled (the system default for pseudo-terminals is often cooked mode).
+
+Crossterm's `enable_raw_mode()` calls `tcsetattr(STDIN_FILENO, TCSANOW, ...)` to disable `ECHO`, `ICANON`, `ISIG`, etc. This **should** work on a real PTY slave — and our tests confirm it does for simple programs.
+
+But the entelecheia-tui issue suggests that something is interfering. Possible causes:
+
+- **`portable-pty` may set `ECHO` after spawn**: Some PTY libraries re-enable echo on the master side.
+- **The VTTY MCP reader thread may be configuring the master**: The dedicated reader thread (`reader_loop` in `pty_unix.rs`) opens a `dup(master_fd)` for reading. Some older PTY implementations can interfere with slave settings.
+- **Bash startup may re-enable echo**: The shell spawned by VTTY (`/bin/bash -c "<command>"`) may restore terminal settings during initialization.
+
+### Recommended Actions
+
+1. **Explicitly disable ECHO on the PTY slave after spawn**:
+
+   In `packages/mcp/src/vtty/pty_unix.rs` and `packages/packager/src/vtty/pty_unix.rs`, after `pair.slave.spawn_command(cmd)`:
+
+   ```rust
+   // Disable echo on the PTY slave to prevent input bytes from appearing
+   // in the output stream. crossterm-based TUIs enable raw mode themselves,
+   // but bash and other intermediate processes may re-enable echo.
+   unsafe {
+       use std::os::unix::io::AsRawFd;
+       let slave_fd = pair.slave.as_raw_fd().unwrap_or(-1);
+       if slave_fd >= 0 {
+           let mut termios: libc::termios = std::mem::zeroed();
+           if libc::tcgetattr(slave_fd, &mut termios) == 0 {
+               termios.c_lflag &= !(libc::ECHO | libc::ECHONL | libc::ICANON);
+               termios.c_iflag &= !(libc::ICRNL | libc::INLCR);
+               libc::tcsetattr(slave_fd, libc::TCSANOW, &termios);
+           }
+       }
+   }
+   ```
+
+   Note: this keeps `ISIG` (signal generation) enabled so that Ctrl+C still works. Full `cfmakeraw` would disable signals too, preventing Ctrl+C from reaching the child process.
+
+2. **Add a smoke test for interactive TUI input**:
+
+   In `packages/mcp/src/vtty/mod.rs` tests, add a test that:
+   - Launches a minimal crossterm program with a modal dialog loop
+   - Sends `Enter` via `send_keys`
+   - Verifies the dialog is dismissed (via screenshot text change)
+
+3. **Check `native_pty_system()` behavior**:
+
+   Verify that `portable-pty`'s `openpty()` does not configure the master to echo. If it does, we need to work around it or configure the master differently.
+
+### Priority
+
+P1 — blocks interactive TUI testing via VTTY in entelecheia's CI/CD pipeline.
