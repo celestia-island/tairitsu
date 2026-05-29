@@ -343,20 +343,22 @@ fn try_fetch_from_origin(
 ) -> crate::Result<HashMap<String, IconData>> {
     #[cfg(feature = "icon-fetch")]
     {
-    match origin {
-        IconOrigin::Npm(pkg, subpath) => fetch_from_npm(source, pkg, subpath, version, cache),
-        IconOrigin::Github(owner, repo, branch) => {
-            fetch_from_github(source, owner, repo, branch, version, cache)
+        match origin {
+            IconOrigin::Npm(pkg, subpath) => fetch_from_npm(source, pkg, subpath, version, cache),
+            IconOrigin::Github(owner, repo, branch) => {
+                fetch_from_github(source, owner, repo, branch, version, cache)
+            }
+            IconOrigin::GithubMirror(mirror, owner, repo, branch) => {
+                fetch_from_github_mirror(source, mirror, owner, repo, branch, version, cache)
+            }
         }
-        IconOrigin::GithubMirror(mirror, owner, repo, branch) => {
-            fetch_from_github_mirror(source, mirror, owner, repo, branch, version, cache)
-        }
-    }
     }
     #[cfg(not(feature = "icon-fetch"))]
     {
         let _ = (source, origin, version, cache);
-        Err(crate::TairitsuPackagerError::IconFetchError("icon-fetch feature not enabled".to_string()))
+        Err(crate::TairitsuPackagerError::IconFetchError(
+            "icon-fetch feature not enabled".to_string(),
+        ))
     }
 }
 

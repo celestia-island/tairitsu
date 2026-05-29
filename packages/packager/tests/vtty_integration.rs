@@ -58,23 +58,31 @@ fn test_pty_write_and_read() {
 
     pty.write(b"echo HELLO_VTTY_TEST\n").expect("write failed");
 
-    wait_ms(500);
+    wait_ms(800);
 
     let mut buf = [0u8; 4096];
-    let n = match pty.read_nonblocking(&mut buf) {
-        Ok(n) => n,
-        Err(e) => {
-            eprintln!("read error: {}", e);
-            0
+    let mut all_output = String::new();
+    for _ in 0..5 {
+        let n = match pty.read_nonblocking(&mut buf) {
+            Ok(n) => n,
+            Err(e) => {
+                eprintln!("read error: {}", e);
+                0
+            }
+        };
+        if n > 0 {
+            all_output.push_str(&String::from_utf8_lossy(&buf[..n]));
         }
-    };
-    let output = String::from_utf8_lossy(&buf[..n]);
-    eprintln!("PTY output: {:?}", output);
+        if all_output.contains("HELLO_VTTY_TEST") {
+            break;
+        }
+        wait_ms(200);
+    }
+    eprintln!("PTY output: {:?}", all_output);
     assert!(
-        output.contains("HELLO_VTTY_TEST") || n > 0,
-        "Should have some output from echo, got {} bytes: {:?}",
-        n,
-        output
+        all_output.contains("HELLO_VTTY_TEST") || !all_output.is_empty(),
+        "Should have some output from echo, got: {:?}",
+        all_output
     );
 
     pty.kill_and_reap().ok();

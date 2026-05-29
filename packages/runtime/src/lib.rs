@@ -82,7 +82,7 @@ pub use tairitsu_macros::{
 };
 // Re-export wasmtime types for user convenience
 pub use wasmtime::component::Component;
-pub use wasmtime::{Engine, Store, Linker, Config};
+pub use wasmtime::{Config, Engine, Linker, Store};
 pub use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 pub use wit::{FunctionInfo, WitLoader};
 pub use wit_helper::GuestInfo;

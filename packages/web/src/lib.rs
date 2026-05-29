@@ -39,10 +39,10 @@ pub use ssr::SsrPlatform;
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub use wit_platform::prevent_event_default;
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
-pub use wit_platform::{ws_close, ws_connect, ws_send, WsConnection};
-#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub use wit_platform::{fetch_text, fetch_text_with_options};
 #[cfg(feature = "wit-bindings")]
 pub use wit_platform::{
     get_pathname, push_state, replace_state, WitElement, WitEvent, WitPlatform,
 };
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub use wit_platform::{ws_close, ws_connect, ws_send, WsConnection};

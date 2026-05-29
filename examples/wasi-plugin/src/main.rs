@@ -27,9 +27,9 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn make_initializer() -> impl for<'a> FnOnce(
-    tairitsu::GuestHandlerContext<'a, tairitsu::HostState>,
-) -> Result<GuestInstance> {
+fn make_initializer(
+) -> impl for<'a> FnOnce(tairitsu::GuestHandlerContext<'a, tairitsu::HostState>) -> Result<GuestInstance>
+{
     |ctx| {
         let instance = ctx
             .linker
@@ -78,7 +78,10 @@ fn smoke_fuel(wasm: &[u8]) -> Result<()> {
 
     let fuel_after = container.store().get_fuel()?;
     eprintln!("  fuel after call:  {}", fuel_after);
-    assert!(fuel_after < fuel_before, "fuel should decrease after a call");
+    assert!(
+        fuel_after < fuel_before,
+        "fuel should decrease after a call"
+    );
 
     eprintln!("  fuel: OK");
     Ok(())

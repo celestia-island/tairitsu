@@ -526,10 +526,7 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
             }
             let _ = daemon::kill_daemon();
             if cli.force && killed_pid > 0 {
-                crate::log_warn!(
-                    "--force: killed previous daemon (PID {})",
-                    killed_pid
-                );
+                crate::log_warn!("--force: killed previous daemon (PID {})", killed_pid);
             }
             crate::log_ok!("Old daemon stopped.");
         } else {
