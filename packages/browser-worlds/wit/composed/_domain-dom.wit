@@ -431,8 +431,11 @@ interface shadow-root {
     /// `onslotchange` attribute — setter.
     set-onslotchange: func(self: shadow-root-handle, value: u64);
 
+    /// `setHTML()` operation.
+    set-html: func(self: shadow-root-handle, html: string, options: option<u64>);
+
     /// `setHTMLUnsafe()` operation.
-    set-html-unsafe: func(self: shadow-root-handle, html: string);
+    set-html-unsafe: func(self: shadow-root-handle, html: string, options: option<u64>);
 
     /// `getHTML()` operation.
     get-html: func(self: shadow-root-handle, options: option<u64>) -> string;

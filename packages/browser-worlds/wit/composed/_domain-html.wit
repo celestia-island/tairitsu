@@ -4137,6 +4137,44 @@ interface xml-serializer {
     serialize-to-string: func(self: xml-serializer-handle, root: u64) -> string;
 }
 
+interface sanitizer {
+    /// Opaque handle to a host-side `Sanitizer` instance.
+    type sanitizer-handle = u64;
+
+    /// `get()` operation.
+    get: func(self: sanitizer-handle) -> u64;
+
+    /// `allowElement()` operation.
+    allow-element: func(self: sanitizer-handle, element: u64) -> bool;
+
+    /// `removeElement()` operation.
+    remove-element: func(self: sanitizer-handle, element: u64) -> bool;
+
+    /// `replaceElementWithChildren()` operation.
+    replace-element-with-children: func(self: sanitizer-handle, element: u64) -> bool;
+
+    /// `allowProcessingInstruction()` operation.
+    allow-processing-instruction: func(self: sanitizer-handle, pi: u64) -> bool;
+
+    /// `removeProcessingInstruction()` operation.
+    remove-processing-instruction: func(self: sanitizer-handle, pi: u64) -> bool;
+
+    /// `allowAttribute()` operation.
+    allow-attribute: func(self: sanitizer-handle, attribute: u64) -> bool;
+
+    /// `removeAttribute()` operation.
+    remove-attribute: func(self: sanitizer-handle, attribute: u64) -> bool;
+
+    /// `setComments()` operation.
+    set-comments: func(self: sanitizer-handle, allow: bool) -> bool;
+
+    /// `setDataAttributes()` operation.
+    set-data-attributes: func(self: sanitizer-handle, allow: bool) -> bool;
+
+    /// `removeUnsafe()` operation.
+    remove-unsafe: func(self: sanitizer-handle) -> bool;
+}
+
 interface navigator-id {
     /// Opaque handle to a host-side `NavigatorID` instance.
     type navigator-id-handle = u64;
