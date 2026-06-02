@@ -2656,8 +2656,11 @@ interface element {
     /// `onfullscreenerror` attribute — setter.
     set-onfullscreenerror: func(self: element-handle, value: u64);
 
+    /// `setHTML()` operation.
+    set-html: func(self: element-handle, html: string, options: option<u64>);
+
     /// `setHTMLUnsafe()` operation.
-    set-html-unsafe: func(self: element-handle, html: string);
+    set-html-unsafe: func(self: element-handle, html: string, options: option<u64>);
 
     /// `getHTML()` operation.
     get-html: func(self: element-handle, options: option<u64>) -> string;
@@ -4235,8 +4238,11 @@ interface shadow-root {
     /// `onslotchange` attribute — setter.
     set-onslotchange: func(self: shadow-root-handle, value: u64);
 
+    /// `setHTML()` operation.
+    set-html: func(self: shadow-root-handle, html: string, options: option<u64>);
+
     /// `setHTMLUnsafe()` operation.
-    set-html-unsafe: func(self: shadow-root-handle, html: string);
+    set-html-unsafe: func(self: shadow-root-handle, html: string, options: option<u64>);
 
     /// `getHTML()` operation.
     get-html: func(self: shadow-root-handle, options: option<u64>) -> string;
@@ -9825,6 +9831,44 @@ interface xml-serializer {
     serialize-to-string: func(self: xml-serializer-handle, root: u64) -> string;
 }
 
+interface sanitizer {
+    /// Opaque handle to a host-side `Sanitizer` instance.
+    type sanitizer-handle = u64;
+
+    /// `get()` operation.
+    get: func(self: sanitizer-handle) -> u64;
+
+    /// `allowElement()` operation.
+    allow-element: func(self: sanitizer-handle, element: u64) -> bool;
+
+    /// `removeElement()` operation.
+    remove-element: func(self: sanitizer-handle, element: u64) -> bool;
+
+    /// `replaceElementWithChildren()` operation.
+    replace-element-with-children: func(self: sanitizer-handle, element: u64) -> bool;
+
+    /// `allowProcessingInstruction()` operation.
+    allow-processing-instruction: func(self: sanitizer-handle, pi: u64) -> bool;
+
+    /// `removeProcessingInstruction()` operation.
+    remove-processing-instruction: func(self: sanitizer-handle, pi: u64) -> bool;
+
+    /// `allowAttribute()` operation.
+    allow-attribute: func(self: sanitizer-handle, attribute: u64) -> bool;
+
+    /// `removeAttribute()` operation.
+    remove-attribute: func(self: sanitizer-handle, attribute: u64) -> bool;
+
+    /// `setComments()` operation.
+    set-comments: func(self: sanitizer-handle, allow: bool) -> bool;
+
+    /// `setDataAttributes()` operation.
+    set-data-attributes: func(self: sanitizer-handle, allow: bool) -> bool;
+
+    /// `removeUnsafe()` operation.
+    remove-unsafe: func(self: sanitizer-handle) -> bool;
+}
+
 interface navigator-id {
     /// Opaque handle to a host-side `NavigatorID` instance.
     type navigator-id-handle = u64;
@@ -13661,7 +13705,10 @@ interface document {
     set-onfullscreenerror: func(value: u64);
 
     /// `parseHTMLUnsafe()` operation.
-    parse-html-unsafe: func(html: string) -> u64;
+    parse-html-unsafe: func(html: string, options: option<u64>) -> u64;
+
+    /// `parseHTML()` operation.
+    parse-html: func(html: string, options: option<u64>) -> u64;
 
     /// `location` attribute — getter.
     get-location: func() -> option<u64>;
@@ -15526,7 +15573,7 @@ interface cache-storage {
     /// `keys()` operation.
     keys: func(self: cache-storage-handle) -> u64;
 }
-/// W3C WebIDL world — 556 interfaces.
+/// W3C WebIDL world — 557 interfaces.
 world w3c-idl-full {
     import event-callbacks;
     import timer-callbacks;
@@ -15546,6 +15593,7 @@ world w3c-idl-full {
     import event-target;
     import platform-helpers;
     import component-types;
+    import web-socket-callbacks;
     import credential;
     import credential-user-data;
     import credentials-container;
@@ -15855,6 +15903,7 @@ world w3c-idl-full {
     import promise-rejection-event;
     import dom-parser;
     import xml-serializer;
+    import sanitizer;
     import navigator-id;
     import navigator-language;
     import navigator-on-line;

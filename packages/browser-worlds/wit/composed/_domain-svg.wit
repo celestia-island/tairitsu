@@ -509,7 +509,10 @@ interface document {
     set-onfullscreenerror: func(value: u64);
 
     /// `parseHTMLUnsafe()` operation.
-    parse-html-unsafe: func(html: string) -> u64;
+    parse-html-unsafe: func(html: string, options: option<u64>) -> u64;
+
+    /// `parseHTML()` operation.
+    parse-html: func(html: string, options: option<u64>) -> u64;
 
     /// `location` attribute — getter.
     get-location: func() -> option<u64>;

@@ -1249,8 +1249,11 @@ interface element {
     /// `onfullscreenerror` attribute — setter.
     set-onfullscreenerror: func(self: element-handle, value: u64);
 
+    /// `setHTML()` operation.
+    set-html: func(self: element-handle, html: string, options: option<u64>);
+
     /// `setHTMLUnsafe()` operation.
-    set-html-unsafe: func(self: element-handle, html: string);
+    set-html-unsafe: func(self: element-handle, html: string, options: option<u64>);
 
     /// `getHTML()` operation.
     get-html: func(self: element-handle, options: option<u64>) -> string;
