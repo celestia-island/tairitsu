@@ -904,25 +904,47 @@ mod daemon {
             }
             v
         };
-        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&priority_dirs) {
+        if let Some((_port, debug_port, _)) =
+            try_read_ready_port_from_candidates(&priority_dirs)
+        {
             if let Some(dp) = debug_port {
-                return Ok(format!("http://localhost:{dp}"));
+                let url = format!("http://localhost:{dp}");
+                if check_daemon_health(&url).await {
+                    return Ok(url);
+                }
             }
             return Err(anyhow!(
-                "Daemon found but debug API not enabled. Start with: tairitsu dev --daemon --debug"
+                "Daemon found but debug API not responding. Start with: tairitsu dev --daemon --debug"
             ));
         }
 
         let searched = search_project_roots_fallback();
-        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&searched) {
+        if let Some((_port, debug_port, _)) =
+            try_read_ready_port_from_candidates(&searched)
+        {
             if let Some(dp) = debug_port {
-                return Ok(format!("http://localhost:{dp}"));
+                let url = format!("http://localhost:{dp}");
+                if check_daemon_health(&url).await {
+                    return Ok(url);
+                }
             }
             return Err(anyhow!(
-                "Daemon found but debug API not enabled. Start with: tairitsu dev --daemon --debug"
+                "Daemon found but debug API not responding. Start with: tairitsu dev --daemon --debug"
             ));
         }
         Err(anyhow!("No running tairitsu daemon found"))
+    }
+
+    async fn check_daemon_health(url: &str) -> bool {
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(2))
+            .build()
+            .unwrap_or_default();
+        client
+            .get(format!("{url}/health"))
+            .send()
+            .await
+            .is_ok_and(|resp| resp.status().is_success())
     }
 
     fn search_project_roots_fallback() -> Vec<PathBuf> {
@@ -979,6 +1001,35 @@ mod daemon {
             let ready_path = dir.join("tairitsu-packager.ready");
             if let Ok(content) = std::fs::read_to_string(&ready_path) {
                 let trimmed = content.trim();
+                if trimmed.is_empty() || trimmed.starts_with("error:") {
+                    let _ = std::fs::remove_file(&ready_path);
+                    continue;
+                }
+
+                if let Ok(metadata) = std::fs::metadata(&ready_path) {
+                    if let Ok(modified) = metadata.modified() {
+                        if modified
+                            .elapsed()
+                            .unwrap_or_default()
+                            > std::time::Duration::from_secs(86400)
+                        {
+                            let pid_path = dir.join("tairitsu-packager.pid");
+                            if let Ok(pid_str) = std::fs::read_to_string(&pid_path) {
+                                if let Ok(pid) = pid_str.trim().parse::<u32>() {
+                                    if !is_process_running(pid) {
+                                        let _ = std::fs::remove_file(&ready_path);
+                                        let _ = std::fs::remove_file(&pid_path);
+                                        continue;
+                                    }
+                                }
+                            } else {
+                                let _ = std::fs::remove_file(&ready_path);
+                                continue;
+                            }
+                        }
+                    }
+                }
+
                 if let Some(rest) = trimmed.strip_prefix("ready:") {
                     let mut parts = rest.splitn(2, ':');
                     if let Some(port_str) = parts.next() {
@@ -993,6 +1044,28 @@ mod daemon {
             }
         }
         None
+    }
+
+    #[cfg(unix)]
+    fn is_process_running(pid: u32) -> bool {
+        std::process::Command::new("kill")
+            .arg("-0")
+            .arg(pid.to_string())
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+    }
+
+    #[cfg(not(unix))]
+    fn is_process_running(pid: u32) -> bool {
+        std::process::Command::new("tasklist")
+            .args(&["/FI", &format!("PID eq {}", pid)])
+            .output()
+            .map(|o| {
+                let s = String::from_utf8_lossy(&o.stdout);
+                s.contains(&pid.to_string())
+            })
+            .unwrap_or(false)
     }
 }
 
