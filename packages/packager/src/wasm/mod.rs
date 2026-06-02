@@ -1914,6 +1914,7 @@ pub async fn dev_server(
         #[cfg(not(feature = "debug-browser"))]
         let dp = None;
         let _ = crate::daemon::signal_ready(actual_port, dp);
+        crate::daemon::register_cleanup_on_exit().await;
     }
 
     let mut last_build_line = format_last_build_line(true, initial_elapsed, None);

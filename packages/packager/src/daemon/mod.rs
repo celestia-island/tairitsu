@@ -157,6 +157,38 @@ pub fn cleanup_ready_file() {
     let _ = fs::remove_file(ready_file_path());
 }
 
+/// Register signal handlers to clean up ready/pid files on daemon exit.
+/// Must be called from within a tokio runtime.
+pub async fn register_cleanup_on_exit() {
+    let ready = ready_file_path();
+    let pid = pid_file_path();
+
+    let ready_ctrlc = ready.clone();
+    let pid_ctrlc = pid.clone();
+    tokio::spawn(async move {
+        tokio::signal::ctrl_c().await.ok();
+        let _ = fs::remove_file(&ready_ctrlc);
+        let _ = fs::remove_file(&pid_ctrlc);
+        std::process::exit(0);
+    });
+
+    #[cfg(unix)]
+    {
+        let ready_sig = ready;
+        let pid_sig = pid;
+        tokio::spawn(async move {
+            let mut sigterm = tokio::signal::unix::signal(
+                tokio::signal::unix::SignalKind::terminate(),
+            )
+            .unwrap();
+            sigterm.recv().await;
+            let _ = fs::remove_file(&ready_sig);
+            let _ = fs::remove_file(&pid_sig);
+            std::process::exit(0);
+        });
+    }
+}
+
 /// Truncate daemon log files so the parent can stream fresh output.
 pub fn truncate_log_files() -> std::io::Result<()> {
     let stdout_path = daemon_log_path().with_extension("stdout");

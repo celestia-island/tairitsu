@@ -27,21 +27,14 @@ impl Server {
     }
 
     async fn ensure_daemon(&self) -> Result<String, McpError> {
-        {
-            let url = self.base_url.read().await.clone();
-            if !url.is_empty() {
-                return Ok(url);
-            }
-        }
-        let resolved = resolve_daemon_url().await.unwrap_or_default();
-        if resolved.is_empty() {
+        let url = self.base_url.read().await.clone();
+        if url.is_empty() {
             return Err(McpError::internal_error(
                 "Browser tools require a running daemon. Start with: tairitsu dev --daemon --debug",
                 None,
             ));
         }
-        *self.base_url.write().await = resolved.clone();
-        Ok(resolved)
+        Ok(url)
     }
 
     fn tool_result(text: impl Into<String>) -> CallToolResult {
@@ -261,7 +254,7 @@ impl Server {
         Parameters(args): Parameters<BrowserNavigateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget("navigate", json!({"url": args.url}))
             .await?;
         Ok(Self::tool_result(format!("Navigated to {}", args.url)))
@@ -295,7 +288,7 @@ impl Server {
         Parameters(args): Parameters<SnapshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         let query: Vec<(&str, &str)> = args
             .target
             .as_deref()
@@ -318,7 +311,7 @@ impl Server {
         Parameters(args): Parameters<ScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         let mut body = json!({});
         if let Some(el) = &args.element {
             body["selector"] = json!(el);
@@ -372,7 +365,7 @@ impl Server {
         Parameters(args): Parameters<ClickArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget("click", json!({"selector": args.target}))
             .await?;
         Ok(Self::tool_result(format!("Clicked: {}", args.target)))
@@ -384,7 +377,7 @@ impl Server {
         Parameters(args): Parameters<TypeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget(
             "type",
             json!({
@@ -404,7 +397,7 @@ impl Server {
         Parameters(args): Parameters<PressKeyArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget("press", json!({"key": args.key}))
             .await?;
         Ok(Self::tool_result(format!("Pressed: {}", args.key)))
@@ -416,7 +409,7 @@ impl Server {
         Parameters(args): Parameters<EvaluateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         let v = self
             .http_post("evaluate", json!({"expression": args.function}))
             .await?;
@@ -442,7 +435,7 @@ impl Server {
         Parameters(args): Parameters<ConsoleMessagesArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         let level = args.level.as_deref().unwrap_or("");
         let v = self.http_get("console", &[("level", level)]).await?;
         Ok(Self::tool_result(v.to_string()))
@@ -454,7 +447,7 @@ impl Server {
         Parameters(args): Parameters<BrowserResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget(
             "resize",
             json!({"width": args.width, "height": args.height}),
@@ -904,25 +897,47 @@ mod daemon {
             }
             v
         };
-        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&priority_dirs) {
+        if let Some((_port, debug_port, _)) =
+            try_read_ready_port_from_candidates(&priority_dirs)
+        {
             if let Some(dp) = debug_port {
-                return Ok(format!("http://localhost:{dp}"));
+                let url = format!("http://localhost:{dp}");
+                if check_daemon_health(&url).await {
+                    return Ok(url);
+                }
             }
             return Err(anyhow!(
-                "Daemon found but debug API not enabled. Start with: tairitsu dev --daemon --debug"
+                "Daemon found but debug API not responding. Start with: tairitsu dev --daemon --debug"
             ));
         }
 
         let searched = search_project_roots_fallback();
-        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&searched) {
+        if let Some((_port, debug_port, _)) =
+            try_read_ready_port_from_candidates(&searched)
+        {
             if let Some(dp) = debug_port {
-                return Ok(format!("http://localhost:{dp}"));
+                let url = format!("http://localhost:{dp}");
+                if check_daemon_health(&url).await {
+                    return Ok(url);
+                }
             }
             return Err(anyhow!(
-                "Daemon found but debug API not enabled. Start with: tairitsu dev --daemon --debug"
+                "Daemon found but debug API not responding. Start with: tairitsu dev --daemon --debug"
             ));
         }
         Err(anyhow!("No running tairitsu daemon found"))
+    }
+
+    async fn check_daemon_health(url: &str) -> bool {
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(2))
+            .build()
+            .unwrap_or_default();
+        client
+            .get(format!("{url}/health"))
+            .send()
+            .await
+            .is_ok_and(|resp| resp.status().is_success())
     }
 
     fn search_project_roots_fallback() -> Vec<PathBuf> {
@@ -979,6 +994,35 @@ mod daemon {
             let ready_path = dir.join("tairitsu-packager.ready");
             if let Ok(content) = std::fs::read_to_string(&ready_path) {
                 let trimmed = content.trim();
+                if trimmed.is_empty() || trimmed.starts_with("error:") {
+                    let _ = std::fs::remove_file(&ready_path);
+                    continue;
+                }
+
+                if let Ok(metadata) = std::fs::metadata(&ready_path) {
+                    if let Ok(modified) = metadata.modified() {
+                        if modified
+                            .elapsed()
+                            .unwrap_or_default()
+                            > std::time::Duration::from_secs(86400)
+                        {
+                            let pid_path = dir.join("tairitsu-packager.pid");
+                            if let Ok(pid_str) = std::fs::read_to_string(&pid_path) {
+                                if let Ok(pid) = pid_str.trim().parse::<u32>() {
+                                    if !is_process_running(pid) {
+                                        let _ = std::fs::remove_file(&ready_path);
+                                        let _ = std::fs::remove_file(&pid_path);
+                                        continue;
+                                    }
+                                }
+                            } else {
+                                let _ = std::fs::remove_file(&ready_path);
+                                continue;
+                            }
+                        }
+                    }
+                }
+
                 if let Some(rest) = trimmed.strip_prefix("ready:") {
                     let mut parts = rest.splitn(2, ':');
                     if let Some(port_str) = parts.next() {
@@ -994,6 +1038,28 @@ mod daemon {
         }
         None
     }
+
+    #[cfg(unix)]
+    fn is_process_running(pid: u32) -> bool {
+        std::process::Command::new("kill")
+            .arg("-0")
+            .arg(pid.to_string())
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+    }
+
+    #[cfg(not(unix))]
+    fn is_process_running(pid: u32) -> bool {
+        std::process::Command::new("tasklist")
+            .args(&["/FI", &format!("PID eq {}", pid)])
+            .output()
+            .map(|o| {
+                let s = String::from_utf8_lossy(&o.stdout);
+                s.contains(&pid.to_string())
+            })
+            .unwrap_or(false)
+    }
 }
 
 use daemon::resolve_daemon_url;
@@ -1008,16 +1074,22 @@ pub struct McpConfig {
 pub async fn run(config: McpConfig) -> Result<()> {
     let base_url = Arc::new(RwLock::new(String::new()));
 
-    let base_url_clone = base_url.clone();
-    let url_from_config = config.base_url.clone();
-    tokio::spawn(async move {
-        let url = if !url_from_config.is_empty() {
-            url_from_config
-        } else {
-            resolve_daemon_url().await.unwrap_or_default()
-        };
-        *base_url_clone.write().await = url;
-    });
+    if !config.base_url.is_empty() {
+        *base_url.write().await = config.base_url.clone();
+    } else {
+        let base_url_clone = base_url.clone();
+        tokio::spawn(async move {
+            loop {
+                if let Ok(url) = resolve_daemon_url().await {
+                    if !url.is_empty() {
+                        *base_url_clone.write().await = url;
+                        return;
+                    }
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            }
+        });
+    }
 
     let server = Server {
         base_url: base_url.clone(),
