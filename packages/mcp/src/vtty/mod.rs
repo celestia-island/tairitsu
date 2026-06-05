@@ -52,7 +52,6 @@ pub struct VttySession {
     alive: AtomicBool,
     pid: Option<u32>,
     reader_running: Arc<AtomicBool>,
-    #[allow(dead_code)]
     reader_handle: Mutex<Option<std::thread::JoinHandle<()>>>,
 }
 
@@ -152,7 +151,7 @@ impl VttySession {
             .unwrap_or_default()
     }
 
-    #[allow(dead_code)]
+    #[cfg(test)]
     pub fn get_line(&self, row: usize) -> String {
         self.screen
             .lock()

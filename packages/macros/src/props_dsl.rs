@@ -11,8 +11,6 @@ use syn::{
 
 /// Parsed props field with optional default value from #[default(...)] attribute
 pub struct PropsField {
-    #[allow(dead_code)]
-    pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub name: Ident,
     pub ty: Type,
@@ -76,7 +74,6 @@ impl Parse for PropsField {
         let default = Self::extract_default(&mut attrs);
 
         Ok(PropsField {
-            attrs,
             vis,
             name,
             ty,

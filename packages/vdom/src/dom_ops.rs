@@ -44,15 +44,6 @@ impl DomHandle {
         Self(id)
     }
 
-    /// Construct a handle from a raw host id (internal use).
-    ///
-    /// Same as [`from_raw`](Self::from_raw) but without the type-safety warning.
-    /// For use by platform internals and tests that knowingly pass raw `u64`.
-    #[allow(dead_code)]
-    pub(crate) const fn from_raw_internal(id: u64) -> Self {
-        Self(id)
-    }
-
     /// The null handle (equivalent to an absent element).
     pub const fn null() -> Self {
         Self(0)

@@ -16,14 +16,21 @@ use crate::resolver::PackageSpec;
 
 /// Client for fetching WIT package files from a remote registry.
 pub struct FetchClient {
-    #[allow(dead_code)]
+    #[cfg(feature = "fetch")]
     registry_url: String,
+    #[cfg(not(feature = "fetch"))]
+    _registry_url: String,
 }
 
 impl FetchClient {
     /// Create a new client pointing at the given registry base URL.
     pub fn new(registry_url: String) -> Self {
-        Self { registry_url }
+        Self {
+            #[cfg(feature = "fetch")]
+            registry_url,
+            #[cfg(not(feature = "fetch"))]
+            _registry_url: registry_url,
+        }
     }
 
     /// Fetch all WIT files for `spec` from the registry.

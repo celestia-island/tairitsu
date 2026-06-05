@@ -122,6 +122,7 @@ impl Vt100Screen {
         out.join("\n")
     }
 
+    #[cfg(test)]
     pub fn get_line(&self, row: usize) -> String {
         if row >= self.rows {
             return String::new();

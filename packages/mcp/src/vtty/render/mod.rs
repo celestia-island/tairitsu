@@ -146,7 +146,6 @@ fn render_cell(img: &mut ImgBuf, cell: &Cell, x0: f32, y0: f32, ctx: &RenderCtx)
     }
 
     let cw = unicode_width::UnicodeWidthChar::width(cell.ch).unwrap_or(1);
-    let _actual_cell_w = ctx.cell_w * cw as f32;
 
     let glyph_id = ctx.fonts.mono.glyph_id(cell.ch);
     let (has_mono, gid) = if glyph_id != GlyphId(0) {

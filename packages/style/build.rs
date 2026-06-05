@@ -96,8 +96,6 @@ struct PropertyEntry {
 
 #[derive(Debug, serde::Deserialize)]
 struct CategoryData {
-    #[allow(dead_code)]
-    description: String,
     properties: Vec<PropertyData>,
 }
 

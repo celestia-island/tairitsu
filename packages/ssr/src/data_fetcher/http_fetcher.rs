@@ -79,7 +79,7 @@ impl HttpFetcher {
     }
 
     /// Create a cache key for a request
-    #[allow(dead_code)]
+    #[cfg(feature = "data-fetcher")]
     fn cache_key(method: &str, url: &str, body: &[u8]) -> String {
         use std::hash::{Hash, Hasher};
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -283,6 +283,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "data-fetcher")]
     fn test_cache_key_generation() {
         let key1 = HttpFetcher::cache_key("GET", "http://example.com", &[]);
         let key2 = HttpFetcher::cache_key("GET", "http://example.com", &[]);

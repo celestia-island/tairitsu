@@ -830,8 +830,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         }
         Some(Commands::Preview { port }) => {
             crate::log_info!("{}", t.cli.preview_starting);
-            let port = port.unwrap_or(3000);
-            let _port = port;
+            let _port = port.unwrap_or(3000);
             crate::log_fail!("{}", t.cli.preview_not_implemented);
             std::process::exit(1);
         }

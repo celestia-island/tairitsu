@@ -1222,18 +1222,13 @@ fn try_generate_component_wrapper(
                                     "from \"@tairitsu-glue/",
                                 );
 
-                                let _import_map_interfaces: std::collections::HashSet<&str> =
-                                    [].into_iter().collect();
-
                                 content = re_import
                                     .replace_all(&content, |caps: &regex::Captures| {
-                                        let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
                                         let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
                                         let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
                                         if m1.is_empty() {
                                             return String::new();
                                         }
-                                        let _iface_name = m2.split('/').next().unwrap_or("");
 
                                         // Split symbols: import-map-available vs needs-glue-fallback
                                         let mut map_syms = Vec::new();
@@ -1260,13 +1255,11 @@ fn try_generate_component_wrapper(
                                     .to_string();
                                 content = re_import_d
                                     .replace_all(&content, |caps: &regex::Captures| {
-                                        let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
                                         let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
                                         let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
                                         if m1.is_empty() {
                                             return String::new();
                                         }
-                                        let _iface_name = m2.split('/').next().unwrap_or("");
 
                                         let mut map_syms = Vec::new();
                                         for sym in m1.trim().split(',') {

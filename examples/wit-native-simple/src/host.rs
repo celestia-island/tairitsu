@@ -141,21 +141,11 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
 // WIT Interface Implementations
 // ============================================================================
 
-#[allow(dead_code)]
-struct FileSystemInterface {
-    handler: FileSystemHandler,
-}
+struct FileSystemInterface;
 
 impl FileSystemInterface {
     fn new() -> Self {
-        Self {
-            handler: FileSystemHandler::new(),
-        }
-    }
-
-    #[allow(dead_code)]
-    fn handler_mut(&mut self) -> &mut FileSystemHandler {
-        &mut self.handler
+        Self
     }
 }
 

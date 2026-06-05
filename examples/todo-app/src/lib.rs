@@ -1,5 +1,7 @@
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{Signal, VNode};
+#[cfg(test)]
+use tairitsu_vdom::Signal;
+use tairitsu_vdom::VNode;
 
 fn todo_app() -> VNode {
     rsx! {
@@ -48,7 +50,7 @@ fn todo_app() -> VNode {
     }
 }
 
-#[allow(dead_code)]
+#[cfg(test)]
 fn dynamic_counter() -> VNode {
     let _count: Signal<i32> = Signal::new(0);
 

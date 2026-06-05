@@ -160,7 +160,6 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
 }
 
 /// Copy static assets to the prerender output directory
-#[allow(dead_code)]
 fn copy_assets(dist_dir: &std::path::Path, output_dir: &std::path::Path) -> crate::Result<()> {
     use std::fs;
 
