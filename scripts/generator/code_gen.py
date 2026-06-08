@@ -51,10 +51,22 @@ class CodeGenerator:
             handle_var = kebab_to_camel(target_iface + "Handles")
             return handle_var, handle_pascal
 
+    @staticmethod
+    def _auto_generated_header() -> List[str]:
+        """Standard header for all auto-generated TypeScript files."""
+        return [
+            "// @ts-nocheck",
+            "/* eslint-disable */",
+            "// prettier-ignore",
+            "",
+        ]
+
     def render_module(self, domain: GeneratedDomain, source_file: str) -> str:
         """Render TypeScript module for a domain using simple string templating."""
 
         lines: List[str] = []
+
+        lines.extend(self._auto_generated_header())
 
         lines.append("/**")
         lines.append(f" * {domain.name} glue — implements the `tairitsu-browser:{domain.name}` WIT import interfaces.")
@@ -797,6 +809,8 @@ class CodeGenerator:
         )
 
         lines: List[str] = []
+
+        lines.extend(self._auto_generated_header())
 
         lines.append("/**")
         lines.append(" * @tairitsu/browser-glue/generated")
