@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { document_exports } from "./document";
 import { element_exports } from "./element";
 import { node_exports } from "./node";
@@ -45,7 +44,7 @@ export const INTERFACES = {
   "@tairitsu-glue/event": event_exports,
 };
 
-export function generateModuleCode(exports) {
+export function generateModuleCode(exports: Record<string, (...args: any[]) => any>) {
   const lines = [];
 
   // Include helper functions needed by exports.

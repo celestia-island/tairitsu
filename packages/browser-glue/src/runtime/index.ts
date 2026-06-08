@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Tairitsu Browser Glue - Runtime Entry Point
  *

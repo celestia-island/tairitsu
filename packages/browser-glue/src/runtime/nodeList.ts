@@ -1,7 +1,6 @@
-// @ts-nocheck
 
 export const nodeList_exports = {
-  getLength(self) {
+  getLength(self: bigint) {
     const list = globalThis.__nodeListHandles
       ? globalThis.__nodeListHandles.get(self)
       : null;
@@ -9,7 +8,7 @@ export const nodeList_exports = {
     return list.length;
   },
 
-  item(self, index) {
+  item(self: bigint, index: number) {
     const list = globalThis.__nodeListHandles
       ? globalThis.__nodeListHandles.get(self)
       : null;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 // Initialize global handle tables for event listeners
 globalThis.__listenerHandles = globalThis.__listenerHandles || new Map();

@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 export const event_exports = {
   getCurrentTarget(eventHandle: bigint): bigint | undefined {

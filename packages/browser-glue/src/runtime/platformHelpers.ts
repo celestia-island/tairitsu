@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 // State stored on globalThis so that when generateModuleCode() stringifies
 // these functions into a blob module, the state is still accessible.
@@ -31,7 +30,7 @@ export const platformHelpers_exports = {
   innerHeight() {
     return window.innerHeight;
   },
-  setTimeout(callbackId, ms) {
+  setTimeout(callbackId: bigint, ms: number) {
     const s = globalThis.__tairitsuTimerState;
     const id = s.nextTimeoutId++;
     const timeoutId = window.setTimeout(() => {
@@ -43,14 +42,14 @@ export const platformHelpers_exports = {
     s.timeoutCallbacks.set(id, timeoutId);
     return id;
   },
-  clearTimeout(id) {
+  clearTimeout(id: number) {
     const s = globalThis.__tairitsuTimerState;
     if (s.timeoutCallbacks.has(id)) {
       window.clearTimeout(s.timeoutCallbacks.get(id));
       s.timeoutCallbacks.delete(id);
     }
   },
-  setInterval(callbackId, ms) {
+  setInterval(callbackId: bigint, ms: number) {
     const s = globalThis.__tairitsuTimerState;
     const id = s.nextTimeoutId++;
     const intervalId = window.setInterval(() => {
@@ -62,14 +61,14 @@ export const platformHelpers_exports = {
     s.intervalCallbacks.set(id, intervalId);
     return id;
   },
-  clearInterval(id) {
+  clearInterval(id: number) {
     const s = globalThis.__tairitsuTimerState;
     if (s.intervalCallbacks.has(id)) {
       window.clearInterval(s.intervalCallbacks.get(id));
       s.intervalCallbacks.delete(id);
     }
   },
-  requestAnimationFrame(callbackId) {
+  requestAnimationFrame(callbackId: bigint) {
     const s = globalThis.__tairitsuAnimState;
     const id = s.nextAnimationId++;
     const animationId = window.requestAnimationFrame((timestamp) => {
@@ -81,14 +80,14 @@ export const platformHelpers_exports = {
     s.animationCallbacks.set(id, animationId);
     return id;
   },
-  cancelAnimationFrame(id) {
+  cancelAnimationFrame(id: number) {
     const s = globalThis.__tairitsuAnimState;
     if (s.animationCallbacks.has(id)) {
       window.cancelAnimationFrame(s.animationCallbacks.get(id));
       s.animationCallbacks.delete(id);
     }
   },
-  getBoundingClientRect(element) {
+  getBoundingClientRect(element: bigint) {
     const el = globalThis.__elementHandles.get(element);
     if (!el) {
       return { x: 0, y: 0, width: 0, height: 0 };
@@ -96,7 +95,7 @@ export const platformHelpers_exports = {
     const rect = el.getBoundingClientRect();
     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
   },
-  createResizeObserver(callbackId) {
+  createResizeObserver(callbackId: bigint) {
     const observer = new ResizeObserver((entries) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"]) {
         const entryHandles = entries.map(entry => {
@@ -113,27 +112,27 @@ export const platformHelpers_exports = {
     });
     return globalThis.__storeElement(observer);
   },
-  observeResize(observer, element) {
+  observeResize(observer: bigint, element: bigint) {
     const obs = globalThis.__elementHandles.get(observer);
     const el = globalThis.__elementHandles.get(element);
     if (obs && el) {
       obs.observe(el);
     }
   },
-  unobserveResize(observer, element) {
+  unobserveResize(observer: bigint, element: bigint) {
     const obs = globalThis.__elementHandles.get(observer);
     const el = globalThis.__elementHandles.get(element);
     if (obs && el) {
       obs.unobserve(el);
     }
   },
-  disconnectResize(observer) {
+  disconnectResize(observer: bigint) {
     const obs = globalThis.__elementHandles.get(observer);
     if (obs) {
       obs.disconnect();
     }
   },
-  createMutationObserver(callbackId) {
+  createMutationObserver(callbackId: bigint) {
     const observer = new MutationObserver((records) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]) {
         const recordHandles = records.map(record => {
@@ -150,7 +149,7 @@ export const platformHelpers_exports = {
     });
     return globalThis.__storeElement(observer);
   },
-  observeMutations(observer, target, _options) {
+  observeMutations(observer: bigint, target: bigint, _options: any) {
     const obs = globalThis.__elementHandles.get(observer);
     const el = globalThis.__elementHandles.get(target);
     if (obs && el) {
@@ -171,7 +170,7 @@ export const platformHelpers_exports = {
     const result = document.querySelectorAll(selector);
     return Array.from(result).map((el) => globalThis.__storeElement(el));
   },
-  disconnectMutation(observer) {
+  disconnectMutation(observer: bigint) {
     const obs = globalThis.__elementHandles.get(observer);
     if (obs) {
       obs.disconnect();

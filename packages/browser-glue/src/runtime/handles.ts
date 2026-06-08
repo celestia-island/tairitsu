@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Initialize global handle tables if not already set
 globalThis.__elementHandles = globalThis.__elementHandles || new Map();
 globalThis.__documentHandles = globalThis.__documentHandles || new Map();
