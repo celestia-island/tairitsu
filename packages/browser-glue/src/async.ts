@@ -40,6 +40,8 @@ interface PromiseState<T> {
  */
 interface IteratorState<T> {
   iterator: AsyncIterator<T>;
+  settled: boolean;
+  result?: IteratorResult<T>;
   nextPromise: Promise<IteratorResult<T>> | null;
 }
 
@@ -192,6 +194,7 @@ export function registerAsyncIterator<T>(iterator: AsyncIterator<T>): bigint {
 
   const state: IteratorState<T> = {
     iterator,
+    settled: false,
     nextPromise: null,
   };
 
@@ -215,46 +218,29 @@ export function pollIterator<T>(iteratorId: bigint): IteratorResult<T> | undefin
     throw new Error(`Async iterator ID ${iteratorId} not found`);
   }
 
+  if (state.settled) {
+    const result = state.result;
+    state.settled = false;
+    state.result = undefined;
+    state.nextPromise = null;
+    return result as IteratorResult<T> | undefined;
+  }
+
   if (!state.nextPromise) {
     state.nextPromise = state.iterator.next();
+    state.nextPromise
+      .then((value) => {
+        state.settled = true;
+        state.result = value;
+      })
+      .catch((error) => {
+        state.settled = true;
+        console.error(`[async] iterator.next() error:`, error);
+        state.result = { done: true, value: undefined };
+      });
   }
 
-  const result = handleIteratorPromise(state.nextPromise);
-  if (result !== undefined) {
-    state.nextPromise = null;
-  }
-
-  return result as IteratorResult<T> | undefined;
-}
-
-/**
- * Handle an iterator's next() promise.
- *
- * Returns undefined if the promise is still pending,
- * or the IteratorResult if it has settled.
- */
-function handleIteratorPromise<T>(
-  promise: Promise<IteratorResult<T>>
-): IteratorResult<T> | undefined {
-  let settled = false;
-  let result: IteratorResult<T> | undefined;
-
-  promise
-    .then((value) => {
-      settled = true;
-      result = value;
-    })
-    .catch((error) => {
-      settled = true;
-      console.error(`[async] iterator.next() error:`, error);
-      result = { done: true, value: undefined };
-    });
-
-  if (!settled) {
-    return undefined;
-  }
-
-  return result;
+  return undefined;
 }
 
 // ---------------------------------------------------------------------------
