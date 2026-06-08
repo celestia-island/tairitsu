@@ -458,11 +458,10 @@ npm-list-wasm:
 # Build all npm packages (glue + runtime + wasm)
 npm-build-all: npm-build-glue
     cd packages/npm/celestia-tairitsu-web-glue && npm run build
-    cd packages/npm/celestia-tairitsu-web-glue && npm run build
     {{python}} scripts/build_wasm_packages.py
 
 # Publish all npm packages to @celestia scope (requires NPM_TOKEN env var)
-publish: (publish-pkg "packages/npm/celestia-tairitsu-web-glue") (publish-pkg "packages/npm/celestia-tairitsu-web-glue")
+publish: (publish-pkg "packages/npm/celestia-tairitsu-web-glue")
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "All npm packages published!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
