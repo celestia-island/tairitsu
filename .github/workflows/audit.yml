@@ -8,6 +8,9 @@ on:
     paths:
       - 'Cargo.lock'
       - 'Cargo.toml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'packages/browser-glue/package.json'
 
 jobs:
   audit:
@@ -35,3 +38,22 @@ jobs:
 
       - name: Run deny check
         run: cargo deny check
+
+  npm-audit:
+    name: NPM Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: packages/browser-glue
+
+      - name: Run npm audit
+        run: npm audit --omit=dev
+        working-directory: packages/browser-glue
