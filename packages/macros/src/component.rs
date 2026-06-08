@@ -186,7 +186,7 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
 
     // Create the function
     let original_fn = if uses_existing_props {
-        let props_type = existing_props_name.unwrap();
+        let props_type = existing_props_name.expect("existing_props_name must be set when uses_existing_props is true");
         quote! {
             #[allow(non_snake_case)]
             #[allow(unused_braces)]
@@ -276,7 +276,7 @@ fn to_pascal_case(s: &str) -> String {
         if ch == '_' || ch == '-' {
             capitalize_next = true;
         } else if capitalize_next {
-            result.push(ch.to_uppercase().next().unwrap());
+            result.push(ch.to_uppercase().next().expect("to_uppercase always yields at least one char"));
             capitalize_next = false;
         } else {
             result.push(ch);

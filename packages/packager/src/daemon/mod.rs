@@ -180,7 +180,7 @@ pub async fn register_cleanup_on_exit() {
             let mut sigterm = tokio::signal::unix::signal(
                 tokio::signal::unix::SignalKind::terminate(),
             )
-            .unwrap();
+            .expect("failed to register SIGTERM handler");
             sigterm.recv().await;
             let _ = fs::remove_file(&ready_sig);
             let _ = fs::remove_file(&pid_sig);
@@ -296,7 +296,7 @@ pub fn daemonize_self() -> std::io::Result<()> {
         }
 
         // Redirect stdin to /dev/null
-        let devnull = std::ffi::CString::new("/dev/null").unwrap();
+        let devnull = std::ffi::CString::new("/dev/null").expect("literal contains no null bytes");
         let null_fd = libc::open(devnull.as_ptr(), libc::O_RDWR);
         if null_fd == -1 {
             return Err(std::io::Error::last_os_error());

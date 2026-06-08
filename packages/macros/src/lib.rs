@@ -255,7 +255,7 @@ fn to_kebab_case(s: &str) -> String {
             if i > 0 {
                 result.push('-');
             }
-            result.push(ch.to_lowercase().next().unwrap());
+            result.push(ch.to_lowercase().next().expect("to_lowercase always yields at least one char"));
         } else {
             result.push(ch);
         }

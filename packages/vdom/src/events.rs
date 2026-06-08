@@ -893,10 +893,7 @@ impl DragEvent {
 
     /// Get mutable access to data transfer, creating it if needed
     pub fn data_transfer_mut(&mut self) -> &mut DataTransfer {
-        if self.data_transfer.is_none() {
-            self.data_transfer = Some(DataTransfer::new());
-        }
-        self.data_transfer.as_mut().unwrap()
+        self.data_transfer.get_or_insert_with(DataTransfer::new)
     }
 
     /// Builder method to set the data transfer object

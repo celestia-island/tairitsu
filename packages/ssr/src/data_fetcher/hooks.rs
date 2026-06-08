@@ -104,7 +104,7 @@ where
             };
 
             // Update the thread-safe state
-            *state_sync_clone.lock().unwrap() = new_state;
+            *state_sync_clone.lock().expect("resource state mutex poisoned") = new_state;
 
             // Trigger re-render
             runtime::mark_dirty(component_id);
@@ -242,7 +242,7 @@ where
                     Err(e) => Resource::Error(e.to_string()),
                 };
 
-                *state_sync_clone.lock().unwrap() = new_state;
+                *state_sync_clone.lock().expect("resource state mutex poisoned") = new_state;
 
                 runtime::mark_dirty(component_id);
                 runtime::flush_render();

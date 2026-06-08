@@ -35,7 +35,7 @@ where
 
     /// Gets the current cached callback.
     pub fn get(&self) -> Rc<F> {
-        self.callback.borrow().as_ref().unwrap().clone()
+        self.callback.borrow().as_ref().expect("callback accessed before initialization").clone()
     }
 
     /// Updates the dependencies and recreates the callback if they have changed.

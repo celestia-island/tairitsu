@@ -918,7 +918,7 @@ impl<T: HostStateImpl> Container<T> {
             imports
                 .into_iter()
                 .map(|name| {
-                    let (params, results) = registry.get_signature(name).unwrap();
+                    let (params, results) = AnyhowContext::with_context(registry.get_signature(name), || format!("missing signature for import: {name}"))?;
                     Ok(ImportInfo {
                         name: name.to_string(),
                         params,

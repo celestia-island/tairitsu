@@ -303,9 +303,9 @@ fn longest_increasing_subsequence_set(arr: &[usize]) -> Vec<usize> {
     for i in 0..n {
         let val = arr[i];
 
-        if tails.is_empty() || val > *tails.last().unwrap() {
+        if tails.is_empty() || val > *tails.last().expect("tails is non-empty (invariant: checked is_empty above)") {
             if !tail_indices.is_empty() {
-                parent[i] = Some(*tail_indices.last().unwrap());
+                parent[i] = Some(*tail_indices.last().expect("tail_indices is non-empty (invariant: checked is_empty above)"));
             }
             tails.push(val);
             tail_indices.push(i);

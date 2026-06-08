@@ -61,7 +61,7 @@ impl HmrClient {
 
     /// Check if connected to the HMR server
     pub fn is_connected(&self) -> bool {
-        *self.connected.read().unwrap()
+        *self.connected.read().expect("connected state lock poisoned")
     }
 
     /// Register a module with the client
@@ -72,7 +72,7 @@ impl HmrClient {
     /// # Returns
     /// Unique module ID
     pub fn register_module(&self, path: impl Into<String>) -> String {
-        let registry = self.module_registry.read().unwrap();
+        let registry = self.module_registry.read().expect("module registry lock poisoned");
         registry.register(path)
     }
 
@@ -90,7 +90,7 @@ impl HmrClient {
                 code: _,
                 dependencies,
             } => {
-                let registry = self.module_registry.read().unwrap();
+                let registry = self.module_registry.read().expect("module registry lock poisoned");
 
                 if registry.get(module_id).is_some() {
                     // Module exists, trigger reload
@@ -140,13 +140,13 @@ impl HmrClient {
             }
 
             HmrMessage::Connected { .. } => {
-                *self.connected.write().unwrap() = true;
+                *self.connected.write().expect("connected state lock poisoned") = true;
                 log::info!("Connected to HMR server");
                 Ok(())
             }
 
             HmrMessage::ModuleState { module_id, state } => {
-                let registry = self.module_registry.read().unwrap();
+                let registry = self.module_registry.read().expect("module registry lock poisoned");
                 let _ = registry.update_state(module_id, state.clone());
                 Ok(())
             }
@@ -155,7 +155,7 @@ impl HmrClient {
 
     /// Disconnect from the HMR server
     pub fn disconnect(&self) {
-        *self.connected.write().unwrap() = false;
+        *self.connected.write().expect("connected state lock poisoned") = false;
     }
 }
 

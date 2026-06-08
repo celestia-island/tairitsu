@@ -6,7 +6,7 @@ pub fn init_project(name: &str) -> crate::Result<()> {
     pb.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
-            .unwrap(),
+            .expect("invalid progress spinner template"),
     );
 
     let name = name.to_string();

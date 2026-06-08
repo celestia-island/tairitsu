@@ -79,7 +79,7 @@ static REF_RESOLVER: Mutex<Option<RefResolverFn>> = Mutex::new(None);
 /// # Safety
 /// Caller must ensure the pointer remains valid for the program lifetime.
 pub fn register_ref_resolver(resolver: RefResolverFn) {
-    *REF_RESOLVER.lock().unwrap() = Some(resolver);
+    *REF_RESOLVER.lock().expect("REF_RESOLVER mutex poisoned") = Some(resolver);
 }
 
 /// Resolve a VDOM element ref to a [`DomHandle`], if the element has been mounted.
@@ -102,7 +102,7 @@ pub fn register_ref_resolver(resolver: RefResolverFn) {
 /// }
 /// ```
 pub fn resolve_element_ref(ref_: &AnyElementRef) -> Option<DomHandle> {
-    let resolver = REF_RESOLVER.lock().unwrap();
+    let resolver = REF_RESOLVER.lock().expect("REF_RESOLVER mutex poisoned");
     if let Some(resolve) = *resolver {
         ref_.borrow()
             .as_ref()
@@ -168,7 +168,7 @@ pub unsafe fn register_wit_functions(
     get_bounding_client_rect: unsafe fn(u64) -> DomRect,
     set_attribute: unsafe fn(u64, &str, &str),
 ) {
-    *WIT_FUNCS.lock().unwrap() = Some(WitFuncs {
+    *WIT_FUNCS.lock().expect("WIT_FUNCS mutex poisoned") = Some(WitFuncs {
         set_style,
         get_bounding_client_rect,
         set_attribute,
@@ -180,7 +180,7 @@ pub unsafe fn register_wit_functions(
 /// # Safety
 /// Caller must ensure the pointers remain valid for the program lifetime.
 pub unsafe fn register_dom_functions(funcs: DomFuncs) {
-    *DOM_FUNCS.lock().unwrap() = Some(funcs);
+    *DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned") = Some(funcs);
 }
 
 // ---------------------------------------------------------------------------
@@ -189,7 +189,7 @@ pub unsafe fn register_dom_functions(funcs: DomFuncs) {
 
 /// Set a CSS property on an element.
 pub fn set_style(el: DomHandle, property: &str, value: &str) {
-    if let Some(f) = WIT_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = WIT_FUNCS.lock().expect("WIT_FUNCS mutex poisoned").as_ref() {
         unsafe {
             let _ = (f.set_style)(el.get_inner_id(), property, value);
         }
@@ -198,7 +198,7 @@ pub fn set_style(el: DomHandle, property: &str, value: &str) {
 
 /// Get the bounding client rect of an element.
 pub fn get_bounding_client_rect(el: DomHandle) -> DomRect {
-    if let Some(f) = WIT_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = WIT_FUNCS.lock().expect("WIT_FUNCS mutex poisoned").as_ref() {
         unsafe { (f.get_bounding_client_rect)(el.get_inner_id()) }
     } else {
         DomRect {
@@ -212,7 +212,7 @@ pub fn get_bounding_client_rect(el: DomHandle) -> DomRect {
 
 /// Set an attribute on an element.
 pub fn set_attribute(el: DomHandle, name: &str, value: &str) {
-    if let Some(f) = WIT_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = WIT_FUNCS.lock().expect("WIT_FUNCS mutex poisoned").as_ref() {
         unsafe { (f.set_attribute)(el.get_inner_id(), name, value) };
     }
 }
@@ -230,7 +230,7 @@ pub fn get_scroll_top(el: DomHandle) -> f64 {
 }
 
 pub fn set_scroll_top(el: DomHandle, value: f64) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref() {
         unsafe { (f.set_scroll_top)(el.get_inner_id(), value) };
     }
 }
@@ -252,7 +252,7 @@ pub fn get_client_height(el: DomHandle) -> i32 {
 }
 
 pub fn class_list_add(el: DomHandle, tokens: &[&str]) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref() {
         let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
         let ts: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
         unsafe { (f.class_list_add)(list, &ts) };
@@ -260,7 +260,7 @@ pub fn class_list_add(el: DomHandle, tokens: &[&str]) {
 }
 
 pub fn class_list_remove(el: DomHandle, tokens: &[&str]) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref() {
         let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
         let ts: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
         unsafe { (f.class_list_remove)(list, &ts) };
@@ -268,7 +268,7 @@ pub fn class_list_remove(el: DomHandle, tokens: &[&str]) {
 }
 
 pub fn class_list_contains(el: DomHandle, token: &str) -> bool {
-    DOM_FUNCS.lock().unwrap().as_ref().is_some_and(|f| {
+    DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref().is_some_and(|f| {
         let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
         unsafe { (f.class_list_contains)(list, token) }
     })
@@ -283,7 +283,7 @@ pub fn first_child(el: DomHandle) -> Option<DomHandle> {
 }
 
 pub fn query_selector_on(el: DomHandle, selector: &str) -> Option<DomHandle> {
-    DOM_FUNCS.lock().unwrap().as_ref().and_then(|f| {
+    DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref().and_then(|f| {
         unsafe { (f.query_selector_on)(el.get_inner_id(), selector) }.map(DomHandle::from_raw)
     })
 }
@@ -299,13 +299,13 @@ pub fn create_element(tag: &str) -> DomHandle {
 }
 
 pub fn append_child(parent: DomHandle, child: DomHandle) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref() {
         let _ = unsafe { (f.append_child)(parent.get_inner_id(), child.get_inner_id()) };
     }
 }
 
 pub fn remove_child(parent: DomHandle, child: DomHandle) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref() {
         let _ = unsafe { (f.remove_child)(parent.get_inner_id(), child.get_inner_id()) };
     }
 }
@@ -329,7 +329,7 @@ pub fn set_timeout(callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
 }
 
 pub fn clear_timeout(id: i32) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref() {
         unsafe { (f.clear_timeout_fn)(id) };
     }
 }
@@ -343,7 +343,7 @@ pub fn set_interval(callback: Box<dyn FnMut()>, ms: i32) -> i32 {
 }
 
 pub fn clear_interval(id: i32) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref() {
         unsafe { (f.clear_interval_fn)(id) };
     }
 }
@@ -357,7 +357,7 @@ pub fn request_animation_frame(callback: Box<dyn FnMut(f64)>) -> u32 {
 }
 
 pub fn cancel_animation_frame(id: u32) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref() {
         unsafe { (f.cancel_animation_frame_fn)(id) };
     }
 }

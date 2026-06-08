@@ -156,7 +156,7 @@ impl ResourceRegistry {
         state: ResourceStateOp,
     ) -> Vec<runtime::ComponentId> {
         if let Some(resource_state) = self.resources.get(&id) {
-            *resource_state.lock().unwrap() = state;
+            *resource_state.lock().expect("resource state mutex poisoned") = state;
         }
 
         // Get all components that depend on this resource
@@ -186,7 +186,7 @@ impl ResourceRegistry {
     }
 
     fn get_resource_state(&self, id: ResourceId) -> Option<ResourceStateOp> {
-        self.resources.get(&id).map(|arc| *arc.lock().unwrap())
+        self.resources.get(&id).map(|arc| *arc.lock().expect("resource state mutex poisoned"))
     }
 
     fn track_access(&mut self, resource_id: ResourceId) {
@@ -246,7 +246,7 @@ fn has_loading_resources(boundary_id: runtime::ComponentId) -> bool {
         if let Some(boundary) = reg.get_boundary(boundary_id) {
             for &resource_id in &boundary.tracked_resources {
                 if let Some(state) = reg.resources.get(&resource_id) {
-                    let guard = state.lock().unwrap();
+                    let guard = state.lock().expect("resource state mutex poisoned");
                     if matches!(&*guard, ResourceStateOp::Loading) {
                         return true;
                     }
@@ -364,7 +364,7 @@ impl<T> Resource<T> {
     {
         *self.inner.state.borrow_mut() = new_state.clone();
         // Also update the thread-safe state for cross-thread access
-        *self.inner.thread_safe_state.lock().unwrap() = new_state.clone();
+        *self.inner.thread_safe_state.lock().expect("thread_safe_state mutex poisoned") = new_state.clone();
 
         // Update the global registry
         let registry_state = match new_state {
@@ -452,7 +452,7 @@ where
             let rt = tokio::runtime::Builder::new_current_thread()
                 .enable_all()
                 .build()
-                .unwrap();
+                .expect("failed to build tokio runtime");
 
             let result = rt.block_on(fetcher());
 
@@ -468,7 +468,7 @@ where
                     Ok(value) => ResourceState::Ready(value),
                     Err(err) => ResourceState::Error(err),
                 };
-                *thread_safe_state.lock().unwrap() = new_state.clone();
+                *thread_safe_state.lock().expect("thread_safe_state mutex poisoned") = new_state.clone();
 
                 // Update the global registry
                 let registry_state = match new_state {

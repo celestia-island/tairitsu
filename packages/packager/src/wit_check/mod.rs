@@ -73,7 +73,7 @@ fn parse_browser_full_imports(wit_path: &Path) -> Result<Vec<String>> {
 
     let mut imports = Vec::new();
     let mut in_world = false;
-    let import_re = regex::Regex::new(r"^\s*import\s+([\w-]+)\s*;").unwrap();
+    let import_re = regex::Regex::new(r"^\s*import\s+([\w-]+)\s*;").expect("static regex is valid");
 
     for line in content.lines() {
         let trimmed = line.trim();
@@ -111,7 +111,7 @@ fn parse_interface_functions(wit_path: &Path) -> Result<Vec<String>> {
 
     let mut funcs = Vec::new();
     let mut in_interface = false;
-    let func_re = regex::Regex::new(r"^([\w-]+)\s*:\s*func\s*\(").unwrap();
+    let func_re = regex::Regex::new(r"^([\w-]+)\s*:\s*func\s*\(").expect("static regex is valid");
 
     for line in content.lines() {
         let trimmed = line.trim();
@@ -147,7 +147,7 @@ fn build_wit_index(wit_base: &Path) -> HashMap<String, PathBuf> {
     let mut index = HashMap::new();
 
     // Scan composed/ directory
-    let iface_re = regex::Regex::new(r"interface\s+([\w-]+)\s*\{").unwrap();
+    let iface_re = regex::Regex::new(r"interface\s+([\w-]+)\s*\{").expect("static regex is valid");
     if let Ok(entries) = std::fs::read_dir(wit_base.join("composed")) {
         for entry in entries.flatten() {
             let p = entry.path();
@@ -363,14 +363,14 @@ fn extract_ts_exports(path: &Path) -> Result<HashSet<String>> {
 fn extract_ts_exports_from_str(content: &str) -> HashSet<String> {
     let mut exports = HashSet::new();
 
-    let re = regex::Regex::new(r#"export\s+(?:function|const|var|let)\s+(\w+)"#).unwrap();
+    let re = regex::Regex::new(r#"export\s+(?:function|const|var|let)\s+(\w+)"#).expect("static regex is valid");
     for cap in re.captures_iter(content) {
         if let Some(name) = cap.get(1) {
             exports.insert(name.as_str().to_string());
         }
     }
 
-    let method_re = regex::Regex::new(r"(?m)^\s+(\w+)\s*\([^)]*\)\s*\{").unwrap();
+    let method_re = regex::Regex::new(r"(?m)^\s+(\w+)\s*\([^)]*\)\s*\{").expect("static regex is valid");
     for cap in method_re.captures_iter(content) {
         if let Some(name) = cap.get(1) {
             let n = name.as_str();
@@ -435,12 +435,12 @@ fn extract_js_runtime_exports(content: &str) -> HashSet<String> {
 
     // Match: location_exports = { ... } or similar patterns
     // Use a simpler pattern that finds the object body
-    let obj_re = regex::Regex::new(r"(\w+)_exports\s*=\s*\{").unwrap();
+    let obj_re = regex::Regex::new(r"(\w+)_exports\s*=\s*\{").expect("static regex is valid");
     for cap in obj_re.captures_iter(content) {
         if let Some(prefix) = cap.get(1) {
             // Now find all method assignments in this object
             let method_re =
-                regex::Regex::new(&format!(r"{}\s*:\s*function\s+(\w+)", prefix.as_str())).unwrap();
+                regex::Regex::new(&format!(r"{}\s*:\s*function\s+(\w+)", prefix.as_str())).expect("dynamic regex from prefix is valid");
             for m in method_re.captures_iter(content) {
                 if let Some(name) = m.get(1) {
                     exports.insert(name.as_str().to_string());
@@ -448,7 +448,7 @@ fn extract_js_runtime_exports(content: &str) -> HashSet<String> {
             }
             // Also match shorthand methods: name(params)
             let short_re =
-                regex::Regex::new(&format!(r"{}\s*\{{\s*(\w+)\s*\(", prefix.as_str())).unwrap();
+                regex::Regex::new(&format!(r"{}\s*\{{\s*(\w+)\s*\(", prefix.as_str())).expect("dynamic regex from prefix is valid");
             for m in short_re.captures_iter(content) {
                 if let Some(name) = m.get(1) {
                     exports.insert(name.as_str().to_string());
@@ -457,7 +457,7 @@ fn extract_js_runtime_exports(content: &str) -> HashSet<String> {
         }
     }
 
-    let fn_re = regex::Regex::new(r"^\s+function\s+(\w+)\s*\(").unwrap();
+    let fn_re = regex::Regex::new(r"^\s+function\s+(\w+)\s*\(").expect("static regex is valid");
     for cap in fn_re.captures_iter(content) {
         if let Some(name) = cap.get(1) {
             exports.insert(name.as_str().to_string());

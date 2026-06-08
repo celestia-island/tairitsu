@@ -11,7 +11,7 @@ fn main() {
     println!("cargo:rerun-if-changed=css_data/css_properties.json");
     println!("cargo:rerun-if-changed=build.rs");
 
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     let data_path = Path::new(&manifest_dir).join("css_data/css_properties.json");
     let output_path = Path::new(&manifest_dir).join("src/properties/generated.rs");
 
