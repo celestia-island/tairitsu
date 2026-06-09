@@ -74,7 +74,7 @@ fn diff_element(old: &VElement, new: &VElement, patches: &mut Vec<Patch>) {
         }
     }
 
-    if old.style.static_styles != new.style.static_styles {
+    if old.style != new.style {
         patches.push(Patch::UpdateStyle {
             style: new.style.clone(),
         });
@@ -875,6 +875,20 @@ mod tests {
         assert!(
             !patches.is_empty(),
             "Style with different static_styles should produce patches"
+        );
+    }
+
+    #[test]
+    fn test_diff_css_variable_only_change() {
+        let old =
+            VNode::Element(VElement::new("div").style(Style::new().add_custom("--gap", "8px")));
+        let new =
+            VNode::Element(VElement::new("div").style(Style::new().add_custom("--gap", "16px")));
+
+        let patches = diff(Some(&old), &new);
+        assert!(
+            !patches.is_empty(),
+            "Changing only a CSS variable (no static_styles change) should produce UpdateStyle patch"
         );
     }
 
