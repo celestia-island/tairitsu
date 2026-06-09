@@ -8,32 +8,26 @@ pub type Event = Box<dyn EventData>;
 
 type EventControlFn = fn(u64);
 
-static mut PREVENT_DEFAULT_FN: Option<EventControlFn> = None;
-static mut STOP_PROPAGATION_FN: Option<EventControlFn> = None;
+static PREVENT_DEFAULT_FN: std::sync::OnceLock<EventControlFn> = std::sync::OnceLock::new();
+static STOP_PROPAGATION_FN: std::sync::OnceLock<EventControlFn> = std::sync::OnceLock::new();
 
 pub fn register_event_control_functions(
     prevent_default: EventControlFn,
     stop_propagation: EventControlFn,
 ) {
-    unsafe {
-        PREVENT_DEFAULT_FN = Some(prevent_default);
-        STOP_PROPAGATION_FN = Some(stop_propagation);
-    }
+    let _ = PREVENT_DEFAULT_FN.set(prevent_default);
+    let _ = STOP_PROPAGATION_FN.set(stop_propagation);
 }
 
 fn call_prevent_default(handle: u64) {
-    unsafe {
-        if let Some(f) = PREVENT_DEFAULT_FN {
-            f(handle);
-        }
+    if let Some(f) = PREVENT_DEFAULT_FN.get() {
+        f(handle);
     }
 }
 
 fn call_stop_propagation(handle: u64) {
-    unsafe {
-        if let Some(f) = STOP_PROPAGATION_FN {
-            f(handle);
-        }
+    if let Some(f) = STOP_PROPAGATION_FN.get() {
+        f(handle);
     }
 }
 
