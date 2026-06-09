@@ -224,7 +224,7 @@ pub fn set_attribute(el: DomHandle, name: &str, value: &str) {
 pub fn get_scroll_top(el: DomHandle) -> f64 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .expect("DOM_FUNCS mutex poisoned")
         .as_ref()
         .map_or(0.0, |f| unsafe { (f.get_scroll_top)(el.get_inner_id()) })
 }
@@ -238,7 +238,7 @@ pub fn set_scroll_top(el: DomHandle, value: f64) {
 pub fn get_scroll_height(el: DomHandle) -> i32 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .expect("DOM_FUNCS mutex poisoned")
         .as_ref()
         .map_or(0, |f| unsafe { (f.get_scroll_height)(el.get_inner_id()) })
 }
@@ -246,7 +246,7 @@ pub fn get_scroll_height(el: DomHandle) -> i32 {
 pub fn get_client_height(el: DomHandle) -> i32 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .expect("DOM_FUNCS mutex poisoned")
         .as_ref()
         .map_or(0, |f| unsafe { (f.get_client_height)(el.get_inner_id()) })
 }
@@ -277,7 +277,7 @@ pub fn class_list_contains(el: DomHandle, token: &str) -> bool {
 pub fn first_child(el: DomHandle) -> Option<DomHandle> {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .expect("DOM_FUNCS mutex poisoned")
         .as_ref()
         .and_then(|f| unsafe { (f.first_child)(el.get_inner_id()) }.map(DomHandle::from_raw))
 }
@@ -291,7 +291,7 @@ pub fn query_selector_on(el: DomHandle, selector: &str) -> Option<DomHandle> {
 pub fn create_element(tag: &str) -> DomHandle {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .expect("DOM_FUNCS mutex poisoned")
         .as_ref()
         .map_or(DomHandle::null(), |f| {
             DomHandle::from_raw(unsafe { (f.create_element)(tag) })
@@ -313,7 +313,7 @@ pub fn remove_child(parent: DomHandle, child: DomHandle) {
 pub fn get_computed_style_value(el: DomHandle, property: &str) -> String {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .expect("DOM_FUNCS mutex poisoned")
         .as_ref()
         .map_or(String::new(), |f| unsafe {
             (f.get_computed_style_value)(el.get_inner_id(), property)
@@ -323,7 +323,7 @@ pub fn get_computed_style_value(el: DomHandle, property: &str) -> String {
 pub fn set_timeout(callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .expect("DOM_FUNCS mutex poisoned")
         .as_ref()
         .map_or(0, |f| unsafe { (f.set_timeout_fn)(callback, ms) })
 }
@@ -337,7 +337,7 @@ pub fn clear_timeout(id: i32) {
 pub fn set_interval(callback: Box<dyn FnMut()>, ms: i32) -> i32 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .expect("DOM_FUNCS mutex poisoned")
         .as_ref()
         .map_or(0, |f| unsafe { (f.set_interval_fn)(callback, ms) })
 }
@@ -351,7 +351,7 @@ pub fn clear_interval(id: i32) {
 pub fn request_animation_frame(callback: Box<dyn FnMut(f64)>) -> u32 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .expect("DOM_FUNCS mutex poisoned")
         .as_ref()
         .map_or(0, |f| unsafe { (f.request_animation_frame_fn)(callback) })
 }
