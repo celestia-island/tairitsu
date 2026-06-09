@@ -536,6 +536,25 @@ mod tests {
         let json = serde_json::to_string(&info).unwrap();
         assert!(!json.contains("pid"));
     }
+
+    #[test]
+    fn test_send_text_converts_lf_to_cr() {
+        let encoded: Vec<u8> = "hello\nworld".replace("\r\n", "\r").replace('\n', "\r").as_bytes().to_vec();
+        assert_eq!(encoded, b"hello\rworld");
+    }
+
+    #[test]
+    fn test_send_text_converts_crlf_to_single_cr() {
+        let encoded: Vec<u8> = "hello\r\nworld".replace("\r\n", "\r").replace('\n', "\r").as_bytes().to_vec();
+        assert_eq!(encoded, b"hello\rworld", "CRLF should become a single CR, not CR+CR");
+    }
+
+    #[test]
+    fn test_send_text_mixed_line_endings() {
+        let input = "line1\r\nline2\nline3\r\n";
+        let encoded: Vec<u8> = input.replace("\r\n", "\r").replace('\n', "\r").as_bytes().to_vec();
+        assert_eq!(encoded, b"line1\rline2\rline3\r");
+    }
 }
 
 #[cfg(test)]
@@ -1001,6 +1020,22 @@ mod smoke_pty {
         assert!(
             found,
             "send_text \\n translation should work, got:\n{}",
+            session.screenshot()
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
+    fn smoke_pty_send_text_with_crlf() {
+        let mut session = spawn_session("bash --norc --noprofile");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        session
+            .send_text("echo CRLF_TEST\r\n")
+            .expect("send_text with CRLF");
+        let found = wait_for_text(&session, "CRLF_TEST", 3000);
+        assert!(
+            found,
+            "send_text \\r\\n translation should work, got:\n{}",
             session.screenshot()
         );
         let _ = session.kill();

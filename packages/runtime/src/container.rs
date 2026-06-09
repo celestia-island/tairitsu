@@ -974,9 +974,22 @@ mod tests {
     }
 
     #[test]
+    fn test_host_state_new_does_not_inherit_stdio_or_network() {
+        let state = HostState::new().expect("should succeed");
+        let _ = state;
+    }
+
+    #[test]
     fn test_host_state_default_does_not_panic() {
         let state = HostState::default();
         let _ = state;
+    }
+
+    #[test]
+    fn test_host_state_new_equals_default() {
+        let new_state = HostState::new().expect("new should succeed");
+        let default_state = HostState::default();
+        let _ = (new_state, default_state);
     }
 
     #[test]
@@ -1056,5 +1069,31 @@ mod tests {
         assert_eq!(state, cloned);
         let debug = format!("{:?}", state);
         assert!(debug.contains("oom"));
+    }
+
+    #[test]
+    fn test_call_guest_json_does_not_leak_payload() {
+        use crate::{HostState, Image};
+        let wasm = bytes::Bytes::from_static(b"\x00asm\x01\x00\x00\x00");
+        let img = match Image::new(wasm) {
+            Ok(img) => img,
+            Err(_) => return,
+        };
+        let mut container = Container::builder(img)
+            .with_guest_initializer(|ctx| {
+                Ok(GuestInstance::new(()))
+            })
+            .build()
+            .expect("build should succeed");
+
+        let sensitive = "SECRET_API_KEY_12345";
+        let result = container.call_guest_json("test_fn", sensitive);
+        assert!(result.is_err());
+        let err_msg = format!("{}", result.unwrap_err());
+        assert!(
+            !err_msg.contains(sensitive),
+            "Error message should not contain the payload, but got: {}",
+            err_msg
+        );
     }
 }

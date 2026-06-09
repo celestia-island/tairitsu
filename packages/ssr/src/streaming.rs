@@ -142,10 +142,6 @@ fn javascript_escape(s: &str) -> String {
     result.push('`');
     result
 }
-    }
-    result.push('`');
-    result
-}
 
 /// A stream of HTML chunks
 ///
@@ -402,6 +398,49 @@ mod tests {
             javascript_escape("</SCRIPT>"),
             "`<\\/script>`"
         );
+    }
+
+    #[test]
+    fn test_javascript_escape_script_edge_cases() {
+        assert_eq!(
+            javascript_escape("</script></script>"),
+            "`<\\/script><\\/script>`"
+        );
+        assert_eq!(
+            javascript_escape("<script>alert(1)</script>"),
+            "`<script>alert(1)<\\/script>`"
+        );
+        assert_eq!(
+            javascript_escape("  </script>  "),
+            "`  <\\/script>  `"
+        );
+        assert_eq!(
+            javascript_escape("</Script>"),
+            "`<\\/script>`"
+        );
+    }
+
+    #[test]
+    fn test_javascript_escape_combined() {
+        let input = "hello`\n$\\</script>";
+        let escaped = javascript_escape(input);
+        assert!(escaped.starts_with('`'));
+        assert!(escaped.ends_with('`'));
+        assert!(!escaped.contains("</script>"));
+        assert!(escaped.contains("\\`"));
+        assert!(escaped.contains("\\n"));
+        assert!(escaped.contains("\\$"));
+        assert!(escaped.contains("\\\\"));
+    }
+
+    #[test]
+    fn test_javascript_escape_empty() {
+        assert_eq!(javascript_escape(""), "``");
+    }
+
+    #[test]
+    fn test_javascript_escape_unicode() {
+        assert_eq!(javascript_escape("你好世界"), "`你好世界`");
     }
 
     #[tokio::test]

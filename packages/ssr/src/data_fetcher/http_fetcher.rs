@@ -214,6 +214,12 @@ impl Fetcher for HttpFetcher {
 
             let headers = self.build_headers(&HashMap::new());
 
+            let cache_key = if self.config.cache {
+                Some(Self::cache_key("POST", url, &body))
+            } else {
+                None
+            };
+
             let response = client
                 .post(url)
                 .headers(headers)
@@ -237,11 +243,8 @@ impl Fetcher for HttpFetcher {
 
             let data = bytes.to_vec();
 
-            // Store in cache
-            #[cfg(feature = "data-fetcher")]
-            if self.config.cache {
-                let cache_key = Self::cache_key("POST", url, &body);
-                self.cache.insert(cache_key, data.clone());
+            if let Some(key) = cache_key {
+                self.cache.insert(key, data.clone());
             }
 
             Ok(data)
@@ -293,6 +296,23 @@ mod tests {
         assert_eq!(key1, key2);
         assert_ne!(key1, key3);
         assert_ne!(key1, key4);
+    }
+
+    #[test]
+    #[cfg(feature = "data-fetcher")]
+    fn test_cache_key_post_different_body() {
+        let post_key_body_a = HttpFetcher::cache_key("POST", "http://example.com/api", b"body_a");
+        let post_key_body_b = HttpFetcher::cache_key("POST", "http://example.com/api", b"body_b");
+        let post_key_empty = HttpFetcher::cache_key("POST", "http://example.com/api", &[]);
+
+        assert_ne!(
+            post_key_body_a, post_key_body_b,
+            "POST with different bodies must produce different cache keys"
+        );
+        assert_ne!(
+            post_key_body_a, post_key_empty,
+            "POST with body vs no body must produce different cache keys"
+        );
     }
 
     #[tokio::test]
