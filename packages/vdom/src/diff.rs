@@ -1067,4 +1067,85 @@ mod tests {
         assert_eq!(removes.len(), 1, "should remove exactly one child");
         assert!(matches!(removes[0], Patch::RemoveChild { index: 0 }));
     }
+
+    #[test]
+    fn test_diff_keyed_all_reordered() {
+        // Old: [A(key="a"), B(key="b"), C(key="c")]
+        // New: [C(key="c"), A(key="a"), B(key="b")]
+        let old = vec![
+            VNode::Element(VElement::new("li").key("a")),
+            VNode::Element(VElement::new("li").key("b")),
+            VNode::Element(VElement::new("li").key("c")),
+        ];
+        let new = vec![
+            VNode::Element(VElement::new("li").key("c")),
+            VNode::Element(VElement::new("li").key("a")),
+            VNode::Element(VElement::new("li").key("b")),
+        ];
+        let patches = diff(Some(&VNode::Fragment(old)), &VNode::Fragment(new));
+        assert!(patches.iter().any(|p| matches!(p, Patch::MoveChild { .. } | Patch::RemoveChild { .. } | Patch::InsertChild { .. })),
+                "reorder should produce move/remove+insert patches");
+    }
+
+    #[test]
+    fn test_diff_keyed_add_and_remove() {
+        // Old: [A, B, C] (all keyed)
+        // New: [D, B]     (A/C removed, D added)
+        let old = vec![
+            VNode::Element(VElement::new("li").key("a")),
+            VNode::Element(VElement::new("li").key("b")),
+            VNode::Element(VElement::new("li").key("c")),
+        ];
+        let new = vec![
+            VNode::Element(VElement::new("li").key("d")),
+            VNode::Element(VElement::new("li").key("b")),
+        ];
+        let patches = diff(Some(&VNode::Fragment(old)), &VNode::Fragment(new));
+        // Should remove A (0) and C (2), insert D at adjusted position
+        let removes: Vec<_> = patches.iter().filter(|p| matches!(p, Patch::RemoveChild { .. })).collect();
+        assert_eq!(removes.len(), 2, "should remove A and C");
+        let inserts: Vec<_> = patches.iter().filter(|p| matches!(p, Patch::InsertChild { .. })).collect();
+        assert!(!inserts.is_empty(), "should insert D");
+    }
+
+    #[test]
+    fn test_diff_fragment_to_element() {
+        let old = VNode::Fragment(vec![]);
+        let new = VNode::Element(VElement::new("div"));
+        let patches = diff(Some(&old), &new);
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(&patches[0], Patch::ReplaceNode { .. }));
+    }
+
+    #[test]
+    fn test_diff_element_to_fragment() {
+        let old = VNode::Element(VElement::new("div"));
+        let new = VNode::Fragment(vec![VNode::Text(VText::new("a"))]);
+        let patches = diff(Some(&old), &new);
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(&patches[0], Patch::ReplaceNode { .. }));
+    }
+
+    #[test]
+    fn test_diff_text_to_element() {
+        let old = VNode::Text(VText::new("hello"));
+        let new = VNode::Element(VElement::new("span"));
+        let patches = diff(Some(&old), &new);
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(&patches[0], Patch::ReplaceNode { .. }));
+    }
+
+    #[test]
+    fn test_diff_identical_trees_produces_no_patches() {
+        let tree = VNode::Element(
+            VElement::new("div")
+                .attr("class", "container")
+                .child(VNode::Text(VText::new("hello"))),
+        );
+        let patches = diff(Some(&tree), &tree);
+        assert!(
+            patches.is_empty(),
+            "identical trees should produce no patches"
+        );
+    }
 }

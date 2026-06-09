@@ -1069,4 +1069,102 @@ mod tests {
         assert_eq!(config.delay, Duration::from_millis(u64::MAX));
         assert_eq!(config.iterations, u32::MAX);
     }
+
+    #[test]
+    fn test_on_update_callback() {
+        let anim = use_simple_animation(300);
+        let called = Rc::new(RefCell::new(false));
+        let c = called.clone();
+
+        anim.on_update(move |_| {
+            *c.borrow_mut() = true;
+        });
+
+        // Verify the callback is stored (internal access via on_update field)
+        let stored = anim.on_update.borrow().is_some();
+        assert!(stored, "on_update callback should be stored");
+    }
+
+    #[test]
+    fn test_clear_on_update() {
+        let anim = use_simple_animation(300);
+        let called = Rc::new(RefCell::new(false));
+        let c = called.clone();
+
+        anim.on_update(move |_| {
+            *c.borrow_mut() = true;
+        });
+        assert!(anim.on_update.borrow().is_some());
+
+        anim.clear_on_update();
+        assert!(anim.on_update.borrow().is_none());
+    }
+
+    #[test]
+    fn test_animation_handle_cancel() {
+        let anim = use_simple_animation(300);
+        let handle = AnimationHandle {
+            state: Rc::clone(&anim.state),
+        };
+
+        anim.start();
+        assert!(anim.is_running());
+
+        handle.cancel();
+        assert_eq!(anim.state(), AnimationState::Idle);
+        assert!(!anim.is_running());
+    }
+
+    #[test]
+    fn test_animation_handle_is_running() {
+        let anim = use_simple_animation(300);
+        let handle = AnimationHandle {
+            state: Rc::clone(&anim.state),
+        };
+
+        assert!(!handle.is_running());
+        anim.start();
+        assert!(handle.is_running());
+    }
+
+    #[test]
+    fn test_stop_clears_state() {
+        let anim = use_simple_animation(300);
+        anim.start();
+        assert!(anim.is_running());
+
+        anim.stop();
+        assert_eq!(anim.state(), AnimationState::Idle);
+        assert_eq!(anim.progress(), 0.0);
+    }
+
+    #[test]
+    fn test_animation_direction_normal() {
+        let config = AnimationConfig {
+            direction: AnimationDirection::Normal,
+            ..Default::default()
+        };
+        let anim = use_animation(Some(config));
+        assert_eq!(anim.config().direction, AnimationDirection::Normal);
+    }
+
+    #[test]
+    fn test_animation_direction_reverse() {
+        let config = AnimationConfig {
+            direction: AnimationDirection::Reverse,
+            ..Default::default()
+        };
+        let anim = use_animation(Some(config));
+        assert_eq!(anim.config().direction, AnimationDirection::Reverse);
+    }
+
+    #[test]
+    fn test_animation_iterations() {
+        let config = AnimationConfig {
+            iterations: 5,
+            ..Default::default()
+        };
+        let anim = use_animation(Some(config));
+        assert_eq!(anim.config().iterations, 5);
+    }
 }

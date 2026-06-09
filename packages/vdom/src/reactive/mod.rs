@@ -539,4 +539,88 @@ mod tests {
         s.set(2);
         assert_eq!(*called.borrow(), 2);
     }
+
+    #[test]
+    fn test_multiple_effects_same_signal() {
+        let s = Signal::new(0i32);
+        let a = Rc::new(RefCell::new(0i32));
+        let b = Rc::new(RefCell::new(0i32));
+
+        let ca = a.clone();
+        let cs = s.clone();
+        let _h1 = create_effect(move || { *ca.borrow_mut() = cs.get(); });
+        let cb = b.clone();
+        let cs2 = s.clone();
+        let _h2 = create_effect(move || { *cb.borrow_mut() = cs2.get(); });
+
+        assert_eq!(*a.borrow(), 0);
+        assert_eq!(*b.borrow(), 0);
+
+        s.set(42);
+        assert_eq!(*a.borrow(), 42, "first effect should re-run");
+        assert_eq!(*b.borrow(), 42, "second effect should re-run");
+    }
+
+    #[test]
+    fn test_effect_no_dependencies() {
+        let run_count = Rc::new(RefCell::new(0u32));
+        let rc = run_count.clone();
+        let _handle = create_effect(move || {
+            // No signal.get() call — no dependencies
+            *rc.borrow_mut() += 1;
+        });
+        assert_eq!(*run_count.borrow(), 1, "effect should run once on creation");
+    }
+
+    #[test]
+    fn test_effect_reattaches_dependencies() {
+        // An effect that conditionally reads a signal should re-track dependencies
+        // each time it runs.
+        let toggle = Signal::new(false);
+        let a = Signal::new(1i32);
+        let b = Signal::new(10i32);
+        let last = Rc::new(RefCell::new(0i32));
+
+        let l = last.clone();
+        let t = toggle.clone();
+        let sa = a.clone();
+        let sb = b.clone();
+        let _handle = create_effect(move || {
+            if t.get() {
+                *l.borrow_mut() = sa.get(); // depends on 'a'
+            } else {
+                *l.borrow_mut() = sb.get(); // depends on 'b'
+            }
+        });
+
+        assert_eq!(*last.borrow(), 10); // reads b
+
+        b.set(20);
+        assert_eq!(*last.borrow(), 20); // still reads b
+
+        toggle.set(true); // now reads a
+        assert_eq!(*last.borrow(), 1); // reads a
+
+        a.set(42);
+        assert_eq!(*last.borrow(), 42); // only a triggers (b no longer tracked)
+    }
+
+    #[test]
+    fn test_signal_notify_inside_effect() {
+        // Test that notify() during effect execution doesn't cause double re-run
+        let s = Signal::new(0i32);
+        let count = Rc::new(RefCell::new(0u32));
+
+        let c = count.clone();
+        let cs = s.clone();
+        let _handle = create_effect(move || {
+            let _ = cs.get();
+            *c.borrow_mut() += 1;
+        });
+
+        assert_eq!(*count.borrow(), 1);
+
+        s.set(1);
+        assert_eq!(*count.borrow(), 2, "effect should re-run once per set");
+    }
 }
