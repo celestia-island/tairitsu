@@ -200,12 +200,18 @@ pub fn track_signal(signal_id: SignalId) {
 /// Check if a signal is currently tracked in the dependency graph.
 #[cfg(test)]
 pub fn signal_is_tracked(signal_id: SignalId) -> bool {
-    RUNTIME.with(|runtime| runtime.borrow().signal_dependencies.contains_key(&signal_id))
+    RUNTIME
+        .try_with(|runtime| runtime.borrow().signal_dependencies.contains_key(&signal_id))
+        .unwrap_or(false)
 }
 
 /// Remove a signal from the dependency tracking. Called automatically when a Signal is dropped.
+///
+/// Uses `try_with` to handle the case where the thread-local RUNTIME has already
+/// been destroyed (e.g. during thread shutdown when signals are dropped after
+/// the runtime).
 pub fn unregister_signal(signal_id: SignalId) {
-    RUNTIME.with(|runtime| {
+    let _ = RUNTIME.try_with(|runtime| {
         let mut rt = runtime.borrow_mut();
         rt.signal_dependencies.remove(&signal_id);
         trace!("Unregistered signal {:?}", signal_id);

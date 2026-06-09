@@ -1,6 +1,7 @@
 use crate::vnode::{Classes, EventHandler, Style, VNode};
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub enum Patch {
     CreateNode {
         node: VNode,
@@ -36,6 +37,8 @@ pub enum Patch {
     RemoveChild {
         index: usize,
     },
+    #[doc(hidden)]
+    #[allow(dead_code)]
     MoveChild {
         from: usize,
         to: usize,
@@ -55,6 +58,8 @@ pub enum Patch {
     RemoveEvent {
         name: String,
     },
+    #[doc(hidden)]
+    #[allow(dead_code)]
     ReorderChildren {
         removals: Vec<usize>,
         moves: Vec<(usize, usize)>,

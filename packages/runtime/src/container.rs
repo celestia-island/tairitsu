@@ -499,6 +499,7 @@ impl<T: HostStateImpl> Container<T> {
     /// ```ignore
     /// let result = container.call_guest_json("process", r#"{"input":"hello"}"#)?;
     /// ```
+    #[deprecated(since = "0.6.0", note = "use call_guest_raw_desc() with RON format instead")]
     pub fn call_guest_json(&mut self, function_name: &str, _json_payload: &str) -> Result<String> {
         anyhow::bail!(
             "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}",

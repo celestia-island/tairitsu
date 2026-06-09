@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use tairitsu_vdom::{
-    batch, create_effect, drain_dependencies, take_dependencies, Signal,
+    batch, create_effect, take_dependencies, Signal,
 };
 
 #[test]
@@ -73,12 +73,12 @@ fn test_batch_no_signals_does_not_panic() {
 }
 
 #[test]
-fn test_drain_dependencies_returns_tracked_entries() {
+fn test_take_dependencies_returns_tracked_entries() {
     let signal = Signal::new(42);
     take_dependencies();
     let _val = signal.get();
-    let deps = drain_dependencies();
-    assert!(!deps.is_empty(), "drain_dependencies should return entries after signal.get()");
+    let deps = take_dependencies();
+    assert!(!deps.is_empty(), "take_dependencies should return entries after signal.get()");
 }
 
 #[test]
@@ -86,11 +86,11 @@ fn test_take_dependencies_clears() {
     let signal = Signal::new(10);
     take_dependencies();
     let _ = signal.get();
-    let first = drain_dependencies();
+    let first = take_dependencies();
     assert!(!first.is_empty());
 
-    let second = drain_dependencies();
-    assert!(second.is_empty(), "second drain should be empty after first drain");
+    let second = take_dependencies();
+    assert!(second.is_empty(), "second take should be empty after first take");
 }
 
 #[test]

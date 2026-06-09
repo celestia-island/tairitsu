@@ -264,14 +264,19 @@ fn execute_effect(
     }
 }
 
+#[deprecated(since = "0.6.0", note = "renamed to take_dependencies")]
 pub fn drain_dependencies() -> Vec<DependencyEntry> {
-    DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect())
+    take_dependencies()
 }
 
+#[deprecated(since = "0.6.0", note = "renamed to take_dependencies")]
 pub fn clear_dependencies() {
-    DEPENDENCIES.with(|deps| deps.borrow_mut().clear());
+    let _ = take_dependencies();
 }
 
+/// Drain all tracked dependency entries from the current context.
+///
+/// This is useful for testing and for manually managing dependency tracking.
 pub fn take_dependencies() -> Vec<DependencyEntry> {
     DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect())
 }

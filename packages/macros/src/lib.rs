@@ -608,18 +608,16 @@ pub fn wit_world(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-/// Marker macro — reserved for future host-import registration codegen.
+/// Host-import registration codegen (not yet implemented).
 ///
-/// Currently this macro accepts its input and emits no code, acting as a
-/// no-op. A future version will auto-generate `add_to_linker` boilerplate
-/// from annotated host structs, but that requires WIT interface knowledge
-/// at compile time that is not yet available here.
-///
-/// Until then, implement the WIT traits manually and call
-/// `MyInterface::add_to_linker(&mut linker, |state| &mut state.data)`.
+/// This macro is reserved for future use. In the meantime, implement the
+/// WIT traits manually and call:
+/// ```ignore
+/// MyInterface::add_to_linker(&mut linker, |state| &mut state.data)?;
+/// ```
 #[proc_macro]
 pub fn register_host(input: TokenStream) -> TokenStream {
-    // Consume input to avoid "unused token" warnings; emit nothing.
+    // Future: parse the struct and generate add_to_linker boilerplate.
     let _ = proc_macro2::TokenStream::from(input);
     TokenStream::new()
 }

@@ -54,6 +54,9 @@ pub use platform::{
     ObserverOps, Platform, QueryOps, ResizeObserverEntry, ResizeObserverSize, ScrollOps, TimerOps,
 };
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
+// take_dependencies is the preferred name; drain_dependencies and
+// clear_dependencies are deprecated aliases kept for backward compatibility.
+#[allow(deprecated)]
 pub use reactive::{
     batch, clear_dependencies, create_effect, drain_dependencies, take_dependencies,
     DependencyEntry, EffectHandle, Signal,
