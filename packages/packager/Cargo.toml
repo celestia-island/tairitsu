@@ -42,7 +42,7 @@ chromiumoxide = { workspace = true, features = [
 ], optional = true }
 grass = "^0.13"
 regex = "^1"
-wit-parser = "^0.243"
+wit-parser = "0.245"
 sha2 = "^0.10"
 yuuka = "0.6"
 sys-locale = "0.3"

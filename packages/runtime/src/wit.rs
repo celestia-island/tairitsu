@@ -184,7 +184,7 @@ impl WitLoader {
                                 params,
                             });
                         }
-                        wit_parser::WorldItem::Interface { id, stability: _ } => {
+                        wit_parser::WorldItem::Interface { id, stability: _, span: _ } => {
                             // Handle exported interfaces - extract all functions from the interface
                             let interface_id = match export_name {
                                 wit_parser::WorldKey::Name(_interface_name) => {
@@ -196,15 +196,15 @@ impl WitLoader {
 
                             if let Some(interface) = self.resolve.interfaces.get(interface_id) {
                                 // Collect all functions from the interface
-                                for (func_name, func_item) in &interface.functions {
+                                for (_func_name, func_item) in &interface.functions {
                                     let params: Vec<(String, String)> = func_item
                                         .params
                                         .iter()
-                                        .map(|(name, ty)| (name.clone(), self.format_type(ty)))
+                                        .map(|p| (p.name.clone(), self.format_type(&p.ty)))
                                         .collect();
 
                                     functions.push(FunctionInfo {
-                                        name: func_name.clone(),
+                                        name: _func_name.clone(),
                                         params,
                                     });
                                 }
@@ -278,7 +278,7 @@ impl WitLoader {
                                 params,
                             });
                         }
-                        wit_parser::WorldItem::Interface { id, stability: _ } => {
+                        wit_parser::WorldItem::Interface { id, stability: _, span: _ } => {
                             // Handle imported interfaces - extract all functions from the interface
                             let interface_id = match import_name {
                                 wit_parser::WorldKey::Name(_interface_name) => {
@@ -294,7 +294,7 @@ impl WitLoader {
                                     let params: Vec<(String, String)> = func_item
                                         .params
                                         .iter()
-                                        .map(|(name, ty)| (name.clone(), self.format_type(ty)))
+                                        .map(|p| (p.name.clone(), self.format_type(&p.ty)))
                                         .collect();
 
                                     functions.push(FunctionInfo {
