@@ -14,4 +14,4 @@ include = ["src/**/*", "wit/**/*", "Cargo.toml", "README.md", "build.rs"]
 anyhow = { workspace = true }
 
 [dev-dependencies]
-wit-parser = "0.245"
+wit-parser = { workspace = true }

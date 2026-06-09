@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "Build and packaging tool for Tairitsu applications"
 authors.workspace = true
-license = "MIT OR Apache-2.0"
+license.workspace = true
 repository.workspace = true
 
 [[bin]]
@@ -20,11 +20,11 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-toml = "^0.8"
+toml = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread"], optional = true }
-futures = "^0.3"
+futures = { workspace = true }
 tracing = { workspace = true }
-tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 clap = { workspace = true, optional = true }
 indicatif = "^0.17"
 webbrowser = "^1"
@@ -40,10 +40,10 @@ chromiumoxide = { workspace = true, features = [
   "native-tls",
   "zip0",
 ], optional = true }
-grass = "^0.13"
-regex = "^1"
-wit-parser = "0.245"
-sha2 = "^0.10"
+grass = { workspace = true }
+regex = { workspace = true }
+wit-parser = { workspace = true }
+sha2 = { workspace = true }
 yuuka = "0.6"
 sys-locale = "0.3"
 crossterm = { version = "0.28", optional = true }

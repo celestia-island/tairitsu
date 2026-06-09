@@ -22,7 +22,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-wit-bindgen = { version = "0.57", features = ["macros"] }
+wit-bindgen = { workspace = true }
 
 [features]
 default = ["serde"]

@@ -16,7 +16,7 @@ serde = { workspace = true }
 tracing = { workspace = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-wit-bindgen = { version = "0.57", features = ["macros"] }
+wit-bindgen = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, default-features = false, features = [

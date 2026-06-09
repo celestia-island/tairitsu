@@ -90,3 +90,15 @@ tairitsu-browser-worlds = { version = "0.5.13", path = "packages/browser-worlds"
 tairitsu-browser-wit-resolver = { version = "0.5.13", path = "packages/browser-wit-resolver" }
 tairitsu-packager = { version = "0.5.13", path = "packages/packager" }
 tairitsu-mcp = { version = "0.5.13", path = "packages/mcp" }
+bytes = "^1"
+sha2 = "^0.10"
+hex = "^0.4"
+futures = "^0.3"
+tracing-subscriber = "^0.3"
+regex = "^1"
+toml = "^0.8"
+grass = "^0.13"
+wit-parser = "0.245"
+wit-component = "0.245"
+wit-bindgen = { version = "0.57", features = ["macros"] }
+tempfile = "^3"

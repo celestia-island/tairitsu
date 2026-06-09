@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "Tairitsu MCP server — browser automation + VTty for AI coding assistants"
 authors.workspace = true
-license = "MIT OR Apache-2.0"
+license.workspace = true
 repository.workspace = true
 exclude = ["src/vtty/fonts/"]
 
@@ -18,7 +18,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "io-std"] }
 tracing = { workspace = true }
-tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 reqwest = { workspace = true, features = ["query"] }
 vte = { version = "^0.15", optional = true }
 portable-pty = { version = "^0.8", optional = true }
