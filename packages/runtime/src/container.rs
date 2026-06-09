@@ -544,14 +544,9 @@ impl<T: HostStateImpl> Container<T> {
         match &result {
             Ok(_) => self.state = ContainerState::Running,
             Err(e) => {
-                let msg = e.to_string();
-                let is_wasm_fatal = msg.contains("trap")
-                    || msg.contains("out of memory")
-                    || msg.contains("fuel")
-                    || e.downcast_ref::<wasmtime::Error>().is_some()
-                    || e.downcast_ref::<wasmtime::Trap>().is_some();
+                let is_wasm_fatal = e.downcast_ref::<wasmtime::Trap>().is_some();
                 if is_wasm_fatal {
-                    self.state = ContainerState::Error(msg);
+                    self.state = ContainerState::Error(e.to_string());
                 }
             }
         }
