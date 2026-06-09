@@ -439,6 +439,11 @@ impl ChangeEvent {
         }
     }
 
+    pub fn with_event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
     pub fn value(mut self, value: impl Into<String>) -> Self {
         self.value = value.into();
         self
@@ -479,6 +484,11 @@ impl SubmitEvent {
             form_data: Vec::new(),
             event_handle: EventWitHandle::placeholder(),
         }
+    }
+
+    pub fn with_event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
     }
 
     pub fn prevent_default(&self) {

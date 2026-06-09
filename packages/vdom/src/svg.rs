@@ -277,7 +277,8 @@ fn remove_attribute(content: &str, attr_name: &str) -> String {
             let after_attr = &remaining[actual_pos..];
 
             // Skip the attribute name
-            let after_name = skip_attribute_name(after_attr);
+            let after_name_offset = skip_attribute_name_offset(after_attr);
+            let after_name = &after_attr[after_name_offset..];
             if let Some(value_end) = find_attribute_value_end(after_name) {
                 remaining = &after_name[value_end..];
             } else {
@@ -329,8 +330,10 @@ fn find_attr_position(content: &str, attr_name: &str) -> Option<usize> {
 }
 
 /// Skip past an attribute name and any following whitespace.
-fn skip_attribute_name(content: &str) -> &str {
+/// Returns the byte offset where the attribute value starts.
+fn skip_attribute_name_offset(content: &str) -> usize {
     let mut chars = content.chars().peekable();
+    let mut offset = 0;
 
     // Skip the attribute name
     while let Some(&c) = chars.peek() {
@@ -338,6 +341,7 @@ fn skip_attribute_name(content: &str) -> &str {
             break;
         }
         chars.next();
+        offset += c.len_utf8();
     }
 
     // Skip whitespace
@@ -346,11 +350,13 @@ fn skip_attribute_name(content: &str) -> &str {
             break;
         }
         chars.next();
+        offset += c.len_utf8();
     }
 
     // Skip '=' if present
     if chars.peek() == Some(&'=') {
         chars.next();
+        offset += 1;
     }
 
     // Skip whitespace after '='
@@ -359,9 +365,10 @@ fn skip_attribute_name(content: &str) -> &str {
             break;
         }
         chars.next();
+        offset += c.len_utf8();
     }
 
-    chars.collect::<String>().leak()
+    offset
 }
 
 /// Find the end of an attribute value.

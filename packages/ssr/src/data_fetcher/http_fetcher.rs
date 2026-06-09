@@ -240,7 +240,7 @@ impl Fetcher for HttpFetcher {
             // Store in cache
             #[cfg(feature = "data-fetcher")]
             if self.config.cache {
-                let cache_key = Self::cache_key("POST", url, &[]);
+                let cache_key = Self::cache_key("POST", url, &body);
                 self.cache.insert(cache_key, data.clone());
             }
 

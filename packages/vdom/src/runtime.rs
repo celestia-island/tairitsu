@@ -349,9 +349,10 @@ pub fn cleanup_component(id: ComponentId) {
         rt.dirty_components.retain(|&c| c != id);
         rt.element_to_component.retain(|_, &mut c| c != id);
 
-        for deps in rt.signal_dependencies.values_mut() {
+        rt.signal_dependencies.retain(|_, deps| {
             deps.retain(|&c| c != id);
-        }
+            !deps.is_empty()
+        });
 
         if let Some(handles) = rt.effect_handles.remove(&id) {
             for handle in handles {

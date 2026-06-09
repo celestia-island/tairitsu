@@ -9,7 +9,6 @@ on:
       - 'Cargo.lock'
       - 'Cargo.toml'
       - 'package.json'
-      - 'package-lock.json'
       - 'packages/browser-glue/package.json'
 
 jobs:
@@ -21,7 +20,7 @@ jobs:
 
       - name: Install cargo-audit
         uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-audit
+      - run: cargo install cargo-audit --locked
 
       - name: Run audit
         run: cargo audit
@@ -34,7 +33,7 @@ jobs:
 
       - name: Install cargo-deny
         uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-deny
+      - run: cargo install cargo-deny --locked
 
       - name: Run deny check
         run: cargo deny check
@@ -48,7 +47,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install dependencies
         run: npm ci

@@ -598,12 +598,16 @@ pub mod wasm_impl {
 
             let event: Box<dyn EventData> = match event_type.as_str() {
                 "submit" => {
-                    let mut evt = tairitsu_vdom::SubmitEvent::new();
+                    let evt = tairitsu_vdom::SubmitEvent::new()
+                        .with_event_handle(wit_handle);
+                    let mut evt = evt;
                     evt.target = target;
                     Box::new(evt)
                 }
                 "change" => {
-                    let mut evt = tairitsu_vdom::ChangeEvent::new();
+                    let evt = tairitsu_vdom::ChangeEvent::new()
+                        .with_event_handle(wit_handle);
+                    let mut evt = evt;
                     evt.target = target;
                     Box::new(evt)
                 }

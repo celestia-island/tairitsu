@@ -16,6 +16,7 @@ use crate::wit_platform::{self, WitPlatform};
 thread_local! {
     static INSTANCE: RefCell<Option<RouterServiceInner>> = RefCell::new(None);
     static CURRENT_PATH: RefCell<String> = RefCell::new("/".to_string());
+    static POLLING_ACTIVE: Cell<bool> = const { Cell::new(false) };
 }
 
 struct RouterServiceInner {
@@ -37,7 +38,14 @@ pub fn init_router(
     do_render(&inner, &path);
     INSTANCE.with(|i| *i.borrow_mut() = Some(inner));
     set_current_path(&path);
+    POLLING_ACTIVE.with(|a| a.set(true));
     schedule_poll();
+}
+
+/// Stop the router and clean up polling.
+pub fn stop_router() {
+    POLLING_ACTIVE.with(|a| a.set(false));
+    INSTANCE.with(|i| *i.borrow_mut() = None);
 }
 
 /// Programmatically navigate to a path (pushState + re-render).
@@ -89,6 +97,9 @@ fn schedule_poll() {
 }
 
 fn poll_url_change() {
+    if !POLLING_ACTIVE.with(|a| a.get()) {
+        return;
+    }
     let current = wit_platform::get_pathname();
     if current != current_path() {
         let normalized = normalize_path(&current);
