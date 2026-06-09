@@ -434,21 +434,15 @@ where
     };
 
     // Spawn the async operation
-    // Note: In a real implementation, this would integrate with a proper async runtime
-    // For now, we provide a thread-pool based approach for testing
-    #[cfg(test)]
+    // Non-WASM targets: spawn a thread with a tokio runtime to execute the future.
+    // WASM targets: the future is discarded (requires wasm-bindgen-futures or similar).
+    #[cfg(not(target_family = "wasm"))]
     {
-        // For testing, we need to use a different approach
-        // since we can't send Rc across threads
-        // We'll use a channel to communicate the result
         let (tx, rx) = std::sync::mpsc::channel();
 
-        // Clone the Arc for thread-safe access
         let thread_safe_state = Arc::clone(&inner.thread_safe_state);
 
         std::thread::spawn(move || {
-            // Create a minimal runtime for the future
-            // In production, use the proper runtime
             let rt = tokio::runtime::Builder::new_current_thread()
                 .enable_all()
                 .build()
@@ -456,21 +450,17 @@ where
 
             let result = rt.block_on(fetcher());
 
-            // Send the result back
             let _ = tx.send(result);
         });
 
-        // Spawn a thread to wait for the result and update the resource
         std::thread::spawn(move || {
             if let Ok(result) = rx.recv() {
-                // Update the thread-safe state
                 let new_state = match result {
                     Ok(value) => ResourceState::Ready(value),
                     Err(err) => ResourceState::Error(err),
                 };
                 *thread_safe_state.lock().expect("thread_safe_state mutex poisoned") = new_state.clone();
 
-                // Update the global registry
                 let registry_state = match new_state {
                     ResourceState::Loading => ResourceStateOp::Loading,
                     ResourceState::Ready(_) => ResourceStateOp::Ready,
@@ -483,7 +473,6 @@ where
                         .update_resource(resource_id, registry_state)
                 });
 
-                // Mark the component as dirty so it will re-render
                 for comp_id in affected {
                     runtime::mark_dirty(comp_id);
                 }
@@ -492,11 +481,12 @@ where
         });
     }
 
-    #[cfg(not(test))]
+    #[cfg(target_family = "wasm")]
     {
-        // For non-test environments, we can't spawn threads with futures
-        // In production, this would integrate with the platform's async runtime
-        let _ = fetcher; // Suppress unused warning
+        let _ = fetcher;
+        tracing::warn!(
+            "use_resource: async execution not supported on WASM targets without wasm-bindgen-futures. Resource will remain in Loading state."
+        );
     }
 
     resource

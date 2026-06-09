@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use tairitsu_vdom::{runtime, Classes, Signal, Style, VNode};
 
 /// Creates a new Signal with the given initial value.
@@ -57,8 +59,45 @@ impl<T: Clone + 'static> ReactiveSignal<T> {
     }
 
     /// Dioxus compatibility alias for write()
-    pub fn write(&self) -> std::cell::RefMut<'_, T> {
-        self.signal.write()
+    ///
+    /// Returns a guard that automatically marks the component dirty on drop,
+    /// ensuring the UI re-renders after the value is mutated.
+    pub fn write(&self) -> SignalWriteGuard<'_, T> {
+        SignalWriteGuard::new(self.signal.write(), self.component_id)
+    }
+}
+
+/// A wrapper around `RefMut` that marks the component dirty on drop.
+///
+/// This ensures that any mutation made through `ReactiveSignal::write()` or
+/// `StandaloneSignal::write()` automatically triggers a re-render.
+pub struct SignalWriteGuard<'a, T: Clone + 'static> {
+    inner: std::cell::RefMut<'a, T>,
+    component_id: runtime::ComponentId,
+}
+
+impl<'a, T: Clone + 'static> SignalWriteGuard<'a, T> {
+    fn new(inner: std::cell::RefMut<'a, T>, component_id: runtime::ComponentId) -> Self {
+        Self { inner, component_id }
+    }
+}
+
+impl<'a, T: Clone + 'static> Deref for SignalWriteGuard<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &*self.inner
+    }
+}
+
+impl<'a, T: Clone + 'static> DerefMut for SignalWriteGuard<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut *self.inner
+    }
+}
+
+impl<'a, T: Clone + 'static> Drop for SignalWriteGuard<'a, T> {
+    fn drop(&mut self) {
+        runtime::mark_dirty_deferred(self.component_id);
     }
 }
 
@@ -85,8 +124,8 @@ impl<T: Clone + 'static> StandaloneSignal<T> {
         self.get()
     }
 
-    pub fn write(&self) -> std::cell::RefMut<'_, T> {
-        self.signal.write()
+    pub fn write(&self) -> SignalWriteGuard<'_, T> {
+        SignalWriteGuard::new(self.signal.write(), self.component_id)
     }
 }
 
@@ -145,5 +184,30 @@ mod tests {
         // Inner signal should work independently
         let inner = signal.inner();
         assert_eq!(inner.get(), 123);
+    }
+
+    #[test]
+    fn test_reactive_signal_write_marks_dirty() {
+        let signal = use_signal(|| 0);
+
+        // write() should return a guard that marks dirty on drop
+        {
+            let mut guard = signal.write();
+            *guard = 42;
+        }
+
+        assert_eq!(signal.get(), 42);
+    }
+
+    #[test]
+    fn test_standalone_signal_write_marks_dirty() {
+        let signal = use_standalone_signal(0);
+
+        {
+            let mut guard = signal.write();
+            *guard = 99;
+        }
+
+        assert_eq!(signal.get(), 99);
     }
 }

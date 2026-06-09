@@ -119,6 +119,24 @@ pub fn update_render_function(id: ComponentId, render_fn: impl FnMut() -> VNode 
     });
 }
 
+/// Mark a component as dirty without triggering an immediate flush.
+///
+/// Unlike [`mark_dirty`], this does NOT flush synchronously. It only adds
+/// the component to the dirty list. The actual re-render happens on the
+/// next scheduled frame or explicit `flush_render` call.
+///
+/// This is safe to call while holding a `RefMut` on a signal's inner `RefCell`,
+/// because it never invokes render functions synchronously.
+pub fn mark_dirty_deferred(id: ComponentId) {
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        if !rt.dirty_components.contains(&id) {
+            rt.dirty_components.push(id);
+            trace!("Deferred: marked component {} as dirty", id);
+        }
+    });
+}
+
 /// Mark a component as dirty and schedule a re-render.
 pub fn mark_dirty(id: ComponentId) {
     let should_flush_sync = RUNTIME.with(|runtime| {

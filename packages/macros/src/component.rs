@@ -215,7 +215,8 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
                 if *has_default {
                     quote! { let #name = props.#name; }
                 } else {
-                    quote! { let #name = props.#name.unwrap_or_default(); }
+                    let err_msg = format!("`{}` is required but was not provided", name);
+                    quote! { let #name = props.#name.expect(#err_msg); }
                 }
             })
             .collect();

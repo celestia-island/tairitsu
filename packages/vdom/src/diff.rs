@@ -29,8 +29,12 @@ fn diff_node(old: &VNode, new: &VNode, patches: &mut Vec<Patch>) {
                 });
             }
         }
-        (VNode::DynamicText(_), VNode::DynamicText(_)) => {
-            // DynamicText is managed by its own effect — skip diff
+        (VNode::DynamicText(old_dt), VNode::DynamicText(new_dt)) => {
+            if old_dt != new_dt {
+                patches.push(Patch::UpdateText {
+                    text: new_dt.initial.clone(),
+                });
+            }
         }
         (VNode::Element(old_elem), VNode::Element(new_elem)) => {
             diff_element(old_elem, new_elem, patches);
@@ -87,11 +91,13 @@ fn diff_element(old: &VElement, new: &VElement, patches: &mut Vec<Patch>) {
     }
 
     for (event_name, handler) in &new.event_handlers {
-        if old.event_handlers.contains_key(event_name) {
-            patches.push(Patch::UpdateEvent {
-                name: event_name.clone(),
-                handler: handler.clone(),
-            });
+        if let Some(old_handler) = old.event_handlers.get(event_name) {
+            if !std::rc::Rc::ptr_eq(old_handler, handler) {
+                patches.push(Patch::UpdateEvent {
+                    name: event_name.clone(),
+                    handler: handler.clone(),
+                });
+            }
         } else {
             patches.push(Patch::AddEvent {
                 name: event_name.clone(),
@@ -144,7 +150,15 @@ fn diff_children_indexed(old_children: &[VNode], new_children: &[VNode], patches
 
         match (old_child, new_child) {
             (Some(old), Some(new)) => {
-                if matches!(old, VNode::DynamicText(_)) && matches!(new, VNode::DynamicText(_)) {
+                if let (VNode::DynamicText(old_dt), VNode::DynamicText(new_dt)) = (old, new) {
+                    if old_dt != new_dt {
+                        patches.push(Patch::UpdateChild {
+                            index: i,
+                            patches: vec![Patch::UpdateText {
+                                text: new_dt.initial.clone(),
+                            }],
+                        });
+                    }
                     continue;
                 }
                 let child_patches = diff(Some(old), new);
@@ -751,7 +765,20 @@ mod tests {
     }
 
     #[test]
-    fn test_diff_dynamic_text_skips() {
+    fn test_diff_dynamic_text_unchanged() {
+        let old = VNode::DynamicText(crate::vnode::DynamicText::new("same".into(), || {
+            "same".to_string()
+        }));
+        let new = VNode::DynamicText(crate::vnode::DynamicText::new("same".into(), || {
+            "same".to_string()
+        }));
+
+        let patches = diff(Some(&old), &new);
+        assert!(patches.is_empty(), "Identical DynamicText should produce no patches");
+    }
+
+    #[test]
+    fn test_diff_dynamic_text_changed() {
         let old = VNode::DynamicText(crate::vnode::DynamicText::new("hello".into(), || {
             "hello".to_string()
         }));
@@ -760,7 +787,8 @@ mod tests {
         }));
 
         let patches = diff(Some(&old), &new);
-        assert!(patches.is_empty());
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(&patches[0], Patch::UpdateText { text } if text == "world"));
     }
 
     #[test]
@@ -788,7 +816,7 @@ mod tests {
     }
 
     #[test]
-    fn test_dynamic_text_in_children_skipped() {
+    fn test_dynamic_text_in_children_changed() {
         let old = VNode::Element(VElement::new("div").child(VNode::DynamicText(
             crate::vnode::DynamicText::new("v1".into(), || "v1".into()),
         )));
@@ -797,7 +825,18 @@ mod tests {
         )));
 
         let patches = diff(Some(&old), &new);
-        assert!(patches.is_empty());
+        assert!(!patches.is_empty());
+
+        // Should contain an UpdateChild with an UpdateText patch inside
+        let has_update = patches.iter().any(|p| match p {
+            Patch::UpdateChild { index, patches: child_patches } => {
+                *index == 0 && child_patches.iter().any(|cp| {
+                    matches!(cp, Patch::UpdateText { text } if text == "v2")
+                })
+            }
+            _ => false,
+        });
+        assert!(has_update, "Expected UpdateChild with UpdateText for changed DynamicText");
     }
 
     #[test]

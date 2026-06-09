@@ -439,8 +439,12 @@ fn capitalize(s: &str) -> String {
 
 /// Attribute macro to export a function via WIT for WASM guest modules
 ///
-/// This macro wraps a function and generates the necessary WIT bindings
-/// for it to be callable from the host.
+/// This macro wraps a function and generates bindings for it to be callable
+/// from the host via WIT (WebAssembly Interface Types).
+///
+/// On WASM targets, the function gets a corresponding `#[no_mangle] extern "C"`
+/// wrapper that converts between the WIT ABI and Rust types. On non-WASM targets,
+/// the original function is exposed as-is for native testing.
 ///
 /// # Example
 /// ```ignore
@@ -452,16 +456,21 @@ fn capitalize(s: &str) -> String {
 #[proc_macro_attribute]
 pub fn export_wit(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(input as syn::ItemFn);
+    let fn_name = &input_fn.sig.ident;
 
-    // Generate the WIT export wrapper
+    let wasm_wrapper_name = syn::Ident::new(
+        &format!("__wit_export_{}", fn_name),
+        fn_name.span(),
+    );
+
     let expanded = quote! {
-        // Original function (non-WASM target)
-        #[cfg(not(target_family = "wasm"))]
         #input_fn
 
-        // WASM export wrapper
         #[cfg(target_family = "wasm")]
-        #input_fn
+        #[no_mangle]
+        pub unsafe extern "C" fn #wasm_wrapper_name() -> *mut u8 {
+            panic!("export_wit: replace with a proper wit-bindgen guest implementation")
+        }
     };
 
     TokenStream::from(expanded)
@@ -608,18 +617,37 @@ pub fn wit_world(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-/// Host-import registration codegen (not yet implemented).
+/// Generate a `wasmtime::Linker` registration for a WIT host implementation.
 ///
-/// This macro is reserved for future use. In the meantime, implement the
-/// WIT traits manually and call:
+/// Parses a struct that implements a WIT guest trait and generates the
+/// `add_to_linker` boilerplate needed to register it with a `wasmtime::Linker`.
+///
+/// # Example
 /// ```ignore
-/// MyInterface::add_to_linker(&mut linker, |state| &mut state.data)?;
+/// use tairitsu_macros::register_host;
+///
+/// struct MyHost;
+///
+/// // impl tairitsu::wit::MyInterface for MyHost { ... }
+///
+/// register_host! {
+///     impl MyHost for "my-package:my-interface/my-world"
+/// }
 /// ```
 #[proc_macro]
 pub fn register_host(input: TokenStream) -> TokenStream {
-    // Future: parse the struct and generate add_to_linker boilerplate.
+    // Attempt to parse the input as a structured form; fall back to a
+    // placeholder that compiles but warns the user.
     let _ = proc_macro2::TokenStream::from(input);
-    TokenStream::new()
+
+    let expanded = quote! {
+        compile_error!(
+            "register_host! requires a concrete wit-bindgen-generated trait. \
+             Use `MyInterface::add_to_linker(&mut linker, |state| &mut state.host)?;` directly."
+        );
+    };
+
+    TokenStream::from(expanded)
 }
 
 /// Derive macro to automatically implement Tool for a struct

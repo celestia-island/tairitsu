@@ -18,6 +18,15 @@ tairitsu-vdom = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio = { workspace = true, default-features = false, features = [
+  "sync",
+  "macros",
+  "io-util",
+  "rt",
+  "time",
+] }
+
 [target.'cfg(target_family = "wasm")'.dependencies]
 wit-bindgen = { version = "^0.50", features = ["macros"] }
 
