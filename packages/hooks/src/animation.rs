@@ -198,16 +198,17 @@ impl UseAnimation {
 
     /// Start the animation with a platform reference
     ///
-    /// # Safety requirement
+    /// # Safety
     ///
-    /// The caller **must** guarantee that `platform` remains alive and at the
-    /// same address for the entire duration of the animation. If the platform
-    /// is dropped or moved while frames are still pending, undefined behaviour
-    /// will result from dangling pointer dereference inside the animation loop.
+    /// The caller **must** guarantee that `platform` remains alive at the same
+    /// memory address for the entire duration of the animation (from this call
+    /// until the returned [`AnimationHandle`] is dropped). If the platform is
+    /// dropped or moved while animation frames are still pending, the internal
+    /// pointer dereference will be **undefined behaviour**.
     ///
-    /// In practice, only pass a `'static` platform reference or a platform
-    /// that is known to outlive all animations (e.g. an arena-allocated value).
-    pub fn start_with_platform<P>(&self, platform: &P) -> AnimationHandle
+    /// The safe alternative is [`start_with_static_platform`], which requires
+    /// `P: 'static`.
+    pub unsafe fn start_with_platform<P>(&self, platform: &P) -> AnimationHandle
     where
         P: Platform,
     {
@@ -221,6 +222,19 @@ impl UseAnimation {
         AnimationHandle {
             state: Rc::clone(&self.state),
         }
+    }
+
+    /// Start the animation with a `'static` platform reference.
+    ///
+    /// This is the safe alternative to [`start_with_platform`] — the `'static`
+    /// bound guarantees the platform lives for the entire program, so the
+    /// animation can never dangle.
+    pub fn start_with_static_platform<P>(&self, platform: &'static P) -> AnimationHandle
+    where
+        P: Platform,
+    {
+        // SAFETY: P: 'static guarantees the platform is never dropped or moved.
+        unsafe { self.start_with_platform(platform) }
     }
 
     /// Internal method to start the requestAnimationFrame loop
@@ -464,7 +478,12 @@ impl UseAnimation {
     }
 
     /// Resume animation with platform reference
-    pub fn resume_with_platform<P>(&self, platform: &P)
+    ///
+    /// # Safety
+    ///
+    /// Same safety contract as [`start_with_platform`]: `platform` must outlive
+    /// the animation.
+    pub unsafe fn resume_with_platform<P>(&self, platform: &P)
     where
         P: Platform,
     {
@@ -472,6 +491,17 @@ impl UseAnimation {
             *self.state.borrow_mut() = AnimationState::Running;
             self.start_raf_loop(platform);
         }
+    }
+
+    /// Resume animation with a `'static` platform reference.
+    ///
+    /// Safe because `P: 'static` guarantees the platform lives forever.
+    pub fn resume_with_static_platform<P>(&self, platform: &'static P)
+    where
+        P: Platform,
+    {
+        // SAFETY: P: 'static guarantees the platform is never dropped or moved.
+        unsafe { self.resume_with_platform(platform) }
     }
 
     pub fn stop(&self) {
