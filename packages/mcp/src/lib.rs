@@ -970,12 +970,15 @@ mod daemon {
             let root_path = PathBuf::from(&root);
             add_target_tree(&mut candidates, &root_path, 2);
         }
-        for scan_dir in std::env::var("HOME")
+        let mut scan_dirs: Vec<PathBuf> = std::env::var("HOME")
             .ok()
             .map(|h| PathBuf::from(h))
             .into_iter()
-            .chain(std::env::var("TAIRITSU_SCAN_DIRS").ok().into_iter().flat_map(|d| d.split(':').map(PathBuf::from)))
-        {
+            .collect();
+        if let Ok(dirs) = std::env::var("TAIRITSU_SCAN_DIRS") {
+            scan_dirs.extend(dirs.split(':').map(PathBuf::from));
+        }
+        for scan_dir in scan_dirs {
             if let Ok(entries) = std::fs::read_dir(&scan_dir) {
                 for entry in entries.flatten() {
                     let p = entry.path();

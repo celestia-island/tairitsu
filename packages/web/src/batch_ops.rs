@@ -164,16 +164,16 @@ impl BatchOps {
         let styles = self.styles.borrow();
         for (element, style_list) in styles.iter() {
             // Try to get style handle from cache once per element
-            let _style_handle = crate::handle_cache::HandleCache::with(|cache| {
+            let _style_handle: Option<u64> = crate::handle_cache::HandleCache::with(|cache| {
                 if let Some(cached_handle) = cache.get_style_handle(*element) {
-                    return cached_handle;
+                    return Some(cached_handle);
                 }
 
                 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
                 {
                     let handle = crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::element_css_inline_style::get_style(*element);
                     cache.set_style_handle(*element, handle);
-                    handle
+                    Some(handle)
                 }
 
                 #[cfg(not(all(feature = "wit-bindings", target_family = "wasm")))]
@@ -185,9 +185,11 @@ impl BatchOps {
             for (name, value) in style_list.iter() {
                 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
                 {
-                    crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::css_style_declaration::set_property(
-                        _style_handle.unwrap(), name, value, None,
-                    );
+                    if let Some(sh) = _style_handle {
+                        crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::css_style_declaration::set_property(
+                            sh, name, value, None,
+                        );
+                    }
                 }
                 let _ = (name, value);
                 count += 1;

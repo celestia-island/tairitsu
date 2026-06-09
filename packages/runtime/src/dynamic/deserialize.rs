@@ -134,9 +134,6 @@ mod basic {
     pub fn deserialize_u64(ron: RonValue) -> Result<Val> {
         match ron {
             RonValue::Number(n) => {
-                if let Some(v) = n.as_u64() {
-                    return Ok(Val::U64(v));
-                }
                 let v = n.as_i64().context("U64 expected")?;
                 if v < 0 {
                     bail!("U64 out of range (negative): {}", v);
