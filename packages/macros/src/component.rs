@@ -1,10 +1,20 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Attribute, FnArg, Ident, ItemFn, Pat, PatType, Result};
+use syn::{Attribute, FnArg, Ident, ItemFn, Pat, PatType, Result};
 
 pub fn expand_component(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as ItemFn);
+    let input: ItemFn = match syn::parse(item.clone()) {
+        Ok(f) => f,
+        Err(e) => {
+            let msg = format!(
+                "#[component] can only be applied to functions. \
+                 Consider adding `fn` before the function name.\n{}",
+                e,
+            );
+            return syn::Error::new(e.span(), msg).to_compile_error().into();
+        }
+    };
 
     match expand_component_impl(input) {
         Ok(tokens) => tokens.into(),
@@ -254,10 +264,13 @@ fn has_props_attribute(attrs: &[Attribute], inner_name: &str) -> bool {
     attrs.iter().any(|attr| {
         // Check for #[props(...)] pattern
         if attr.path().is_ident("props") {
-            // Check the meta for the inner_name
             if let syn::Meta::List(meta_list) = &attr.meta {
-                // Check if any nested meta matches the inner_name
-                return meta_list.tokens.to_string().contains(inner_name);
+                // Parse nested meta items properly to avoid substring false positives.
+                // e.g. #[props(default_value)] should NOT match inner_name = "default".
+                // We use syn::parse2 with a custom parser for a comma-separated list of Meta.
+                return syn::parse2::<PropsMetaList>(meta_list.tokens.clone())
+                    .ok()
+                    .is_some_and(|list| list.0.iter().any(|m| m.path().is_ident(inner_name)));
             }
         }
         // Also check for direct #[default] for backward compatibility
@@ -266,6 +279,23 @@ fn has_props_attribute(attrs: &[Attribute], inner_name: &str) -> bool {
         }
         false
     })
+}
+
+/// Helper to parse a comma-separated list of `syn::Meta` items.
+struct PropsMetaList(Vec<syn::Meta>);
+
+impl syn::parse::Parse for PropsMetaList {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let mut metas = Vec::new();
+        while !input.is_empty() {
+            let meta = input.parse::<syn::Meta>()?;
+            metas.push(meta);
+            if input.peek(syn::Token![,]) {
+                let _ = input.parse::<syn::Token![,]>();
+            }
+        }
+        Ok(PropsMetaList(metas))
+    }
 }
 
 fn to_pascal_case(s: &str) -> String {
@@ -284,4 +314,49 @@ fn to_pascal_case(s: &str) -> String {
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use syn::parse_quote;
+
+    #[test]
+    fn test_has_props_attribute_detects_default() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(default)])];
+        assert!(has_props_attribute(&attrs, "default"));
+    }
+
+    #[test]
+    fn test_has_props_attribute_detects_children() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(children)])];
+        assert!(has_props_attribute(&attrs, "children"));
+    }
+
+    #[test]
+    fn test_has_props_attribute_no_false_positive() {
+        // #[props(default_value = "...")] should NOT match inner_name = "default"
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(default_value = "foo")])];
+        assert!(!has_props_attribute(&attrs, "default"), "default_value should not match 'default'");
+    }
+
+    #[test]
+    fn test_has_props_attribute_multiple() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(default, children)])];
+        assert!(has_props_attribute(&attrs, "default"));
+        assert!(has_props_attribute(&attrs, "children"));
+    }
+
+    #[test]
+    fn test_has_props_attribute_no_match() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(required)])];
+        assert!(!has_props_attribute(&attrs, "default"));
+        assert!(!has_props_attribute(&attrs, "children"));
+    }
+
+    #[test]
+    fn test_has_props_attribute_direct_default() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[default])];
+        assert!(has_props_attribute(&attrs, "default"));
+    }
 }
