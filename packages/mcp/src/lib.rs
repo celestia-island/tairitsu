@@ -1,3 +1,24 @@
+//! MCP (Model Context Protocol) server for Tairitsu.
+//!
+//! Provides AI coding assistants with tools to interact with the Tairitsu
+//! development server, including browser automation, visual regression testing,
+//! and virtual terminal (VTty) management.
+//!
+//! # Tools
+//!
+//! - Browser navigation, screenshots, snapshots
+//! - Debug API for DOM inspection
+//! - VTty (virtual terminal) for command execution
+//!
+//! # Usage
+//!
+//! Start the MCP server alongside the dev daemon:
+//!
+//! ```ignore
+//! tairitsu dev --daemon --debug
+//! tairitsu-mcp
+//! ```
+
 #[cfg(feature = "vtty")]
 mod vtty;
 

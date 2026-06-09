@@ -1,3 +1,26 @@
+//! Platform-agnostic Virtual DOM for Tairitsu.
+//!
+//! This crate provides a complete virtual DOM implementation with reactive state
+//! management, keyed diffing (LIS algorithm), and 34+ typed event types.
+//!
+//! # Core Types
+//!
+//! - [`VNode`] / [`VElement`] — Virtual DOM nodes with attributes, styles, events
+//! - [`Signal`] — Fine-grained reactive state with automatic dependency tracking
+//! - [`Patch`] — Diff result operations (create, replace, update, reorder, etc.)
+//! - [`Platform`] — Trait abstraction for DOM/Canvas/Clipboard/File/Geo/IDB/Media ops
+//!
+//! # Usage
+//!
+//! ```ignore
+//! use tairitsu_vdom::{el, txt, Signal, VNode};
+//!
+//! let count = Signal::new(0);
+//! let node = el("div", vec![
+//!     el("button", vec![txt("Click me")])
+//! ]);
+//! ```
+
 pub mod callback;
 pub mod diff;
 pub mod dom_ops;
