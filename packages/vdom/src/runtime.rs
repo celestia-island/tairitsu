@@ -7,7 +7,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use tracing::trace;
 
-use crate::{patch::Patch, reactive::EffectHandle, VNode};
+use crate::{patch::Patch, reactive::EffectHandle, reactive::SignalId, VNode};
 
 /// Component ID - unique identifier for each component instance
 pub type ComponentId = usize;
@@ -175,7 +175,7 @@ pub fn active_component_id() -> Option<ComponentId> {
 }
 
 /// Track a signal dependency for the current component.
-pub fn track_signal(signal_ptr: usize) {
+pub fn track_signal(signal_id: SignalId) {
     RUNTIME.with(|runtime| {
         let rt = runtime.borrow_mut();
 
@@ -184,16 +184,31 @@ pub fn track_signal(signal_ptr: usize) {
             RUNTIME.with(|runtime| {
                 let mut rt = runtime.borrow_mut();
                 rt.signal_dependencies
-                    .entry(signal_ptr)
+                    .entry(signal_id)
                     .or_insert_with(Vec::new)
                     .push(component_id);
                 trace!(
                     "Component {} now depends on signal {:?}",
                     component_id,
-                    signal_ptr
+                    signal_id
                 );
             });
         }
+    });
+}
+
+/// Check if a signal is currently tracked in the dependency graph.
+#[cfg(test)]
+pub fn signal_is_tracked(signal_id: SignalId) -> bool {
+    RUNTIME.with(|runtime| runtime.borrow().signal_dependencies.contains_key(&signal_id))
+}
+
+/// Remove a signal from the dependency tracking. Called automatically when a Signal is dropped.
+pub fn unregister_signal(signal_id: SignalId) {
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        rt.signal_dependencies.remove(&signal_id);
+        trace!("Unregistered signal {:?}", signal_id);
     });
 }
 
@@ -309,28 +324,28 @@ pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
 }
 
 /// Subscribe a component to a signal's changes.
-pub fn subscribe_component(signal_ptr: usize, component_id: ComponentId) {
+pub fn subscribe_component(signal_id: SignalId, component_id: ComponentId) {
     RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
         rt.signal_dependencies
-            .entry(signal_ptr)
+            .entry(signal_id)
             .or_insert_with(Vec::new)
             .push(component_id);
         trace!(
             "Component {} subscribed to signal {:?}",
             component_id,
-            signal_ptr
+            signal_id
         );
     });
 }
 
 /// Notify all dependent components that a signal has changed.
-pub fn notify_signal(signal_ptr: usize) {
+pub fn notify_signal(signal_id: SignalId) {
     let components: Vec<ComponentId> = RUNTIME.with(|runtime| {
         runtime
             .borrow()
             .signal_dependencies
-            .get(&signal_ptr)
+            .get(&signal_id)
             .cloned()
             .unwrap_or_default()
     });

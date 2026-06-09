@@ -1,6 +1,7 @@
 use std::{
     cell::{Cell, RefCell},
     rc::Rc,
+    sync::atomic::{AtomicUsize, Ordering},
 };
 
 use tracing::trace;
@@ -17,9 +18,9 @@ thread_local! {
     static PENDING_UPDATES: RefCell<Vec<Box<dyn FnOnce()>>> = RefCell::new(Vec::new());
 }
 
-fn refcell_ptr<T>(refcell: &Rc<RefCell<T>>) -> usize {
-    refcell.as_ref() as *const RefCell<T> as usize
-}
+static NEXT_SIGNAL_ID: AtomicUsize = AtomicUsize::new(1);
+
+pub type SignalId = usize;
 
 /// A reactive value container that tracks reads and notifies subscribers on writes.
 ///
@@ -51,8 +52,15 @@ impl<T> PartialEq for Signal<T> {
 impl<T> Eq for Signal<T> {}
 
 struct SignalInner<T> {
+    signal_id: SignalId,
     value: T,
     subscribers: Vec<Rc<dyn Fn()>>,
+}
+
+impl<T> Drop for SignalInner<T> {
+    fn drop(&mut self) {
+        crate::runtime::unregister_signal(self.signal_id);
+    }
 }
 
 impl<T: Clone + 'static> Signal<T> {
@@ -61,9 +69,16 @@ impl<T: Clone + 'static> Signal<T> {
     /// ```no_run
     /// let name = tairitsu_vdom::Signal::new("Alice".to_string());
     /// ```
+    /// Return the unique identifier for this signal.
+    pub fn id(&self) -> SignalId {
+        self.inner.borrow().signal_id
+    }
+
     pub fn new(value: T) -> Self {
+        let id = NEXT_SIGNAL_ID.fetch_add(1, Ordering::Relaxed);
         Self {
             inner: Rc::new(RefCell::new(SignalInner {
+                signal_id: id,
                 value,
                 subscribers: Vec::new(),
             })),
@@ -73,8 +88,8 @@ impl<T: Clone + 'static> Signal<T> {
     /// Read the current value. If called inside [`create_effect`], this signal
     /// is automatically tracked as a dependency.
     pub fn get(&self) -> T {
-        let signal_ptr = refcell_ptr(&self.inner);
-        crate::runtime::track_signal(signal_ptr);
+        let id = self.inner.borrow().signal_id;
+        crate::runtime::track_signal(id);
 
         let signal = self.clone();
         DEPENDENCIES.with(|deps| {
@@ -91,7 +106,7 @@ impl<T: Clone + 'static> Signal<T> {
     /// Write a new value and notify all subscribers. If not inside a [`batch`],
     /// subscribers are called synchronously.
     pub fn set(&self, value: T) {
-        let signal_ptr = refcell_ptr(&self.inner);
+        let id = self.inner.borrow().signal_id;
 
         let subscribers = {
             let mut inner = self.inner.borrow_mut();
@@ -99,7 +114,7 @@ impl<T: Clone + 'static> Signal<T> {
             inner.subscribers.clone()
         };
 
-        crate::runtime::notify_signal(signal_ptr);
+        crate::runtime::notify_signal(id);
 
         let batched = BATCH_DEPTH.with(|d| *d.borrow() > 0);
         if batched {
@@ -129,6 +144,7 @@ impl<T: Clone + 'static> Signal<T> {
     }
 
     pub fn notify(&self) {
+        let _id = self.inner.borrow().signal_id;
         let subscribers = self.inner.borrow().subscribers.clone();
         let batched = BATCH_DEPTH.with(|d| *d.borrow() > 0);
         if batched {
@@ -310,5 +326,172 @@ impl<T: std::fmt::Debug> std::fmt::Debug for Signal<T> {
         f.debug_struct("Signal")
             .field("value", &self.inner.borrow().value)
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_signal_new_assigns_unique_ids() {
+        let a = Signal::new(0);
+        let b = Signal::new(0);
+        assert_ne!(a.id(), b.id());
+    }
+
+    #[test]
+    fn test_signal_get_set() {
+        let s = Signal::new(42i32);
+        assert_eq!(s.get(), 42);
+        s.set(100);
+        assert_eq!(s.get(), 100);
+    }
+
+    #[test]
+    fn test_signal_effect_tracks_dependency() {
+        let s = Signal::new(1i32);
+        let observed = Rc::new(RefCell::new(0i32));
+
+        let effect_observed = observed.clone();
+        let effect_s = s.clone();
+        let _handle = create_effect(move || {
+            *effect_observed.borrow_mut() = effect_s.get();
+        });
+
+        assert_eq!(*observed.borrow(), 1);
+
+        s.set(5);
+        assert_eq!(*observed.borrow(), 5);
+    }
+
+    #[test]
+    fn test_signal_effect_multiple_dependencies() {
+        let a = Signal::new(1i32);
+        let b = Signal::new(10i32);
+        let sum = Rc::new(RefCell::new(0i32));
+
+        let effect_sum = sum.clone();
+        let effect_a = a.clone();
+        let effect_b = b.clone();
+        let _handle = create_effect(move || {
+            *effect_sum.borrow_mut() = effect_a.get() + effect_b.get();
+        });
+
+        assert_eq!(*sum.borrow(), 11);
+
+        a.set(5);
+        assert_eq!(*sum.borrow(), 15);
+
+        b.set(20);
+        assert_eq!(*sum.borrow(), 25);
+    }
+
+    #[test]
+    fn test_signal_drop_cleans_up_runtime() {
+        let signal_id;
+        {
+            let s = Signal::new(99i32);
+            signal_id = s.id();
+
+            // Track the signal to register it in the runtime
+            crate::runtime::track_signal(signal_id);
+            crate::runtime::with_component(
+                crate::runtime::use_component(|| crate::VNode::Text(crate::vnode::VText::new(""))),
+                || {
+                    crate::runtime::track_signal(signal_id);
+                },
+            );
+
+            // Verify it's tracked
+            let tracked = crate::runtime::signal_is_tracked(signal_id);
+            assert!(tracked, "Signal should be tracked before drop");
+        }
+        // Signal dropped here — dependencies should be cleaned up
+
+        let tracked = crate::runtime::signal_is_tracked(signal_id);
+        assert!(!tracked, "Signal dependencies should be cleaned up after drop");
+    }
+
+    #[test]
+    fn test_signal_write_bypasses_notify() {
+        let s = Signal::new(0i32);
+        let observed = Rc::new(RefCell::new(0i32));
+
+        let effect_observed = observed.clone();
+        let effect_s = s.clone();
+        let _handle = create_effect(move || {
+            *effect_observed.borrow_mut() = effect_s.get();
+        });
+
+        // Effect should have run once during creation
+        assert_eq!(*observed.borrow(), 0);
+
+        // write() returns RefMut that can modify value without notification
+        {
+            let mut guard = s.write();
+            *guard = 42;
+        }
+
+        // Without explicit notify(), the effect should NOT have re-run
+        // because write() bypasses the subscriber notification path
+        assert_eq!(*observed.borrow(), 0, "write() without notify() should not trigger effect");
+
+        // Now call notify(), which triggers subscribers directly
+        s.notify();
+        assert_eq!(*observed.borrow(), 42, "After notify(), effect should re-run");
+    }
+
+    #[test]
+    fn test_signal_batch_deferred_updates() {
+        let s = Signal::new(0i32);
+        let observed = Rc::new(RefCell::new(0i32));
+
+        let effect_observed = observed.clone();
+        let effect_s = s.clone();
+        let _handle = create_effect(move || {
+            *effect_observed.borrow_mut() = effect_s.get();
+        });
+
+        batch(|| {
+            s.set(1);
+            s.set(2);
+            s.set(3);
+            // Effect should NOT have re-run yet
+            assert_eq!(*observed.borrow(), 0);
+        });
+
+        // After batch, effect should re-run once with the final value
+        assert_eq!(*observed.borrow(), 3);
+    }
+
+    #[test]
+    fn test_signal_clone_shares_state() {
+        let a = Signal::new("hello".to_string());
+        let b = a.clone();
+
+        assert_eq!(a.get(), "hello");
+        assert_eq!(b.get(), "hello");
+
+        a.set("world".to_string());
+        assert_eq!(b.get(), "world");
+        assert_eq!(a.id(), b.id());
+    }
+
+    #[test]
+    fn test_signal_subscribe_direct() {
+        let s = Signal::new(0i32);
+        let called = Rc::new(RefCell::new(0i32));
+
+        let cb_called = called.clone();
+        s.subscribe(move || {
+            *cb_called.borrow_mut() += 1;
+        });
+
+        s.set(1);
+        assert_eq!(*called.borrow(), 1);
+
+        s.set(2);
+        assert_eq!(*called.borrow(), 2);
     }
 }
