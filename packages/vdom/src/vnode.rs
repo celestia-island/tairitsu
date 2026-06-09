@@ -896,6 +896,8 @@ impl From<&str> for Style {
             if !part.is_empty() {
                 if let Some((name, value)) = part.split_once(':') {
                     style = style.add(name.trim(), value.trim());
+                } else {
+                    tracing::warn!("Style::from: skipping malformed entry (missing ':'): {:?}", part);
                 }
             }
         }

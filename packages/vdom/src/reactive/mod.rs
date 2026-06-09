@@ -139,6 +139,32 @@ impl<T: Clone + 'static> Signal<T> {
         self.get()
     }
 
+    /// Mutate the value through a closure and automatically notify subscribers.
+    ///
+    /// This is the safe alternative to [`write`] which returns a raw `RefMut`
+    /// requiring a manual [`notify`] call.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use tairitsu_vdom::Signal;
+    ///
+    /// let count = Signal::new(0);
+    /// count.update(|n| *n += 1);
+    /// assert_eq!(count.get(), 1);
+    /// ```
+    pub fn update<F>(&self, f: F)
+    where
+        F: FnOnce(&mut T),
+    {
+        f(&mut self.inner.borrow_mut().value);
+        self.notify();
+    }
+
+    /// Return a mutable reference to the inner value.
+    ///
+    /// **Note:** mutating through the returned `RefMut` does NOT automatically
+    /// notify subscribers. Call [`notify`] afterwards, or use [`update`] instead.
     pub fn write(&self) -> std::cell::RefMut<'_, T> {
         std::cell::RefMut::map(self.inner.borrow_mut(), |inner| &mut inner.value)
     }
@@ -481,6 +507,20 @@ mod tests {
         a.set("world".to_string());
         assert_eq!(b.get(), "world");
         assert_eq!(a.id(), b.id());
+    }
+
+    #[test]
+    fn test_signal_update_notifies() {
+        let s = Signal::new(0i32);
+        let observed = Rc::new(RefCell::new(0i32));
+        let effect_observed = observed.clone();
+        let effect_s = s.clone();
+        let _handle = create_effect(move || {
+            *effect_observed.borrow_mut() = effect_s.get();
+        });
+
+        s.update(|n| *n = 42);
+        assert_eq!(*observed.borrow(), 42, "update() should trigger effect");
     }
 
     #[test]
