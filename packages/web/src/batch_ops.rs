@@ -202,13 +202,19 @@ impl BatchOps {
         for element in removals.iter() {
             #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
             {
-                // Invalidate cache first
                 crate::handle_cache::HandleCache::with(|cache| {
                     cache.invalidate_style_handle(element.as_raw());
                 });
-
-                // Remove from parent (assuming parent is known or using a default)
-                // In practice, you'd need to track parent relationships
+                if let Some(parent) =
+                    crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::node::get_parent_node(
+                        element.as_raw(),
+                    )
+                {
+                    let _ = crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::node::remove_child(
+                        parent,
+                        element.as_raw(),
+                    );
+                }
             }
             let _ = element;
             count += 1;

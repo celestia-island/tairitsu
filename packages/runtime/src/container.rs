@@ -545,7 +545,12 @@ impl<T: HostStateImpl> Container<T> {
             Ok(_) => self.state = ContainerState::Running,
             Err(e) => {
                 let msg = e.to_string();
-                if msg.contains("trap") || msg.contains("out of memory") || msg.contains("fuel") {
+                let is_wasm_fatal = msg.contains("trap")
+                    || msg.contains("out of memory")
+                    || msg.contains("fuel")
+                    || e.downcast_ref::<wasmtime::Error>().is_some()
+                    || e.downcast_ref::<wasmtime::Trap>().is_some();
+                if is_wasm_fatal {
                     self.state = ContainerState::Error(msg);
                 }
             }
@@ -678,7 +683,12 @@ impl<T: HostStateImpl> Container<T> {
             Ok(_) => self.state = ContainerState::Running,
             Err(e) => {
                 let msg = e.to_string();
-                if msg.contains("trap") || msg.contains("out of memory") || msg.contains("fuel") {
+                let is_wasm_fatal = msg.contains("trap")
+                    || msg.contains("out of memory")
+                    || msg.contains("fuel")
+                    || e.downcast_ref::<wasmtime::Error>().is_some()
+                    || e.downcast_ref::<wasmtime::Trap>().is_some();
+                if is_wasm_fatal {
                     self.state = ContainerState::Error(msg);
                 }
             }

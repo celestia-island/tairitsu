@@ -282,14 +282,21 @@ pub mod wasm_impl {
     }
 
     pub fn with_render_component<T>(id: tairitsu_vdom::ComponentId, f: impl FnOnce() -> T) -> T {
+        struct Guard;
+        impl Drop for Guard {
+            fn drop(&mut self) {
+                CURRENT_RENDER_COMPONENT.with(|c| {
+                    *c.borrow_mut() = None;
+                });
+            }
+        }
+
         CURRENT_RENDER_COMPONENT.with(|c| {
             *c.borrow_mut() = Some(id);
         });
-        let result = f();
-        CURRENT_RENDER_COMPONENT.with(|c| {
-            *c.borrow_mut() = None;
-        });
-        result
+
+        let _guard = Guard;
+        f()
     }
 
     fn create_tracked_effect<F>(f: F) -> tairitsu_vdom::EffectHandle
@@ -626,9 +633,23 @@ pub mod wasm_impl {
         EVENT_CALLBACKS.with(|m| {
             let mut handler_opt = m.borrow_mut().remove(&listener_id);
             if let Some(handler) = &mut handler_opt {
-                handler(event);
+                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    handler(event);
+                }));
+                if let Err(e) = result {
+                    let msg = e
+                        .downcast_ref::<String>()
+                        .map(|s| s.as_str())
+                        .or_else(|| e.downcast_ref::<&str>().copied())
+                        .unwrap_or("unknown panic");
+                    tracing::error!(
+                        "Event handler for '{}' (listener {}) panicked: {}",
+                        _event_type,
+                        listener_id,
+                        msg
+                    );
+                }
             }
-            // Re-insert the handler so it can be called again
             if let Some(handler) = handler_opt {
                 m.borrow_mut().insert(listener_id, handler);
             }
