@@ -165,12 +165,22 @@ function getOrCreateRegistry<T>(typeName: string): TypeRegistry<T> {
  */
 function isInstanceOfType(obj: unknown, typeName: string): boolean {
   if (obj === null || obj === undefined) return false;
-  
+
   const constructor = (obj as object).constructor;
   if (!constructor) return false;
-  
+
   const objType = constructor.name;
-  return objType === typeName;
+  if (objType === typeName) return true;
+
+  if (!constructor.__tairitsu_typeName) {
+    Object.defineProperty(constructor, '__tairitsu_typeName', {
+      value: objType,
+      writable: false,
+      enumerable: false,
+      configurable: false,
+    });
+  }
+  return constructor.__tairitsu_typeName === typeName;
 }
 
 /**

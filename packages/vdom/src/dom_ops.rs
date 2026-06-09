@@ -132,6 +132,18 @@ static DOM_FUNCS: Mutex<Option<DomFuncs>> = Mutex::new(None);
 /// Function pointers for extended DOM operations.
 ///
 /// Filled in by the platform layer during bootstrap.
+///
+/// # Safety
+///
+/// All fields are `unsafe fn` pointers because they dereference raw DOM
+/// element handles (`u64`) obtained from the browser glue layer. The caller
+/// must ensure:
+///
+/// - The handle is valid (was obtained from a live element and not freed).
+/// - `register_dom_funcs` or `register_wit_funcs` was called before any
+///   function pointer is invoked.
+/// - The function pointers are not called concurrently with registration
+///   (guaranteed by the `Mutex` guarding `DOM_FUNCS`/`WIT_FUNCS`).
 pub struct DomFuncs {
     pub get_scroll_top: unsafe fn(u64) -> f64,
     pub set_scroll_top: unsafe fn(u64, f64),

@@ -302,20 +302,23 @@ pub fn daemonize_self() -> std::io::Result<()> {
             return Err(std::io::Error::last_os_error());
         }
         if libc::dup2(null_fd, libc::STDIN_FILENO) == -1 {
+            let err = std::io::Error::last_os_error();
             libc::close(null_fd);
-            return Err(std::io::Error::last_os_error());
+            return Err(err);
         }
 
         // Redirect stdout
         if libc::dup2(stdout.as_raw_fd(), libc::STDOUT_FILENO) == -1 {
+            let err = std::io::Error::last_os_error();
             libc::close(null_fd);
-            return Err(std::io::Error::last_os_error());
+            return Err(err);
         }
 
         // Redirect stderr
         if libc::dup2(stderr.as_raw_fd(), libc::STDERR_FILENO) == -1 {
+            let err = std::io::Error::last_os_error();
             libc::close(null_fd);
-            return Err(std::io::Error::last_os_error());
+            return Err(err);
         }
 
         libc::close(null_fd);

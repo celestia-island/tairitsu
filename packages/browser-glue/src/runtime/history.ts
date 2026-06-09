@@ -13,7 +13,7 @@ export const history_exports = {
     }
   },
   setScrollRestoration(value: bigint) {
-    let enumValue;
+    let enumValue: ScrollRestoration;
     if (value === 0n) { enumValue = 'auto'; }
     else if (value === 1n) { enumValue = 'manual'; }
     else { enumValue = 'auto'; }

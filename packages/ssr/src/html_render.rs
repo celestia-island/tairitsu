@@ -57,7 +57,7 @@ impl SsrDom {
 
         // Opening html tag with language attribute
         buf.push_str("<html lang=\"");
-        buf.push_str(&config.lang);
+        html_escape_into(&mut buf, &config.lang);
         buf.push_str("\">\n");
 
         // Head section
@@ -65,7 +65,7 @@ impl SsrDom {
 
         // Meta charset
         buf.push_str("  <meta charset=\"");
-        buf.push_str(&config.charset);
+        html_escape_into(&mut buf, &config.charset);
         buf.push_str("\">\n");
 
         // Viewport meta tag

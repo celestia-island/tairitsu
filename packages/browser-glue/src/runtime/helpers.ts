@@ -35,8 +35,12 @@ globalThis.__lookupElement = function (handle: bigint) {
 };
 
 globalThis.__lookupNode = function (handle: bigint) {
-  const node = globalThis.__nodeHandles.get(handle) || globalThis.__elementHandles.get(handle) || globalThis.__textHandles.get(handle);
-  if (!node) throw new Error("Node handle " + handle + " not found");
+  const node = globalThis.__nodeHandles.get(handle) || globalThis.__textHandles.get(handle);
+  if (!node) {
+    const el = globalThis.__elementHandles.get(handle);
+    if (el) return el;
+    throw new Error("Node handle " + handle + " not found");
+  }
   return node;
 };
 
@@ -69,7 +73,11 @@ export function lookupElement(handle: bigint) {
 }
 
 export function lookupNode(handle: bigint) {
-  const node = globalThis.__nodeHandles.get(handle) || globalThis.__elementHandles.get(handle) || globalThis.__textHandles.get(handle);
-  if (!node) throw new Error("Node handle " + handle + " not found");
+  const node = globalThis.__nodeHandles.get(handle) || globalThis.__textHandles.get(handle);
+  if (!node) {
+    const el = globalThis.__elementHandles.get(handle);
+    if (el) return el;
+    throw new Error("Node handle " + handle + " not found");
+  }
   return node;
 }

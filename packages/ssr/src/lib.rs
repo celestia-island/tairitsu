@@ -108,11 +108,20 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
 pub fn render_full_page(wasm_bytes: &[u8], config: SsrConfig, template: &str) -> Result<String> {
     let body_html = render_to_html(wasm_bytes, config)?;
 
-    // Inject the rendered HTML into the template
-    let full_page = template.replace(
-        "<div id=\"app\"></div>",
-        &format!("<div id=\"app\">{}</div>", body_html),
-    );
+    // Inject the rendered HTML into the template.
+    // Use a single marker with a data attribute to avoid false-positive matches.
+    let marker = r#"<div id="app" data-ssr-marker></div>"#;
+    let replacement = &format!(r#"<div id="app" data-ssr-marker>{}</div>"#, body_html);
+
+    let full_page = if template.contains(marker) {
+        template.replacen(marker, replacement, 1)
+    } else {
+        // Fallback: look for the conventional marker without data attribute
+        let fallback_marker = r#"<div id="app"></div>"#;
+        let fallback_replacement =
+            &format!(r#"<div id="app">{}</div>"#, body_html);
+        template.replacen(fallback_marker, fallback_replacement, 1)
+    };
 
     Ok(full_page)
 }

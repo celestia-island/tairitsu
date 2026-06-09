@@ -435,13 +435,14 @@ export const platformHelpers_exports = {
     color: string,
     background: string,
   ) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas || !(canvas as HTMLCanvasElement).getContext) return false;
-    const ctx = (canvas as HTMLCanvasElement).getContext("2d");
+    const canvasEl = globalThis.__elementHandles.get(BigInt(canvasId)) ||
+      document.getElementById(canvasId);
+    if (!canvasEl || !(canvasEl as HTMLCanvasElement).getContext) return false;
+    const ctx = (canvasEl as HTMLCanvasElement).getContext("2d");
     if (!ctx) return false;
-    const cellSize = canvas.width / Number(modules);
+    const cellSize = canvasEl.width / Number(modules);
     ctx.fillStyle = background || "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
     ctx.fillStyle = color || "#000000";
     for (let r = 0; r < matrix.length; r++) {
       for (let c = 0; c < matrix[r].length; c++) {

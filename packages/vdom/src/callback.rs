@@ -95,12 +95,10 @@ impl<T, R> Deref for Callback<T, R> {
 
 impl<T, R> DerefMut for Callback<T, R> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        // We cannot provide a mutable reference to the inner dyn Fn
-        // since it's behind an Rc. This implementation exists for
-        // completeness but panics at runtime if called.
-        // In practice, this is rarely needed since callbacks are typically
-        // invoked via call() or deref().
-        panic!("Cannot mutate a Callback's inner function");
+        unreachable!(
+            "Callback does not support mutable access. \
+             Use Callback::call() or deref() instead."
+        )
     }
 }
 
@@ -293,7 +291,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Cannot mutate a Callback")]
+    #[should_panic]
     fn test_callback_deref_mut_panics() {
         let mut callback = Callback::new(|x: i32| x);
         let _ = callback.deref_mut();

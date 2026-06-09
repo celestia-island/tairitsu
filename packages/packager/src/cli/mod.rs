@@ -15,13 +15,23 @@ fn find_workspace_root(start: &Path) -> PathBuf {
         start.to_path_buf()
     };
 
+    let mut depth = 0u32;
     loop {
         if current.join("packages").is_dir() && current.join("Cargo.toml").is_file() {
             return current;
         }
         match current.parent() {
-            Some(parent) => current = parent.to_path_buf(),
+            Some(parent) => {
+                if parent == current {
+                    return start.to_path_buf();
+                }
+                current = parent.to_path_buf();
+            }
             None => return start.to_path_buf(),
+        }
+        depth += 1;
+        if depth > 64 {
+            return start.to_path_buf();
         }
     }
 }

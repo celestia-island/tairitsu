@@ -1,21 +1,33 @@
 
+function reverseLookupElement(target: EventTarget | null): bigint | undefined {
+  if (!target) return undefined;
+  if (!globalThis.__elementReverseMap) {
+    globalThis.__elementReverseMap = new Map();
+    const orig = globalThis.__storeElement;
+    if (orig) {
+      globalThis.__storeElement = function (el: any) {
+        const handle = orig(el);
+        if (handle !== undefined) {
+          globalThis.__elementReverseMap.set(el, handle);
+        }
+        return handle;
+      };
+    }
+  }
+  return globalThis.__elementReverseMap.get(target);
+}
+
 export const event_exports = {
   getCurrentTarget(eventHandle: bigint): bigint | undefined {
     const ev = globalThis.__eventHandles?.get(eventHandle);
     if (!ev || !ev.currentTarget) return undefined;
-    for (const [h, el] of globalThis.__elementHandles) {
-      if (el === ev.currentTarget) return h;
-    }
-    return undefined;
+    return reverseLookupElement(ev.currentTarget);
   },
 
   getTarget(eventHandle: bigint): bigint | undefined {
     const ev = globalThis.__eventHandles?.get(eventHandle);
     if (!ev || !ev.target) return undefined;
-    for (const [h, el] of globalThis.__elementHandles) {
-      if (el === ev.target) return h;
-    }
-    return undefined;
+    return reverseLookupElement(ev.target);
   },
 
   getEventType(eventHandle: bigint): string {
@@ -26,10 +38,7 @@ export const event_exports = {
   getSrcElement(eventHandle: bigint): bigint | undefined {
     const ev = globalThis.__eventHandles?.get(eventHandle);
     if (!ev || !(ev as any).srcElement) return undefined;
-    for (const [h, el] of globalThis.__elementHandles) {
-      if (el === (ev as any).srcElement) return h;
-    }
-    return undefined;
+    return reverseLookupElement((ev as any).srcElement);
   },
 
   getEventPhase(eventHandle: bigint): number {
@@ -86,12 +95,7 @@ export const event_exports = {
     const ev = globalThis.__eventHandles?.get(eventHandle);
     if (!ev) return [];
     return ev.composedPath()
-      .map((t: EventTarget) => {
-        for (const [h, el] of globalThis.__elementHandles) {
-          if (el === t) return h;
-        }
-        return undefined;
-      })
+      .map((t: EventTarget) => reverseLookupElement(t))
       .filter((h: bigint | undefined): h is bigint => h !== undefined);
   },
 };

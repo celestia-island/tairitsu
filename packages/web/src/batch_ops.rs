@@ -178,7 +178,7 @@ impl BatchOps {
 
                 #[cfg(not(all(feature = "wit-bindings", target_family = "wasm")))]
                 {
-                    0
+                    None
                 }
             });
 
@@ -186,7 +186,7 @@ impl BatchOps {
                 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
                 {
                     crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::css_style_declaration::set_property(
-                        _style_handle, name, value, None,
+                        _style_handle.unwrap(), name, value, None,
                     );
                 }
                 let _ = (name, value);
