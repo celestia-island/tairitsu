@@ -220,7 +220,7 @@ impl Clone for VElement {
             class: self.class.clone(),
             event_handlers: self.event_handlers.clone(),
             inner_html: self.inner_html.clone(),
-            element_ref: None,
+            element_ref: self.element_ref.clone(),
             dynamic_attributes: self.dynamic_attributes.clone(),
             dynamic_styles: self.dynamic_styles.clone(),
             dynamic_classes: self.dynamic_classes.clone(),
@@ -1316,5 +1316,35 @@ impl<T: Clone + std::string::ToString + 'static> IntoStyleValue for crate::react
             "cssText".to_string(),
             Rc::new(RefCell::new(move || signal.get().to_string())),
         ));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_velement_clone_preserves_element_ref() {
+        let mut el = VElement::new("div");
+        el.element_ref = Some(Rc::new(RefCell::new(Some(Box::new(42u64)))));
+        let cloned = el.clone();
+        assert!(cloned.element_ref.is_some(), "Clone should preserve element_ref");
+    }
+
+    #[test]
+    fn test_velement_clone_is_independent_ref() {
+        let mut el = VElement::new("div");
+        el.element_ref = Some(Rc::new(RefCell::new(Some(Box::new(42u64)))));
+        let cloned = el.clone();
+        // Both original and clone should have a valid element_ref
+        assert!(el.element_ref.is_some());
+        assert!(cloned.element_ref.is_some());
+    }
+
+    #[test]
+    fn test_velement_without_ref_clone() {
+        let el = VElement::new("span");
+        let cloned = el.clone();
+        assert!(cloned.element_ref.is_none());
     }
 }
