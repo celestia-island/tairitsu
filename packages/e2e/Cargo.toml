@@ -10,22 +10,22 @@ publish = false
 
 [dependencies]
 thirtyfour = { version = "^0.34", features = ["reqwest"] }
-chromiumoxide = { version = "^0.8", features = ["tokio-runtime"] }
+chromiumoxide = { workspace = true }
 scraper = "^0.20"
 tokio = { workspace = true }
 async-trait = "^0.1"
 log = "^0.4"
-tracing = "^0.1"
+tracing = { workspace = true }
 tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
-anyhow = "^1"
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
 chrono = "^0.4"
 futures = "^0.3"
 tempfile = "^3"
 tairitsu-ssr = { workspace = true }
 toml = "^0.8"
-clap = { version = "^4", features = ["derive"] }
+clap = { workspace = true }
 image = "^0.25"
 
 [[bin]]

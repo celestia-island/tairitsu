@@ -15,8 +15,8 @@ default = []
 
 [dependencies]
 tairitsu-vdom = { workspace = true }
-anyhow = "^1"
-tracing = "^0.1"
+anyhow = { workspace = true }
+tracing = { workspace = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 wit-bindgen = { version = "^0.50", features = ["macros"] }

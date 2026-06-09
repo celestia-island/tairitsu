@@ -12,14 +12,14 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 tairitsu-vdom = { workspace = true }
-thiserror = "^2"
-serde = { version = "1.0", features = ["derive"], optional = true }
+thiserror = { workspace = true }
+serde = { workspace = true, optional = true }
 pest = "2.7"
 pest_derive = "2.7"
 
 [build-dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 wit-bindgen = { version = "^0.50", features = ["macros"] }

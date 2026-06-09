@@ -16,24 +16,16 @@ tairitsu-vdom = { workspace = true, optional = true }
 tairitsu-browser-wit-resolver = { workspace = true }
 tairitsu-browser-worlds = { workspace = true }
 tairitsu-ssr = { workspace = true, optional = true }
-anyhow = "^1"
-thiserror = "^2"
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 toml = "^0.8"
-tokio = { version = "^1", default-features = false, features = [
-  "sync",
-  "macros",
-  "io-util",
-  "rt",
-  "rt-multi-thread",
-  "time",
-  "signal",
-], optional = true }
+tokio = { workspace = true, features = ["rt-multi-thread"], optional = true }
 futures = "^0.3"
-tracing = "^0.1"
+tracing = { workspace = true }
 tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
-clap = { version = "^4", features = ["derive"], optional = true }
+clap = { workspace = true, optional = true }
 indicatif = "^0.17"
 webbrowser = "^1"
 walkdir = "^2"
@@ -43,7 +35,7 @@ tower-http = { version = "^0.6", features = ["fs", "cors", "compression-gzip"], 
 tokio-stream = { version = "^0.1", features = ["sync"], optional = true }
 wry = { version = "^0.48", optional = true }
 tao = { version = "^0.30", optional = true }
-chromiumoxide = { version = "^0.9", features = [
+chromiumoxide = { workspace = true, features = [
   "fetcher",
   "native-tls",
   "zip0",
@@ -59,9 +51,8 @@ chrono = { version = "0.4", default-features = false, features = [
   "clock",
   "serde",
 ] }
-reqwest = { version = "^0.12", features = [
+reqwest = { workspace = true, features = [
   "blocking",
-  "json",
   "stream",
 ], optional = true }
 zip = { version = "^2", default-features = false, features = [

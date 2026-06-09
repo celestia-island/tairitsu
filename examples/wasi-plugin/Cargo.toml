@@ -5,7 +5,7 @@ edition.workspace = true
 publish = false
 
 [dependencies]
-anyhow = "^1"
+anyhow = { workspace = true }
 bytes = "^1"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
