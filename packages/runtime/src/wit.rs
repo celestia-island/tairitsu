@@ -169,7 +169,7 @@ impl WitLoader {
                             let params: Vec<(String, String)> = func
                                 .params
                                 .iter()
-                                .map(|(name, ty)| (name.clone(), self.format_type(ty)))
+                                .map(|p| (p.name.clone(), self.format_type(&p.ty)))
                                 .collect();
 
                             let name_str = match export_name {
@@ -263,7 +263,7 @@ impl WitLoader {
                             let params: Vec<(String, String)> = func
                                 .params
                                 .iter()
-                                .map(|(name, ty)| (name.clone(), self.format_type(ty)))
+                                .map(|p| (p.name.clone(), self.format_type(&p.ty)))
                                 .collect();
 
                             let name_str = match import_name {

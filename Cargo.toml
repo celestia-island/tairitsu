@@ -77,7 +77,7 @@ tokio = { version = "^1", default-features = false, features = [
 ] }
 wasmtime = { version = "^43", features = ["component-model"] }
 wasmtime-wasi = "^43"
-reqwest = { version = "^0.12", features = ["json"] }
+reqwest = { version = "^0.13", features = ["json", "blocking"] }
 chromiumoxide = { version = "^0.9" }
 tairitsu = { version = "0.5.13", path = "packages/runtime" }
 tairitsu-macros = { version = "0.5.13", path = "packages/macros" }

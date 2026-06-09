@@ -9,9 +9,9 @@ repository.workspace = true
 publish = false
 
 [dependencies]
-thirtyfour = { version = "^0.34", features = ["reqwest"] }
+thirtyfour = { version = "^0.37", features = ["reqwest"] }
 chromiumoxide = { workspace = true }
-scraper = "^0.20"
+scraper = "^0.22"
 tokio = { workspace = true }
 async-trait = "^0.1"
 log = "^0.4"
