@@ -7,7 +7,7 @@
 //! - Re-rendering on URL change (polled every 200ms)
 //! - Programmatic navigation via navigate()
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 use tairitsu_vdom::TimerOps;
 

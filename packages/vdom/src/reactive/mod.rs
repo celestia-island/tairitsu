@@ -13,7 +13,7 @@ pub struct DependencyEntry {
 
 thread_local! {
     static DEPENDENCIES: RefCell<Vec<DependencyEntry>> = const { RefCell::new(Vec::new()) };
-    static BATCHING: RefCell<bool> = const { RefCell::new(false) };
+    static BATCH_DEPTH: RefCell<i32> = const { RefCell::new(0) };
     static PENDING_UPDATES: RefCell<Vec<Box<dyn FnOnce()>>> = RefCell::new(Vec::new());
 }
 
@@ -101,8 +101,14 @@ impl<T: Clone + 'static> Signal<T> {
 
         crate::runtime::notify_signal(signal_ptr);
 
-        if BATCHING.with(|b| *b.borrow()) {
-            trace!("Signal update batched");
+        let batched = BATCH_DEPTH.with(|d| *d.borrow() > 0);
+        if batched {
+            trace!("Signal update batched (depth={})", BATCH_DEPTH.with(|d| *d.borrow()));
+            PENDING_UPDATES.with(|updates| {
+                for subscriber in subscribers {
+                    updates.borrow_mut().push(Box::new(move || subscriber()));
+                }
+            });
         } else {
             for subscriber in subscribers {
                 subscriber();
@@ -124,8 +130,17 @@ impl<T: Clone + 'static> Signal<T> {
 
     pub fn notify(&self) {
         let subscribers = self.inner.borrow().subscribers.clone();
-        for subscriber in subscribers {
-            subscriber();
+        let batched = BATCH_DEPTH.with(|d| *d.borrow() > 0);
+        if batched {
+            PENDING_UPDATES.with(|updates| {
+                for subscriber in subscribers {
+                    updates.borrow_mut().push(Box::new(move || subscriber()));
+                }
+            });
+        } else {
+            for subscriber in subscribers {
+                subscriber();
+            }
         }
     }
 }
@@ -234,11 +249,6 @@ fn execute_effect(
 }
 
 pub fn drain_dependencies() -> Vec<DependencyEntry> {
-    DEPENDENCIES.with(|deps| {
-        deps.borrow_mut().clear();
-    });
-
-    // Run nothing — caller should run their closure first, then call this
     DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect())
 }
 
@@ -272,22 +282,25 @@ pub fn batch<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
-    BATCHING.with(|b| {
-        *b.borrow_mut() = true;
+    BATCH_DEPTH.with(|d| {
+        *d.borrow_mut() += 1;
     });
 
     let result = f();
 
-    BATCHING.with(|b| {
-        *b.borrow_mut() = false;
+    let should_flush = BATCH_DEPTH.with(|d| {
+        *d.borrow_mut() -= 1;
+        *d.borrow() == 0
     });
 
-    PENDING_UPDATES.with(|updates| {
-        let pending: Vec<_> = updates.borrow_mut().drain(..).collect();
-        for update in pending {
-            update();
-        }
-    });
+    if should_flush {
+        PENDING_UPDATES.with(|updates| {
+            let pending: Vec<_> = updates.borrow_mut().drain(..).collect();
+            for update in pending {
+                update();
+            }
+        });
+    }
 
     result
 }

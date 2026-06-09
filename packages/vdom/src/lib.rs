@@ -55,8 +55,8 @@ pub use platform::{
 };
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
 pub use reactive::{
-    batch, clear_dependencies, create_effect, take_dependencies, DependencyEntry, EffectHandle,
-    Signal,
+    batch, clear_dependencies, create_effect, drain_dependencies, take_dependencies,
+    DependencyEntry, EffectHandle, Signal,
 };
 pub use runtime::{
     cleanup_component, flush_render, mark_dirty, notify_signal, on_element_removed,
