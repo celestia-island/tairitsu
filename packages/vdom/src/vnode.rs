@@ -169,8 +169,12 @@ impl PartialEq for VElement {
             && self.style == other.style
             && self.class == other.class
             && self.inner_html == other.inner_html
-            && self.dynamic_attributes.len() == other.dynamic_attributes.len()
-            && self.dynamic_styles.len() == other.dynamic_styles.len()
+            && self.event_handlers.keys().collect::<Vec<_>>()
+                == other.event_handlers.keys().collect::<Vec<_>>()
+            && self.dynamic_attributes.iter().map(|(k, _)| k).collect::<Vec<_>>()
+                == other.dynamic_attributes.iter().map(|(k, _)| k).collect::<Vec<_>>()
+            && self.dynamic_styles.iter().map(|(k, _)| k).collect::<Vec<_>>()
+                == other.dynamic_styles.iter().map(|(k, _)| k).collect::<Vec<_>>()
             && self.dynamic_classes.len() == other.dynamic_classes.len()
     }
 }
@@ -1346,5 +1350,41 @@ mod tests {
         let el = VElement::new("span");
         let cloned = el.clone();
         assert!(cloned.element_ref.is_none());
+    }
+
+    #[test]
+    fn test_velement_eq_different_event_handlers() {
+        let a = VElement::new("button").on_event("click", |_| {});
+        let b = VElement::new("button");
+        assert_ne!(a, b, "element with click handler should not equal one without");
+    }
+
+    #[test]
+    fn test_velement_eq_same_event_handlers() {
+        let a = VElement::new("button")
+            .on_event("click", |_| {})
+            .on_event("mouseover", |_| {});
+        let b = VElement::new("button")
+            .on_event("click", |_| {})
+            .on_event("mouseover", |_| {});
+        assert_eq!(a, b, "elements with same event handler keys should be equal");
+    }
+
+    #[test]
+    fn test_velement_eq_different_handler_keys() {
+        let a = VElement::new("button")
+            .on_event("click", |_| {})
+            .on_event("mouseover", |_| {});
+        let b = VElement::new("button")
+            .on_event("click", |_| {})
+            .on_event("mouseout", |_| {});
+        assert_ne!(a, b, "elements with different event handler keys should not be equal");
+    }
+
+    #[test]
+    fn test_velement_eq_dynamic_attributes() {
+        let a = VElement::new("div").dynamic_attr("data-x", || "1".to_string());
+        let b = VElement::new("div");
+        assert_ne!(a, b, "element with dynamic attr should not equal one without");
     }
 }
