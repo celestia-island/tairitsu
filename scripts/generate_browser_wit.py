@@ -1513,6 +1513,12 @@ world browser-full {{
                 if iface_name not in seen_composed:
                     seen_composed.add(iface_name)
                     domain_ifaces.append(iface_block)
+                else:
+                    log_warn(
+                        f"Interface '{iface_name}' from {domain_file.name} "
+                        f"collides with an already-included interface of the same name. "
+                        f"The first occurrence (alphabetically) is kept."
+                    )
 
         if not domain_ifaces:
             continue
