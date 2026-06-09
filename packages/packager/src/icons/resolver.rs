@@ -1,11 +1,15 @@
 use serde::Deserialize;
 use std::{
     collections::HashMap,
-    path::{Path, PathBuf},
+    path::Path,
 };
+#[cfg(feature = "icon-fetch")]
+use std::path::PathBuf;
 
+use super::cache::{IconCache, IconData};
+#[cfg(feature = "icon-fetch")]
+use super::cache::CacheManifest;
 use super::{
-    cache::{CacheManifest, IconCache, IconData},
     sources::{self, IconOrigin, IconSourceDef},
 };
 
@@ -386,7 +390,7 @@ fn fetch_from_npm(
             .and_then(|v| v.as_str())
             .map(|s| s.to_string())
             .unwrap_or_else(|| {
-                let name = pkg.split('/').last().unwrap_or(pkg);
+                let name = pkg.split('/').next_back().unwrap_or(pkg);
                 format!(
                     "https://registry.npmjs.org/{}/-/{}-{}.tgz",
                     pkg, name, version
@@ -477,6 +481,7 @@ fn fetch_from_github_mirror(
     scan_and_build_cache(source, &base_dir, version, cache)
 }
 
+#[cfg(feature = "icon-fetch")]
 fn scan_and_build_cache(
     source: &IconSourceDef,
     base_dir: &Path,
@@ -526,6 +531,7 @@ fn scan_and_build_cache(
     Ok(icons)
 }
 
+#[cfg(feature = "icon-fetch")]
 fn scan_svg_dir(
     dir: &Path,
     source: &IconSourceDef,
@@ -573,6 +579,7 @@ fn scan_svg_dir(
     }
 }
 
+#[cfg(feature = "icon-fetch")]
 fn extract_path_d(svg: &str) -> Option<String> {
     let mut paths = Vec::new();
     let mut search_from = 0;
@@ -637,6 +644,7 @@ fn extract_path_d(svg: &str) -> Option<String> {
     }
 }
 
+#[cfg(feature = "icon-fetch")]
 fn load_meta_tags(meta_path: &Path, icons: &mut HashMap<String, IconData>, _set_name: &str) {
     let content = match std::fs::read_to_string(meta_path) {
         Ok(c) => c,
@@ -698,124 +706,94 @@ fn load_meta_tags(meta_path: &Path, icons: &mut HashMap<String, IconData>, _set_
 
 #[cfg(feature = "icon-fetch")]
 fn download_file(url: &str, dest: &Path) -> crate::Result<()> {
-    #[cfg(feature = "icon-fetch")]
-    {
-        let client = reqwest::blocking::Client::builder()
-            .user_agent(format!("tairitsu-packager/{}", crate::VERSION))
-            .timeout(std::time::Duration::from_secs(300))
-            .build()
-            .map_err(|e| crate::TairitsuPackagerError::HttpError(e.to_string()))?;
+    let client = reqwest::blocking::Client::builder()
+        .user_agent(format!("tairitsu-packager/{}", crate::VERSION))
+        .timeout(std::time::Duration::from_secs(300))
+        .build()
+        .map_err(|e| crate::TairitsuPackagerError::HttpError(e.to_string()))?;
 
-        let mut resp = client.get(url).send().map_err(|e| {
-            crate::TairitsuPackagerError::HttpError(format!("Failed to download {}: {}", url, e))
-        })?;
+    let mut resp = client.get(url).send().map_err(|e| {
+        crate::TairitsuPackagerError::HttpError(format!("Failed to download {}: {}", url, e))
+    })?;
 
-        if !resp.status().is_success() {
-            return Err(crate::TairitsuPackagerError::HttpError(format!(
-                "HTTP {} for {}",
-                resp.status(),
-                url
-            )));
-        }
-
-        if let Some(parent) = dest.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        let mut f = std::fs::File::create(dest)?;
-        resp.copy_to(&mut f)
-            .map_err(|e| crate::TairitsuPackagerError::HttpError(e.to_string()))?;
-        Ok(())
+    if !resp.status().is_success() {
+        return Err(crate::TairitsuPackagerError::HttpError(format!(
+            "HTTP {} for {}",
+            resp.status(),
+            url
+        )));
     }
 
-    #[cfg(not(feature = "icon-fetch"))]
-    {
-        let _ = (url, dest);
-        Err(crate::TairitsuPackagerError::IconFetchError(
-            "icon-fetch feature not enabled".to_string(),
-        ))
+    if let Some(parent) = dest.parent() {
+        std::fs::create_dir_all(parent)?;
     }
+
+    let mut f = std::fs::File::create(dest)?;
+    resp.copy_to(&mut f)
+        .map_err(|e| crate::TairitsuPackagerError::HttpError(e.to_string()))?;
+    Ok(())
 }
 
+#[cfg(feature = "icon-fetch")]
 fn extract_tgz(tgz_path: &Path, dest: &Path) -> crate::Result<()> {
-    #[cfg(feature = "icon-fetch")]
-    {
-        use std::process::Command;
+    use std::process::Command;
 
-        let output = Command::new("tar")
-            .args([
-                "xzf",
-                &tgz_path.to_string_lossy(),
-                "-C",
-                &dest.to_string_lossy(),
-            ])
-            .output()
-            .map_err(|e| crate::TairitsuPackagerError::IconFetchError(e.to_string()))?;
+    let output = Command::new("tar")
+        .args([
+            "xzf",
+            &tgz_path.to_string_lossy(),
+            "-C",
+            &dest.to_string_lossy(),
+        ])
+        .output()
+        .map_err(|e| crate::TairitsuPackagerError::IconFetchError(e.to_string()))?;
 
-        if !output.status.success() {
-            return Err(crate::TairitsuPackagerError::IconFetchError(
-                String::from_utf8_lossy(&output.stderr).to_string(),
-            ));
-        }
-
-        Ok(())
+    if !output.status.success() {
+        return Err(crate::TairitsuPackagerError::IconFetchError(
+            String::from_utf8_lossy(&output.stderr).to_string(),
+        ));
     }
 
-    #[cfg(not(feature = "icon-fetch"))]
-    {
-        let _ = (tgz_path, dest);
-        Err(crate::TairitsuPackagerError::IconFetchError(
-            "icon-fetch feature not enabled".to_string(),
-        ))
-    }
+    Ok(())
 }
 
+#[cfg(feature = "icon-fetch")]
 fn extract_zip(zip_path: &Path, dest: &Path) -> crate::Result<()> {
-    #[cfg(feature = "icon-fetch")]
-    {
-        let file = std::fs::File::open(zip_path)?;
-        let mut archive = zip::ZipArchive::new(file).map_err(|e| {
-            crate::TairitsuPackagerError::IconFetchError(format!("Failed to open zip: {}", e))
+    let file = std::fs::File::open(zip_path)?;
+    let mut archive = zip::ZipArchive::new(file).map_err(|e| {
+        crate::TairitsuPackagerError::IconFetchError(format!("Failed to open zip: {}", e))
+    })?;
+
+    for i in 0..archive.len() {
+        let mut entry = archive.by_index(i).map_err(|e| {
+            crate::TairitsuPackagerError::IconFetchError(format!(
+                "Failed to read zip entry {}: {}",
+                i, e
+            ))
         })?;
 
-        for i in 0..archive.len() {
-            let mut entry = archive.by_index(i).map_err(|e| {
-                crate::TairitsuPackagerError::IconFetchError(format!(
-                    "Failed to read zip entry {}: {}",
-                    i, e
-                ))
-            })?;
+        let outpath = match entry.enclosed_name() {
+            Some(path) => dest.join(path),
+            None => continue,
+        };
 
-            let outpath = match entry.enclosed_name() {
-                Some(path) => dest.join(path),
-                None => continue,
-            };
-
-            if entry.is_dir() {
-                std::fs::create_dir_all(&outpath)?;
-            } else {
-                if let Some(p) = outpath.parent() {
-                    if !p.exists() {
-                        std::fs::create_dir_all(p)?;
-                    }
+        if entry.is_dir() {
+            std::fs::create_dir_all(&outpath)?;
+        } else {
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    std::fs::create_dir_all(p)?;
                 }
-                let mut outfile = std::fs::File::create(&outpath)?;
-                std::io::copy(&mut entry, &mut outfile)?;
             }
+            let mut outfile = std::fs::File::create(&outpath)?;
+            std::io::copy(&mut entry, &mut outfile)?;
         }
-
-        Ok(())
     }
 
-    #[cfg(not(feature = "icon-fetch"))]
-    {
-        let _ = (zip_path, dest);
-        Err(crate::TairitsuPackagerError::IconFetchError(
-            "icon-fetch feature not enabled".to_string(),
-        ))
-    }
+    Ok(())
 }
 
+#[cfg(feature = "icon-fetch")]
 fn find_extracted_dir(base: &Path) -> PathBuf {
     if let Ok(entries) = std::fs::read_dir(base) {
         let mut dirs: Vec<_> = entries.flatten().filter(|e| e.path().is_dir()).collect();

@@ -196,7 +196,8 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
 
     // Create the function
     let original_fn = if uses_existing_props {
-        let props_type = existing_props_name.expect("existing_props_name must be set when uses_existing_props is true");
+        let props_type = existing_props_name
+            .expect("existing_props_name must be set when uses_existing_props is true");
         quote! {
             #[allow(non_snake_case)]
             #[allow(unused_braces)]
@@ -307,7 +308,11 @@ fn to_pascal_case(s: &str) -> String {
         if ch == '_' || ch == '-' {
             capitalize_next = true;
         } else if capitalize_next {
-            result.push(ch.to_uppercase().next().expect("to_uppercase always yields at least one char"));
+            result.push(
+                ch.to_uppercase()
+                    .next()
+                    .expect("to_uppercase always yields at least one char"),
+            );
             capitalize_next = false;
         } else {
             result.push(ch);
@@ -338,7 +343,10 @@ mod tests {
     fn test_has_props_attribute_no_false_positive() {
         // #[props(default_value = "...")] should NOT match inner_name = "default"
         let attrs: Vec<Attribute> = vec![parse_quote!(#[props(default_value = "foo")])];
-        assert!(!has_props_attribute(&attrs, "default"), "default_value should not match 'default'");
+        assert!(
+            !has_props_attribute(&attrs, "default"),
+            "default_value should not match 'default'"
+        );
     }
 
     #[test]

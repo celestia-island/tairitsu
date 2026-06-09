@@ -390,14 +390,8 @@ mod tests {
         assert_eq!(javascript_escape("hello$world"), "`hello\\$world`");
         assert_eq!(javascript_escape("hello\nworld"), "`hello\\nworld`");
         assert_eq!(javascript_escape("hello\\world"), "`hello\\\\world`");
-        assert_eq!(
-            javascript_escape("</script>"),
-            "`<\\/script>`"
-        );
-        assert_eq!(
-            javascript_escape("</SCRIPT>"),
-            "`<\\/script>`"
-        );
+        assert_eq!(javascript_escape("</script>"), "`<\\/script>`");
+        assert_eq!(javascript_escape("</SCRIPT>"), "`<\\/script>`");
     }
 
     #[test]
@@ -410,14 +404,8 @@ mod tests {
             javascript_escape("<script>alert(1)</script>"),
             "`<script>alert(1)<\\/script>`"
         );
-        assert_eq!(
-            javascript_escape("  </script>  "),
-            "`  <\\/script>  `"
-        );
-        assert_eq!(
-            javascript_escape("</Script>"),
-            "`<\\/script>`"
-        );
+        assert_eq!(javascript_escape("  </script>  "), "`  <\\/script>  `");
+        assert_eq!(javascript_escape("</Script>"), "`<\\/script>`");
     }
 
     #[test]

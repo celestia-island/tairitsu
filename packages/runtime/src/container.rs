@@ -499,7 +499,10 @@ impl<T: HostStateImpl> Container<T> {
     /// ```ignore
     /// let result = container.call_guest_json("process", r#"{"input":"hello"}"#)?;
     /// ```
-    #[deprecated(since = "0.6.0", note = "use call_guest_raw_desc() with RON format instead")]
+    #[deprecated(
+        since = "0.6.0",
+        note = "use call_guest_raw_desc() with RON format instead"
+    )]
     pub fn call_guest_json(&mut self, function_name: &str, _json_payload: &str) -> Result<String> {
         anyhow::bail!(
             "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}",
@@ -921,7 +924,10 @@ impl<T: HostStateImpl> Container<T> {
             imports
                 .into_iter()
                 .map(|name| {
-                    let (params, results) = AnyhowContext::with_context(registry.get_signature(name), || format!("missing signature for import: {name}"))?;
+                    let (params, results) =
+                        AnyhowContext::with_context(registry.get_signature(name), || {
+                            format!("missing signature for import: {name}")
+                        })?;
                     Ok(ImportInfo {
                         name: name.to_string(),
                         params,
@@ -1078,26 +1084,25 @@ mod tests {
     }
 
     #[test]
-    fn test_call_guest_json_does_not_leak_payload() {
-        use crate::{HostState, Image};
+    fn test_call_guest_raw_desc_rejects_invalid_payload() {
+        use crate::Image;
         let wasm = bytes::Bytes::from_static(b"\x00asm\x01\x00\x00\x00");
         let img = match Image::new(wasm) {
             Ok(img) => img,
             Err(_) => return,
         };
         let mut container = Container::builder(img)
-            .with_guest_initializer(|ctx| {
-                Ok(GuestInstance::new(()))
-            })
+            .with_guest_initializer(|_ctx| Ok(GuestInstance::new(())))
             .build()
             .expect("build should succeed");
 
-        let sensitive = "SECRET_API_KEY_12345";
+        let sensitive = r#"("SECRET_API_KEY_12345",)"#;
+        #[allow(deprecated)]
         let result = container.call_guest_json("test_fn", sensitive);
         assert!(result.is_err());
         let err_msg = format!("{}", result.unwrap_err());
         assert!(
-            !err_msg.contains(sensitive),
+            !err_msg.contains("SECRET_API_KEY_12345"),
             "Error message should not contain the payload, but got: {}",
             err_msg
         );

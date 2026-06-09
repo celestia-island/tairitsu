@@ -8,8 +8,10 @@ fn test_full_document_config_escapes_lang() {
     };
     let dom = SsrDom::new();
     let html = dom.render_full_document_html(&config);
-    assert!(!html.contains("<script>alert(1)</script>"),
-        "Lang attribute should be escaped against injection");
+    assert!(
+        !html.contains("<script>alert(1)</script>"),
+        "Lang attribute should be escaped against injection"
+    );
 }
 
 #[test]
@@ -51,8 +53,12 @@ fn test_full_document_config_title_escaping() {
     };
     let dom = SsrDom::new();
     let html = dom.render_full_document_html(&config);
-    assert!(!html.contains("<script>alert"),
-        "Title should be HTML-escaped");
-    assert!(html.contains("&lt;script&gt;"),
-        "Title should contain escaped tags");
+    assert!(
+        !html.contains("<script>alert"),
+        "Title should be HTML-escaped"
+    );
+    assert!(
+        html.contains("&lt;script&gt;"),
+        "Title should contain escaped tags"
+    );
 }

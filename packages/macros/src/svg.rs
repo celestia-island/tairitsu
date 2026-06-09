@@ -503,7 +503,11 @@ mod tests {
     fn test_sanitize_removes_vbscript_url() {
         let input = r#"<a xlink:href="vbscript:msgbox('xss')">link</a>"#;
         let result = sanitize_svg(input);
-        assert!(!result.contains("vbscript:"), "vbscript: scheme should be blocked, got: {}", result);
+        assert!(
+            !result.contains("vbscript:"),
+            "vbscript: scheme should be blocked, got: {}",
+            result
+        );
     }
 
     #[test]

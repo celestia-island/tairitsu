@@ -51,7 +51,6 @@ pub struct DiffReport {
     pub results: Vec<DiffResult>,
 }
 
-
 pub fn compare_images(baseline: &Path, actual: &Path, config: &DiffConfig) -> Result<DiffResult> {
     let name = actual
         .file_stem()

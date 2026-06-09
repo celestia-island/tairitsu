@@ -4,7 +4,8 @@ use std::{
 };
 
 fn main() {
-    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set"));
+    let manifest_dir =
+        PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set"));
     let workspace_root = find_workspace_root(&manifest_dir);
 
     // Watch for template changes
@@ -124,5 +125,8 @@ fn find_workspace_root(manifest_dir: &Path) -> PathBuf {
         }
         current = dir.parent();
     }
-    manifest_dir.parent().expect("manifest_dir has no parent").to_path_buf()
+    manifest_dir
+        .parent()
+        .expect("manifest_dir has no parent")
+        .to_path_buf()
 }

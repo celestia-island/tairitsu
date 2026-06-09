@@ -2,10 +2,12 @@
 
 use std::{cell::RefCell, collections::HashMap, ops::AddAssign, rc::Rc};
 
+type CallbackMap = Rc<RefCell<HashMap<u32, Box<dyn Fn()>>>>;
+
 pub struct BrowserPlatform {
-    timeout_callbacks: Rc<RefCell<HashMap<u32, Box<dyn Fn()>>>>,
+    timeout_callbacks: CallbackMap,
     next_timeout_id: Rc<RefCell<u32>>,
-    animation_callbacks: Rc<RefCell<HashMap<u32, Box<dyn Fn()>>>>,
+    animation_callbacks: CallbackMap,
     next_animation_id: Rc<RefCell<u32>>,
 }
 

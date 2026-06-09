@@ -188,15 +188,31 @@ impl PartialEq for VElement {
                 a == b
             }
             && {
-                let mut a: Vec<&str> = self.dynamic_attributes.iter().map(|(k, _)| k.as_str()).collect();
-                let mut b: Vec<&str> = other.dynamic_attributes.iter().map(|(k, _)| k.as_str()).collect();
+                let mut a: Vec<&str> = self
+                    .dynamic_attributes
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect();
+                let mut b: Vec<&str> = other
+                    .dynamic_attributes
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect();
                 a.sort();
                 b.sort();
                 a == b
             }
             && {
-                let mut a: Vec<&str> = self.dynamic_styles.iter().map(|(k, _)| k.as_str()).collect();
-                let mut b: Vec<&str> = other.dynamic_styles.iter().map(|(k, _)| k.as_str()).collect();
+                let mut a: Vec<&str> = self
+                    .dynamic_styles
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect();
+                let mut b: Vec<&str> = other
+                    .dynamic_styles
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect();
                 a.sort();
                 b.sort();
                 a == b
@@ -798,7 +814,10 @@ impl VElement {
         self
     }
 
-    #[deprecated(since = "0.6.0", note = "renamed to dangerous_inner_html to match React convention")]
+    #[deprecated(
+        since = "0.6.0",
+        note = "renamed to dangerous_inner_html to match React convention"
+    )]
     pub fn inner_html(self, html: impl Into<String>) -> Self {
         self.dangerous_inner_html(html)
     }
@@ -897,7 +916,10 @@ impl From<&str> for Style {
                 if let Some((name, value)) = part.split_once(':') {
                     style = style.add(name.trim(), value.trim());
                 } else {
-                    tracing::warn!("Style::from: skipping malformed entry (missing ':'): {:?}", part);
+                    tracing::warn!(
+                        "Style::from: skipping malformed entry (missing ':'): {:?}",
+                        part
+                    );
                 }
             }
         }
@@ -1360,7 +1382,10 @@ mod tests {
         let mut el = VElement::new("div");
         el.element_ref = Some(Rc::new(RefCell::new(Some(Box::new(42u64)))));
         let cloned = el.clone();
-        assert!(cloned.element_ref.is_some(), "Clone should preserve element_ref");
+        assert!(
+            cloned.element_ref.is_some(),
+            "Clone should preserve element_ref"
+        );
     }
 
     #[test]
@@ -1384,7 +1409,10 @@ mod tests {
     fn test_velement_eq_different_event_handlers() {
         let a = VElement::new("button").on_event("click", |_| {});
         let b = VElement::new("button");
-        assert_ne!(a, b, "element with click handler should not equal one without");
+        assert_ne!(
+            a, b,
+            "element with click handler should not equal one without"
+        );
     }
 
     #[test]
@@ -1395,7 +1423,10 @@ mod tests {
         let b = VElement::new("button")
             .on_event("click", |_| {})
             .on_event("mouseover", |_| {});
-        assert_eq!(a, b, "elements with same event handler keys should be equal");
+        assert_eq!(
+            a, b,
+            "elements with same event handler keys should be equal"
+        );
     }
 
     #[test]
@@ -1406,14 +1437,20 @@ mod tests {
         let b = VElement::new("button")
             .on_event("click", |_| {})
             .on_event("mouseout", |_| {});
-        assert_ne!(a, b, "elements with different event handler keys should not be equal");
+        assert_ne!(
+            a, b,
+            "elements with different event handler keys should not be equal"
+        );
     }
 
     #[test]
     fn test_velement_eq_dynamic_attributes() {
         let a = VElement::new("div").dynamic_attr("data-x", || "1".to_string());
         let b = VElement::new("div");
-        assert_ne!(a, b, "element with dynamic attr should not equal one without");
+        assert_ne!(
+            a, b,
+            "element with dynamic attr should not equal one without"
+        );
     }
 
     #[test]
@@ -1421,14 +1458,20 @@ mod tests {
         let a = DynamicText::new("hello".into(), || "world".into());
         let b = DynamicText::new("hello".into(), || "different".into());
         // Same initial + no keys → equal (even though compute differs)
-        assert_eq!(a, b, "DynamicText with same initial and no keys should be equal");
+        assert_eq!(
+            a, b,
+            "DynamicText with same initial and no keys should be equal"
+        );
     }
 
     #[test]
     fn test_dynamic_text_eq_different_initial() {
         let a = DynamicText::new("hello".into(), || "world".into());
         let b = DynamicText::new("bye".into(), || "world".into());
-        assert_ne!(a, b, "DynamicText with different initial should not be equal");
+        assert_ne!(
+            a, b,
+            "DynamicText with different initial should not be equal"
+        );
     }
 
     #[test]

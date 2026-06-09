@@ -177,10 +177,9 @@ pub async fn register_cleanup_on_exit() {
         let ready_sig = ready;
         let pid_sig = pid;
         tokio::spawn(async move {
-            let mut sigterm = tokio::signal::unix::signal(
-                tokio::signal::unix::SignalKind::terminate(),
-            )
-            .expect("failed to register SIGTERM handler");
+            let mut sigterm =
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                    .expect("failed to register SIGTERM handler");
             sigterm.recv().await;
             let _ = fs::remove_file(&ready_sig);
             let _ = fs::remove_file(&pid_sig);

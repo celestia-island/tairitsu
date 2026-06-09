@@ -36,8 +36,8 @@ pub use animation::{
 };
 pub use callback::{use_callback, use_return_callback, use_void_callback, Callback};
 pub use context::{
-    clear_all_contexts, consume_context, drop_context, provide_context,
-    provide_context_scoped, use_context, Context, ContextGuard,
+    clear_all_contexts, consume_context, drop_context, provide_context, provide_context_scoped,
+    use_context, Context, ContextGuard,
 };
 pub use dom_ref::{use_dom_ref, DomRef};
 pub use dynamic::{use_dynamic_text, use_dynamic_text_fn};

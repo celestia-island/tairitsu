@@ -156,7 +156,9 @@ impl ResourceRegistry {
         state: ResourceStateOp,
     ) -> Vec<runtime::ComponentId> {
         if let Some(resource_state) = self.resources.get(&id) {
-            *resource_state.lock().expect("resource state mutex poisoned") = state;
+            *resource_state
+                .lock()
+                .expect("resource state mutex poisoned") = state;
         }
 
         // Get all components that depend on this resource
@@ -186,7 +188,9 @@ impl ResourceRegistry {
     }
 
     fn get_resource_state(&self, id: ResourceId) -> Option<ResourceStateOp> {
-        self.resources.get(&id).map(|arc| *arc.lock().expect("resource state mutex poisoned"))
+        self.resources
+            .get(&id)
+            .map(|arc| *arc.lock().expect("resource state mutex poisoned"))
     }
 
     fn track_access(&mut self, resource_id: ResourceId) {
@@ -364,7 +368,11 @@ impl<T> Resource<T> {
     {
         *self.inner.state.borrow_mut() = new_state.clone();
         // Also update the thread-safe state for cross-thread access
-        *self.inner.thread_safe_state.lock().expect("thread_safe_state mutex poisoned") = new_state.clone();
+        *self
+            .inner
+            .thread_safe_state
+            .lock()
+            .expect("thread_safe_state mutex poisoned") = new_state.clone();
 
         // Update the global registry
         let registry_state = match new_state {
@@ -459,7 +467,9 @@ where
                     Ok(value) => ResourceState::Ready(value),
                     Err(err) => ResourceState::Error(err),
                 };
-                *thread_safe_state.lock().expect("thread_safe_state mutex poisoned") = new_state.clone();
+                *thread_safe_state
+                    .lock()
+                    .expect("thread_safe_state mutex poisoned") = new_state.clone();
 
                 let registry_state = match new_state {
                     ResourceState::Loading => ResourceStateOp::Loading,

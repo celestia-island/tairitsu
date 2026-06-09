@@ -307,9 +307,18 @@ fn longest_increasing_subsequence_set(arr: &[usize]) -> Vec<usize> {
     for i in 0..n {
         let val = arr[i];
 
-        if tails.is_empty() || val > *tails.last().expect("tails is non-empty (invariant: checked is_empty above)") {
+        if tails.is_empty()
+            || val
+                > *tails
+                    .last()
+                    .expect("tails is non-empty (invariant: checked is_empty above)")
+        {
             if !tail_indices.is_empty() {
-                parent[i] = Some(*tail_indices.last().expect("tail_indices is non-empty (invariant: checked is_empty above)"));
+                parent[i] = Some(
+                    *tail_indices
+                        .last()
+                        .expect("tail_indices is non-empty (invariant: checked is_empty above)"),
+                );
             }
             tails.push(val);
             tail_indices.push(i);
@@ -774,7 +783,10 @@ mod tests {
         }));
 
         let patches = diff(Some(&old), &new);
-        assert!(patches.is_empty(), "Identical DynamicText should produce no patches");
+        assert!(
+            patches.is_empty(),
+            "Identical DynamicText should produce no patches"
+        );
     }
 
     #[test]
@@ -829,14 +841,21 @@ mod tests {
 
         // Should contain an UpdateChild with an UpdateText patch inside
         let has_update = patches.iter().any(|p| match p {
-            Patch::UpdateChild { index, patches: child_patches } => {
-                *index == 0 && child_patches.iter().any(|cp| {
-                    matches!(cp, Patch::UpdateText { text } if text == "v2")
-                })
+            Patch::UpdateChild {
+                index,
+                patches: child_patches,
+            } => {
+                *index == 0
+                    && child_patches
+                        .iter()
+                        .any(|cp| matches!(cp, Patch::UpdateText { text } if text == "v2"))
             }
             _ => false,
         });
-        assert!(has_update, "Expected UpdateChild with UpdateText for changed DynamicText");
+        assert!(
+            has_update,
+            "Expected UpdateChild with UpdateText for changed DynamicText"
+        );
     }
 
     #[test]
@@ -1062,11 +1081,19 @@ mod tests {
         // Unkeyed children should NOT be destroyed when keyed children exist.
         let old_children = vec![
             VNode::Text(VText::new("A")),
-            VNode::Element(VElement::new("span").key("b").child(VNode::Text(VText::new("B")))),
+            VNode::Element(
+                VElement::new("span")
+                    .key("b")
+                    .child(VNode::Text(VText::new("B"))),
+            ),
             VNode::Text(VText::new("C")),
         ];
         let new_children = vec![
-            VNode::Element(VElement::new("span").key("b").child(VNode::Text(VText::new("B")))),
+            VNode::Element(
+                VElement::new("span")
+                    .key("b")
+                    .child(VNode::Text(VText::new("B"))),
+            ),
             VNode::Text(VText::new("A")),
             VNode::Text(VText::new("C")),
         ];
@@ -1077,8 +1104,15 @@ mod tests {
         );
 
         // Should NOT remove the unkeyed children (A and C)
-        let removes: Vec<&Patch> = patches.iter().filter(|p| matches!(p, Patch::RemoveChild { .. })).collect();
-        assert!(removes.is_empty(), "Should not remove unkeyed children: {:?}", patches);
+        let removes: Vec<&Patch> = patches
+            .iter()
+            .filter(|p| matches!(p, Patch::RemoveChild { .. }))
+            .collect();
+        assert!(
+            removes.is_empty(),
+            "Should not remove unkeyed children: {:?}",
+            patches
+        );
     }
 
     #[test]
@@ -1102,7 +1136,10 @@ mod tests {
         );
 
         // Should remove only A (index 0, keyed, removed from new)
-        let removes: Vec<&Patch> = patches.iter().filter(|p| matches!(p, Patch::RemoveChild { .. })).collect();
+        let removes: Vec<&Patch> = patches
+            .iter()
+            .filter(|p| matches!(p, Patch::RemoveChild { .. }))
+            .collect();
         assert_eq!(removes.len(), 1, "should remove exactly one child");
         assert!(matches!(removes[0], Patch::RemoveChild { index: 0 }));
     }
@@ -1122,8 +1159,13 @@ mod tests {
             VNode::Element(VElement::new("li").key("b")),
         ];
         let patches = diff(Some(&VNode::Fragment(old)), &VNode::Fragment(new));
-        assert!(patches.iter().any(|p| matches!(p, Patch::MoveChild { .. } | Patch::RemoveChild { .. } | Patch::InsertChild { .. })),
-                "reorder should produce move/remove+insert patches");
+        assert!(
+            patches.iter().any(|p| matches!(
+                p,
+                Patch::MoveChild { .. } | Patch::RemoveChild { .. } | Patch::InsertChild { .. }
+            )),
+            "reorder should produce move/remove+insert patches"
+        );
     }
 
     #[test]
@@ -1141,9 +1183,15 @@ mod tests {
         ];
         let patches = diff(Some(&VNode::Fragment(old)), &VNode::Fragment(new));
         // Should remove A (0) and C (2), insert D at adjusted position
-        let removes: Vec<_> = patches.iter().filter(|p| matches!(p, Patch::RemoveChild { .. })).collect();
+        let removes: Vec<_> = patches
+            .iter()
+            .filter(|p| matches!(p, Patch::RemoveChild { .. }))
+            .collect();
         assert_eq!(removes.len(), 2, "should remove A and C");
-        let inserts: Vec<_> = patches.iter().filter(|p| matches!(p, Patch::InsertChild { .. })).collect();
+        let inserts: Vec<_> = patches
+            .iter()
+            .filter(|p| matches!(p, Patch::InsertChild { .. }))
+            .collect();
         assert!(!inserts.is_empty(), "should insert D");
     }
 

@@ -184,7 +184,11 @@ impl WitLoader {
                                 params,
                             });
                         }
-                        wit_parser::WorldItem::Interface { id, stability: _, span: _ } => {
+                        wit_parser::WorldItem::Interface {
+                            id,
+                            stability: _,
+                            span: _,
+                        } => {
                             // Handle exported interfaces - extract all functions from the interface
                             let interface_id = match export_name {
                                 wit_parser::WorldKey::Name(_interface_name) => {
@@ -278,7 +282,11 @@ impl WitLoader {
                                 params,
                             });
                         }
-                        wit_parser::WorldItem::Interface { id, stability: _, span: _ } => {
+                        wit_parser::WorldItem::Interface {
+                            id,
+                            stability: _,
+                            span: _,
+                        } => {
                             // Handle imported interfaces - extract all functions from the interface
                             let interface_id = match import_name {
                                 wit_parser::WorldKey::Name(_interface_name) => {

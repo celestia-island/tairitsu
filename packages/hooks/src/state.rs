@@ -3,8 +3,8 @@ use std::{cell::RefCell, rc::Rc};
 use tairitsu_vdom::{runtime, VNode};
 
 pub fn use_state<T: Clone + Default + 'static>(initial: T) -> (Rc<RefCell<T>>, impl Fn(T)) {
-    let component_id = runtime::active_component_id()
-        .unwrap_or_else(|| runtime::use_component(VNode::empty));
+    let component_id =
+        runtime::active_component_id().unwrap_or_else(|| runtime::use_component(VNode::empty));
     let state = Rc::new(RefCell::new(initial));
     let state_clone = Rc::clone(&state);
 

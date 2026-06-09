@@ -935,8 +935,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                             continue;
                         }
 
-                        let mut fake_meta = crate::icons::HikariIconsMetadata::default();
-                        fake_meta.sets = vec![set_name.clone()];
+                        let fake_meta = crate::icons::HikariIconsMetadata { sets: vec![set_name.clone()], ..Default::default() };
                         let result = crate::icons::resolve(&fake_meta, &cache)?;
                         if result.sets.is_empty() {
                             crate::log_fail!("{} — failed to fetch", set_name);

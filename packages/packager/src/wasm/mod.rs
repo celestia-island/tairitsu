@@ -9,8 +9,12 @@ fn locale() -> &'static crate::i18n::Translations {
 }
 
 fn find_workspace_root(manifest_dir: &std::path::Path) -> crate::Result<std::path::PathBuf> {
-    let manifest_path = manifest_dir.join("Cargo.toml").to_str()
-        .ok_or_else(|| crate::TairitsuPackagerError::BuildError("manifest path is not valid UTF-8".to_string()))?
+    let manifest_path = manifest_dir
+        .join("Cargo.toml")
+        .to_str()
+        .ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError("manifest path is not valid UTF-8".to_string())
+        })?
         .to_string();
     let output = std::process::Command::new("cargo")
         .args([
@@ -292,8 +296,15 @@ fn build_wasm_component(
         "--package",
         pkg_name,
         "--manifest-path",
-        config.manifest_dir.join("Cargo.toml").to_str()
-            .ok_or_else(|| crate::TairitsuPackagerError::BuildError("manifest path is not valid UTF-8".to_string()))?,
+        config
+            .manifest_dir
+            .join("Cargo.toml")
+            .to_str()
+            .ok_or_else(|| {
+                crate::TairitsuPackagerError::BuildError(
+                    "manifest path is not valid UTF-8".to_string(),
+                )
+            })?,
         "--message-format=json-diagnostic-rendered-ansi",
     ]);
     if release {
@@ -1963,7 +1974,8 @@ pub async fn dev_server(
             #[cfg(unix)]
             {
                 use tokio::signal::unix::{signal, SignalKind};
-                let mut sigterm = signal(SignalKind::terminate()).expect("failed to register SIGTERM handler");
+                let mut sigterm =
+                    signal(SignalKind::terminate()).expect("failed to register SIGTERM handler");
                 tokio::select! {
                     _ = tokio::signal::ctrl_c() => {},
                     _ = sigterm.recv() => {},

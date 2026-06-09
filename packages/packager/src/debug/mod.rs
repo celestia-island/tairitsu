@@ -310,7 +310,6 @@ struct BatchResult {
     duration_ms: u64,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct NetworkResource {
     name: String,

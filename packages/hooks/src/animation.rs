@@ -367,7 +367,9 @@ impl UseAnimation {
                 *start_time.borrow_mut() = Some(timestamp);
             }
 
-            let start = start_time.borrow().expect("start_time not initialized (invariant: set above)");
+            let start = start_time
+                .borrow()
+                .expect("start_time not initialized (invariant: set above)");
             let elapsed = timestamp - start - *paused_time.borrow();
             let delay_ms = config_cb.delay.as_millis() as f64;
 
@@ -460,7 +462,10 @@ impl UseAnimation {
         *next_callback.borrow_mut() = Some(Box::new(callback_logic));
 
         // Schedule the first frame
-        let callback = next_callback.borrow_mut().take().expect("animation callback not set (invariant: stored above)");
+        let callback = next_callback
+            .borrow_mut()
+            .take()
+            .expect("animation callback not set (invariant: stored above)");
         let id = platform_ref.request_animation_frame(callback);
         *raf_id.borrow_mut() = Some(id);
     }

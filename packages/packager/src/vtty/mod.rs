@@ -155,6 +155,7 @@ impl VttySession {
             .unwrap_or_default()
     }
 
+    #[allow(dead_code)]
     pub fn get_line(&self, row: usize) -> String {
         self.screen
             .lock()

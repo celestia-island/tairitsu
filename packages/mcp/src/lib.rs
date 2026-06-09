@@ -918,9 +918,7 @@ mod daemon {
             }
             v
         };
-        if let Some((_port, debug_port, _)) =
-            try_read_ready_port_from_candidates(&priority_dirs)
-        {
+        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&priority_dirs) {
             if let Some(dp) = debug_port {
                 let url = format!("http://localhost:{dp}");
                 if check_daemon_health(&url).await {
@@ -933,9 +931,7 @@ mod daemon {
         }
 
         let searched = search_project_roots_fallback();
-        if let Some((_port, debug_port, _)) =
-            try_read_ready_port_from_candidates(&searched)
-        {
+        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&searched) {
             if let Some(dp) = debug_port {
                 let url = format!("http://localhost:{dp}");
                 if check_daemon_health(&url).await {
@@ -972,7 +968,7 @@ mod daemon {
         }
         let mut scan_dirs: Vec<PathBuf> = std::env::var("HOME")
             .ok()
-            .map(|h| PathBuf::from(h))
+            .map(PathBuf::from)
             .into_iter()
             .collect();
         if let Ok(dirs) = std::env::var("TAIRITSU_SCAN_DIRS") {
@@ -1026,9 +1022,7 @@ mod daemon {
 
                 if let Ok(metadata) = std::fs::metadata(&ready_path) {
                     if let Ok(modified) = metadata.modified() {
-                        if modified
-                            .elapsed()
-                            .unwrap_or_default()
+                        if modified.elapsed().unwrap_or_default()
                             > std::time::Duration::from_secs(86400)
                         {
                             let pid_path = dir.join("tairitsu-packager.pid");

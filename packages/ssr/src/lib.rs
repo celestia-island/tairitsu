@@ -118,8 +118,7 @@ pub fn render_full_page(wasm_bytes: &[u8], config: SsrConfig, template: &str) ->
     } else {
         // Fallback: look for the conventional marker without data attribute
         let fallback_marker = r#"<div id="app"></div>"#;
-        let fallback_replacement =
-            &format!(r#"<div id="app">{}</div>"#, body_html);
+        let fallback_replacement = &format!(r#"<div id="app">{}</div>"#, body_html);
         template.replacen(fallback_marker, fallback_replacement, 1)
     };
 

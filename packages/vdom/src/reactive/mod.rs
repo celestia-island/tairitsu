@@ -118,7 +118,10 @@ impl<T: Clone + 'static> Signal<T> {
 
         let batched = BATCH_DEPTH.with(|d| *d.borrow() > 0);
         if batched {
-            trace!("Signal update batched (depth={})", BATCH_DEPTH.with(|d| *d.borrow()));
+            trace!(
+                "Signal update batched (depth={})",
+                BATCH_DEPTH.with(|d| *d.borrow())
+            );
             PENDING_UPDATES.with(|updates| {
                 for subscriber in subscribers {
                     updates.borrow_mut().push(Box::new(move || subscriber()));
@@ -441,7 +444,10 @@ mod tests {
         // Signal dropped here — dependencies should be cleaned up
 
         let tracked = crate::runtime::signal_is_tracked(signal_id);
-        assert!(!tracked, "Signal dependencies should be cleaned up after drop");
+        assert!(
+            !tracked,
+            "Signal dependencies should be cleaned up after drop"
+        );
     }
 
     #[test]
@@ -466,11 +472,19 @@ mod tests {
 
         // Without explicit notify(), the effect should NOT have re-run
         // because write() bypasses the subscriber notification path
-        assert_eq!(*observed.borrow(), 0, "write() without notify() should not trigger effect");
+        assert_eq!(
+            *observed.borrow(),
+            0,
+            "write() without notify() should not trigger effect"
+        );
 
         // Now call notify(), which triggers subscribers directly
         s.notify();
-        assert_eq!(*observed.borrow(), 42, "After notify(), effect should re-run");
+        assert_eq!(
+            *observed.borrow(),
+            42,
+            "After notify(), effect should re-run"
+        );
     }
 
     #[test]
@@ -548,10 +562,14 @@ mod tests {
 
         let ca = a.clone();
         let cs = s.clone();
-        let _h1 = create_effect(move || { *ca.borrow_mut() = cs.get(); });
+        let _h1 = create_effect(move || {
+            *ca.borrow_mut() = cs.get();
+        });
         let cb = b.clone();
         let cs2 = s.clone();
-        let _h2 = create_effect(move || { *cb.borrow_mut() = cs2.get(); });
+        let _h2 = create_effect(move || {
+            *cb.borrow_mut() = cs2.get();
+        });
 
         assert_eq!(*a.borrow(), 0);
         assert_eq!(*b.borrow(), 0);

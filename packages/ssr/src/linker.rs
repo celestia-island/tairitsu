@@ -332,14 +332,14 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
     event_target.func_wrap(
         "prevent-default",
         |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_event): (u64,)|
+         _event: (u64,)|
          -> Result<(), wasmtime::Error> { Ok(()) },
     )?;
 
     event_target.func_wrap(
         "stop-propagation",
         |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_event): (u64,)|
+         _event: (u64,)|
          -> Result<(), wasmtime::Error> { Ok(()) },
     )?;
 

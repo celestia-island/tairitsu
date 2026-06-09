@@ -1,9 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use tairitsu_vdom::{
-    batch, create_effect, take_dependencies, Signal,
-};
+use tairitsu_vdom::{batch, create_effect, take_dependencies, Signal};
 
 #[test]
 fn test_batch_defers_signal_notifications() {
@@ -20,7 +18,10 @@ fn test_batch_defers_signal_notifications() {
         assert!(!*called.borrow(), "subscriber should NOT fire inside batch");
     });
 
-    assert!(*called.borrow(), "subscriber should fire after batch flushes");
+    assert!(
+        *called.borrow(),
+        "subscriber should fire after batch flushes"
+    );
 }
 
 #[test]
@@ -31,16 +32,28 @@ fn test_batch_multiple_signals_flush_at_end() {
     let c1 = counter.clone();
     let c2 = counter.clone();
 
-    a.subscribe(move || { *c1.borrow_mut() += 1; });
-    b.subscribe(move || { *c2.borrow_mut() += 1; });
+    a.subscribe(move || {
+        *c1.borrow_mut() += 1;
+    });
+    b.subscribe(move || {
+        *c2.borrow_mut() += 1;
+    });
 
     batch(|| {
         a.set(1);
         b.set(2);
-        assert_eq!(*counter.borrow(), 0, "no subscriber should fire inside batch");
+        assert_eq!(
+            *counter.borrow(),
+            0,
+            "no subscriber should fire inside batch"
+        );
     });
 
-    assert_eq!(*counter.borrow(), 2, "both subscribers should fire after batch");
+    assert_eq!(
+        *counter.borrow(),
+        2,
+        "both subscribers should fire after batch"
+    );
 }
 
 #[test]
@@ -49,7 +62,9 @@ fn test_nested_batch_flushes_at_outermost() {
     let called = Rc::new(RefCell::new(false));
     let c = called.clone();
 
-    signal.subscribe(move || { *c.borrow_mut() = true; });
+    signal.subscribe(move || {
+        *c.borrow_mut() = true;
+    });
 
     batch(|| {
         signal.set(1);
@@ -78,7 +93,10 @@ fn test_take_dependencies_returns_tracked_entries() {
     take_dependencies();
     let _val = signal.get();
     let deps = take_dependencies();
-    assert!(!deps.is_empty(), "take_dependencies should return entries after signal.get()");
+    assert!(
+        !deps.is_empty(),
+        "take_dependencies should return entries after signal.get()"
+    );
 }
 
 #[test]
@@ -90,7 +108,10 @@ fn test_take_dependencies_clears() {
     assert!(!first.is_empty());
 
     let second = take_dependencies();
-    assert!(second.is_empty(), "second take should be empty after first take");
+    assert!(
+        second.is_empty(),
+        "second take should be empty after first take"
+    );
 }
 
 #[test]
@@ -99,7 +120,9 @@ fn test_notify_inside_batch_defers() {
     let called = Rc::new(RefCell::new(false));
     let c = called.clone();
 
-    signal.subscribe(move || { *c.borrow_mut() = true; });
+    signal.subscribe(move || {
+        *c.borrow_mut() = true;
+    });
 
     batch(|| {
         signal.notify();
@@ -115,10 +138,15 @@ fn test_notify_outside_batch_is_immediate() {
     let called = Rc::new(RefCell::new(false));
     let c = called.clone();
 
-    signal.subscribe(move || { *c.borrow_mut() = true; });
+    signal.subscribe(move || {
+        *c.borrow_mut() = true;
+    });
 
     signal.notify();
-    assert!(*called.borrow(), "notify should fire immediately outside batch");
+    assert!(
+        *called.borrow(),
+        "notify should fire immediately outside batch"
+    );
 }
 
 #[test]
@@ -178,8 +206,14 @@ fn test_multiple_effects_on_same_signal() {
     let s1 = signal.clone();
     let s2 = signal.clone();
 
-    create_effect(move || { let _ = s1.get(); *ac.borrow_mut() += 1; });
-    create_effect(move || { let _ = s2.get(); *bc.borrow_mut() += 1; });
+    create_effect(move || {
+        let _ = s1.get();
+        *ac.borrow_mut() += 1;
+    });
+    create_effect(move || {
+        let _ = s2.get();
+        *bc.borrow_mut() += 1;
+    });
 
     assert_eq!(*a_count.borrow(), 1);
     assert_eq!(*b_count.borrow(), 1);

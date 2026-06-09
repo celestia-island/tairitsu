@@ -219,7 +219,12 @@ pub fn track_signal(signal_id: SignalId) {
 #[cfg(test)]
 pub fn signal_is_tracked(signal_id: SignalId) -> bool {
     RUNTIME
-        .try_with(|runtime| runtime.borrow().signal_dependencies.contains_key(&signal_id))
+        .try_with(|runtime| {
+            runtime
+                .borrow()
+                .signal_dependencies
+                .contains_key(&signal_id)
+        })
         .unwrap_or(false)
 }
 

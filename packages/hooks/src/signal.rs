@@ -78,20 +78,23 @@ pub struct SignalWriteGuard<'a, T: Clone + 'static> {
 
 impl<'a, T: Clone + 'static> SignalWriteGuard<'a, T> {
     fn new(inner: std::cell::RefMut<'a, T>, component_id: runtime::ComponentId) -> Self {
-        Self { inner, component_id }
+        Self {
+            inner,
+            component_id,
+        }
     }
 }
 
 impl<'a, T: Clone + 'static> Deref for SignalWriteGuard<'a, T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
-        &*self.inner
+        &self.inner
     }
 }
 
 impl<'a, T: Clone + 'static> DerefMut for SignalWriteGuard<'a, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut *self.inner
+        &mut self.inner
     }
 }
 

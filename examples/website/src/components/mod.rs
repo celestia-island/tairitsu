@@ -51,7 +51,7 @@ fn icon_el(icon: MdiIcon) -> VNode {
     VNode::Element(
         el("span")
             .class("hi-menu-item-icon ts-icon")
-            .inner_html(svg_str),
+            .dangerous_inner_html(svg_str),
     )
 }
 
@@ -134,11 +134,11 @@ pub fn top_nav() -> VNode {
                     .child(VNode::Element(
                         el("button").class("hi-header-toggle").attr("id", "drawer-toggle")
                             .attr("aria-label", "Toggle menu")
-                            .inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>"#)
+                            .dangerous_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>"#)
                     ))
                     .child(VNode::Element(
                         el("a").attr("href", "/").class("hi-header-brand")
-                            .inner_html(r#"<img class="hi-header-logo-img" src="/images/logo-tairitsu.png" alt="Tairitsu" width="28" height="28"/><span style="font-weight:700;font-size:1.15rem;margin-left:8px;">Tairitsu</span>"#)
+                            .dangerous_inner_html(r#"<img class="hi-header-logo-img" src="/images/logo-tairitsu.png" alt="Tairitsu" width="28" height="28"/><span style="font-weight:700;font-size:1.15rem;margin-left:8px;">Tairitsu</span>"#)
                     ))
             ))
             .child(VNode::Element(

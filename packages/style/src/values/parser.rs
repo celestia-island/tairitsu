@@ -57,7 +57,10 @@ impl CssLength {
 }
 
 fn parse_length(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssLength> {
-    let inner = pair.into_inner().next().expect("grammar invariant: length rule always has an inner pair");
+    let inner = pair
+        .into_inner()
+        .next()
+        .expect("grammar invariant: length rule always has an inner pair");
 
     match inner.as_rule() {
         Rule::px
@@ -363,7 +366,10 @@ fn parse_length_from_pair(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssL
         Rule::percent => parse_unit_value(pair, "%", CssLength::percent),
         Rule::simple_length => {
             // For simple_length, we need to check the inner rule
-            let inner_pair = pair.into_inner().next().expect("grammar invariant: simple_length always has an inner pair");
+            let inner_pair = pair
+                .into_inner()
+                .next()
+                .expect("grammar invariant: simple_length always has an inner pair");
             parse_length_from_pair(inner_pair)
         }
         _ => Err(CssValueParseError::ParseError(format!(

@@ -280,10 +280,14 @@ pub fn class_list_remove(el: DomHandle, tokens: &[&str]) {
 }
 
 pub fn class_list_contains(el: DomHandle, token: &str) -> bool {
-    DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref().is_some_and(|f| {
-        let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
-        unsafe { (f.class_list_contains)(list, token) }
-    })
+    DOM_FUNCS
+        .lock()
+        .expect("DOM_FUNCS mutex poisoned")
+        .as_ref()
+        .is_some_and(|f| {
+            let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
+            unsafe { (f.class_list_contains)(list, token) }
+        })
 }
 
 pub fn first_child(el: DomHandle) -> Option<DomHandle> {
@@ -295,9 +299,13 @@ pub fn first_child(el: DomHandle) -> Option<DomHandle> {
 }
 
 pub fn query_selector_on(el: DomHandle, selector: &str) -> Option<DomHandle> {
-    DOM_FUNCS.lock().expect("DOM_FUNCS mutex poisoned").as_ref().and_then(|f| {
-        unsafe { (f.query_selector_on)(el.get_inner_id(), selector) }.map(DomHandle::from_raw)
-    })
+    DOM_FUNCS
+        .lock()
+        .expect("DOM_FUNCS mutex poisoned")
+        .as_ref()
+        .and_then(|f| {
+            unsafe { (f.query_selector_on)(el.get_inner_id(), selector) }.map(DomHandle::from_raw)
+        })
 }
 
 pub fn create_element(tag: &str) -> DomHandle {

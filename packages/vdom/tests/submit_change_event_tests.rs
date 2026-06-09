@@ -43,7 +43,9 @@ fn test_submit_event_with_event_handle() {
 fn test_submit_event_clone() {
     let mut event = SubmitEvent::new();
     event.target = Some(123);
-    event.form_data.push(("key".to_string(), "value".to_string()));
+    event
+        .form_data
+        .push(("key".to_string(), "value".to_string()));
     let cloned = event.clone();
     assert_eq!(cloned.target, Some(123));
     assert_eq!(cloned.form_data.len(), 1);

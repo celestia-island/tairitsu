@@ -363,14 +363,16 @@ fn extract_ts_exports(path: &Path) -> Result<HashSet<String>> {
 fn extract_ts_exports_from_str(content: &str) -> HashSet<String> {
     let mut exports = HashSet::new();
 
-    let re = regex::Regex::new(r#"export\s+(?:function|const|var|let)\s+(\w+)"#).expect("static regex is valid");
+    let re = regex::Regex::new(r#"export\s+(?:function|const|var|let)\s+(\w+)"#)
+        .expect("static regex is valid");
     for cap in re.captures_iter(content) {
         if let Some(name) = cap.get(1) {
             exports.insert(name.as_str().to_string());
         }
     }
 
-    let method_re = regex::Regex::new(r"(?m)^\s+(\w+)\s*\([^)]*\)\s*\{").expect("static regex is valid");
+    let method_re =
+        regex::Regex::new(r"(?m)^\s+(\w+)\s*\([^)]*\)\s*\{").expect("static regex is valid");
     for cap in method_re.captures_iter(content) {
         if let Some(name) = cap.get(1) {
             let n = name.as_str();
@@ -440,15 +442,16 @@ fn extract_js_runtime_exports(content: &str) -> HashSet<String> {
         if let Some(prefix) = cap.get(1) {
             // Now find all method assignments in this object
             let method_re =
-                regex::Regex::new(&format!(r"{}\s*:\s*function\s+(\w+)", prefix.as_str())).expect("dynamic regex from prefix is valid");
+                regex::Regex::new(&format!(r"{}\s*:\s*function\s+(\w+)", prefix.as_str()))
+                    .expect("dynamic regex from prefix is valid");
             for m in method_re.captures_iter(content) {
                 if let Some(name) = m.get(1) {
                     exports.insert(name.as_str().to_string());
                 }
             }
             // Also match shorthand methods: name(params)
-            let short_re =
-                regex::Regex::new(&format!(r"{}\s*\{{\s*(\w+)\s*\(", prefix.as_str())).expect("dynamic regex from prefix is valid");
+            let short_re = regex::Regex::new(&format!(r"{}\s*\{{\s*(\w+)\s*\(", prefix.as_str()))
+                .expect("dynamic regex from prefix is valid");
             for m in short_re.captures_iter(content) {
                 if let Some(name) = m.get(1) {
                     exports.insert(name.as_str().to_string());

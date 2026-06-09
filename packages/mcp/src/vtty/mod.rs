@@ -122,7 +122,11 @@ impl VttySession {
     }
 
     pub fn send_text(&self, text: &str) -> Result<(), String> {
-        let encoded: Vec<u8> = text.replace("\r\n", "\r").replace('\n', "\r").as_bytes().to_vec();
+        let encoded: Vec<u8> = text
+            .replace("\r\n", "\r")
+            .replace('\n', "\r")
+            .as_bytes()
+            .to_vec();
         self.write(&encoded)
     }
 
@@ -539,20 +543,35 @@ mod tests {
 
     #[test]
     fn test_send_text_converts_lf_to_cr() {
-        let encoded: Vec<u8> = "hello\nworld".replace("\r\n", "\r").replace('\n', "\r").as_bytes().to_vec();
+        let encoded: Vec<u8> = "hello\nworld"
+            .replace("\r\n", "\r")
+            .replace('\n', "\r")
+            .as_bytes()
+            .to_vec();
         assert_eq!(encoded, b"hello\rworld");
     }
 
     #[test]
     fn test_send_text_converts_crlf_to_single_cr() {
-        let encoded: Vec<u8> = "hello\r\nworld".replace("\r\n", "\r").replace('\n', "\r").as_bytes().to_vec();
-        assert_eq!(encoded, b"hello\rworld", "CRLF should become a single CR, not CR+CR");
+        let encoded: Vec<u8> = "hello\r\nworld"
+            .replace("\r\n", "\r")
+            .replace('\n', "\r")
+            .as_bytes()
+            .to_vec();
+        assert_eq!(
+            encoded, b"hello\rworld",
+            "CRLF should become a single CR, not CR+CR"
+        );
     }
 
     #[test]
     fn test_send_text_mixed_line_endings() {
         let input = "line1\r\nline2\nline3\r\n";
-        let encoded: Vec<u8> = input.replace("\r\n", "\r").replace('\n', "\r").as_bytes().to_vec();
+        let encoded: Vec<u8> = input
+            .replace("\r\n", "\r")
+            .replace('\n', "\r")
+            .as_bytes()
+            .to_vec();
         assert_eq!(encoded, b"line1\rline2\rline3\r");
     }
 }
@@ -640,7 +659,9 @@ mod smoke_pty {
         let mut session = spawn_session("bash --norc --noprofile");
         std::thread::sleep(std::time::Duration::from_millis(500));
 
-        session.send_text("echo SEND_TEXT_OK").expect("send_text should work");
+        session
+            .send_text("echo SEND_TEXT_OK")
+            .expect("send_text should work");
         session.send_keys("ENTER").expect("enter");
         let found = wait_for_text(&session, "SEND_TEXT_OK", 3000);
         assert!(
@@ -1104,7 +1125,11 @@ mod smoke_pty {
     fn smoke_bash_no_echo_on_start() {
         let mut session = spawn_session("bash --norc --noprofile -i");
         let found = wait_for_text(&session, "$", 5000);
-        assert!(found, "bash prompt should appear, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "bash prompt should appear, got:\n{}",
+            session.screenshot()
+        );
 
         session.send_keys("ESCAPE").expect("send ESC");
         std::thread::sleep(std::time::Duration::from_millis(300));

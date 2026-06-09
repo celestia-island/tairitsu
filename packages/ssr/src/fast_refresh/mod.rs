@@ -156,8 +156,14 @@ impl FastRefreshRuntime {
         signature: ComponentSignature,
         component_id: ComponentId,
     ) -> RegistrationResult {
-        let mut components = self.registered_components.write().expect("registered_components lock poisoned");
-        let mut signatures = self.component_signatures.write().expect("component_signatures lock poisoned");
+        let mut components = self
+            .registered_components
+            .write()
+            .expect("registered_components lock poisoned");
+        let mut signatures = self
+            .component_signatures
+            .write()
+            .expect("component_signatures lock poisoned");
 
         // Check if this component ID was previously registered with a different signature
         let old_signature = signatures.get(&component_id);
@@ -167,12 +173,16 @@ impl FastRefreshRuntime {
                 // Component signature changed - check if we can preserve state
                 if self.can_preserve_state_internal(old_sig, &signature) {
                     // Update the component
-                    let info = components.get_mut(old_sig).expect("component must exist in registry (invariant: matched by component_id)");
+                    let info = components.get_mut(old_sig).expect(
+                        "component must exist in registry (invariant: matched by component_id)",
+                    );
                     info.signature = signature.clone();
                     info.refresh_count += 1;
 
                     // Move to new signature key
-                    let info = components.remove(old_sig).expect("component must exist in registry (invariant: matched by component_id)");
+                    let info = components.remove(old_sig).expect(
+                        "component must exist in registry (invariant: matched by component_id)",
+                    );
                     components.insert(signature.clone(), info);
                     signatures.insert(component_id, signature.clone());
 
@@ -206,8 +216,14 @@ impl FastRefreshRuntime {
 
     /// Unregister a component from the runtime
     pub fn unregister_component(&self, component_id: ComponentId) -> bool {
-        let mut signatures = self.component_signatures.write().expect("component_signatures lock poisoned");
-        let mut components = self.registered_components.write().expect("registered_components lock poisoned");
+        let mut signatures = self
+            .component_signatures
+            .write()
+            .expect("component_signatures lock poisoned");
+        let mut components = self
+            .registered_components
+            .write()
+            .expect("registered_components lock poisoned");
 
         if let Some(signature) = signatures.remove(&component_id) {
             components.remove(&signature);
@@ -247,57 +263,90 @@ impl FastRefreshRuntime {
 
     /// Queue a component update for processing
     pub fn queue_update(&self, update: ComponentUpdate) {
-        let mut updates = self.pending_updates.lock().expect("pending_updates mutex poisoned");
+        let mut updates = self
+            .pending_updates
+            .lock()
+            .expect("pending_updates mutex poisoned");
         updates.push(update);
     }
 
     /// Process all pending updates
     pub fn process_updates(&self) -> Vec<ComponentUpdate> {
-        let mut updates = self.pending_updates.lock().expect("pending_updates mutex poisoned");
+        let mut updates = self
+            .pending_updates
+            .lock()
+            .expect("pending_updates mutex poisoned");
         std::mem::take(&mut *updates)
     }
 
     /// Force a component to fully re-render on next update
     pub fn force_rerender(&self, component_id: ComponentId) {
-        let mut force = self.force_rerender.lock().expect("force_rerender mutex poisoned");
+        let mut force = self
+            .force_rerender
+            .lock()
+            .expect("force_rerender mutex poisoned");
         force.insert(component_id);
     }
 
     /// Check if a component should force re-render
     pub fn should_force_rerender(&self, component_id: ComponentId) -> bool {
-        let force = self.force_rerender.lock().expect("force_rerender mutex poisoned");
+        let force = self
+            .force_rerender
+            .lock()
+            .expect("force_rerender mutex poisoned");
         force.contains(&component_id)
     }
 
     /// Clear force re-render flag for a component
     pub fn clear_force_rerender(&self, component_id: ComponentId) {
-        let mut force = self.force_rerender.lock().expect("force_rerender mutex poisoned");
+        let mut force = self
+            .force_rerender
+            .lock()
+            .expect("force_rerender mutex poisoned");
         force.remove(&component_id);
     }
 
     /// Get component info by signature
     pub fn get_component_info(&self, signature: &ComponentSignature) -> Option<ComponentInfo> {
-        let components = self.registered_components.read().expect("registered_components lock poisoned");
+        let components = self
+            .registered_components
+            .read()
+            .expect("registered_components lock poisoned");
         components.get(signature).cloned()
     }
 
     /// Get component signature by ID
     pub fn get_component_signature(&self, component_id: ComponentId) -> Option<ComponentSignature> {
-        let signatures = self.component_signatures.read().expect("component_signatures lock poisoned");
+        let signatures = self
+            .component_signatures
+            .read()
+            .expect("component_signatures lock poisoned");
         signatures.get(&component_id).cloned()
     }
 
     /// Get all registered components
     pub fn get_all_components(&self) -> Vec<ComponentInfo> {
-        let components = self.registered_components.read().expect("registered_components lock poisoned");
+        let components = self
+            .registered_components
+            .read()
+            .expect("registered_components lock poisoned");
         components.values().cloned().collect()
     }
 
     /// Clear all registered components (useful for full reload)
     pub fn clear(&self) {
-        let mut components = self.registered_components.write().expect("registered_components lock poisoned");
-        let mut signatures = self.component_signatures.write().expect("component_signatures lock poisoned");
-        let mut force = self.force_rerender.lock().expect("force_rerender mutex poisoned");
+        let mut components = self
+            .registered_components
+            .write()
+            .expect("registered_components lock poisoned");
+        let mut signatures = self
+            .component_signatures
+            .write()
+            .expect("component_signatures lock poisoned");
+        let mut force = self
+            .force_rerender
+            .lock()
+            .expect("force_rerender mutex poisoned");
 
         components.clear();
         signatures.clear();

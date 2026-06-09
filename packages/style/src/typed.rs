@@ -36,6 +36,7 @@ mod tests {
     use crate::ClassesBuilder;
 
     define_typed_classes! {
+        #[allow(dead_code)]
         TestDisplay {
             Flex => "hi-flex",
             Hidden => "hi-hidden",
