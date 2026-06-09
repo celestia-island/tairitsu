@@ -210,18 +210,12 @@ fn diff_children_keyed(old_children: &[VNode], new_children: &[VNode], patches: 
         stable_old.insert(matched_old_indices[lis_idx]);
     }
 
-    // Phase 1: Remove old children that are not matched
+    // Phase 1: Remove old keyed children that are not matched in new.
+    // Unkeyed children are matched positionally and are NOT removed here.
     let mut to_remove: Vec<usize> = Vec::new();
     for (i, child) in old_children.iter().enumerate() {
         if extract_key(child).is_some() && !matched_old_set.contains_key(&i) {
             to_remove.push(i);
-        }
-    }
-    if new_has_any_key_among(new_children) {
-        for (i, child) in old_children.iter().enumerate() {
-            if extract_key(child).is_none() {
-                to_remove.push(i);
-            }
         }
     }
 
@@ -280,10 +274,6 @@ fn diff_children_keyed(old_children: &[VNode], new_children: &[VNode], patches: 
             }
         }
     }
-}
-
-fn new_has_any_key_among(children: &[VNode]) -> bool {
-    children.iter().any(|c| extract_key(c).is_some())
 }
 
 fn count_removed_before(removals: &[usize], idx: usize) -> isize {
@@ -1024,5 +1014,57 @@ mod tests {
         let patches = diff(None, &new);
         assert_eq!(patches.len(), 1);
         assert!(matches!(&patches[0], Patch::CreateNode { .. }));
+    }
+
+    #[test]
+    fn test_diff_mixed_keyed_preserves_unkeyed() {
+        // Old: [A(unkeyed), B(key="b"), C(unkeyed)]
+        // New: [B(key="b"), A(unkeyed), C(unkeyed)]
+        // Unkeyed children should NOT be destroyed when keyed children exist.
+        let old_children = vec![
+            VNode::Text(VText::new("A")),
+            VNode::Element(VElement::new("span").key("b").child(VNode::Text(VText::new("B")))),
+            VNode::Text(VText::new("C")),
+        ];
+        let new_children = vec![
+            VNode::Element(VElement::new("span").key("b").child(VNode::Text(VText::new("B")))),
+            VNode::Text(VText::new("A")),
+            VNode::Text(VText::new("C")),
+        ];
+
+        let patches = diff(
+            Some(&VNode::Fragment(old_children)),
+            &VNode::Fragment(new_children),
+        );
+
+        // Should NOT remove the unkeyed children (A and C)
+        let removes: Vec<&Patch> = patches.iter().filter(|p| matches!(p, Patch::RemoveChild { .. })).collect();
+        assert!(removes.is_empty(), "Should not remove unkeyed children: {:?}", patches);
+    }
+
+    #[test]
+    fn test_diff_mixed_keyed_remove_keyed_only() {
+        // Old: [A(key="a"), B(key="b"), C(unkeyed)]
+        // New: [B(key="b"), C(unkeyed)]
+        // Only A (keyed and removed) should be removed, not C.
+        let old_children = vec![
+            VNode::Element(VElement::new("span").key("a")),
+            VNode::Element(VElement::new("span").key("b")),
+            VNode::Text(VText::new("C")),
+        ];
+        let new_children = vec![
+            VNode::Element(VElement::new("span").key("b")),
+            VNode::Text(VText::new("C")),
+        ];
+
+        let patches = diff(
+            Some(&VNode::Fragment(old_children)),
+            &VNode::Fragment(new_children),
+        );
+
+        // Should remove only A (index 0, keyed, removed from new)
+        let removes: Vec<&Patch> = patches.iter().filter(|p| matches!(p, Patch::RemoveChild { .. })).collect();
+        assert_eq!(removes.len(), 1, "should remove exactly one child");
+        assert!(matches!(removes[0], Patch::RemoveChild { index: 0 }));
     }
 }

@@ -102,6 +102,10 @@ pub enum VNode {
 pub struct DynamicText {
     pub initial: String,
     pub compute: Rc<RefCell<dyn FnMut() -> String>>,
+    /// Optional identity key. When set, [`PartialEq`] compares keys in addition
+    /// to `initial`, allowing the consumer to distinguish dynamic texts that
+    /// happen to share the same initial string.
+    pub key: Option<&'static str>,
 }
 
 impl DynamicText {
@@ -112,13 +116,20 @@ impl DynamicText {
         Self {
             initial,
             compute: Rc::new(RefCell::new(compute)),
+            key: None,
         }
+    }
+
+    /// Set an identity key for this dynamic text node.
+    pub fn with_key(mut self, key: &'static str) -> Self {
+        self.key = Some(key);
+        self
     }
 }
 
 impl PartialEq for DynamicText {
     fn eq(&self, other: &Self) -> bool {
-        self.initial == other.initial
+        self.initial == other.initial && self.key == other.key
     }
 }
 
@@ -169,12 +180,27 @@ impl PartialEq for VElement {
             && self.style == other.style
             && self.class == other.class
             && self.inner_html == other.inner_html
-            && self.event_handlers.keys().collect::<Vec<_>>()
-                == other.event_handlers.keys().collect::<Vec<_>>()
-            && self.dynamic_attributes.iter().map(|(k, _)| k).collect::<Vec<_>>()
-                == other.dynamic_attributes.iter().map(|(k, _)| k).collect::<Vec<_>>()
-            && self.dynamic_styles.iter().map(|(k, _)| k).collect::<Vec<_>>()
-                == other.dynamic_styles.iter().map(|(k, _)| k).collect::<Vec<_>>()
+            && {
+                let mut a: Vec<&str> = self.event_handlers.keys().map(|s| s.as_str()).collect();
+                let mut b: Vec<&str> = other.event_handlers.keys().map(|s| s.as_str()).collect();
+                a.sort();
+                b.sort();
+                a == b
+            }
+            && {
+                let mut a: Vec<&str> = self.dynamic_attributes.iter().map(|(k, _)| k.as_str()).collect();
+                let mut b: Vec<&str> = other.dynamic_attributes.iter().map(|(k, _)| k.as_str()).collect();
+                a.sort();
+                b.sort();
+                a == b
+            }
+            && {
+                let mut a: Vec<&str> = self.dynamic_styles.iter().map(|(k, _)| k.as_str()).collect();
+                let mut b: Vec<&str> = other.dynamic_styles.iter().map(|(k, _)| k.as_str()).collect();
+                a.sort();
+                b.sort();
+                a == b
+            }
             && self.dynamic_classes.len() == other.dynamic_classes.len()
     }
 }
@@ -1386,5 +1412,34 @@ mod tests {
         let a = VElement::new("div").dynamic_attr("data-x", || "1".to_string());
         let b = VElement::new("div");
         assert_ne!(a, b, "element with dynamic attr should not equal one without");
+    }
+
+    #[test]
+    fn test_dynamic_text_eq_same_initial() {
+        let a = DynamicText::new("hello".into(), || "world".into());
+        let b = DynamicText::new("hello".into(), || "different".into());
+        // Same initial + no keys → equal (even though compute differs)
+        assert_eq!(a, b, "DynamicText with same initial and no keys should be equal");
+    }
+
+    #[test]
+    fn test_dynamic_text_eq_different_initial() {
+        let a = DynamicText::new("hello".into(), || "world".into());
+        let b = DynamicText::new("bye".into(), || "world".into());
+        assert_ne!(a, b, "DynamicText with different initial should not be equal");
+    }
+
+    #[test]
+    fn test_dynamic_text_eq_with_keys() {
+        let a = DynamicText::new("hello".into(), || "val".into()).with_key("a");
+        let b = DynamicText::new("hello".into(), || "val".into()).with_key("b");
+        assert_ne!(a, b, "DynamicText with different keys should not be equal");
+    }
+
+    #[test]
+    fn test_dynamic_text_eq_same_keys() {
+        let a = DynamicText::new("hello".into(), || "val".into()).with_key("x");
+        let b = DynamicText::new("hello".into(), || "val".into()).with_key("x");
+        assert_eq!(a, b, "DynamicText with same keys should be equal");
     }
 }
