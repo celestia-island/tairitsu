@@ -706,6 +706,141 @@ fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro
     quote! { #default_name }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use syn::parse_quote;
+
+    #[test]
+    fn test_to_kebab_case_empty() {
+        assert_eq!(to_kebab_case(""), "");
+    }
+
+    #[test]
+    fn test_to_kebab_case_single_word() {
+        assert_eq!(to_kebab_case("hello"), "hello");
+    }
+
+    #[test]
+    fn test_to_kebab_case_camel_case() {
+        assert_eq!(to_kebab_case("helloWorld"), "hello-world");
+    }
+
+    #[test]
+    fn test_to_kebab_case_multiple_uppercase() {
+        assert_eq!(to_kebab_case("helloWorldTest"), "hello-world-test");
+    }
+
+    #[test]
+    fn test_to_kebab_case_all_uppercase() {
+        assert_eq!(to_kebab_case("HELLO"), "h-e-l-l-o");
+    }
+
+    #[test]
+    fn test_to_kebab_case_single_char() {
+        assert_eq!(to_kebab_case("a"), "a");
+    }
+
+    #[test]
+    fn test_capitalize_empty() {
+        assert_eq!(capitalize(""), "");
+    }
+
+    #[test]
+    fn test_capitalize_single_char() {
+        assert_eq!(capitalize("a"), "A");
+    }
+
+    #[test]
+    fn test_capitalize_word() {
+        assert_eq!(capitalize("hello"), "Hello");
+    }
+
+    #[test]
+    fn test_capitalize_already_capitalized() {
+        assert_eq!(capitalize("Hello"), "Hello");
+    }
+
+    #[test]
+    fn test_capitalize_with_numbers() {
+        assert_eq!(capitalize("hello123"), "Hello123");
+    }
+
+    #[test]
+    fn test_extract_response_type_default() {
+        let attrs: Vec<syn::Attribute> = vec![];
+        let result = extract_response_type(&attrs);
+        assert_eq!(result.to_string(), "String");
+    }
+
+    #[test]
+    fn test_extract_response_type_custom() {
+        let attrs: Vec<syn::Attribute> = vec![parse_quote!(#[wit_response(MyResponse)])];
+        let result = extract_response_type(&attrs);
+        assert!(result.to_string().contains("MyResponse"));
+    }
+
+    #[test]
+    fn test_extract_response_type_generic() {
+        let attrs: Vec<syn::Attribute> = vec![parse_quote!(#[wit_response(Result<Vec<u8>, String>)])];
+        let result = extract_response_type(&attrs);
+        assert!(result.to_string().contains("Result"));
+        assert!(result.to_string().contains("Vec"));
+    }
+
+    #[test]
+    fn test_wit_interface_parse_basic() {
+        let input: proc_macro2::TokenStream = quote! {
+            interface filesystem {
+                read: func(path: String) -> Result<Vec<u8>, String>;
+                write: func(path: String, data: Vec<u8>) -> Result<(), String>;
+            }
+        };
+        let parsed: WitInterface = syn::parse2(input).unwrap();
+        assert_eq!(parsed.name.to_string(), "filesystem");
+        assert_eq!(parsed.functions.len(), 2);
+        assert_eq!(parsed.functions[0].name.to_string(), "read");
+        assert_eq!(parsed.functions[1].name.to_string(), "write");
+    }
+
+    #[test]
+    fn test_wit_interface_parse_no_return() {
+        let input: proc_macro2::TokenStream = quote! {
+            interface logger {
+                log: func(message: String);
+            }
+        };
+        let parsed: WitInterface = syn::parse2(input).unwrap();
+        assert_eq!(parsed.functions.len(), 1);
+        assert!(parsed.functions[0].return_type.is_none());
+    }
+
+    #[test]
+    fn test_wit_interface_parse_multi_params() {
+        let input: proc_macro2::TokenStream = quote! {
+            interface calculator {
+                add: func(a: i32, b: i32) -> i32;
+            }
+        };
+        let parsed: WitInterface = syn::parse2(input).unwrap();
+        assert_eq!(parsed.functions[0].params.len(), 2);
+        assert_eq!(parsed.functions[0].params[0].0.to_string(), "a");
+        assert_eq!(parsed.functions[0].params[1].0.to_string(), "b");
+    }
+
+    #[test]
+    fn test_wit_world_args_parse() {
+        let input: proc_macro2::TokenStream = quote! {
+            "my-package:my-world", "./wit"
+        };
+        let parsed: WitWorldArgs = syn::parse2(input).unwrap();
+        assert_eq!(parsed.world.value(), "my-package:my-world");
+        assert_eq!(parsed.path.value(), "./wit");
+    }
+
+
+}
+
 /// Derive macro for Props structs.
 ///
 /// This is a marker derive that indicates a struct is used as component props.

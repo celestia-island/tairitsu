@@ -77,7 +77,6 @@ clean-idl-cache:
     @{{python}} scripts/clean_idl_cache.py
 
 # ============================================================================
-# ============================================================================
 # Build tasks
 # ============================================================================
 
@@ -281,7 +280,7 @@ watch:
     @echo "Watching for changes..."
     @echo "Press Ctrl+C to stop"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo watch -x check
+    @cargo watch -x check 2>/dev/null || echo "[HINT] Install cargo-watch: cargo install cargo-watch"
 
 # ============================================================================
 # Web development
@@ -293,6 +292,7 @@ watch:
 #   just dev --daemon --debug - Start daemon + debug API server (port 3001)
 #   just dev --daemon stop    - Stop daemon
 dev *FLAGS="":
+    @tairitsu --help > /dev/null 2>&1 || (echo "  Building tairitsu CLI..." && cargo build --release --package tairitsu-packager > /dev/null 2>&1)
     cd examples/website && tairitsu --manifest-path Cargo.toml dev --port 3000 --watch {{FLAGS}}
 
 # Dev server with debug/inspection API for agent automation
@@ -310,7 +310,7 @@ build-web: init
 # Serve web demo (production build)
 serve-web: build-web
     @echo "Serving production build..."
-    cd examples/website/dist && {{python}} -m http.server 3001
+    @cd examples/website/dist && {{python}} -m http.server 3001 2>/dev/null || echo "[HINT] Python http.server not available; try: python -m http.server 3001"
 
 # ============================================================================
 # WIT generation — W3C WebIDL → WIT interface pipeline
@@ -478,7 +478,7 @@ publish-live:
 # Build all npm packages locally
 npm-build:
     npm run build -w @celestia/tairitsu-browser-glue || (cd packages/npm/celestia-tairitsu-web-glue && npm run build)
-    npm run build -w @celestia/tairitsu-runtime || (cd packages/npm/celestia-tairitsu-web-glue && npm run build)
+    npm run build -w @celestia/tairitsu-runtime || (cd packages/npm/celestia-tairitsu-runtime && npm run build)
 
 # Build CDN demo with esm.sh CDN URLs (for production deployment)
 cdn-demo-prod:
@@ -568,4 +568,5 @@ visual-update:
         --update-baseline
 
 # Full visual regression pipeline: capture + diff + report
-visual-regression: visual-capture visual-diff
+visual-regression: visual-capture
+    just visual-diff

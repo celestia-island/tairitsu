@@ -141,7 +141,7 @@ fn call_lifecycle_start(store: &mut Store<SsrHostState>, browser_full: &BrowserF
     // Call the start function
     match lifecycle.call_start(store) {
         Ok(Ok(())) => {
-            println!("lifecycle::start() called successfully");
+            tracing::info!("lifecycle::start() called successfully");
             Ok(())
         }
         Ok(Err(e)) => {
@@ -155,7 +155,7 @@ fn call_lifecycle_start(store: &mut Store<SsrHostState>, browser_full: &BrowserF
         Err(e) => {
             // Failed to call the function (e.g., the export doesn't exist)
             // This is acceptable for components that don't have lifecycle::start
-            println!("lifecycle::start not available or failed to call: {}", e);
+            tracing::warn!("lifecycle::start not available or failed to call: {}", e);
             Ok(())
         }
     }

@@ -6264,7 +6264,6 @@ dependencies = [
  "async-trait",
  "bytes",
  "futures",
- "log",
  "regex",
  "reqwest 0.12.28",
  "serde",

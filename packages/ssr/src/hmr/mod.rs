@@ -112,12 +112,12 @@ impl HmrClient {
                 media: _,
             } => {
                 // CSS updates are handled by the browser
-                log::debug!("CSS update received for: {}", url);
+                tracing::debug!("CSS update received for: {}", url);
                 Ok(())
             }
 
             HmrMessage::FullReload { reason } => {
-                log::warn!(
+                tracing::warn!(
                     "Full page reload required: {}",
                     reason.as_deref().unwrap_or("unknown reason")
                 );
@@ -125,7 +125,7 @@ impl HmrClient {
             }
 
             HmrMessage::Error { message, .. } => {
-                log::error!("HMR error: {}", message);
+                tracing::error!("HMR error: {}", message);
                 Err(format!("HMR error: {}", message))
             }
 
@@ -141,7 +141,7 @@ impl HmrClient {
 
             HmrMessage::Connected { .. } => {
                 *self.connected.write().expect("connected state lock poisoned") = true;
-                log::info!("Connected to HMR server");
+                tracing::info!("Connected to HMR server");
                 Ok(())
             }
 

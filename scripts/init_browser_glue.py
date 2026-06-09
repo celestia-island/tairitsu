@@ -15,7 +15,8 @@ import sys
 from pathlib import Path
 
 
-def find_package_manager() -> str | None:
+def find_package_manager():
+
     for pm in ("pnpm", "yarn", "npm"):
         if shutil.which(pm):
             return pm

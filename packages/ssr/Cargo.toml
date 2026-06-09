@@ -16,7 +16,6 @@ anyhow = { workspace = true }
 wasmtime = { workspace = true }
 wasmtime-wasi = { workspace = true }
 tracing = { workspace = true }
-log = "0.4"
 bytes = "1"
 serde = { workspace = true }
 serde_json = { workspace = true }

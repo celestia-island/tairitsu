@@ -74,6 +74,5 @@ pub struct Rect {
 }
 
 pub fn init() {
-    // Initialize browser-specific features
-    println!("Initializing Tairitsu Web (Browser platform)");
+    tracing::info!("Initializing Tairitsu Web (Browser platform)");
 }
