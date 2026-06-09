@@ -98,7 +98,18 @@ impl SsrHostState {
 
 impl Default for SsrHostState {
     fn default() -> Self {
-        Self::new().expect("Failed to create SsrHostState")
+        Self::new().unwrap_or_else(|e| {
+            tracing::warn!(
+                "Failed to create SsrHostState with default config: {}. Using minimal fallback.",
+                e
+            );
+            Self {
+                wasi: WasiCtxBuilder::new().build(),
+                table: ResourceTable::new(),
+                dom: SsrDom::new(),
+                config: SsrConfig::default(),
+            }
+        })
     }
 }
 

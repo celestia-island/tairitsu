@@ -1336,6 +1336,7 @@ pub mod wasm_impl {
         }
 
         fn clear_timeout(&self, id: i32) {
+            TIMEOUT_CALLBACKS.with(|m| m.borrow_mut().remove(&(id as u64)));
             bindings::tairitsu_browser::full::platform_helpers::clear_timeout(id)
         }
 
@@ -1346,6 +1347,7 @@ pub mod wasm_impl {
         }
 
         fn clear_interval(&self, id: i32) {
+            INTERVAL_CALLBACKS.with(|m| m.borrow_mut().remove(&(id as u64)));
             bindings::tairitsu_browser::full::platform_helpers::clear_interval(id)
         }
 
@@ -1356,6 +1358,7 @@ pub mod wasm_impl {
         }
 
         fn cancel_animation_frame(&self, id: u32) {
+            ANIMATION_CALLBACKS.with(|m| m.borrow_mut().remove(&(id as u64)));
             bindings::tairitsu_browser::full::platform_helpers::cancel_animation_frame(id)
         }
     }
