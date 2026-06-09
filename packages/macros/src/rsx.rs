@@ -462,7 +462,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::InnerHtml(expr) => {
                 let expr = interpolate_expr(expr);
-                other_attrs.push(quote! { .inner_html(#expr) });
+                other_attrs.push(quote! { .dangerous_inner_html(#expr) });
             }
             RsxAttr::Ref(expr) => {
                 ref_attr = Some(expr);

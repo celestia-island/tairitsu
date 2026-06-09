@@ -759,15 +759,23 @@ impl VElement {
         self
     }
 
-    /// Set inner HTML directly (dangerously, equivalent to dangerouslySetInnerHTML)
-    pub fn inner_html(mut self, html: impl Into<String>) -> Self {
+    /// Set inner HTML directly (dangerously, equivalent to React's dangerouslySetInnerHTML).
+    ///
+    /// This bypasses all HTML escaping and XSS sanitization. Only use with
+    /// trusted content. For SVG, use [`safe_svg`] instead.
+    pub fn dangerous_inner_html(mut self, html: impl Into<String>) -> Self {
         self.inner_html = Some(html.into());
         self
     }
 
+    #[deprecated(since = "0.6.0", note = "renamed to dangerous_inner_html to match React convention")]
+    pub fn inner_html(self, html: impl Into<String>) -> Self {
+        self.dangerous_inner_html(html)
+    }
+
     /// Set inner HTML from a sanitized SVG content.
     ///
-    /// This is the safe alternative to `inner_html` for SVG content.
+    /// This is the safe alternative to [`dangerous_inner_html`] for SVG content.
     /// The `SafeSvg` wrapper ensures that the SVG has been sanitized
     /// to remove potentially dangerous elements and attributes.
     ///
