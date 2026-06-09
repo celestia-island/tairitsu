@@ -48,7 +48,7 @@ def download_file(url: str, dest_path: Path) -> None:
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with urllib.request.urlopen(url) as response:
+    with urllib.request.urlopen(url, timeout=60) as response:
         dest_path.write_bytes(response.read())
 
 
@@ -60,7 +60,7 @@ def download_wasi_adapters(version: str, res_dir: Path) -> None:
     print(f"  API URL: {api_url}")
 
     try:
-        with urllib.request.urlopen(api_url) as response:
+        with urllib.request.urlopen(api_url, timeout=60) as response:
             release_data = json.loads(response.read())
     except urllib.error.HTTPError as e:
         print(f"[ERROR] Failed to fetch release info: {e}")

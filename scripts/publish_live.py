@@ -21,7 +21,9 @@ def main():
         print("Error: NPM_TOKEN environment variable is not set.", file=sys.stderr)
         sys.exit(1)
 
-    run(["npm", "config", "set", "//registry.npmjs.org/:_authToken", token])
+    npmrc_path = Path.home() / ".npmrc"
+    npmrc_path.write_text(f"//registry.npmjs.org/:_authToken={token}\n")
+    os.chmod(str(npmrc_path), 0o600)
 
     glue_dir = REPO_ROOT / "packages" / "npm" / "celestia-tairitsu-web-glue"
 

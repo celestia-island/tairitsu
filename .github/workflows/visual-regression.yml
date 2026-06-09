@@ -117,8 +117,8 @@ jobs:
           path: target/visual-diff/
           retention-days: 14
 
-      - name: Update baseline on main branch
-        if: github.ref == 'refs/heads/main' && steps.diff.outcome == 'success'
+      - name: Update baseline on master branch
+        if: github.ref == 'refs/heads/master' && steps.diff.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

@@ -62,6 +62,11 @@ impl FetchClient {
     fn fetch_impl(&self, spec: &PackageSpec) -> Result<HashMap<String, Vec<u8>>> {
         use anyhow::Context;
 
+        let client = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .context("Failed to build HTTP client")?;
+
         let base = format!(
             "{}/{}/{}/{}",
             self.registry_url.trim_end_matches('/'),
@@ -73,7 +78,9 @@ impl FetchClient {
         // Fetch the manifest first to learn which files are available.
         let manifest_url = format!("{base}/manifest.json");
         debug!("GET {manifest_url}");
-        let manifest_resp = reqwest::blocking::get(&manifest_url)
+        let manifest_resp = client
+            .get(&manifest_url)
+            .send()
             .with_context(|| format!("Fetching manifest from {manifest_url}"))?
             .error_for_status()
             .with_context(|| format!("HTTP error fetching {manifest_url}"))?;
@@ -87,7 +94,9 @@ impl FetchClient {
         for filename in manifest.file_hashes.keys() {
             let url = format!("{base}/{filename}");
             debug!("GET {url}");
-            let bytes = reqwest::blocking::get(&url)
+            let bytes = client
+                .get(&url)
+                .send()
                 .with_context(|| format!("Fetching {url}"))?
                 .error_for_status()
                 .with_context(|| format!("HTTP error fetching {url}"))?

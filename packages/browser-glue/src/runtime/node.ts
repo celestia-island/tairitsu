@@ -21,7 +21,10 @@ export const node_exports = {
   getParentElement(self: bigint) {
     const el = globalThis.__lookupNode(self).parentElement;
     if (!el) return undefined;
-    return globalThis.__elementHandles.get(el);
+    for (const [handle, elem] of globalThis.__elementHandles.entries()) {
+      if (elem === el) return handle;
+    }
+    return undefined;
   },
   getFirstChild(self: bigint) {
     const node = globalThis.__lookupNode(self);

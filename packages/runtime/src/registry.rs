@@ -86,6 +86,9 @@ impl Registry {
             .containers
             .lock()
             .expect("registry containers lock poisoned");
+        if let Some(container) = containers.get_mut(name) {
+            container.stop();
+        }
         containers.remove(name)
     }
 

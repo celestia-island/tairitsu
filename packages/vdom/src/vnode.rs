@@ -523,9 +523,9 @@ impl VElement {
         })
     }
 
-    pub fn on_submit(self, mut handler: impl FnMut(crate::events::ChangeEvent) + 'static) -> Self {
+    pub fn on_submit(self, mut handler: impl FnMut(crate::events::SubmitEvent) + 'static) -> Self {
         self.on_event("submit", move |e: Box<dyn EventData>| {
-            if let Some(event) = e.as_any().downcast_ref::<crate::events::ChangeEvent>() {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::SubmitEvent>() {
                 handler(event.clone());
             }
         })

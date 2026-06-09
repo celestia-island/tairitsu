@@ -21,7 +21,12 @@ export const element_exports = {
     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
   },
   setInnerHtml(self: bigint, html: string) {
-    globalThis.__lookupElement(self).innerHTML = html;
+    const el = globalThis.__lookupElement(self);
+    const sanitizer = document.createElement('div');
+    sanitizer.innerHTML = html;
+    const scripts = sanitizer.querySelectorAll('script');
+    scripts.forEach(s => s.remove());
+    el.innerHTML = sanitizer.innerHTML;
   },
   getAttribute(self: bigint, name: string) {
     return globalThis.__lookupElement(self).getAttribute(name);

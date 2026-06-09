@@ -459,6 +459,7 @@ impl Default for ChangeEvent {
     }
 }
 
+#[derive(Clone)]
 pub struct SubmitEvent {
     pub target: Option<u64>,
     pub form_data: Vec<(String, String)>,

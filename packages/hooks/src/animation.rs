@@ -197,7 +197,16 @@ impl UseAnimation {
     }
 
     /// Start the animation with a platform reference
-    /// This initiates the requestAnimationFrame loop
+    ///
+    /// # Safety requirement
+    ///
+    /// The caller **must** guarantee that `platform` remains alive and at the
+    /// same address for the entire duration of the animation. If the platform
+    /// is dropped or moved while frames are still pending, undefined behaviour
+    /// will result from dangling pointer dereference inside the animation loop.
+    ///
+    /// In practice, only pass a `'static` platform reference or a platform
+    /// that is known to outlive all animations (e.g. an arena-allocated value).
     pub fn start_with_platform<P>(&self, platform: &P) -> AnimationHandle
     where
         P: Platform,
@@ -221,9 +230,18 @@ impl UseAnimation {
     where
         P: Platform,
     {
-        // We need to store a pointer to the platform to use in subsequent frames.
-        // Since we can't capture &P in the closure (lifetime issues), we use
-        // a raw pointer and ensure the platform outlives the animation.
+        // SAFETY NOTE: The platform pointer is stored as a raw `usize` so it can
+        // be used inside `FnOnce` closures scheduled via `request_animation_frame`.
+        //
+        // **Callers must guarantee that `platform` outlives the animation.**
+        // This typically means the platform must be a long-lived object (e.g. a
+        // `'static` singleton or an arena-allocated value). If the platform is
+        // dropped while an animation frame is pending, dereferencing this pointer
+        // is undefined behaviour.
+        //
+        // A more robust design would require `P: 'static` and use `Arc<P>`, but
+        // that would be a breaking API change. For now, we rely on the caller
+        // contract documented on `start_with_platform`.
         let platform_ptr = platform as *const P as usize;
 
         // Use weak references to avoid circular references

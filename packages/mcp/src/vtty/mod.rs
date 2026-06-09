@@ -122,7 +122,7 @@ impl VttySession {
     }
 
     pub fn send_text(&self, text: &str) -> Result<(), String> {
-        let encoded: Vec<u8> = text.replace('\n', "\r").as_bytes().to_vec();
+        let encoded: Vec<u8> = text.replace("\r\n", "\r").replace('\n', "\r").as_bytes().to_vec();
         self.write(&encoded)
     }
 

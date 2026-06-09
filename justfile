@@ -495,6 +495,7 @@ sync-wit:
 
 # Check that embedded WIT files are in sync with browser-worlds
 sync-wit-check:
+    @if [ ! -d packages/web/wit/composed ]; then echo "packages/web/wit/composed does not exist, run: just sync-wit" && exit 1; fi
     @diff -r packages/browser-worlds/wit/composed packages/web/wit/composed \
       || (echo "WIT files out of sync! Run: just sync-wit" && exit 1)
     @echo "WIT files are in sync"

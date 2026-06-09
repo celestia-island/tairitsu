@@ -112,11 +112,17 @@ impl HtmlChunk {
     }
 }
 
-/// Escape a string for use in a JavaScript string literal
+/// Escape a string for use in a JavaScript string literal.
+///
+/// Escapes backtick template literals and also replaces `</script` sequences
+/// to prevent premature closing of the wrapping `<script>` tag (XSS vector).
 fn javascript_escape(s: &str) -> String {
     let mut result = String::with_capacity(s.len() + 2);
     result.push('`');
-    for c in s.chars() {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let c = s[i..].chars().next().unwrap();
         match c {
             '`' => result.push_str("\\`"),
             '$' => result.push_str("\\$"),
@@ -124,8 +130,18 @@ fn javascript_escape(s: &str) -> String {
             '\n' => result.push_str("\\n"),
             '\r' => result.push_str("\\r"),
             '\t' => result.push_str("\\t"),
+            '<' if s[i + c.len_utf8()..].to_lowercase().starts_with("/script") => {
+                result.push_str("<\\/script");
+                i += c.len_utf8() + "/script".len();
+                continue;
+            }
             _ => result.push(c),
         }
+        i += c.len_utf8();
+    }
+    result.push('`');
+    result
+}
     }
     result.push('`');
     result
@@ -378,6 +394,14 @@ mod tests {
         assert_eq!(javascript_escape("hello$world"), "`hello\\$world`");
         assert_eq!(javascript_escape("hello\nworld"), "`hello\\nworld`");
         assert_eq!(javascript_escape("hello\\world"), "`hello\\\\world`");
+        assert_eq!(
+            javascript_escape("</script>"),
+            "`<\\/script>`"
+        );
+        assert_eq!(
+            javascript_escape("</SCRIPT>"),
+            "`<\\/script>`"
+        );
     }
 
     #[tokio::test]

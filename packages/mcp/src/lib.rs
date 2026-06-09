@@ -972,8 +972,9 @@ mod daemon {
         }
         for scan_dir in std::env::var("HOME")
             .ok()
-            .map(|h| vec![PathBuf::from("/mnt/sdb1"), PathBuf::from(h)])
-            .unwrap_or_default()
+            .map(|h| PathBuf::from(h))
+            .into_iter()
+            .chain(std::env::var("TAIRITSU_SCAN_DIRS").ok().into_iter().flat_map(|d| d.split(':').map(PathBuf::from)))
         {
             if let Ok(entries) = std::fs::read_dir(&scan_dir) {
                 for entry in entries.flatten() {

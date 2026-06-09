@@ -33,12 +33,13 @@ pub struct HostState {
 }
 
 impl HostState {
-    /// Create a new host state
+    /// Create a new host state with no inherited capabilities
+    ///
+    /// The returned state has no stdio, network, or filesystem access by default.
+    /// Use [`HostState::with_wasi`] or [`HostState::default`] if you need
+    /// to customise WASI capabilities explicitly.
     pub fn new() -> Result<Self> {
-        let wasi = WasiCtxBuilder::new()
-            .inherit_stdio()
-            .inherit_network()
-            .build();
+        let wasi = WasiCtxBuilder::new().build();
 
         let table = ResourceTable::new();
 
@@ -498,14 +499,10 @@ impl<T: HostStateImpl> Container<T> {
     /// ```ignore
     /// let result = container.call_guest_json("process", r#"{"input":"hello"}"#)?;
     /// ```
-    pub fn call_guest_json(&mut self, function_name: &str, json_payload: &str) -> Result<String> {
-        // JSON invocation is superseded by the RON-based call_guest_raw_desc() which
-        // preserves Rust type fidelity. This entry-point returns an error to guide
-        // callers to the preferred API.
+    pub fn call_guest_json(&mut self, function_name: &str, _json_payload: &str) -> Result<String> {
         anyhow::bail!(
-            "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}, Payload: {}",
+            "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}",
             function_name,
-            json_payload
         )
     }
 
