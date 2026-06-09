@@ -155,14 +155,6 @@ impl VttySession {
             .unwrap_or_default()
     }
 
-    #[cfg(test)]
-    pub fn get_line(&self, row: usize) -> String {
-        self.screen
-            .lock()
-            .map(|s| s.get_line(row))
-            .unwrap_or_default()
-    }
-
     pub fn find_text(&self, pattern: &str) -> Vec<(usize, usize)> {
         self.screen
             .lock()
