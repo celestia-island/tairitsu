@@ -622,7 +622,7 @@ export function BlobGetSize(self: bigint): bigint {
  */
 export function BlobGetType(self: bigint): string {
   const obj = lookupBlob(self);
-  return obj.getType();
+  return obj.type;
 }
 
 /**
@@ -630,7 +630,11 @@ export function BlobGetType(self: bigint): string {
  */
 export function slice(self: bigint, start: bigint | undefined, end: bigint | undefined, contentType: string | undefined): bigint {
   const obj = lookupBlob(self);
-  const _callResult = (obj as any).slice(start, end, contentType);
+  const _callResult = obj.slice(
+    start !== undefined ? Number(start) : undefined,
+    end !== undefined ? Number(end) : undefined,
+    contentType ?? undefined,
+  );
   const handle = _nextBlob++;
   _blobHandles.set(handle, _callResult);
   return handle;
@@ -641,7 +645,10 @@ export function slice(self: bigint, start: bigint | undefined, end: bigint | und
  */
 export function stream(self: bigint): bigint {
   const obj = lookupBlob(self);
-  return obj.stream();
+  const _stream = obj.stream();
+  const handle = _nextReadableStream++;
+  _readableStreamHandles.set(handle, _stream);
+  return handle;
 }
 
 /**

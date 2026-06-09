@@ -35,7 +35,12 @@ export const element_exports = {
     return globalThis.__lookupElement(self).tagName || '';
   },
   getClassList(self: bigint) {
-    return self;
+    const el = globalThis.__lookupElement(self);
+    const classList = el.classList;
+    if (!classList) return self;
+    const handle = globalThis.__nextHandle++;
+    globalThis.__elementHandles.set(handle, classList);
+    return handle;
   },
   getClientHeight(self: bigint) {
     return globalThis.__lookupElement(self).clientHeight || 0;

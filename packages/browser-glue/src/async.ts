@@ -104,7 +104,9 @@ export function pollPromise<T>(requestId: bigint): PromiseResult<T> | undefined 
     return undefined;
   }
 
-  return state.result as PromiseResult<T> | undefined;
+  const result = state.result as PromiseResult<T> | undefined;
+  promises.delete(requestId);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -167,11 +169,10 @@ export function clearTimer(timerId: bigint): void {
     throw new Error(`Timer ID ${timerId} not found`);
   }
 
-  if (typeof timer === "object" && timer !== null && "unref" in timer) {
-    clearInterval(timer);
-  } else {
-    clearTimeout(timer);
-  }
+  // Both clearTimeout and clearInterval accept either type in practice,
+  // so calling clearTimeout for both is safe in browser environments.
+  clearTimeout(timer);
+  clearInterval(timer);
 
   timers.delete(timerId);
 }
@@ -280,11 +281,8 @@ export function getAsyncStats(): {
  */
 export function clearAllAsyncState(): void {
   for (const timer of timers.values()) {
-    if (typeof timer === "object" && timer !== null && "unref" in timer) {
-      clearInterval(timer);
-    } else {
-      clearTimeout(timer);
-    }
+    clearTimeout(timer);
+    clearInterval(timer);
   }
   timers.clear();
   promises.clear();
