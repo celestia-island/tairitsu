@@ -24,6 +24,7 @@ tairitsu-ssr = { workspace = true, optional = true }
 tairitsu-packager = { workspace = true, optional = true }
 iso639_enum = { version = "0.6", optional = true }
 anyhow = { workspace = true }
+thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 toml = { workspace = true }

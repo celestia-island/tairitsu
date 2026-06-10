@@ -13,6 +13,7 @@ tairitsu-vdom = { workspace = true }
 tairitsu-hooks = { workspace = true, optional = true }
 tairitsu-browser-worlds = { workspace = true }
 anyhow = { workspace = true }
+thiserror = { workspace = true }
 wasmtime = { workspace = true }
 wasmtime-wasi = { workspace = true }
 tracing = { workspace = true }

@@ -22,7 +22,8 @@
 
 pub mod segment;
 
-use std::{collections::HashMap, fmt, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
+use thiserror::Error;
 
 pub use segment::{RouteSegment, SegmentType};
 use tairitsu_vdom::VNode;
@@ -88,24 +89,17 @@ pub type Params = HashMap<String, String>;
 pub type RouteMiddleware = Arc<dyn Fn(&mut Params) -> Result<(), MiddlewareError> + Send + Sync>;
 
 /// Error that can occur during middleware execution
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Error, Clone, Debug, PartialEq)]
 pub enum MiddlewareError {
     /// The route is not accessible
+    #[error("Forbidden")]
     Forbidden,
     /// The route requires authentication
+    #[error("Unauthorized")]
     Unauthorized,
     /// A custom error message
+    #[error("{0}")]
     Custom(String),
-}
-
-impl fmt::Display for MiddlewareError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            MiddlewareError::Forbidden => write!(f, "Forbidden"),
-            MiddlewareError::Unauthorized => write!(f, "Unauthorized"),
-            MiddlewareError::Custom(msg) => write!(f, "{}", msg),
-        }
-    }
 }
 
 /// Result of matching a route

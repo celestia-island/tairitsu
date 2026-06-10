@@ -6360,6 +6360,7 @@ dependencies = [
  "tairitsu-browser-worlds",
  "tairitsu-hooks",
  "tairitsu-vdom",
+ "thiserror 2.0.18",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -6409,6 +6410,7 @@ dependencies = [
  "tairitsu-ssr",
  "tairitsu-style",
  "tairitsu-vdom",
+ "thiserror 2.0.18",
  "tokio",
  "toml 0.8.2",
  "tracing",
@@ -9232,17 +9234,17 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "aoba"
-version = "0.1.2"
-
-[[patch.unused]]
-name = "kirino"
-version = "0.5.0"
+name = "hikari-animation"
+version = "0.2.7"
 
 [[patch.unused]]
 name = "plana"
 version = "0.1.0"
 
 [[patch.unused]]
-name = "hikari-animation"
-version = "0.2.7"
+name = "aoba"
+version = "0.1.2"
+
+[[patch.unused]]
+name = "kirino"
+version = "0.5.0"
