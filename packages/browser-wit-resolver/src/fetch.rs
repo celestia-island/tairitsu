@@ -5,8 +5,7 @@
 //! directing users to run the fetch subcommand or enable the feature.
 
 #[cfg(not(feature = "fetch"))]
-use anyhow::bail;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use std::collections::HashMap;
 
 #[cfg(feature = "fetch")]
