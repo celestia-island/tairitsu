@@ -2294,21 +2294,6 @@ pub mod wasm_impl {
             Patch::RemoveEvent { name } => {
                 platform.remove_event_listener(element, name);
             }
-
-            Patch::MoveChild { from, to } => {
-                let child = platform.first_child(element);
-                if let Some(_child) = child {
-                    tracing::trace!("MoveChild from {} to {} (stub)", from, to);
-                }
-            }
-
-            Patch::ReorderChildren { removals, moves } => {
-                tracing::trace!(
-                    "ReorderChildren removals={:?} moves={:?} (stub)",
-                    removals,
-                    moves
-                );
-            }
         }
 
         Ok(())

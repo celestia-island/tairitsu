@@ -70,7 +70,7 @@ impl SsrDom {
 
         // Viewport meta tag
         buf.push_str("  <meta name=\"viewport\" content=\"");
-        buf.push_str(&config.viewport_content);
+        html_escape_attr_into(&mut buf, &config.viewport_content);
         buf.push_str("\">\n");
 
         // Page title
@@ -83,7 +83,7 @@ impl SsrDom {
         // CSS links
         for css_link in &config.css_links {
             buf.push_str("  <link rel=\"stylesheet\" href=\"");
-            buf.push_str(css_link);
+            html_escape_attr_into(&mut buf, css_link);
             buf.push_str("\">\n");
         }
 
@@ -199,6 +199,7 @@ fn html_escape_attr_into(buf: &mut String, s: &str) {
         match ch {
             '&' => buf.push_str("&amp;"),
             '"' => buf.push_str("&quot;"),
+            '\'' => buf.push_str("&#39;"),
             '<' => buf.push_str("&lt;"),
             '>' => buf.push_str("&gt;"),
             _ => buf.push(ch),
@@ -244,6 +245,13 @@ mod tests {
         let mut buf = String::new();
         html_escape_attr_into(&mut buf, "a\"b&c");
         assert_eq!(buf, "a&quot;b&amp;c");
+    }
+
+    #[test]
+    fn test_html_attr_escape_single_quote() {
+        let mut buf = String::new();
+        html_escape_attr_into(&mut buf, "a'b");
+        assert_eq!(buf, "a&#39;b");
     }
 
     #[test]

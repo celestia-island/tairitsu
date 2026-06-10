@@ -195,22 +195,17 @@ pub fn active_component_id() -> Option<ComponentId> {
 /// Track a signal dependency for the current component.
 pub fn track_signal(signal_id: SignalId) {
     RUNTIME.with(|runtime| {
-        let rt = runtime.borrow_mut();
-
+        let mut rt = runtime.borrow_mut();
         if let Some(component_id) = rt.active_component {
-            drop(rt);
-            RUNTIME.with(|runtime| {
-                let mut rt = runtime.borrow_mut();
-                rt.signal_dependencies
-                    .entry(signal_id)
-                    .or_insert_with(Vec::new)
-                    .push(component_id);
-                trace!(
-                    "Component {} now depends on signal {:?}",
-                    component_id,
-                    signal_id
-                );
-            });
+            rt.signal_dependencies
+                .entry(signal_id)
+                .or_insert_with(Vec::new)
+                .push(component_id);
+            trace!(
+                "Component {} now depends on signal {:?}",
+                component_id,
+                signal_id
+            );
         }
     });
 }

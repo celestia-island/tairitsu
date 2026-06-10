@@ -1,5 +1,5 @@
 use std::{
-    ops::{Deref, DerefMut},
+    ops::Deref,
     rc::Rc,
 };
 
@@ -90,15 +90,6 @@ impl<T, R> Deref for Callback<T, R> {
 
     fn deref(&self) -> &Self::Target {
         &*self.inner
-    }
-}
-
-impl<T, R> DerefMut for Callback<T, R> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unreachable!(
-            "Callback does not support mutable access. \
-             Use Callback::call() or deref() instead."
-        )
     }
 }
 
@@ -290,10 +281,4 @@ mod tests {
         assert_eq!(state.get(), 20);
     }
 
-    #[test]
-    #[should_panic]
-    fn test_callback_deref_mut_panics() {
-        let mut callback = Callback::new(|x: i32| x);
-        let _ = callback.deref_mut();
-    }
 }

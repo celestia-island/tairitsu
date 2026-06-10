@@ -1067,6 +1067,7 @@ fn html_escape_attr_into(buf: &mut String, s: &str) {
         match ch {
             '&' => buf.push_str("&amp;"),
             '"' => buf.push_str("&quot;"),
+            '\'' => buf.push_str("&#39;"),
             '<' => buf.push_str("&lt;"),
             '>' => buf.push_str("&gt;"),
             _ => buf.push(ch),
@@ -1486,5 +1487,19 @@ mod tests {
         let a = DynamicText::new("hello".into(), || "val".into()).with_key("x");
         let b = DynamicText::new("hello".into(), || "val".into()).with_key("x");
         assert_eq!(a, b, "DynamicText with same keys should be equal");
+    }
+
+    #[test]
+    fn test_html_render_escapes_attr_single_quote() {
+        let el = VElement::new("div").attr("data-value", "it's");
+        let html = VNode::Element(el).render_to_html();
+        assert!(html.contains("&#39;"), "Single quote should be escaped: {}", html);
+    }
+
+    #[test]
+    fn test_html_render_escapes_attr_double_quote() {
+        let el = VElement::new("div").attr("data-value", r#"he"llo"#);
+        let html = VNode::Element(el).render_to_html();
+        assert!(html.contains("&quot;"), "Double quote should be escaped: {}", html);
     }
 }

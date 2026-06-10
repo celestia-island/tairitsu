@@ -1162,9 +1162,9 @@ mod tests {
         assert!(
             patches.iter().any(|p| matches!(
                 p,
-                Patch::MoveChild { .. } | Patch::RemoveChild { .. } | Patch::InsertChild { .. }
+                Patch::RemoveChild { .. } | Patch::InsertChild { .. }
             )),
-            "reorder should produce move/remove+insert patches"
+            "reorder should produce remove+insert patches"
         );
     }
 

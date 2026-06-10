@@ -37,12 +37,6 @@ pub enum Patch {
     RemoveChild {
         index: usize,
     },
-    #[doc(hidden)]
-    #[allow(dead_code)]
-    MoveChild {
-        from: usize,
-        to: usize,
-    },
     UpdateChild {
         index: usize,
         patches: Vec<Patch>,
@@ -57,12 +51,6 @@ pub enum Patch {
     },
     RemoveEvent {
         name: String,
-    },
-    #[doc(hidden)]
-    #[allow(dead_code)]
-    ReorderChildren {
-        removals: Vec<usize>,
-        moves: Vec<(usize, usize)>,
     },
 }
 
@@ -103,16 +91,6 @@ impl std::fmt::Debug for Patch {
             Patch::RemoveChild { index } => {
                 f.debug_struct("RemoveChild").field("index", index).finish()
             }
-            Patch::MoveChild { from, to } => f
-                .debug_struct("MoveChild")
-                .field("from", from)
-                .field("to", to)
-                .finish(),
-            Patch::ReorderChildren { removals, moves } => f
-                .debug_struct("ReorderChildren")
-                .field("removals", &format!("{:?}", removals))
-                .field("moves", &format!("{:?}", moves))
-                .finish(),
             Patch::UpdateChild { index, patches } => f
                 .debug_struct("UpdateChild")
                 .field("index", index)
