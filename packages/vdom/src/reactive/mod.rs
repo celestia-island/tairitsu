@@ -16,6 +16,7 @@ thread_local! {
     static DEPENDENCIES: RefCell<Vec<DependencyEntry>> = const { RefCell::new(Vec::new()) };
     static BATCH_DEPTH: RefCell<i32> = const { RefCell::new(0) };
     static PENDING_UPDATES: RefCell<Vec<Box<dyn FnOnce()>>> = RefCell::new(Vec::new());
+    static TRACKING_ACTIVE: Cell<bool> = const { Cell::new(false) };
 }
 
 static NEXT_SIGNAL_ID: AtomicUsize = AtomicUsize::new(1);
@@ -91,18 +92,16 @@ impl<T: Clone + 'static> Signal<T> {
         let id = self.inner.borrow().signal_id;
         crate::runtime::track_signal(id);
 
-        let signal = self.clone();
-        DEPENDENCIES.with(|deps| {
-            let borrowed = deps.borrow();
-            if !borrowed.is_empty() {
-                drop(borrowed);
+        if TRACKING_ACTIVE.with(|t| t.get()) {
+            let signal = self.clone();
+            DEPENDENCIES.with(|deps| {
                 deps.borrow_mut().push(DependencyEntry {
                     subscribe: Box::new(move |cb: Rc<dyn Fn()>| {
                         signal.inner.borrow_mut().subscribers.push(cb);
                     }),
                 });
-            }
-        });
+            });
+        }
 
         self.inner.borrow().value.clone()
     }
@@ -268,15 +267,15 @@ fn execute_effect(
     generation.set(gen + 1);
     let my_gen = generation.get();
 
+    let _prev_deps: Vec<DependencyEntry> =
+        DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect());
+
+    TRACKING_ACTIVE.with(|t| t.set(true));
+    callback.borrow_mut()();
+    TRACKING_ACTIVE.with(|t| t.set(false));
+
     let deps: Vec<DependencyEntry> =
         DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect());
-
-    callback.borrow_mut()();
-
-    let new_deps: Vec<DependencyEntry> =
-        DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect());
-
-    let deps = if new_deps.is_empty() { deps } else { new_deps };
 
     if deps.is_empty() {
         return;

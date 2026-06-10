@@ -1160,10 +1160,9 @@ mod tests {
         ];
         let patches = diff(Some(&VNode::Fragment(old)), &VNode::Fragment(new));
         assert!(
-            patches.iter().any(|p| matches!(
-                p,
-                Patch::RemoveChild { .. } | Patch::InsertChild { .. }
-            )),
+            patches
+                .iter()
+                .any(|p| matches!(p, Patch::RemoveChild { .. } | Patch::InsertChild { .. })),
             "reorder should produce remove+insert patches"
         );
     }

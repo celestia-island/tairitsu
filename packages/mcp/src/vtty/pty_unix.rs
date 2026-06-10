@@ -160,7 +160,8 @@ impl UnixPty {
                 }
                 tracing::debug!(
                     "[vtty-reader] poll hangup/error on fd={}, revents={}",
-                    read_fd, pfd.revents
+                    read_fd,
+                    pfd.revents
                 );
                 break;
             }

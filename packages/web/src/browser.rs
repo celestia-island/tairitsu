@@ -1,11 +1,6 @@
 //! Browser-specific platform implementation
 
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    ops::AddAssign,
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashMap, ops::AddAssign, rc::Rc};
 
 type CallbackMap = Rc<RefCell<HashMap<u32, Box<dyn Fn()>>>>;
 
@@ -41,9 +36,7 @@ impl BrowserPlatform {
 
         let callback = Box::new(callback);
         callback();
-        self.timeout_callbacks
-            .borrow_mut()
-            .insert(id, callback);
+        self.timeout_callbacks.borrow_mut().insert(id, callback);
 
         id
     }
@@ -57,9 +50,7 @@ impl BrowserPlatform {
 
         let callback = Box::new(callback);
         callback();
-        self.animation_callbacks
-            .borrow_mut()
-            .insert(id, callback);
+        self.animation_callbacks.borrow_mut().insert(id, callback);
 
         id
     }

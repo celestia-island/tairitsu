@@ -1493,13 +1493,21 @@ mod tests {
     fn test_html_render_escapes_attr_single_quote() {
         let el = VElement::new("div").attr("data-value", "it's");
         let html = VNode::Element(el).render_to_html();
-        assert!(html.contains("&#39;"), "Single quote should be escaped: {}", html);
+        assert!(
+            html.contains("&#39;"),
+            "Single quote should be escaped: {}",
+            html
+        );
     }
 
     #[test]
     fn test_html_render_escapes_attr_double_quote() {
         let el = VElement::new("div").attr("data-value", r#"he"llo"#);
         let html = VNode::Element(el).render_to_html();
-        assert!(html.contains("&quot;"), "Double quote should be escaped: {}", html);
+        assert!(
+            html.contains("&quot;"),
+            "Double quote should be escaped: {}",
+            html
+        );
     }
 }

@@ -122,7 +122,10 @@ fn javascript_escape(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
-        let c = s[i..].chars().next().expect("non-empty slice at byte offset i");
+        let c = s[i..]
+            .chars()
+            .next()
+            .expect("non-empty slice at byte offset i");
         match c {
             '`' => result.push_str("\\`"),
             '$' => result.push_str("\\$"),

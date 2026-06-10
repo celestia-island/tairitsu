@@ -156,9 +156,7 @@ impl ResourceRegistry {
         state: ResourceStateOp,
     ) -> Vec<runtime::ComponentId> {
         if let Some(resource_state) = self.resources.get(&id) {
-            *resource_state
-                .lock()
-                .expect("resource state mutex poisoned") = state;
+            *resource_state.lock().unwrap_or_else(|e| e.into_inner()) = state;
         }
 
         // Get all components that depend on this resource
@@ -190,7 +188,7 @@ impl ResourceRegistry {
     fn get_resource_state(&self, id: ResourceId) -> Option<ResourceStateOp> {
         self.resources
             .get(&id)
-            .map(|arc| *arc.lock().expect("resource state mutex poisoned"))
+            .map(|arc| *arc.lock().unwrap_or_else(|e| e.into_inner()))
     }
 
     fn track_access(&mut self, resource_id: ResourceId) {
@@ -250,7 +248,7 @@ fn has_loading_resources(boundary_id: runtime::ComponentId) -> bool {
         if let Some(boundary) = reg.get_boundary(boundary_id) {
             for &resource_id in &boundary.tracked_resources {
                 if let Some(state) = reg.resources.get(&resource_id) {
-                    let guard = state.lock().expect("resource state mutex poisoned");
+                    let guard = state.lock().unwrap_or_else(|e| e.into_inner());
                     if matches!(&*guard, ResourceStateOp::Loading) {
                         return true;
                     }
@@ -372,7 +370,7 @@ impl<T> Resource<T> {
             .inner
             .thread_safe_state
             .lock()
-            .expect("thread_safe_state mutex poisoned") = new_state.clone();
+            .unwrap_or_else(|e| e.into_inner()) = new_state.clone();
 
         // Update the global registry
         let registry_state = match new_state {
@@ -467,9 +465,7 @@ where
                     Ok(value) => ResourceState::Ready(value),
                     Err(err) => ResourceState::Error(err.to_string()),
                 };
-                *thread_safe_state
-                    .lock()
-                    .expect("thread_safe_state mutex poisoned") = new_state.clone();
+                *thread_safe_state.lock().unwrap_or_else(|e| e.into_inner()) = new_state.clone();
 
                 let registry_state = match new_state {
                     ResourceState::Loading => ResourceStateOp::Loading,

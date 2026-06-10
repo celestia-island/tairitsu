@@ -1,7 +1,4 @@
-use std::{
-    ops::Deref,
-    rc::Rc,
-};
+use std::{ops::Deref, rc::Rc};
 
 /// A smart pointer wrapping `Fn(T) -> R` for event handling.
 ///
@@ -280,5 +277,4 @@ mod tests {
         callback2.call(20);
         assert_eq!(state.get(), 20);
     }
-
 }

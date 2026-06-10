@@ -522,10 +522,7 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
     }
 
     if cli.daemon && !daemon::is_daemon() && !cli.dry_run {
-        // SAFETY: single-threaded at this point
-        unsafe {
-            std::env::set_var("TAIRITSU_LOG_TS", "1");
-        }
+        std::env::set_var("TAIRITSU_LOG_TS", "1");
         let was_running = daemon::is_daemon_running();
         if was_running {
             let killed_pid = daemon::read_pid().unwrap_or(0);
@@ -935,7 +932,10 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                             continue;
                         }
 
-                        let fake_meta = crate::icons::HikariIconsMetadata { sets: vec![set_name.clone()], ..Default::default() };
+                        let fake_meta = crate::icons::HikariIconsMetadata {
+                            sets: vec![set_name.clone()],
+                            ..Default::default()
+                        };
                         let result = crate::icons::resolve(&fake_meta, &cache)?;
                         if result.sets.is_empty() {
                             crate::log_fail!("{} — failed to fetch", set_name);

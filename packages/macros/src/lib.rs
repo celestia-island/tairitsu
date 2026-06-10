@@ -470,7 +470,11 @@ pub fn export_wit(_attrs: TokenStream, input: TokenStream) -> TokenStream {
         #[cfg(target_family = "wasm")]
         #[no_mangle]
         pub unsafe extern "C" fn #wasm_wrapper_name() -> *mut u8 {
-            panic!("export_wit: replace with a proper wit-bindgen guest implementation")
+            unimplemented!(
+                "export_wit: the function `{}` must be replaced with a proper \
+                 wit-bindgen guest implementation before deploying to WASM",
+                stringify!(#fn_name)
+            )
         }
     };
 

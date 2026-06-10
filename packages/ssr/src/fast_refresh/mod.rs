@@ -159,11 +159,11 @@ impl FastRefreshRuntime {
         let mut components = self
             .registered_components
             .write()
-            .expect("registered_components lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         let mut signatures = self
             .component_signatures
             .write()
-            .expect("component_signatures lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
 
         // Check if this component ID was previously registered with a different signature
         let old_signature = signatures.get(&component_id);
@@ -189,7 +189,7 @@ impl FastRefreshRuntime {
                     RegistrationResult::Updated
                 } else {
                     // Cannot preserve state - blacklist this component
-                    let mut blacklist = self.blacklisted.write().expect("blacklist lock poisoned");
+                    let mut blacklist = self.blacklisted.write().unwrap_or_else(|e| e.into_inner());
                     blacklist.insert(signature.clone());
                     blacklist.insert(old_sig.clone());
 
@@ -219,11 +219,11 @@ impl FastRefreshRuntime {
         let mut signatures = self
             .component_signatures
             .write()
-            .expect("component_signatures lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         let mut components = self
             .registered_components
             .write()
-            .expect("registered_components lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
 
         if let Some(signature) = signatures.remove(&component_id) {
             components.remove(&signature);
@@ -248,7 +248,7 @@ impl FastRefreshRuntime {
         new_sig: &ComponentSignature,
     ) -> bool {
         // Check blacklist
-        let blacklist = self.blacklisted.read().expect("fast_refresh blacklist lock poisoned");
+        let blacklist = self.blacklisted.read().unwrap_or_else(|e| e.into_inner());
         if blacklist.contains(old_sig) || blacklist.contains(new_sig) {
             return false;
         }
@@ -266,7 +266,7 @@ impl FastRefreshRuntime {
         let mut updates = self
             .pending_updates
             .lock()
-            .expect("pending_updates mutex poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         updates.push(update);
     }
 
@@ -275,7 +275,7 @@ impl FastRefreshRuntime {
         let mut updates = self
             .pending_updates
             .lock()
-            .expect("pending_updates mutex poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         std::mem::take(&mut *updates)
     }
 
@@ -284,7 +284,7 @@ impl FastRefreshRuntime {
         let mut force = self
             .force_rerender
             .lock()
-            .expect("force_rerender mutex poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         force.insert(component_id);
     }
 
@@ -293,7 +293,7 @@ impl FastRefreshRuntime {
         let force = self
             .force_rerender
             .lock()
-            .expect("force_rerender mutex poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         force.contains(&component_id)
     }
 
@@ -302,7 +302,7 @@ impl FastRefreshRuntime {
         let mut force = self
             .force_rerender
             .lock()
-            .expect("force_rerender mutex poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         force.remove(&component_id);
     }
 
@@ -311,7 +311,7 @@ impl FastRefreshRuntime {
         let components = self
             .registered_components
             .read()
-            .expect("registered_components lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         components.get(signature).cloned()
     }
 
@@ -320,7 +320,7 @@ impl FastRefreshRuntime {
         let signatures = self
             .component_signatures
             .read()
-            .expect("component_signatures lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         signatures.get(&component_id).cloned()
     }
 
@@ -329,7 +329,7 @@ impl FastRefreshRuntime {
         let components = self
             .registered_components
             .read()
-            .expect("registered_components lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         components.values().cloned().collect()
     }
 
@@ -338,15 +338,15 @@ impl FastRefreshRuntime {
         let mut components = self
             .registered_components
             .write()
-            .expect("registered_components lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         let mut signatures = self
             .component_signatures
             .write()
-            .expect("component_signatures lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         let mut force = self
             .force_rerender
             .lock()
-            .expect("force_rerender mutex poisoned");
+            .unwrap_or_else(|e| e.into_inner());
 
         components.clear();
         signatures.clear();
@@ -355,13 +355,13 @@ impl FastRefreshRuntime {
 
     /// Add a signature to the blacklist
     pub fn blacklist(&self, signature: ComponentSignature) {
-        let mut blacklist = self.blacklisted.write().expect("blacklist lock poisoned");
+        let mut blacklist = self.blacklisted.write().unwrap_or_else(|e| e.into_inner());
         blacklist.insert(signature);
     }
 
     /// Check if a signature is blacklisted
     pub fn is_blacklisted(&self, signature: &ComponentSignature) -> bool {
-        let blacklist = self.blacklisted.read().expect("blacklist lock poisoned");
+        let blacklist = self.blacklisted.read().unwrap_or_else(|e| e.into_inner());
         blacklist.contains(signature)
     }
 

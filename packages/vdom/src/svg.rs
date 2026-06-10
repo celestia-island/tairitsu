@@ -496,8 +496,11 @@ fn extract_attribute_with_value(content: &str) -> Option<(&str, usize, usize)> {
     let mut pos = 0;
 
     // Skip attribute name
-    while pos < len && !bytes[pos].is_ascii_whitespace() && bytes[pos] != b'='
-        && bytes[pos] != b'>' && bytes[pos] != b'/'
+    while pos < len
+        && !bytes[pos].is_ascii_whitespace()
+        && bytes[pos] != b'='
+        && bytes[pos] != b'>'
+        && bytes[pos] != b'/'
     {
         pos += 1;
     }

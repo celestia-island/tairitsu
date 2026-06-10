@@ -73,19 +73,13 @@ impl Registry {
     where
         F: FnOnce(&mut Container) -> R,
     {
-        let mut containers = self
-            .containers
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
+        let mut containers = self.containers.lock().unwrap_or_else(|e| e.into_inner());
         containers.get_mut(name).map(f)
     }
 
     /// Stop and remove container (similar to docker stop/rm)
     pub fn stop_container(&self, name: &str) -> Option<Container> {
-        let mut containers = self
-            .containers
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
+        let mut containers = self.containers.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(container) = containers.get_mut(name) {
             container.stop();
         }
@@ -100,10 +94,7 @@ impl Registry {
 
     /// List all running container names
     pub fn list_containers(&self) -> Vec<String> {
-        let containers = self
-            .containers
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
+        let containers = self.containers.lock().unwrap_or_else(|e| e.into_inner());
         containers.keys().cloned().collect()
     }
 

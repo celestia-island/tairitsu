@@ -125,7 +125,9 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
                 output_dir.join("index.html")
             } else {
                 let route_path = output_dir.join(route).join("index.html");
-                let parent = route_path.parent().expect("route path has parent (route is non-empty)");
+                let parent = route_path
+                    .parent()
+                    .expect("route path has parent (route is non-empty)");
                 fs::create_dir_all(parent)?;
                 route_path
             };

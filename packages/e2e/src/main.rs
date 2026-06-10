@@ -24,10 +24,8 @@ async fn main() -> Result<()> {
 
     tracing_subscriber::fmt().with_env_filter("info").init();
 
-    unsafe {
-        std::env::set_var("WEBSITE_BASE_URL", &args.website_url);
-        std::env::set_var("E2E_SCREENSHOTS_DIR", &args.screenshots_dir);
-    }
+    std::env::set_var("WEBSITE_BASE_URL", &args.website_url);
+    std::env::set_var("E2E_SCREENSHOTS_DIR", &args.screenshots_dir);
 
     info!("Starting E2E tests...");
     info!("Selenium URL: {}", args.selenium_url);

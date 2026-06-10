@@ -104,9 +104,7 @@ where
             };
 
             // Update the thread-safe state
-            *state_sync_clone
-                .lock()
-                .expect("resource state mutex poisoned") = new_state;
+            *state_sync_clone.lock().unwrap_or_else(|e| e.into_inner()) = new_state;
 
             // Trigger re-render
             runtime::mark_dirty(component_id);
@@ -156,9 +154,7 @@ pub fn use_fetch_json<T>(url: &str) -> Rc<RefCell<Resource<T>>>
 where
     T: serde::de::DeserializeOwned + Clone + Send + 'static,
 {
-    use_fetch(url, |data| {
-        Ok(serde_json::from_slice(data)?)
-    })
+    use_fetch(url, |data| Ok(serde_json::from_slice(data)?))
 }
 
 /// Hook for fetching data with a custom fetcher and automatic JSON parsing
@@ -167,11 +163,7 @@ where
     T: serde::de::DeserializeOwned + Clone + Send + 'static,
     Fr: Fetcher + Clone + Send + Sync + 'static,
 {
-    use_fetch_with_fetcher(
-        url,
-        |data| Ok(serde_json::from_slice(data)?),
-        fetcher,
-    )
+    use_fetch_with_fetcher(url, |data| Ok(serde_json::from_slice(data)?), fetcher)
 }
 
 /// Hook for lazy data fetching
@@ -244,9 +236,7 @@ where
                     Err(e) => Resource::Error(e.to_string()),
                 };
 
-                *state_sync_clone
-                    .lock()
-                    .expect("resource state mutex poisoned") = new_state;
+                *state_sync_clone.lock().unwrap_or_else(|e| e.into_inner()) = new_state;
 
                 runtime::mark_dirty(component_id);
                 runtime::flush_render();

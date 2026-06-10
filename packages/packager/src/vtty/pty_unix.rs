@@ -41,7 +41,8 @@ impl UnixPty {
         {
             let master_fd = pair.master.as_raw_fd().unwrap_or(-1);
             if master_fd >= 0 {
-                let mut termios: std::mem::MaybeUninit<libc::termios> = std::mem::MaybeUninit::uninit();
+                let mut termios: std::mem::MaybeUninit<libc::termios> =
+                    std::mem::MaybeUninit::uninit();
                 if unsafe { libc::tcgetattr(master_fd, termios.as_mut_ptr()) } == 0 {
                     let termios = unsafe { termios.assume_init_mut() };
                     termios.c_lflag &= !(libc::ECHO | libc::ECHONL);

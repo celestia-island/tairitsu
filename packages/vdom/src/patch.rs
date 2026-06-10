@@ -3,55 +3,21 @@ use crate::vnode::{Classes, EventHandler, Style, VNode};
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum Patch {
-    CreateNode {
-        node: VNode,
-    },
+    CreateNode { node: VNode },
     RemoveNode,
-    ReplaceNode {
-        node: VNode,
-    },
-    UpdateText {
-        text: String,
-    },
-    UpdateAttribute {
-        name: String,
-        value: String,
-    },
-    AddAttribute {
-        name: String,
-        value: String,
-    },
-    RemoveAttribute {
-        name: String,
-    },
-    UpdateStyle {
-        style: Style,
-    },
-    UpdateClass {
-        class: Classes,
-    },
-    InsertChild {
-        index: usize,
-        node: VNode,
-    },
-    RemoveChild {
-        index: usize,
-    },
-    UpdateChild {
-        index: usize,
-        patches: Vec<Patch>,
-    },
-    AddEvent {
-        name: String,
-        handler: EventHandler,
-    },
-    UpdateEvent {
-        name: String,
-        handler: EventHandler,
-    },
-    RemoveEvent {
-        name: String,
-    },
+    ReplaceNode { node: VNode },
+    UpdateText { text: String },
+    UpdateAttribute { name: String, value: String },
+    AddAttribute { name: String, value: String },
+    RemoveAttribute { name: String },
+    UpdateStyle { style: Style },
+    UpdateClass { class: Classes },
+    InsertChild { index: usize, node: VNode },
+    RemoveChild { index: usize },
+    UpdateChild { index: usize, patches: Vec<Patch> },
+    AddEvent { name: String, handler: EventHandler },
+    UpdateEvent { name: String, handler: EventHandler },
+    RemoveEvent { name: String },
 }
 
 impl std::fmt::Debug for Patch {

@@ -61,10 +61,7 @@ impl HmrClient {
 
     /// Check if connected to the HMR server
     pub fn is_connected(&self) -> bool {
-        *self
-            .connected
-            .read()
-            .expect("connected state lock poisoned")
+        *self.connected.read().unwrap_or_else(|e| e.into_inner())
     }
 
     /// Register a module with the client
@@ -78,7 +75,7 @@ impl HmrClient {
         let registry = self
             .module_registry
             .read()
-            .expect("module registry lock poisoned");
+            .unwrap_or_else(|e| e.into_inner());
         registry.register(path)
     }
 
@@ -99,7 +96,7 @@ impl HmrClient {
                 let registry = self
                     .module_registry
                     .read()
-                    .expect("module registry lock poisoned");
+                    .unwrap_or_else(|e| e.into_inner());
 
                 if registry.get(module_id).is_some() {
                     // Module exists, trigger reload
@@ -149,10 +146,7 @@ impl HmrClient {
             }
 
             HmrMessage::Connected { .. } => {
-                *self
-                    .connected
-                    .write()
-                    .expect("connected state lock poisoned") = true;
+                *self.connected.write().unwrap_or_else(|e| e.into_inner()) = true;
                 tracing::info!("Connected to HMR server");
                 Ok(())
             }
@@ -161,7 +155,7 @@ impl HmrClient {
                 let registry = self
                     .module_registry
                     .read()
-                    .expect("module registry lock poisoned");
+                    .unwrap_or_else(|e| e.into_inner());
                 let _ = registry.update_state(module_id, state.clone());
                 Ok(())
             }
@@ -170,10 +164,7 @@ impl HmrClient {
 
     /// Disconnect from the HMR server
     pub fn disconnect(&self) {
-        *self
-            .connected
-            .write()
-            .expect("connected state lock poisoned") = false;
+        *self.connected.write().unwrap_or_else(|e| e.into_inner()) = false;
     }
 }
 

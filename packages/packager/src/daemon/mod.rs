@@ -878,17 +878,14 @@ where
             fs::create_dir_all(parent)?;
         }
 
-        // SAFETY: single-threaded at this point, no concurrent env access
-        unsafe {
-            env::set_var(
-                "TAIRITSU_COLOR",
-                if std::io::stderr().is_terminal() {
-                    "1"
-                } else {
-                    "0"
-                },
-            );
-        }
+        env::set_var(
+            "TAIRITSU_COLOR",
+            if std::io::stderr().is_terminal() {
+                "1"
+            } else {
+                "0"
+            },
+        );
 
         let pid = spawn_daemon_process_windows(&exe, &args)?;
         Ok(pid)
