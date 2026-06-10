@@ -61,3 +61,7 @@ HIKARI_BROWSER_ISSUE.md
 # Note: This directory must exist for sync-wit-check to work.
 # Run `just sync-wit` to populate it from browser-worlds.
 # packages/web/wit/
+
+# Package manager lock files (not tracked per project convention)
+Cargo.lock
+package-lock.json

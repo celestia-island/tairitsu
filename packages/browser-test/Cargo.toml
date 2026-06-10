@@ -34,7 +34,7 @@ hex = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 which = { workspace = true }
-semver = "1"
+semver = "^1"
 
 [dev-dependencies]
 tempfile = { workspace = true }

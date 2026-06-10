@@ -22,7 +22,7 @@ tairitsu-macros = { workspace = true, optional = true }
 tairitsu-style = { workspace = true, optional = true }
 tairitsu-ssr = { workspace = true, optional = true }
 tairitsu-packager = { workspace = true, optional = true }
-iso639_enum = { version = "0.6", optional = true }
+iso639_enum = { version = "^0.6", optional = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }

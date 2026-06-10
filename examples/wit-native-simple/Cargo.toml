@@ -29,13 +29,13 @@ tairitsu = { path = "../../packages/runtime" }
 tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # MCP / network and protocols
-wit-bindgen = "0.57"
-wit-component = "0.245"
+wit-bindgen = "^0.57"
+wit-component = "^0.245"
 
 # For WASM guest builds
 [target.'cfg(target_family = "wasm")'.dependencies]
 # MCP / network and protocols
-wit-bindgen = { version = "0.57", features = ["macros"] }
+wit-bindgen = { version = "^0.57", features = ["macros"] }
 
 [lib]
 # Library is used for the WASM guest side

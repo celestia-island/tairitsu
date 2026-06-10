@@ -41,8 +41,8 @@ grass = { workspace = true }
 regex = { workspace = true }
 wit-parser = { workspace = true }
 sha2 = { workspace = true }
-yuuka = "0.6"
-sys-locale = "0.3"
+yuuka = "^0.6"
+sys-locale = "^0.3"
 crossterm = { workspace = true, optional = true }
 chrono = { workspace = true }
 reqwest = { workspace = true, features = [
@@ -84,7 +84,7 @@ vtty = ["vte", "portable-pty"]
  libc = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59", features = [
+windows-sys = { version = "^0.59", features = [
   "Win32_Foundation",
   "Win32_Security",
   "Win32_Storage_FileSystem",

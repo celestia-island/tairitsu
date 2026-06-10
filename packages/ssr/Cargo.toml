@@ -20,12 +20,12 @@ tracing = { workspace = true }
 bytes = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-uuid = { version = "1.11", features = ["v4"] }
+uuid = { version = "^1.11", features = ["v4"] }
 regex = { workspace = true }
 async-trait = { workspace = true }
 reqwest = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
-async-stream = { version = "0.3", optional = true }
+async-stream = { version = "^0.3", optional = true }
 tokio = { workspace = true, features = ["full"], optional = true }
 tokio-stream = { workspace = true, optional = true, default-features = false }
 

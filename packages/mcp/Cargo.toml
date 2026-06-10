@@ -22,8 +22,8 @@ tracing-subscriber = { workspace = true, features = ["env-filter"] }
 reqwest = { workspace = true, features = ["query"] }
 vte = { workspace = true, optional = true }
 portable-pty = { workspace = true, optional = true }
-schemars = "1"
-rmcp = { version = "1", features = ["server", "transport-io", "macros", "schemars"] }
+schemars = "^1"
+rmcp = { version = "^1", features = ["server", "transport-io", "macros", "schemars"] }
 ab_glyph = { version = "^0.2", optional = true }
 image = { workspace = true, optional = true }
 base64 = { workspace = true, optional = true }

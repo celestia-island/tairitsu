@@ -28,7 +28,7 @@ hikari-components = { git = "https://github.com/celestia-island/hikari.git", bra
 hikari-icons = { git = "https://github.com/celestia-island/hikari.git", branch = "dev", features = ["tairitsu"] }
 
 # Markdown rendering
-pulldown-cmark = "0.12"
+pulldown-cmark = "^0.12"
 
 # Logging and error handling
 tracing = { workspace = true }

@@ -14,8 +14,8 @@ crate-type = ["cdylib", "rlib"]
 tairitsu-vdom = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true, optional = true }
-pest = "2.7"
-pest_derive = "2.7"
+pest = "^2.7"
+pest_derive = "^2.7"
 
 [build-dependencies]
 serde = { workspace = true }
