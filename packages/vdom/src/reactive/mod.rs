@@ -93,11 +93,15 @@ impl<T: Clone + 'static> Signal<T> {
 
         let signal = self.clone();
         DEPENDENCIES.with(|deps| {
-            deps.borrow_mut().push(DependencyEntry {
-                subscribe: Box::new(move |cb: Rc<dyn Fn()>| {
-                    signal.inner.borrow_mut().subscribers.push(cb);
-                }),
-            });
+            let borrowed = deps.borrow();
+            if !borrowed.is_empty() {
+                drop(borrowed);
+                deps.borrow_mut().push(DependencyEntry {
+                    subscribe: Box::new(move |cb: Rc<dyn Fn()>| {
+                        signal.inner.borrow_mut().subscribers.push(cb);
+                    }),
+                });
+            }
         });
 
         self.inner.borrow().value.clone()
@@ -264,12 +268,15 @@ fn execute_effect(
     generation.set(gen + 1);
     let my_gen = generation.get();
 
-    DEPENDENCIES.with(|deps| deps.borrow_mut().clear());
+    let deps: Vec<DependencyEntry> =
+        DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect());
 
     callback.borrow_mut()();
 
-    let deps: Vec<DependencyEntry> =
+    let new_deps: Vec<DependencyEntry> =
         DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect());
+
+    let deps = if new_deps.is_empty() { deps } else { new_deps };
 
     if deps.is_empty() {
         return;

@@ -971,7 +971,9 @@ fn ron_value_to_val(
 
 impl<T: HostStateImpl> std::fmt::Debug for Container<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Container").finish()
+        f.debug_struct("Container")
+            .field("state", &self.state)
+            .finish()
     }
 }
 

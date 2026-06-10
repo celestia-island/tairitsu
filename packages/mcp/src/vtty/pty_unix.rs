@@ -50,20 +50,25 @@ impl UnixPty {
             return Err(io::Error::last_os_error());
         }
 
-        let mut cmd = CommandBuilder::new("/bin/bash");
+        let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
+        let mut cmd = CommandBuilder::new(shell);
         cmd.arg("-c");
         cmd.arg(command);
         cmd.env("TERM", "xterm-256color");
         if let Some(dir) = cwd {
             cmd.cwd(dir);
         }
-        let child = pair.slave.spawn_command(cmd).map_err(to_io)?;
+        let child = pair.slave.spawn_command(cmd).map_err(|e| {
+            unsafe { libc::close(read_fd) };
+            to_io(e)
+        })?;
 
         {
-            let mut termios: libc::termios = unsafe { std::mem::zeroed() };
-            if unsafe { libc::tcgetattr(master_fd, &mut termios) } == 0 {
+            let mut termios: std::mem::MaybeUninit<libc::termios> = std::mem::MaybeUninit::uninit();
+            if unsafe { libc::tcgetattr(master_fd, termios.as_mut_ptr()) } == 0 {
+                let termios = unsafe { termios.assume_init_mut() };
                 termios.c_lflag &= !(libc::ECHO | libc::ECHONL);
-                unsafe { libc::tcsetattr(master_fd, libc::TCSANOW, &termios) };
+                unsafe { libc::tcsetattr(master_fd, libc::TCSANOW, termios) };
             }
         }
 

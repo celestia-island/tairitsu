@@ -281,7 +281,7 @@ impl ScssExtractor {
                     self.advance(1);
                 }
                 '"' | '\'' => return,
-                '/' if self.ch_at(1) == '*' || self.ch_at(1) != '\0' => return,
+                '/' if self.ch_at(1) == '*' || self.ch_at(1) == '/' => return,
                 '.' => self.consume_class_selector(),
                 '#' => {
                     self.advance(1);

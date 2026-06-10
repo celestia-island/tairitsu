@@ -4,8 +4,9 @@
 //! When the flag is disabled the client returns a "not available" error,
 //! directing users to run the fetch subcommand or enable the feature.
 
+use anyhow::Result;
 #[cfg(not(feature = "fetch"))]
-use anyhow::{bail, Result};
+use anyhow::bail;
 use std::collections::HashMap;
 
 #[cfg(feature = "fetch")]

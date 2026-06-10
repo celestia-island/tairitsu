@@ -760,7 +760,7 @@ mod tests {
     #[test]
     fn test_use_resource_sync() {
         // Test with an immediately-ready future
-        let resource = use_resource(|| async { Ok::<_, String>("immediate") });
+        let resource = use_resource(|| async { Ok::<_, anyhow::Error>("immediate") });
 
         // Give the thread a moment to complete
         std::thread::sleep(Duration::from_millis(500));
@@ -774,13 +774,13 @@ mod tests {
 
     #[test]
     fn test_use_resource_error() {
-        let resource = use_resource(|| async { Err::<(), _>("fetch failed".to_string()) });
+        let resource = use_resource(|| async { Err::<(), _>(anyhow::anyhow!("fetch failed")) });
 
         // Give the thread a moment to complete
         std::thread::sleep(Duration::from_millis(500));
 
         match resource.read() {
-            ResourceState::Error(msg) => assert_eq!(msg, "fetch failed"),
+            ResourceState::Error(msg) => assert!(msg.contains("fetch failed")),
             ResourceState::Loading => panic!("Resource should have errored"),
             ResourceState::Ready(_) => panic!("Resource should have errored"),
         }
@@ -799,7 +799,7 @@ mod tests {
 
     #[test]
     fn test_resource_clone() {
-        let resource = use_resource(|| async { Ok::<_, String>(42) });
+        let resource = use_resource(|| async { Ok::<_, anyhow::Error>(42) });
 
         let resource_clone = resource.clone();
 
@@ -814,9 +814,9 @@ mod tests {
 
     #[test]
     fn test_resource_id() {
-        let resource1 = use_resource(|| async { Ok::<_, String>(1) });
+        let resource1 = use_resource(|| async { Ok::<_, anyhow::Error>(1) });
 
-        let resource2 = use_resource(|| async { Ok::<_, String>(2) });
+        let resource2 = use_resource(|| async { Ok::<_, anyhow::Error>(2) });
 
         // Resources should have different IDs
         assert_ne!(resource1.id(), resource2.id());
@@ -827,7 +827,7 @@ mod tests {
         // Create a resource that will take time to load
         let resource = use_resource(|| async {
             std::thread::sleep(Duration::from_millis(100));
-            Ok::<_, String>("loaded")
+            Ok::<_, anyhow::Error>("loaded")
         });
 
         let fallback = VNode::Text(tairitsu_vdom::VText::new("Loading..."));
@@ -882,7 +882,7 @@ mod tests {
 
     #[test]
     fn test_multiple_reads_same_resource() {
-        let resource = use_resource(|| async { Ok::<_, String>(42) });
+        let resource = use_resource(|| async { Ok::<_, anyhow::Error>(42) });
 
         std::thread::sleep(Duration::from_millis(500));
 
@@ -898,7 +898,7 @@ mod tests {
     fn test_resource_peek() {
         let resource = use_resource(|| async {
             // Very short async operation
-            Ok::<_, String>("peek test")
+            Ok::<_, anyhow::Error>("peek test")
         });
 
         // Wait for resource to load - give it enough time

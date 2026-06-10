@@ -157,7 +157,7 @@ impl SsrDom {
                 }
                 buf.push_str(prop);
                 buf.push(':');
-                buf.push_str(val);
+                html_escape_attr_into(buf, val);
             }
             buf.push('"');
         }
