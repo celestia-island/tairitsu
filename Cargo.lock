@@ -2537,19 +2537,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
-name = "hikari-animation"
-version = "0.2.7"
-dependencies = [
- "anyhow",
- "hikari-palette",
- "slotmap",
- "tairitsu-hooks",
- "tairitsu-style",
- "tairitsu-vdom",
- "tairitsu-web",
-]
-
-[[package]]
 name = "hikari-components"
 version = "0.2.7"
 dependencies = [
@@ -2571,7 +2558,6 @@ dependencies = [
 name = "hikari-icons"
 version = "0.2.7"
 dependencies = [
- "hikari-animation",
  "serde",
  "tairitsu-hooks",
  "tairitsu-macros",
@@ -5847,15 +5833,6 @@ name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
-
-[[package]]
-name = "slotmap"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bdd58c3c93c3d278ca835519292445cb4b0d4dc59ccfdf7ceadaab3f8aeb4038"
-dependencies = [
- "version_check",
-]
 
 [[package]]
 name = "slug"
@@ -9255,13 +9232,17 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "plana"
-version = "0.1.0"
-
-[[patch.unused]]
 name = "aoba"
 version = "0.1.2"
 
 [[patch.unused]]
 name = "kirino"
 version = "0.5.0"
+
+[[patch.unused]]
+name = "plana"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "hikari-animation"
+version = "0.2.7"
