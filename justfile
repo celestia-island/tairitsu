@@ -266,8 +266,8 @@ fmt:
     @echo "Formatting all code..."
     cargo fmt --all
 
-# CI checks (format check + test)
-ci: fmt-check test
+# CI checks (format check + clippy + test)
+ci: fmt-check clippy test
     @echo "✅ CI checks passed"
 
 # ============================================================================
