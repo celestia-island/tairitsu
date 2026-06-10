@@ -218,7 +218,7 @@ fn main() -> anyhow::Result<()> {
     info!("Command: {:?}", write_cmd);
     match basic_handler
         .execute(&write_cmd)
-        .map_err(|e| anyhow::anyhow!(e))?
+        .map_err(anyhow::Error::msg)?
     {
         Ok(_) => info!("Write successful"),
         Err(e) => info!("Write failed: {}", e),
@@ -230,7 +230,7 @@ fn main() -> anyhow::Result<()> {
     info!("Command: {:?}", read_cmd);
     match basic_handler
         .execute(&read_cmd)
-        .map_err(|e| anyhow::anyhow!(e))?
+        .map_err(anyhow::Error::msg)?
     {
         Ok(data) => {
             let content = String::from_utf8_lossy(&data);
@@ -249,14 +249,14 @@ fn main() -> anyhow::Result<()> {
             path: "/dir/file1.txt".to_string(),
             data: b"File 1".to_vec(),
         })
-        .map_err(|e| anyhow::anyhow!(e))?;
+        .map_err(anyhow::Error::msg)?;
     let _ = advanced_handler
         .basic_handler
         .execute(&FileSystemBasicCommands::Write {
             path: "/dir/file2.txt".to_string(),
             data: b"File 2".to_vec(),
         })
-        .map_err(|e| anyhow::anyhow!(e))?;
+        .map_err(anyhow::Error::msg)?;
 
     let list_cmd = FileSystemAdvancedCommands::List {
         directory: "/dir".to_string(),
@@ -264,7 +264,7 @@ fn main() -> anyhow::Result<()> {
     info!("Command: {:?}", list_cmd);
     match advanced_handler
         .execute(&list_cmd)
-        .map_err(|e| anyhow::anyhow!(e))?
+        .map_err(anyhow::Error::msg)?
     {
         Ok(files) => {
             info!("List successful: {:?}", files);
@@ -279,7 +279,7 @@ fn main() -> anyhow::Result<()> {
     info!("Command: {:?}", copy_cmd);
     match advanced_handler
         .execute(&copy_cmd)
-        .map_err(|e| anyhow::anyhow!(e))?
+        .map_err(anyhow::Error::msg)?
     {
         Ok(result) => info!("Copy successful: {:?}", result),
         Err(e) => info!("Copy failed: {}", e),

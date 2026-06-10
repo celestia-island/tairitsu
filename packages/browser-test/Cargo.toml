@@ -17,7 +17,7 @@ tokio = { workspace = true, features = ["full"] }
 chromiumoxide = { workspace = true }
 futures = { workspace = true }
 reqwest = { workspace = true, default-features = false, features = [
-  "rustls-tls",
+  "rustls",
   "stream",
 ] }
 zip = { workspace = true }

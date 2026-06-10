@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::path::PathBuf;
 
 use bytes::Bytes;
@@ -34,7 +34,7 @@ fn make_initializer(
         let instance = ctx
             .linker
             .instantiate(ctx.store, ctx.component)
-            .map_err(|e| anyhow::anyhow!("instantiation failed: {}", e))?;
+            .context("instantiation failed")?;
         Ok(GuestInstance::new_dynamic(instance))
     }
 }
