@@ -678,37 +678,16 @@ pub fn register_host(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_derive(AsTool, attributes(tool_name))]
 pub fn derive_as_tool(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = &input.ident;
-
-    // Extract tool name from attribute or use struct name
-    let tool_name = extract_tool_name(&input.attrs, &name.to_string());
+    let _input = parse_macro_input!(input as DeriveInput);
 
     let expanded = quote! {
-        impl tairitsu::json::Tool for #name {
-            fn invoke_json(&self, json: &str) -> anyhow::Result<String> {
-                // Delegate to the struct's invoke_json method
-                self.invoke_json(json)
-            }
-
-            fn name(&self) -> &str {
-                #tool_name
-            }
-        }
+        compile_error!(
+            "AsTool derive is deprecated. Implement the Tool trait manually \
+             or use the MCP server integration in tairitsu-mcp."
+        );
     };
 
     TokenStream::from(expanded)
-}
-
-fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro2::TokenStream {
-    for attr in attrs {
-        if attr.path().is_ident("tool_name") {
-            if let Ok(lit) = attr.parse_args::<syn::LitStr>() {
-                return quote! { #lit };
-            }
-        }
-    }
-    quote! { #default_name }
 }
 
 /// Derive macro for Props structs.
@@ -728,11 +707,31 @@ fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro
 /// ```
 #[proc_macro_derive(Props, attributes(props))]
 pub fn derive_props(input: TokenStream) -> TokenStream {
-    let _input = parse_macro_input!(input as DeriveInput);
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    // Props derive is just a marker - Default should be derived separately
+    let fields = match &input.data {
+        Data::Struct(data) => &data.fields,
+        _ => return quote! { compile_error!("Props can only be derived for structs") }.into(),
+    };
+
+    let field_defaults: Vec<_> = fields
+        .iter()
+        .map(|f| {
+            let ident = &f.ident;
+            quote! { #ident: Default::default() }
+        })
+        .collect();
+
     let expanded = quote! {
-        // Props marker - no additional implementation
+        impl #impl_generics Default for #name #ty_generics #where_clause {
+            fn default() -> Self {
+                Self {
+                    #(#field_defaults,)*
+                }
+            }
+        }
     };
 
     TokenStream::from(expanded)

@@ -2529,7 +2529,7 @@ pub mod wasm_impl {
         }
 
         // If the node is an element, render its children
-        if let VNode::Element(velement) = node {
+        if let VNode::Element(Box::new(velement)) = node {
             for child in &velement.children {
                 render_vnode(platform, child, &new_element)?;
             }
@@ -2847,7 +2847,7 @@ mod tests {
         }
 
         // Test ReplaceNode patch
-        let new_node = VNode::Element(VElement::new("div"));
+        let new_node = VNode::Element(Box::new(VElement::new("div")));
         let replace_patch = Patch::ReplaceNode {
             node: new_node.clone(),
         };

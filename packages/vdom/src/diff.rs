@@ -51,7 +51,7 @@ fn diff_node(old: &VNode, new: &VNode, patches: &mut Vec<Patch>) {
 fn diff_element(old: &VElement, new: &VElement, patches: &mut Vec<Patch>) {
     if old.tag != new.tag {
         patches.push(Patch::ReplaceNode {
-            node: VNode::Element(new.clone()),
+            node: VNode::Element(Box::new(new.clone())),
         });
         return;
     }
@@ -364,8 +364,8 @@ mod tests {
 
     #[test]
     fn test_diff_element_attributes() {
-        let old = VNode::Element(VElement::new("div").attr("class", "old"));
-        let new = VNode::Element(VElement::new("div").attr("class", "new"));
+        let old = VNode::Element(Box::new(VElement::new("div").attr("class", "old")));
+        let new = VNode::Element(Box::new(VElement::new("div").attr("class", "new")));
 
         let patches = diff(Some(&old), &new);
 
@@ -375,39 +375,39 @@ mod tests {
     #[test]
     fn test_keyed_reorder_uses_move() {
         let old = vec![
-            VNode::Element(
+            VNode::Element(Box::new(
                 VElement::new("li")
                     .key("a")
                     .child(VNode::Text(VText::new("A"))),
-            ),
-            VNode::Element(
+            )),
+            VNode::Element(Box::new(
                 VElement::new("li")
                     .key("b")
                     .child(VNode::Text(VText::new("B"))),
-            ),
-            VNode::Element(
+            )),
+            VNode::Element(Box::new(
                 VElement::new("li")
                     .key("c")
                     .child(VNode::Text(VText::new("C"))),
-            ),
+            )),
         ];
 
         let new = vec![
-            VNode::Element(
+            VNode::Element(Box::new(
                 VElement::new("li")
                     .key("c")
                     .child(VNode::Text(VText::new("C"))),
-            ),
-            VNode::Element(
+            )),
+            VNode::Element(Box::new(
                 VElement::new("li")
                     .key("a")
                     .child(VNode::Text(VText::new("A"))),
-            ),
-            VNode::Element(
+            )),
+            VNode::Element(Box::new(
                 VElement::new("li")
                     .key("b")
                     .child(VNode::Text(VText::new("B"))),
-            ),
+            )),
         ];
 
         let mut patches = Vec::new();
@@ -425,14 +425,14 @@ mod tests {
     #[test]
     fn test_keyed_insert_and_remove() {
         let old = vec![
-            VNode::Element(VElement::new("li").key("a")),
-            VNode::Element(VElement::new("li").key("b")),
+            VNode::Element(Box::new(VElement::new("li").key("a"))),
+            VNode::Element(Box::new(VElement::new("li").key("b"))),
         ];
 
         let new = vec![
-            VNode::Element(VElement::new("li").key("a")),
-            VNode::Element(VElement::new("li").key("c")),
-            VNode::Element(VElement::new("li").key("b")),
+            VNode::Element(Box::new(VElement::new("li").key("a"))),
+            VNode::Element(Box::new(VElement::new("li").key("c"))),
+            VNode::Element(Box::new(VElement::new("li").key("b"))),
         ];
 
         let mut patches = Vec::new();
@@ -478,8 +478,8 @@ mod tests {
 
     #[test]
     fn test_diff_element_different_tag_replaces() {
-        let old = VNode::Element(VElement::new("div"));
-        let new = VNode::Element(VElement::new("span"));
+        let old = VNode::Element(Box::new(VElement::new("div")));
+        let new = VNode::Element(Box::new(VElement::new("span")));
 
         let patches = diff(Some(&old), &new);
 
@@ -495,8 +495,8 @@ mod tests {
 
     #[test]
     fn test_diff_element_attribute_addition() {
-        let old = VNode::Element(VElement::new("div"));
-        let new = VNode::Element(VElement::new("div").attr("id", "app").attr("data-x", "1"));
+        let old = VNode::Element(Box::new(VElement::new("div")));
+        let new = VNode::Element(Box::new(VElement::new("div").attr("id", "app").attr("data-x", "1")));
 
         let patches = diff(Some(&old), &new);
 
@@ -521,13 +521,13 @@ mod tests {
 
     #[test]
     fn test_diff_element_attribute_removal() {
-        let old = VNode::Element(
+        let old = VNode::Element(Box::new(
             VElement::new("div")
                 .attr("id", "app")
                 .attr("data-x", "1")
                 .attr("role", "main"),
-        );
-        let new = VNode::Element(VElement::new("div").attr("id", "app"));
+        ));
+        let new = VNode::Element(Box::new(VElement::new("div").attr("id", "app")));
 
         let patches = diff(Some(&old), &new);
 
@@ -546,8 +546,8 @@ mod tests {
 
     #[test]
     fn test_diff_element_attribute_update() {
-        let old = VNode::Element(VElement::new("div").attr("class", "old").attr("id", "x"));
-        let new = VNode::Element(VElement::new("div").attr("class", "new").attr("id", "x"));
+        let old = VNode::Element(Box::new(VElement::new("div").attr("class", "old").attr("id", "x")));
+        let new = VNode::Element(Box::new(VElement::new("div").attr("class", "new").attr("id", "x")));
 
         let patches = diff(Some(&old), &new);
 
@@ -565,10 +565,10 @@ mod tests {
 
     #[test]
     fn test_diff_element_style_changes() {
-        let old = VNode::Element(VElement::new("div").style(Style::new().add("color", "red")));
-        let new = VNode::Element(
+        let old = VNode::Element(Box::new(VElement::new("div").style(Style::new().add("color", "red"))));
+        let new = VNode::Element(Box::new(
             VElement::new("div").style(Style::new().add("color", "blue").add("font-size", "16px")),
-        );
+        ));
 
         let patches = diff(Some(&old), &new);
 
@@ -589,8 +589,8 @@ mod tests {
 
     #[test]
     fn test_diff_element_style_no_change() {
-        let old = VNode::Element(VElement::new("div").style(Style::new().add("color", "red")));
-        let new = VNode::Element(VElement::new("div").style(Style::new().add("color", "red")));
+        let old = VNode::Element(Box::new(VElement::new("div").style(Style::new().add("color", "red"))));
+        let new = VNode::Element(Box::new(VElement::new("div").style(Style::new().add("color", "red"))));
 
         let patches = diff(Some(&old), &new);
 
@@ -604,8 +604,8 @@ mod tests {
 
     #[test]
     fn test_diff_element_class_changes() {
-        let old = VNode::Element(VElement::new("div").class(Classes::new().add("a").add("b")));
-        let new = VNode::Element(VElement::new("div").class(Classes::new().add("a").add("c")));
+        let old = VNode::Element(Box::new(VElement::new("div").class(Classes::new().add("a").add("b"))));
+        let new = VNode::Element(Box::new(VElement::new("div").class(Classes::new().add("a").add("c"))));
 
         let patches = diff(Some(&old), &new);
 
@@ -625,8 +625,8 @@ mod tests {
 
     #[test]
     fn test_diff_element_class_no_change() {
-        let old = VNode::Element(VElement::new("div").class(Classes::new().add("foo")));
-        let new = VNode::Element(VElement::new("div").class(Classes::new().add("foo")));
+        let old = VNode::Element(Box::new(VElement::new("div").class(Classes::new().add("foo"))));
+        let new = VNode::Element(Box::new(VElement::new("div").class(Classes::new().add("foo"))));
 
         let patches = diff(Some(&old), &new);
 
@@ -641,13 +641,13 @@ mod tests {
     #[test]
     fn test_diff_children_mixed_keyed_unkeyed() {
         let old = vec![
-            VNode::Element(VElement::new("li").key("a")),
+            VNode::Element(Box::new(VElement::new("li").key("a"))),
             VNode::Text(VText::new("unkeyed")),
-            VNode::Element(VElement::new("li").key("b")),
+            VNode::Element(Box::new(VElement::new("li").key("b"))),
         ];
 
         let new = vec![
-            VNode::Element(VElement::new("li").key("b")),
+            VNode::Element(Box::new(VElement::new("li").key("b"))),
             VNode::Text(VText::new("unkeyed-changed")),
         ];
 
@@ -690,8 +690,8 @@ mod tests {
     fn test_diff_children_replace_all() {
         let old = vec![VNode::Text(VText::new("a")), VNode::Text(VText::new("b"))];
         let new = vec![
-            VNode::Element(VElement::new("span")),
-            VNode::Element(VElement::new("div")),
+            VNode::Element(Box::new(VElement::new("span"))),
+            VNode::Element(Box::new(VElement::new("div"))),
         ];
 
         let mut patches = Vec::new();
@@ -766,7 +766,7 @@ mod tests {
     #[test]
     fn test_diff_type_change_replaces() {
         let old = VNode::Text(VText::new("text"));
-        let new = VNode::Element(VElement::new("div"));
+        let new = VNode::Element(Box::new(VElement::new("div")));
 
         let patches = diff(Some(&old), &new);
         assert_eq!(patches.len(), 1);
@@ -829,12 +829,12 @@ mod tests {
 
     #[test]
     fn test_dynamic_text_in_children_changed() {
-        let old = VNode::Element(VElement::new("div").child(VNode::DynamicText(
+        let old = VNode::Element(Box::new(VElement::new("div").child(VNode::DynamicText(
             crate::vnode::DynamicText::new("v1".into(), || "v1".into()),
-        )));
-        let new = VNode::Element(VElement::new("div").child(VNode::DynamicText(
+        ))));
+        let new = VNode::Element(Box::new(VElement::new("div").child(VNode::DynamicText(
             crate::vnode::DynamicText::new("v2".into(), || "v2".into()),
-        )));
+        ))));
 
         let patches = diff(Some(&old), &new);
         assert!(!patches.is_empty());
@@ -910,14 +910,14 @@ mod tests {
     #[test]
     fn test_diff_css_variable_change() {
         let old =
-            VNode::Element(VElement::new("div").style(Style::new().add_custom("--color", "red")));
-        let new = VNode::Element(
+            VNode::Element(Box::new(VElement::new("div").style(Style::new().add_custom("--color", "red"))));
+        let new = VNode::Element(Box::new(
             VElement::new("div").style(
                 Style::new()
                     .add_custom("--color", "blue")
                     .add("color", "var(--color)"),
             ),
-        );
+        ));
 
         let patches = diff(Some(&old), &new);
         assert!(
@@ -929,9 +929,9 @@ mod tests {
     #[test]
     fn test_diff_css_variable_only_change() {
         let old =
-            VNode::Element(VElement::new("div").style(Style::new().add_custom("--gap", "8px")));
+            VNode::Element(Box::new(VElement::new("div").style(Style::new().add_custom("--gap", "8px"))));
         let new =
-            VNode::Element(VElement::new("div").style(Style::new().add_custom("--gap", "16px")));
+            VNode::Element(Box::new(VElement::new("div").style(Style::new().add_custom("--gap", "16px"))));
 
         let patches = diff(Some(&old), &new);
         assert!(
@@ -942,8 +942,8 @@ mod tests {
 
     #[test]
     fn test_diff_event_handler_change_produces_update() {
-        let old = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
-        let new = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
+        let old = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
+        let new = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
 
         let patches = diff(Some(&old), &new);
         assert!(
@@ -956,8 +956,8 @@ mod tests {
 
     #[test]
     fn test_diff_event_handler_add() {
-        let old = VNode::Element(VElement::new("button"));
-        let new = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
+        let old = VNode::Element(Box::new(VElement::new("button")));
+        let new = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
 
         let patches = diff(Some(&old), &new);
         assert!(patches.iter().any(|p| matches!(p, Patch::AddEvent { .. })));
@@ -965,8 +965,8 @@ mod tests {
 
     #[test]
     fn test_diff_event_handler_remove() {
-        let old = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
-        let new = VNode::Element(VElement::new("button"));
+        let old = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
+        let new = VNode::Element(Box::new(VElement::new("button")));
 
         let patches = diff(Some(&old), &new);
         assert!(patches
@@ -976,16 +976,16 @@ mod tests {
 
     #[test]
     fn test_diff_event_handler_change() {
-        let old = VNode::Element(
+        let old = VNode::Element(Box::new(
             VElement::new("button")
                 .on_event("click", |_| {})
                 .on_event("mouseover", |_| {}),
-        );
-        let new = VNode::Element(
+        ));
+        let new = VNode::Element(Box::new(
             VElement::new("button")
                 .on_event("click", |_| {})
                 .on_event("mouseout", |_| {}),
-        );
+        ));
 
         let patches = diff(Some(&old), &new);
         assert!(patches
@@ -996,8 +996,8 @@ mod tests {
 
     #[test]
     fn test_diff_event_handler_unchanged_produces_update() {
-        let old = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
-        let new = VNode::Element(VElement::new("button").on_event("click", move |_| {}));
+        let old = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
+        let new = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
 
         let patches = diff(Some(&old), &new);
         assert!(
@@ -1010,12 +1010,12 @@ mod tests {
 
     #[test]
     fn test_diff_nested_element_children() {
-        let old = VNode::Element(VElement::new("div").child(VNode::Element(
-            VElement::new("span").child(VNode::Text(VText::new("old"))),
-        )));
-        let new = VNode::Element(VElement::new("div").child(VNode::Element(
-            VElement::new("span").child(VNode::Text(VText::new("new"))),
-        )));
+        let old = VNode::Element(Box::new(VElement::new("div").child(VNode::Element(
+            Box::new(VElement::new("span").child(VNode::Text(VText::new("old")))),
+        ))));
+        let new = VNode::Element(Box::new(VElement::new("div").child(VNode::Element(
+            Box::new(VElement::new("span").child(VNode::Text(VText::new("new")))),
+        ))));
 
         let patches = diff(Some(&old), &new);
         assert!(!patches.is_empty());
@@ -1031,16 +1031,16 @@ mod tests {
 
     #[test]
     fn test_diff_keyed_with_same_keys_different_order() {
-        let old = VNode::Element(VElement::new("ul").children(vec![
-            VNode::Element(VElement::new("li").key("a").child(VNode::Text(VText::new("A")))),
-            VNode::Element(VElement::new("li").key("b").child(VNode::Text(VText::new("B")))),
-            VNode::Element(VElement::new("li").key("c").child(VNode::Text(VText::new("C")))),
-        ]));
-        let new = VNode::Element(VElement::new("ul").children(vec![
-            VNode::Element(VElement::new("li").key("c").child(VNode::Text(VText::new("C")))),
-            VNode::Element(VElement::new("li").key("a").child(VNode::Text(VText::new("A")))),
-            VNode::Element(VElement::new("li").key("b").child(VNode::Text(VText::new("B")))),
-        ]));
+        let old = VNode::Element(Box::new(VElement::new("ul").children(vec![
+            VNode::Element(Box::new(VElement::new("li").key("a").child(VNode::Text(VText::new("A"))))),
+            VNode::Element(Box::new(VElement::new("li").key("b").child(VNode::Text(VText::new("B"))))),
+            VNode::Element(Box::new(VElement::new("li").key("c").child(VNode::Text(VText::new("C"))))),
+        ])));
+        let new = VNode::Element(Box::new(VElement::new("ul").children(vec![
+            VNode::Element(Box::new(VElement::new("li").key("c").child(VNode::Text(VText::new("C"))))),
+            VNode::Element(Box::new(VElement::new("li").key("a").child(VNode::Text(VText::new("A"))))),
+            VNode::Element(Box::new(VElement::new("li").key("b").child(VNode::Text(VText::new("B"))))),
+        ])));
 
         let patches = diff(Some(&old), &new);
         assert!(!patches.is_empty(), "Keyed reorder should produce patches");
@@ -1067,7 +1067,7 @@ mod tests {
 
     #[test]
     fn test_diff_none_to_element() {
-        let new = VNode::Element(VElement::new("div"));
+        let new = VNode::Element(Box::new(VElement::new("div")));
 
         let patches = diff(None, &new);
         assert_eq!(patches.len(), 1);
@@ -1081,19 +1081,19 @@ mod tests {
         // Unkeyed children should NOT be destroyed when keyed children exist.
         let old_children = vec![
             VNode::Text(VText::new("A")),
-            VNode::Element(
+            VNode::Element(Box::new(
                 VElement::new("span")
                     .key("b")
                     .child(VNode::Text(VText::new("B"))),
-            ),
+            )),
             VNode::Text(VText::new("C")),
         ];
         let new_children = vec![
-            VNode::Element(
+            VNode::Element(Box::new(
                 VElement::new("span")
                     .key("b")
                     .child(VNode::Text(VText::new("B"))),
-            ),
+            )),
             VNode::Text(VText::new("A")),
             VNode::Text(VText::new("C")),
         ];
@@ -1121,12 +1121,12 @@ mod tests {
         // New: [B(key="b"), C(unkeyed)]
         // Only A (keyed and removed) should be removed, not C.
         let old_children = vec![
-            VNode::Element(VElement::new("span").key("a")),
-            VNode::Element(VElement::new("span").key("b")),
+            VNode::Element(Box::new(VElement::new("span").key("a"))),
+            VNode::Element(Box::new(VElement::new("span").key("b"))),
             VNode::Text(VText::new("C")),
         ];
         let new_children = vec![
-            VNode::Element(VElement::new("span").key("b")),
+            VNode::Element(Box::new(VElement::new("span").key("b"))),
             VNode::Text(VText::new("C")),
         ];
 
@@ -1149,14 +1149,14 @@ mod tests {
         // Old: [A(key="a"), B(key="b"), C(key="c")]
         // New: [C(key="c"), A(key="a"), B(key="b")]
         let old = vec![
-            VNode::Element(VElement::new("li").key("a")),
-            VNode::Element(VElement::new("li").key("b")),
-            VNode::Element(VElement::new("li").key("c")),
+            VNode::Element(Box::new(VElement::new("li").key("a"))),
+            VNode::Element(Box::new(VElement::new("li").key("b"))),
+            VNode::Element(Box::new(VElement::new("li").key("c"))),
         ];
         let new = vec![
-            VNode::Element(VElement::new("li").key("c")),
-            VNode::Element(VElement::new("li").key("a")),
-            VNode::Element(VElement::new("li").key("b")),
+            VNode::Element(Box::new(VElement::new("li").key("c"))),
+            VNode::Element(Box::new(VElement::new("li").key("a"))),
+            VNode::Element(Box::new(VElement::new("li").key("b"))),
         ];
         let patches = diff(Some(&VNode::Fragment(old)), &VNode::Fragment(new));
         assert!(
@@ -1172,13 +1172,13 @@ mod tests {
         // Old: [A, B, C] (all keyed)
         // New: [D, B]     (A/C removed, D added)
         let old = vec![
-            VNode::Element(VElement::new("li").key("a")),
-            VNode::Element(VElement::new("li").key("b")),
-            VNode::Element(VElement::new("li").key("c")),
+            VNode::Element(Box::new(VElement::new("li").key("a"))),
+            VNode::Element(Box::new(VElement::new("li").key("b"))),
+            VNode::Element(Box::new(VElement::new("li").key("c"))),
         ];
         let new = vec![
-            VNode::Element(VElement::new("li").key("d")),
-            VNode::Element(VElement::new("li").key("b")),
+            VNode::Element(Box::new(VElement::new("li").key("d"))),
+            VNode::Element(Box::new(VElement::new("li").key("b"))),
         ];
         let patches = diff(Some(&VNode::Fragment(old)), &VNode::Fragment(new));
         // Should remove A (0) and C (2), insert D at adjusted position
@@ -1197,7 +1197,7 @@ mod tests {
     #[test]
     fn test_diff_fragment_to_element() {
         let old = VNode::Fragment(vec![]);
-        let new = VNode::Element(VElement::new("div"));
+        let new = VNode::Element(Box::new(VElement::new("div")));
         let patches = diff(Some(&old), &new);
         assert_eq!(patches.len(), 1);
         assert!(matches!(&patches[0], Patch::ReplaceNode { .. }));
@@ -1205,7 +1205,7 @@ mod tests {
 
     #[test]
     fn test_diff_element_to_fragment() {
-        let old = VNode::Element(VElement::new("div"));
+        let old = VNode::Element(Box::new(VElement::new("div")));
         let new = VNode::Fragment(vec![VNode::Text(VText::new("a"))]);
         let patches = diff(Some(&old), &new);
         assert_eq!(patches.len(), 1);
@@ -1215,7 +1215,7 @@ mod tests {
     #[test]
     fn test_diff_text_to_element() {
         let old = VNode::Text(VText::new("hello"));
-        let new = VNode::Element(VElement::new("span"));
+        let new = VNode::Element(Box::new(VElement::new("span")));
         let patches = diff(Some(&old), &new);
         assert_eq!(patches.len(), 1);
         assert!(matches!(&patches[0], Patch::ReplaceNode { .. }));
@@ -1223,11 +1223,11 @@ mod tests {
 
     #[test]
     fn test_diff_identical_trees_produces_no_patches() {
-        let tree = VNode::Element(
+        let tree = VNode::Element(Box::new(
             VElement::new("div")
                 .attr("class", "container")
                 .child(VNode::Text(VText::new("hello"))),
-        );
+        ));
         let patches = diff(Some(&tree), &tree);
         assert!(
             patches.is_empty(),

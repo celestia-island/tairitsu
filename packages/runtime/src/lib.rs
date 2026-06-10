@@ -76,7 +76,7 @@ pub use registry::Registry;
 pub use ron::{typed_ron_tool, RonBinding, RonFunctionTool, RonTool, RonToolRegistry};
 // Re-export procedural macros
 pub use tairitsu_macros::{
-    export_wit, wit_guest_impl, wit_interface, wit_world, AsTool, WitCommand,
+    export_wit, wit_guest_impl, wit_interface, wit_world, WitCommand as WitCommandDerive,
 };
 // Re-export wasmtime types for user convenience
 pub use wasmtime::component::Component;

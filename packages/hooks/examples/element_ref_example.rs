@@ -36,7 +36,7 @@ pub fn ref_example() -> VNode {
         println!("Element handle (resolved): {:?}", handle);
     }
 
-    VNode::Element(element)
+    VNode::Element(Box::new(element))
 }
 
 /// Example showing how refs can be cloned and shared.
@@ -56,7 +56,7 @@ pub fn ref_clone_example() -> VNode {
     assert_eq!(ref1.get(), Some(100u64));
     assert_eq!(ref2.get(), Some(100u64));
 
-    VNode::Element(element)
+    VNode::Element(Box::new(element))
 }
 
 /// Example showing ref lifecycle.
@@ -80,9 +80,9 @@ pub fn ref_lifecycle_example() -> VNode {
     assert_eq!(taken, Some(100));
     assert!(ref_handle.get().is_none());
 
-    VNode::Element(
+    VNode::Element(Box::new(
         VElement::new("div").child(VNode::Text(tairitsu_vdom::VText::new("Lifecycle demo"))),
-    )
+    ))
 }
 
 fn main() {

@@ -111,8 +111,10 @@ fn expand_inline_svg(content: &str) -> TokenStream2 {
 
 /// Expand file-based SVG
 fn expand_file_svg(path: &str) -> TokenStream2 {
-    // Get the crate root directory
-    let crate_root = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let crate_root = match std::env::var("CARGO_MANIFEST_DIR") {
+        Ok(v) => v,
+        Err(_) => return quote! { compile_error!("CARGO_MANIFEST_DIR not set — cannot resolve SVG file path") },
+    };
 
     let full_path = std::path::Path::new(&crate_root).join(path);
 

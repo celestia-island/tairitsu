@@ -88,11 +88,15 @@ pub fn use_context<T: 'static + Clone>() -> Option<Context<T>> {
     })
 }
 
-pub fn consume_context<T: 'static + Clone>() -> T {
-    use_context::<T>()
-        .expect("Context not found. Make sure to call provide_context first.")
-        .get()
-        .clone()
+pub fn consume_context<T: 'static + Clone>() -> Option<T> {
+    use_context::<T>().map(|ctx| ctx.get().clone())
+}
+
+/// Consume a context value, panicking if not found.
+/// Prefer [`consume_context`] for fallible access.
+pub fn consume_context_expect<T: 'static + Clone>() -> T {
+    consume_context::<T>()
+        .unwrap_or_else(|| panic!("Context not found for type {}. Make sure to call provide_context first.", std::any::type_name::<T>()))
 }
 
 /// A guard that removes a context type from the registry when dropped.
@@ -156,8 +160,15 @@ mod tests {
     fn test_consume_context() {
         provide_context(String::from("test value"));
 
-        let value = consume_context::<String>();
+        let value = consume_context_expect::<String>();
         assert_eq!(value, "test value");
+    }
+
+    #[test]
+    fn test_consume_context_missing() {
+        clear_all_contexts();
+        let value = consume_context::<i64>();
+        assert!(value.is_none());
     }
 
     #[test]

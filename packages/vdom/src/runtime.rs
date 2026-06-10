@@ -21,6 +21,33 @@ type ScheduleCallback = Rc<RefCell<dyn FnMut(Box<dyn FnOnce()>)>>;
 /// Callback type for applying patches to the DOM
 type ApplyPatchesCallback = Rc<RefCell<dyn FnMut(ComponentId, Vec<Patch>)>>;
 
+thread_local! {
+    static HOOK_SLOT: RefCell<HashMap<(ComponentId, String), Box<dyn std::any::Any>>> = RefCell::new(HashMap::new());
+}
+
+/// Retrieve or initialize a hook slot for the given component and key.
+/// Returns a clone of the stored value if present, otherwise stores and
+/// returns the result of `init_fn`.
+pub fn hook_slot<T: Clone + 'static>(component_id: ComponentId, key: &str, init_fn: impl FnOnce() -> T) -> T {
+    HOOK_SLOT.with(|slots| {
+        let mut slots = slots.borrow_mut();
+        let entry = slots.entry((component_id, key.to_string())).or_insert_with(|| Box::new(init_fn()));
+        entry.downcast_ref::<T>().cloned().unwrap()
+    })
+}
+
+/// Clear all hook slots for a component (called during cleanup).
+pub fn clear_hook_slots(component_id: ComponentId) {
+    HOOK_SLOT.with(|slots| {
+        slots.borrow_mut().retain(|(cid, _), _| *cid != component_id);
+    });
+}
+
+/// Reset the hook slot counter (useful for testing).
+pub fn reset_hook_slots() {
+    HOOK_SLOT.with(|slots| slots.borrow_mut().clear());
+}
+
 /// Inner state of the reactive runtime
 struct RuntimeInner {
     next_id: ComponentId,
@@ -401,6 +428,8 @@ pub fn cleanup_component(id: ComponentId) {
 
         trace!("Cleaned up component {}", id);
     });
+
+    clear_hook_slots(id);
 }
 
 pub fn register_effect_handle(id: ComponentId, handle: EffectHandle) {

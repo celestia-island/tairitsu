@@ -25,7 +25,7 @@ impl<T> std::fmt::Debug for StateSetter<T> {
 pub fn use_state<T: Clone + Default + 'static>(initial: T) -> (Rc<RefCell<T>>, StateSetter<T>) {
     let component_id =
         runtime::active_component_id().unwrap_or_else(|| runtime::use_component(VNode::empty));
-    let state = Rc::new(RefCell::new(initial));
+    let state = runtime::hook_slot(component_id, "use_state", || Rc::new(RefCell::new(initial)));
     let setter = StateSetter {
         inner: Rc::clone(&state),
         component_id,

@@ -245,13 +245,13 @@ pub async fn render_to_stream(wasm_bytes: &[u8], config: SsrConfig) -> Result<Ht
 /// use tairitsu_vdom::{VElement, VNode};
 ///
 /// # async fn example() {
-/// let fallback = VNode::Element(VElement::new("div").child(VNode::Text(
+/// let fallback = VNode::Element(Box::new(VElement::new("div").child(VNode::Text(
 ///     tairitsu_vdom::VText::new("Loading...")
-/// )));
+/// ))));
 ///
-/// let content = VNode::Element(VElement::new("div").child(VNode::Text(
+/// let content = VNode::Element(Box::new(VElement::new("div").child(VNode::Text(
 ///     tairitsu_vdom::VText::new("Hello, World!")
-/// )));
+/// ))));
 ///
 /// let chunks = render_suspense_boundary("my-suspense", fallback, content).await;
 ///
@@ -437,9 +437,9 @@ mod tests {
     #[tokio::test]
     async fn test_render_suspense_boundary() {
         let fallback =
-            VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Loading..."))));
+            VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Loading...")))));
         let content =
-            VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Hello, World!"))));
+            VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Hello, World!")))));
 
         let chunks = render_suspense_boundary("test-suspense", fallback, content).await;
 
@@ -464,11 +464,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_render_vnode_to_stream() {
-        let vnode = VNode::Element(
+        let vnode = VNode::Element(Box::new(
             VElement::new("div")
                 .attr("id", "test")
                 .child(VNode::Text(VText::new("Hello"))),
-        );
+        ));
 
         let mut stream = render_vnode_to_stream(vnode);
 

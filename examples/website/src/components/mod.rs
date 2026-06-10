@@ -29,12 +29,12 @@ pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
         r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="{}"/></svg>"#,
         path_d
     );
-    VNode::Element(
+    VNode::Element(Box::new(
         el("div")
             .class(full_class.as_str())
             .attr("style", format!("width:{}px;height:{}px;", size, size))
             .safe_svg(SafeSvg::from_static(Box::leak(svg_html.into_boxed_str()))),
-    )
+    ))
 }
 
 fn icon_el(icon: MdiIcon) -> VNode {
@@ -48,11 +48,11 @@ fn icon_el(icon: MdiIcon) -> VNode {
         .unwrap_or_else(|| {
             r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>"#.to_string()
         });
-    VNode::Element(
+    VNode::Element(Box::new(
         el("span")
             .class("hi-menu-item-icon ts-icon")
             .dangerous_inner_html(svg_str),
-    )
+    ))
 }
 
 /// Glow effect wrapper with native Rust mouse-tracking.
@@ -97,7 +97,7 @@ pub fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -
         }
     };
 
-    VNode::Element(
+    VNode::Element(Box::new(
         el("div")
             .class(format!("hi-glow-wrapper hi-glow-blur-{} hi-glow-{}", blur, intensity).as_str())
             .attr("style", format!(
@@ -108,7 +108,7 @@ pub fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -
             .on_event("mouseenter", onmouseenter)
             .on_event("mouseleave", onmouseleave)
             .child(children),
-    )
+    ))
 }
 
 // ============================================================
@@ -119,45 +119,45 @@ pub fn top_nav() -> VNode {
     let t = crate::i18n::text(Language::default_lang());
 
     let nav_link = |href: &str, label: &str| -> VNode {
-        VNode::Element(
+        VNode::Element(Box::new(
             el("a")
                 .attr("href", href)
                 .class("ts-topnav__link")
                 .child(txt(label)),
-        )
+        ))
     };
 
-    VNode::Element(
+    VNode::Element(Box::new(
         el("header").class("hi-header hi-header-sticky hi-header-md")
-            .child(VNode::Element(
+            .child(VNode::Element(Box::new(
                 el("div").class("hi-header-left")
-                    .child(VNode::Element(
+                    .child(VNode::Element(Box::new(
                         el("button").class("hi-header-toggle").attr("id", "drawer-toggle")
                             .attr("aria-label", "Toggle menu")
                             .dangerous_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>"#)
-                    ))
-                    .child(VNode::Element(
+                    )))
+                    .child(VNode::Element(Box::new(
                         el("a").attr("href", "/").class("hi-header-brand")
                             .dangerous_inner_html(r#"<img class="hi-header-logo-img" src="/images/logo-tairitsu.png" alt="Tairitsu" width="28" height="28"/><span style="font-weight:700;font-size:1.15rem;margin-left:8px;">Tairitsu</span>"#)
-                    ))
-            ))
-            .child(VNode::Element(
+                    )))
+            )))
+            .child(VNode::Element(Box::new(
                 el("div").class("hi-header-right")
-                    .child(VNode::Element(
+                    .child(VNode::Element(Box::new(
                         el("nav").class("hi-header-nav")
                             .child(nav_link("/guides/quick-start", t.nav_guides))
                             .child(nav_link("/system", "System"))
                             .child(nav_link("/packages", t.nav_packages))
-                    ))
-                    .child(VNode::Element(
+                    )))
+                    .child(VNode::Element(Box::new(
                         el("a")
                             .attr("href", "https://github.com/langyo/tairitsu")
                             .attr("target", "_blank")
                             .class("hi-header-github")
                             .child(txt(t.nav_github))
-                    ))
-            ))
-    )
+                    )))
+            )))
+    ))
 }
 
 // ============================================================
@@ -453,90 +453,90 @@ pub fn sidebar() -> VNode {
         ));
     }
 
-    let menu_list = VNode::Element(el("ul").class("hi-menu-list").children(category_nodes));
+    let menu_list = VNode::Element(Box::new(el("ul").class("hi-menu-list").children(category_nodes)));
 
-    VNode::Element(
+    VNode::Element(Box::new(
         el("aside")
             .attr("id", "ts-aside")
             .class("hi-aside hi-aside-drawer hi-aside-lg hi-aside-light")
-            .child(VNode::Element(
-                el("div").class("hi-aside-content").child(VNode::Element(
+            .child(VNode::Element(Box::new(
+                el("div").class("hi-aside-content").child(VNode::Element(Box::new(
                     el("nav")
                         .class("hi-menu hi-menu-vertical hi-menu-compact")
                         .child(menu_list),
-                )),
-            ))
+                ))),
+            )))
             .child(aside_footer()),
-    )
+    ))
 }
 
 fn menu_item(href: &str, label: &str, icon: MdiIcon) -> VNode {
-    let inner = VNode::Element(
+    let inner = VNode::Element(Box::new(
         el("a")
             .attr("href", href)
             .class("hi-menu-item-inner")
             .child(icon_el(icon))
-            .child(VNode::Element(
+            .child(VNode::Element(Box::new(
                 el("span").class("hi-menu-item-content").child(txt(label)),
-            )),
-    );
+            ))),
+    ));
     glow_wrapper(
         "medium",
         "dim",
         "rgba(128,128,128,0.3)",
-        VNode::Element(
+        VNode::Element(Box::new(
             el("li")
                 .class("hi-menu-item hi-menu-height-compact")
                 .child(inner),
-        ),
+        )),
     )
 }
 
 fn submenu_title(label: &str, _level: u32, icon: MdiIcon) -> VNode {
     let arrow = icon_el(icon);
-    VNode::Element(
+    VNode::Element(Box::new(
         el("div")
             .class("hi-submenu-title hi-menu-height-compact".to_string())
             .child(arrow)
             .child(txt(label)),
-    )
+    ))
 }
 
 fn submenu(label: &str, level: u32, children: Vec<VNode>, open: bool, icon: MdiIcon) -> VNode {
     let title = submenu_title(label, level, icon);
-    let list = VNode::Element(
+    let list = VNode::Element(Box::new(
         el("ul")
             .class("hi-submenu-list")
             .style(format!("padding-left:{}em", level))
             .children(children),
-    );
+    ));
     let mut el = VElement::new("li").class("hi-submenu");
     el = el.child(title).child(list);
     if !open {
         el = el.attr("data-collapsed", "");
     }
-    VNode::Element(el)
+    VNode::Element(Box::new(el))
 }
 
 fn plain_menu_item(href: &str, label: &str, _level: u32, icon: MdiIcon) -> VNode {
-    let inner = VNode::Element(
+    let inner = VNode::Element(Box::new(
         el("a")
             .attr("href", href)
             .class("hi-menu-item-inner")
             .child(icon_el(icon))
-            .child(VNode::Element(
+            .child(VNode::Element(Box::new(
                 el("span").class("hi-menu-item-content").child(txt(label)),
-            )),
-    );
+            ))),
+    ));
     glow_wrapper(
         "medium",
         "dim",
         "rgba(128,128,128,0.3)",
-        VNode::Element(
+        VNode::Element(Box::new(
             el("li")
                 .class("hi-menu-item hi-menu-height-compact".to_string())
                 .child(inner),
-        ),
+        )),
     )
 }
 
@@ -548,24 +548,24 @@ pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
     let mut children: Vec<VNode> = Vec::new();
     for (i, (label, href)) in items.iter().enumerate() {
         if i > 0 {
-            children.push(VNode::Element(
+            children.push(VNode::Element(Box::new(
                 el("span").class("hi-breadcrumb-sep").child(txt(" / ")),
-            ));
+            )));
         }
         if href.is_empty() {
-            children.push(VNode::Element(
+            children.push(VNode::Element(Box::new(
                 el("span").class("hi-breadcrumb-current").child(txt(label)),
-            ));
+            )));
         } else {
-            children.push(VNode::Element(
+            children.push(VNode::Element(Box::new(
                 el("a")
                     .attr("href", href)
                     .class("hi-breadcrumb-link")
                     .child(txt(label)),
-            ));
+            )));
         }
     }
-    VNode::Element(el("nav").class("hi-breadcrumb").children(children))
+    VNode::Element(Box::new(el("nav").class("hi-breadcrumb").children(children)))
 }
 
 // ============================================================
@@ -598,13 +598,13 @@ pub fn aside_footer() -> VNode {
                 }
                 ..if lang_open {
                     let options: Vec<VNode> = i18n::LOCALES.iter().map(|lang| {
-                        VNode::Element(el("div").class("hi-select-option").child(txt(lang.native_name())))
+                        VNode::Element(Box::new(el("div").class("hi-select-option").child(txt(lang.native_name()))))
                     }).collect();
-                    vec![VNode::Element(
+                    vec![VNode::Element(Box::new(
                         el("div")
                             .class("hi-select-dropdown")
                             .children(options)
-                    )]
+                    ))]
                 } else {
                     vec![]
                 }

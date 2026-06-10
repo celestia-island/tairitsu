@@ -92,16 +92,19 @@ impl<T: Clone + 'static> Signal<T> {
         let id = self.inner.borrow().signal_id;
         crate::runtime::track_signal(id);
 
-        if TRACKING_ACTIVE.with(|t| t.get()) {
-            let signal = self.clone();
-            DEPENDENCIES.with(|deps| {
+        let signal = self.clone();
+        DEPENDENCIES.with(|deps| {
+            let borrowed = deps.borrow();
+            let tracking = TRACKING_ACTIVE.with(|t| t.get());
+            drop(borrowed);
+            if tracking {
                 deps.borrow_mut().push(DependencyEntry {
                     subscribe: Box::new(move |cb: Rc<dyn Fn()>| {
                         signal.inner.borrow_mut().subscribers.push(cb);
                     }),
                 });
-            });
-        }
+            }
+        });
 
         self.inner.borrow().value.clone()
     }
@@ -303,7 +306,17 @@ fn execute_effect(
 ///
 /// This is useful for testing and for manually managing dependency tracking.
 pub fn take_dependencies() -> Vec<DependencyEntry> {
-    DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect())
+    let result = DEPENDENCIES.with(|deps| deps.borrow_mut().drain(..).collect());
+    TRACKING_ACTIVE.with(|t| t.set(true));
+    result
+}
+
+/// Stop tracking signal dependencies. Further `signal.get()` calls will
+/// not record dependencies until `take_dependencies()` or `create_effect`
+/// re-enables tracking.
+pub fn stop_tracking() {
+    TRACKING_ACTIVE.with(|t| t.set(false));
+    DEPENDENCIES.with(|deps| deps.borrow_mut().clear());
 }
 
 /// Batch multiple signal writes into a single update. Subscribers are deferred

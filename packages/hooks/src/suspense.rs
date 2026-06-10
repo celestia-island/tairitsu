@@ -26,7 +26,7 @@
 //!     });
 //!
 //!     Suspense::new(
-//!         VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Loading...")))),
+//!         VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Loading..."))))),
 //!         || match data.read() {
 //!             ResourceState::Loading => VNode::Text(VText::new("Loading...")),
 //!             ResourceState::Ready(value) => VNode::Text(VText::new(value)),
@@ -516,8 +516,8 @@ where
 ///
 /// fn component() -> VNode {
 ///     Suspense::new(
-///         VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Loading...")))),
-///         || VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Content loaded!")))),
+///         VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Loading..."))))),
+///         || VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Content loaded!"))))),
 ///     ).render()
 /// }
 /// ```
@@ -589,8 +589,8 @@ impl Suspense {
 ///
 /// fn component() -> VNode {
 ///     use_suspense(
-///         VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Loading...")))),
-///         || VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Content loaded!")))),
+///         VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Loading...")))),
+///         || VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Content loaded!")))),
 ///     )
 /// }
 /// ```

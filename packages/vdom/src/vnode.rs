@@ -90,9 +90,8 @@ impl<T: ToString + Clone> IntoAttrValue for &T {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[allow(clippy::large_enum_variant)]
 pub enum VNode {
-    Element(VElement),
+    Element(Box<VElement>),
     Text(VText),
     Fragment(Vec<VNode>),
     DynamicText(DynamicText),
@@ -102,10 +101,7 @@ pub enum VNode {
 pub struct DynamicText {
     pub initial: String,
     pub compute: Rc<RefCell<dyn FnMut() -> String>>,
-    /// Optional identity key. When set, [`PartialEq`] compares keys in addition
-    /// to `initial`, allowing the consumer to distinguish dynamic texts that
-    /// happen to share the same initial string.
-    pub key: Option<&'static str>,
+    pub key: Option<String>,
 }
 
 impl DynamicText {
@@ -121,8 +117,8 @@ impl DynamicText {
     }
 
     /// Set an identity key for this dynamic text node.
-    pub fn with_key(mut self, key: &'static str) -> Self {
-        self.key = Some(key);
+    pub fn with_key(mut self, key: impl Into<String>) -> Self {
+        self.key = Some(key.into());
         self
     }
 }
@@ -285,6 +281,19 @@ pub struct Style {
     pub css_variables: Vec<(String, String)>,
 }
 
+impl std::fmt::Display for Style {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.static_styles)?;
+        for (i, (name, value)) in self.css_variables.iter().enumerate() {
+            if i > 0 || !self.static_styles.is_empty() {
+                write!(f, ";")?;
+            }
+            write!(f, "{}:{}", name, value)?;
+        }
+        Ok(())
+    }
+}
+
 impl Style {
     pub fn new() -> Self {
         Self::default()
@@ -304,22 +313,17 @@ impl Style {
         self
     }
 
-    #[allow(clippy::inherent_to_string)]
-    pub fn to_string(&self) -> String {
-        let mut result = self.static_styles.clone();
-        for (name, value) in &self.css_variables {
-            if !result.is_empty() {
-                result.push(';');
-            }
-            result.push_str(&format!("{}:{}", name, value));
-        }
-        result
-    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Classes {
     pub static_classes: String,
+}
+
+impl std::fmt::Display for Classes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.static_classes)
+    }
 }
 
 impl Classes {
@@ -343,10 +347,6 @@ impl Classes {
         self
     }
 
-    #[allow(clippy::inherent_to_string)]
-    pub fn to_string(&self) -> &str {
-        &self.static_classes
-    }
 }
 
 impl VElement {
@@ -1492,7 +1492,7 @@ mod tests {
     #[test]
     fn test_html_render_escapes_attr_single_quote() {
         let el = VElement::new("div").attr("data-value", "it's");
-        let html = VNode::Element(el).render_to_html();
+        let html = VNode::Element(Box::new(el)).render_to_html();
         assert!(
             html.contains("&#39;"),
             "Single quote should be escaped: {}",
@@ -1503,7 +1503,7 @@ mod tests {
     #[test]
     fn test_html_render_escapes_attr_double_quote() {
         let el = VElement::new("div").attr("data-value", r#"he"llo"#);
-        let html = VNode::Element(el).render_to_html();
+        let html = VNode::Element(Box::new(el)).render_to_html();
         assert!(
             html.contains("&quot;"),
             "Double quote should be escaped: {}",
