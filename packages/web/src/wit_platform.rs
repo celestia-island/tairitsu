@@ -360,19 +360,19 @@ pub mod wasm_impl {
     /// Log an error (native fallback).
     #[cfg(not(target_family = "wasm"))]
     fn log_error(message: &str) {
-        eprintln!("[WitPlatform ERROR] {}", message);
+        tracing::error!("[WitPlatform ERROR] {}", message);
     }
 
     /// Log a warning (native fallback).
     #[cfg(not(target_family = "wasm"))]
     fn log_warning(message: &str) {
-        eprintln!("[WitPlatform WARNING] {}", message);
+        tracing::warn!("[WitPlatform WARNING] {}", message);
     }
 
     /// Log diagnostic information (native fallback).
     #[cfg(not(target_family = "wasm"))]
     fn log_info(message: &str) {
-        eprintln!("[WitPlatform] {}", message);
+        tracing::info!("[WitPlatform] {}", message);
     }
 
     type GeoCallback =
@@ -2580,7 +2580,6 @@ pub fn push_state(url: &str) {
     {
         wasm_impl::wasm_push_state(url);
     }
-    #[allow(unused_variables)]
     let _ = url;
 }
 
@@ -2590,7 +2589,6 @@ pub fn replace_state(url: &str) {
     {
         wasm_impl::wasm_replace_state(url);
     }
-    #[allow(unused_variables)]
     let _ = url;
 }
 

@@ -889,9 +889,9 @@ async fn resolve_default_cwd(context: &RequestContext<RoleServer>) -> Option<Str
 mod daemon {
     use std::path::PathBuf;
 
-    use anyhow::anyhow;
+    use anyhow::{anyhow, Result};
 
-    pub(super) async fn resolve_daemon_url() -> anyhow::Result<String> {
+    pub(super) async fn resolve_daemon_url() -> Result<String> {
         if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL") {
             if !url.is_empty() {
                 return Ok(url);

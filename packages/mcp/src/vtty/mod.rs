@@ -298,7 +298,7 @@ impl VttyManager {
             .map_err(|_| "session lock poisoned".to_string())?;
         let info = guard.info();
         if let Err(e) = guard.kill() {
-            eprintln!("[vtty] warning: kill session '{}': {}", sid, e);
+            tracing::warn!("[vtty] kill session '{}': {}", sid, e);
         }
         drop(guard);
         self.sessions

@@ -1174,8 +1174,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
             }
         }
-        #[allow(unused_variables)]
-        Some(Commands::Mcp { url, action }) => {
+        Some(Commands::Mcp { url, action: _ }) => {
             let config = crate::mcp::McpConfig {
                 base_url: url.unwrap_or_default(),
             };

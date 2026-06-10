@@ -14,7 +14,7 @@ tairitsu-web = { path = "../../packages/web", features = ["full"] }
 anyhow = { workspace = true }
 
 # Data and serialization
-bytes = "^1"
+bytes = { workspace = true }
 serde = { workspace = true }
 
 # WASM dependencies (re-exported by tairitsu, but needed for direct use)

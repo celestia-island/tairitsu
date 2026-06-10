@@ -28,7 +28,7 @@ use super::{http_fetcher::HttpFetcher, Fetcher, Resource};
 /// # Example
 /// ```ignore
 /// let user_data = use_fetch("/api/user", |data| {
-///     serde_json::from_slice::<User>(data).map_err(|e| e.to_string())
+///     Ok(serde_json::from_slice::<User>(data)?)
 /// });
 ///
 /// match user_data.borrow() {
@@ -40,7 +40,7 @@ use super::{http_fetcher::HttpFetcher, Fetcher, Resource};
 pub fn use_fetch<T, F>(url: &str, parser: F) -> Rc<RefCell<Resource<T>>>
 where
     T: Clone + Send + 'static,
-    F: Fn(&[u8]) -> Result<T, String> + Clone + Send + 'static,
+    F: Fn(&[u8]) -> anyhow::Result<T> + Clone + Send + 'static,
 {
     use_fetch_with_fetcher_impl(url, parser, None::<HttpFetcher>)
 }
@@ -56,7 +56,7 @@ pub fn use_fetch_with_fetcher<T, F, Fr>(
 ) -> Rc<RefCell<Resource<T>>>
 where
     T: Clone + Send + 'static,
-    F: Fn(&[u8]) -> Result<T, String> + Clone + Send + 'static,
+    F: Fn(&[u8]) -> anyhow::Result<T> + Clone + Send + 'static,
     Fr: Fetcher + Clone + Send + Sync + 'static,
 {
     use_fetch_with_fetcher_impl(url, parser, Some(fetcher))
@@ -71,7 +71,7 @@ fn use_fetch_with_fetcher_impl<T, F, Fr>(
 ) -> Rc<RefCell<Resource<T>>>
 where
     T: Clone + Send + 'static,
-    F: Fn(&[u8]) -> Result<T, String> + Clone + Send + 'static,
+    F: Fn(&[u8]) -> anyhow::Result<T> + Clone + Send + 'static,
     Fr: Fetcher + Clone + Send + Sync + 'static,
 {
     let state = Rc::new(RefCell::new(Resource::Loading));
@@ -98,7 +98,7 @@ where
             let new_state = match result {
                 Ok(data) => match parser(&data) {
                     Ok(value) => Resource::Success(value),
-                    Err(e) => Resource::Error(e),
+                    Err(e) => Resource::Error(e.to_string()),
                 },
                 Err(e) => Resource::Error(e.to_string()),
             };
@@ -157,7 +157,7 @@ where
     T: serde::de::DeserializeOwned + Clone + Send + 'static,
 {
     use_fetch(url, |data| {
-        serde_json::from_slice(data).map_err(|e| e.to_string())
+        Ok(serde_json::from_slice(data)?)
     })
 }
 
@@ -169,7 +169,7 @@ where
 {
     use_fetch_with_fetcher(
         url,
-        |data| serde_json::from_slice(data).map_err(|e| e.to_string()),
+        |data| Ok(serde_json::from_slice(data)?),
         fetcher,
     )
 }
@@ -212,7 +212,7 @@ where
 pub fn use_lazy_fetch<T, F>(url: &str, parser: F) -> (Rc<RefCell<Resource<T>>>, impl Fn())
 where
     T: Clone + Send + 'static,
-    F: Fn(&[u8]) -> Result<T, String> + Clone + Send + 'static,
+    F: Fn(&[u8]) -> anyhow::Result<T> + Clone + Send + 'static,
 {
     let state = Rc::new(RefCell::new(Resource::Loading));
     #[allow(unused_variables)]
@@ -239,7 +239,7 @@ where
                 let new_state = match result {
                     Ok(data) => match parser(&data) {
                         Ok(value) => Resource::Success(value),
-                        Err(e) => Resource::Error(e),
+                        Err(e) => Resource::Error(e.to_string()),
                     },
                     Err(e) => Resource::Error(e.to_string()),
                 };
@@ -276,7 +276,7 @@ mod tests {
 
         // We can test that the function returns the right type
         let resource: Rc<RefCell<Resource<String>>> = use_fetch("http://example.com", |data| {
-            String::from_utf8(data.to_vec()).map_err(|e| e.to_string())
+            Ok(String::from_utf8(data.to_vec())?)
         });
 
         // On non-server, it returns an error state
@@ -286,7 +286,7 @@ mod tests {
     #[test]
     fn test_use_lazy_fetch_creates_trigger() {
         let (_resource, _trigger) = use_lazy_fetch("http://example.com", |data| {
-            String::from_utf8(data.to_vec()).map_err(|e| e.to_string())
+            Ok(String::from_utf8(data.to_vec())?)
         });
 
         // Just verify the types are correct
@@ -298,7 +298,7 @@ mod tests {
     async fn test_use_fetch_with_tokio_runtime() {
         // This test verifies that use_fetch works with a tokio runtime
         let resource: Rc<RefCell<Resource<String>>> = use_fetch("http://example.com", |data| {
-            String::from_utf8(data.to_vec()).map_err(|e| e.to_string())
+            Ok(String::from_utf8(data.to_vec())?)
         });
 
         // The resource should be Loading initially

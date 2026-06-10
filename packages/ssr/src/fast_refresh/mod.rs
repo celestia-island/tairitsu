@@ -248,7 +248,7 @@ impl FastRefreshRuntime {
         new_sig: &ComponentSignature,
     ) -> bool {
         // Check blacklist
-        let blacklist = self.blacklisted.read().unwrap();
+        let blacklist = self.blacklisted.read().expect("fast_refresh blacklist lock poisoned");
         if blacklist.contains(old_sig) || blacklist.contains(new_sig) {
             return false;
         }

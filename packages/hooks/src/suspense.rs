@@ -419,7 +419,7 @@ pub fn use_resource<T, F, Fut>(fetcher: F) -> Resource<T>
 where
     T: Clone + 'static + std::marker::Send,
     F: FnOnce() -> Fut + 'static + std::marker::Send,
-    Fut: Future<Output = Result<T, String>> + 'static + std::marker::Send,
+    Fut: Future<Output = anyhow::Result<T>> + 'static + std::marker::Send,
 {
     let component_id = runtime::use_component(VNode::empty);
 
@@ -465,7 +465,7 @@ where
             if let Ok(result) = rx.recv() {
                 let new_state = match result {
                     Ok(value) => ResourceState::Ready(value),
-                    Err(err) => ResourceState::Error(err),
+                    Err(err) => ResourceState::Error(err.to_string()),
                 };
                 *thread_safe_state
                     .lock()

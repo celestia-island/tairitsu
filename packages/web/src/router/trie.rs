@@ -164,9 +164,9 @@ impl TrieNode {
         // Check if we have a handler at this level
         {
             let handler_guard = self.handler.borrow();
-            if handler_guard.is_some() {
+            if let Some(handler) = handler_guard.as_ref() {
                 return Some((
-                    handler_guard.as_ref().unwrap().clone(),
+                    handler.clone(),
                     params.clone(),
                     self.name.borrow().clone(),
                 ));

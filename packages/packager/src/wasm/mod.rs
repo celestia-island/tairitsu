@@ -584,8 +584,8 @@ fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<
                 ))
             });
         }
-        eprintln!(
-            "[tairitsu] Warning: TAIRITSU_RUNTIME_BUNDLE={} does not exist, falling back to default search",
+        tracing::warn!(
+            "TAIRITSU_RUNTIME_BUNDLE={} does not exist, falling back to default search",
             path.display()
         );
     }

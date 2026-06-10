@@ -61,11 +61,6 @@ pub mod wit_registry;
 #[cfg(feature = "dynamic")]
 pub mod dynamic;
 
-// Re-export common types
-// NOTE: anyhow::Result is re-exported for convenience. Downstream crates that
-// need structured error handling should define their own error types rather than
-// relying on this re-export.
-pub use anyhow::{Error, Result};
 pub use container::{
     Container, ContainerState, ExportInfo, GuestHandlerContext, GuestInstance, HostState,
     HostStateImpl, ImportInfo,

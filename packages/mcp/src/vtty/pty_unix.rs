@@ -100,7 +100,7 @@ impl UnixPty {
         screen: Arc<std::sync::Mutex<super::screen::Vt100Screen>>,
         running: Arc<AtomicBool>,
     ) {
-        eprintln!("[vtty-reader] started, fd={}", read_fd);
+        tracing::debug!("[vtty-reader] started, fd={}", read_fd);
         let mut buf = vec![0u8; 65536];
         let mut pfd = libc::pollfd {
             fd: read_fd,
@@ -115,7 +115,7 @@ impl UnixPty {
                 if err.kind() == io::ErrorKind::Interrupted {
                     continue;
                 }
-                eprintln!("[vtty-reader] poll error on fd={}: {}", read_fd, err);
+                tracing::debug!("[vtty-reader] poll error on fd={}: {}", read_fd, err);
                 break;
             }
             if ready > 0 && (pfd.revents & libc::POLLIN) != 0 {
@@ -127,7 +127,7 @@ impl UnixPty {
                         s.process(&buf[..n as usize]);
                     }
                 } else if n == 0 {
-                    eprintln!("[vtty-reader] EOF on fd={}", read_fd);
+                    tracing::debug!("[vtty-reader] EOF on fd={}", read_fd);
                     break;
                 } else {
                     let err = io::Error::last_os_error();
@@ -135,7 +135,7 @@ impl UnixPty {
                         continue;
                     }
                     if err.kind() != io::ErrorKind::WouldBlock {
-                        eprintln!("[vtty-reader] read error on fd={}: {}", read_fd, err);
+                        tracing::debug!("[vtty-reader] read error on fd={}: {}", read_fd, err);
                         break;
                     }
                 }
@@ -153,14 +153,14 @@ impl UnixPty {
                         break;
                     }
                 }
-                eprintln!(
+                tracing::debug!(
                     "[vtty-reader] poll hangup/error on fd={}, revents={}",
                     read_fd, pfd.revents
                 );
                 break;
             }
         }
-        eprintln!("[vtty-reader] exiting, fd={}", read_fd);
+        tracing::debug!("[vtty-reader] exiting, fd={}", read_fd);
     }
 
     pub fn read_fd(&self) -> RawFd {
