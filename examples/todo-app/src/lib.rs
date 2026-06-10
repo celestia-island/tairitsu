@@ -102,7 +102,7 @@ mod tests {
                 let list = elem
                     .children
                     .iter()
-                    .find(|c| matches!(c, VNode::Element(Box::new(e)) if e.tag == "ul"));
+                    .find(|c| matches!(c, VNode::Element(e) if e.tag == "ul"));
                 assert!(list.is_some(), "Should contain a <ul>");
             }
             _ => panic!("Expected element"),
@@ -117,7 +117,7 @@ mod tests {
                 let has_input = elem
                     .children
                     .iter()
-                    .any(|c| matches!(c, VNode::Element(Box::new(e)) if e.tag == "div"));
+                    .any(|c| matches!(c, VNode::Element(e) if e.tag == "div"));
                 assert!(has_input);
             }
             _ => panic!("Expected element"),

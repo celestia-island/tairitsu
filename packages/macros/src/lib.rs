@@ -690,15 +690,19 @@ pub fn derive_as_tool(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-/// Derive macro for Props structs.
+/// Marker derive macro for Props structs.
 ///
-/// This is a marker derive that indicates a struct is used as component props.
-/// The actual Default implementation should be derived separately using `#[derive(Default)]`
-/// or implemented manually with proper defaults for fields.
+/// This marks a struct as being used as component props, enabling the
+/// `#[props(default)]` field attribute for use by the RSX and component macros.
+/// The `#[props(default)]` attribute is used by the component builder macros
+/// to determine which fields have defaults when constructing instances.
+///
+/// This derive does not generate any trait implementations. Users should
+/// derive or implement `Default` separately if needed.
 ///
 /// # Example
 /// ```ignore
-/// #[derive(Clone, Props, PartialEq, Default)]
+/// #[derive(Clone, PartialEq, Props, Default)]
 /// pub struct ButtonProps {
 ///     pub variant: String,
 ///     #[props(default)]
@@ -706,35 +710,8 @@ pub fn derive_as_tool(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro_derive(Props, attributes(props))]
-pub fn derive_props(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = &input.ident;
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-
-    let fields = match &input.data {
-        Data::Struct(data) => &data.fields,
-        _ => return quote! { compile_error!("Props can only be derived for structs") }.into(),
-    };
-
-    let field_defaults: Vec<_> = fields
-        .iter()
-        .map(|f| {
-            let ident = &f.ident;
-            quote! { #ident: Default::default() }
-        })
-        .collect();
-
-    let expanded = quote! {
-        impl #impl_generics Default for #name #ty_generics #where_clause {
-            fn default() -> Self {
-                Self {
-                    #(#field_defaults,)*
-                }
-            }
-        }
-    };
-
-    TokenStream::from(expanded)
+pub fn derive_props(_input: TokenStream) -> TokenStream {
+    TokenStream::new()
 }
 
 /// Attribute macro for defining component props with cleaner DSL syntax.
