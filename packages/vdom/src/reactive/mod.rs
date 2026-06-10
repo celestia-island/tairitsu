@@ -293,16 +293,6 @@ fn execute_effect(
     }
 }
 
-#[deprecated(since = "0.6.0", note = "renamed to take_dependencies")]
-pub fn drain_dependencies() -> Vec<DependencyEntry> {
-    take_dependencies()
-}
-
-#[deprecated(since = "0.6.0", note = "renamed to take_dependencies")]
-pub fn clear_dependencies() {
-    let _ = take_dependencies();
-}
-
 /// Drain all tracked dependency entries from the current context.
 ///
 /// This is useful for testing and for manually managing dependency tracking.

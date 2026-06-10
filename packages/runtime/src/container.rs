@@ -1084,6 +1084,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "dynamic")]
     fn test_call_guest_raw_desc_rejects_invalid_payload() {
         use crate::Image;
         let wasm = bytes::Bytes::from_static(b"\x00asm\x01\x00\x00\x00");
@@ -1097,8 +1098,7 @@ mod tests {
             .expect("build should succeed");
 
         let sensitive = r#"("SECRET_API_KEY_12345",)"#;
-        #[allow(deprecated)]
-        let result = container.call_guest_json("test_fn", sensitive);
+        let result = container.call_guest_raw_desc("test_fn", sensitive);
         assert!(result.is_err());
         let err_msg = format!("{}", result.unwrap_err());
         assert!(
