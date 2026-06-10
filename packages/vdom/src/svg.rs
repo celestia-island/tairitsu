@@ -491,39 +491,34 @@ fn find_attr_position_case_insensitive(content: &str, attr_name: &str) -> Option
 
 /// Extract an attribute with its value.
 fn extract_attribute_with_value(content: &str) -> Option<(&str, usize, usize)> {
-    let mut chars = content.chars().peekable();
+    let bytes = content.as_bytes();
+    let len = content.len();
+    let mut pos = 0;
 
     // Skip attribute name
-    while let Some(&c) = chars.peek() {
-        if c.is_whitespace() || c == '=' || c == '>' || c == '/' {
-            break;
-        }
-        chars.next();
+    while pos < len && !bytes[pos].is_ascii_whitespace() && bytes[pos] != b'='
+        && bytes[pos] != b'>' && bytes[pos] != b'/'
+    {
+        pos += 1;
     }
 
     // Skip whitespace
-    while let Some(&c) = chars.peek() {
-        if !c.is_whitespace() {
-            break;
-        }
-        chars.next();
+    while pos < len && bytes[pos].is_ascii_whitespace() {
+        pos += 1;
     }
 
     // Expect '='
-    if chars.peek() != Some(&'=') {
+    if pos >= len || bytes[pos] != b'=' {
         return None;
     }
-    chars.next();
+    pos += 1;
 
     // Skip whitespace after '='
-    while let Some(&c) = chars.peek() {
-        if !c.is_whitespace() {
-            break;
-        }
-        chars.next();
+    while pos < len && bytes[pos].is_ascii_whitespace() {
+        pos += 1;
     }
 
-    let consumed = content.len() - chars.collect::<String>().leak().len();
+    let consumed = pos;
     let after_eq = &content[consumed..];
 
     let first_char = after_eq.chars().next()?;

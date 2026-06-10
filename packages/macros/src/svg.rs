@@ -299,15 +299,15 @@ fn remove_event_handlers(content: &str) -> String {
     let len = bytes.len();
 
     while i < len {
-        // Look for "on" preceded by whitespace, '<', '"', or ''' (attribute boundary)
+        // Look for "on" preceded by whitespace or '<' (attribute boundary)
+        // Note: we do NOT match '"' or '\'' because those indicate being inside
+        // an attribute value, not at an attribute name boundary.
         let is_prefix = i == 0
             || bytes[i - 1] == b' '
             || bytes[i - 1] == b'\t'
             || bytes[i - 1] == b'\n'
             || bytes[i - 1] == b'\r'
-            || bytes[i - 1] == b'<'
-            || bytes[i - 1] == b'"'
-            || bytes[i - 1] == b'\'';
+            || bytes[i - 1] == b'<';
         if is_prefix
             && i + 2 < len
             && (bytes[i] == b'o' || bytes[i] == b'O')

@@ -141,7 +141,10 @@ pub fn expand_define_props(input: PropsInput) -> TokenStream2 {
                 let ty_str = quote!(#field_ty).to_string();
 
                 // Check for Option<T> first (most specific)
-                if ty_str.starts_with("Option <") || ty_str.contains("Option <") {
+                if ty_str.starts_with("Option <")
+                    || ty_str.starts_with("std::option::Option<")
+                    || ty_str.contains("Option <")
+                {
                     prop_attrs.push(quote! {
                         #[props(default)]
                     });
@@ -150,7 +153,10 @@ pub fn expand_define_props(input: PropsInput) -> TokenStream2 {
                     });
                 }
                 // Check for Vec<T> before String since Vec<Vec<String>> contains "String"
-                else if ty_str.starts_with("Vec <") || ty_str.starts_with("Vec<") {
+                else if ty_str.starts_with("Vec <")
+                    || ty_str.starts_with("Vec<")
+                    || ty_str.starts_with("std::vec::Vec<")
+                {
                     prop_attrs.push(quote! {
                         #[props(default)]
                     });
@@ -168,7 +174,11 @@ pub fn expand_define_props(input: PropsInput) -> TokenStream2 {
                     });
                 }
                 // Check for HashMap/HashSet
-                else if ty_str.starts_with("HashMap") || ty_str.starts_with("HashSet") {
+                else if ty_str.starts_with("HashMap")
+                    || ty_str.starts_with("std::collections::HashMap<")
+                    || ty_str.starts_with("HashSet")
+                    || ty_str.starts_with("std::collections::HashSet<")
+                {
                     prop_attrs.push(quote! {
                         #[props(default)]
                     });

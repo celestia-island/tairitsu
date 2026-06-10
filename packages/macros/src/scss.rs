@@ -266,7 +266,7 @@ fn process_class_names(scss: &str, hash: &str, class_map: &mut HashMap<String, S
                     class_map.insert(current_class.clone(), hashed_class.clone());
                     result.push_str(&hashed_class);
                 }
-                result.push(' ');
+                result.push('.');
                 current_class.clear();
             } else if ch == '&' {
                 current_class.clear();

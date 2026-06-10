@@ -1,6 +1,11 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::RefCell,
+    rc::Rc,
+};
 
-use tairitsu_vdom::{Classes, IntoClassValue, IntoStyleValue, Signal, Style, VElement};
+use tairitsu_vdom::{
+    create_effect, Classes, IntoClassValue, IntoStyleValue, Signal, Style, VElement,
+};
 
 /// A memoized value that only recomputes when dependencies change.
 ///
@@ -127,6 +132,10 @@ where
 /// Creates a memoized value that only recomputes when accessed signals change.
 /// This is the Dioxus-compatible API that accepts just a compute function.
 ///
+/// Internally uses reactive signal tracking: when the compute function calls
+/// `.get()` on a `Signal`, that signal is automatically tracked as a dependency.
+/// When any tracked signal changes, the value is recomputed.
+///
 /// # Arguments
 /// * `compute` - A function that computes the value
 ///
@@ -143,7 +152,23 @@ where
     T: Clone + 'static,
     F: Fn() -> T + Clone + 'static,
 {
-    Memo::new(compute, ())
+    let value = Signal::new(compute());
+    let compute = Rc::new(compute);
+
+    {
+        let compute = compute.clone();
+        let value = value.clone();
+        create_effect(move || {
+            let v = compute();
+            value.set(v);
+        });
+    }
+
+    Memo {
+        value,
+        compute: (*compute).clone(),
+        deps: Rc::new(RefCell::new(())),
+    }
 }
 
 /// Creates a memoized value with explicit dependencies.

@@ -218,7 +218,7 @@ impl ScssExtractor {
         while self.remaining() {
             match self.ch() {
                 '/' if self.ch_at(1) == '*' => self.skip_block_comment(),
-                '/' if self.ch_at(1) != '\0' => {
+                '/' if self.ch_at(1) == '/' => {
                     self.advance(2);
                     self.skip_to_eol();
                 }
@@ -257,7 +257,7 @@ impl ScssExtractor {
                 '"' => self.skip_string_double(),
                 '\'' => self.skip_string_single(),
                 '/' if self.ch_at(1) == '*' => self.skip_block_comment(),
-                '/' if self.ch_at(1) != '\0' => {
+                '/' if self.ch_at(1) == '/' => {
                     self.advance(2);
                     self.skip_to_eol();
                 }
