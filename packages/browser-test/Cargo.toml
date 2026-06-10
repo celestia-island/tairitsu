@@ -20,11 +20,11 @@ reqwest = { workspace = true, features = [
   "rustls",
   "stream",
 ] }
-zip = { version = "2", default-features = false, features = ["deflate"] }
+zip = { workspace = true }
 clap = { workspace = true, features = ["env"] }
-indicatif = "0.17"
-axum = "0.8"
-tower-http = { version = "0.6", features = ["fs"] }
+indicatif = { workspace = true }
+axum = { workspace = true }
+tower-http = { workspace = true, features = ["fs"] }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }

@@ -20,17 +20,17 @@ tokio = { workspace = true, features = ["rt-multi-thread", "io-std"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 reqwest = { workspace = true, features = ["query"] }
-vte = { version = "^0.15", optional = true }
-portable-pty = { version = "^0.8", optional = true }
+vte = { workspace = true, optional = true }
+portable-pty = { workspace = true, optional = true }
 schemars = "1"
 rmcp = { version = "1", features = ["server", "transport-io", "macros", "schemars"] }
 ab_glyph = { version = "^0.2", optional = true }
-image = { version = "^0.25", optional = true }
-base64 = { version = "^0.22", optional = true }
+image = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
 unicode-width = { version = "^0.2", optional = true }
 
 [target.'cfg(unix)'.dependencies]
-libc = "^0.2"
+libc = { workspace = true }
 
 [features]
 default = ["vtty", "vtty-visual"]
@@ -38,4 +38,4 @@ vtty = ["vte", "portable-pty", "dep:unicode-width"]
 vtty-visual = ["vtty", "dep:ab_glyph", "dep:image", "dep:base64"]
 
 [dev-dependencies]
-crossterm = { version = "^0.28" }
+crossterm = { workspace = true }

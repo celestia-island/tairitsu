@@ -102,3 +102,16 @@ wit-parser = "0.245"
 wit-component = "0.245"
 wit-bindgen = { version = "0.57", features = ["macros"] }
 tempfile = "^3"
+vte = "^0.15"
+portable-pty = "^0.8"
+image = "^0.25"
+base64 = "^0.22"
+crossterm = "^0.28"
+chrono = { version = "^0.4", default-features = false, features = ["clock", "serde"] }
+libc = "^0.2"
+indicatif = "^0.17"
+zip = { version = "^2", default-features = false, features = ["deflate"] }
+async-trait = "^0.1"
+axum = "^0.8"
+tower-http = "^0.6"
+tokio-stream = { version = "^0.1", default-features = false }
