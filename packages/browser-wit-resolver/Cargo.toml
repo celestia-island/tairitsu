@@ -10,7 +10,6 @@ repository.workspace = true
 [dependencies]
 tairitsu-browser-worlds = { workspace = true, optional = true }
 anyhow = { workspace = true }
-thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }

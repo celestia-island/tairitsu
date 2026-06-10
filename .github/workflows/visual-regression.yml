@@ -182,7 +182,7 @@ jobs:
             }
 
       - name: Fail on visual diff failures
-        if: steps.diff.outcome == 'success' && github.ref != 'refs/heads/main'
+        if: steps.diff.outcome == 'success' && github.ref != 'refs/heads/master'
         run: |
           if [ -f target/visual-diff/report.json ]; then
             FAILED=$(python3 -c "import json; print(json.load(open('target/visual-diff/report.json'))['failed'])")

@@ -10,7 +10,6 @@ publish = false
 
 [dependencies]
 thirtyfour = { version = "^0.37", features = ["reqwest"] }
-chromiumoxide = { workspace = true }
 scraper = "^0.22"
 tokio = { workspace = true }
 async-trait = { workspace = true }
@@ -32,4 +31,3 @@ image = { workspace = true }
 name = "tairitsu-e2e"
 path = "src/main.rs"
 
-[dev-dependencies]

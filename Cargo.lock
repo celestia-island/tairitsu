@@ -6098,7 +6098,6 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
- "thiserror 2.0.18",
  "tokio",
  "tower-http",
  "tracing",
@@ -6119,7 +6118,6 @@ dependencies = [
  "sha2",
  "tairitsu-browser-worlds",
  "tempfile",
- "thiserror 2.0.18",
  "tracing",
 ]
 
@@ -9234,17 +9232,17 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "hikari-animation"
-version = "0.2.7"
-
-[[patch.unused]]
-name = "plana"
-version = "0.1.0"
-
-[[patch.unused]]
 name = "aoba"
 version = "0.1.2"
 
 [[patch.unused]]
 name = "kirino"
 version = "0.5.0"
+
+[[patch.unused]]
+name = "plana"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "hikari-animation"
+version = "0.2.7"

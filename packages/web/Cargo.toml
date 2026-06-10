@@ -30,8 +30,6 @@ serde_json = { workspace = true }
 toml = { workspace = true }
 tracing = { workspace = true }
 wit-bindgen = { workspace = true, optional = true }
-wasm-bindgen = { version = "^0.2", optional = true }
-wasm-bindgen-futures = { version = "^0.4", optional = true }
 
 [features]
 default = ["vdom", "hooks", "macros", "style", "ssr"]
@@ -40,10 +38,10 @@ hooks = ["dep:tairitsu-hooks"]
 macros = ["dep:tairitsu-macros"]
 style = ["dep:tairitsu-style"]
 router = []
-data-fetcher = ["ssr"]
-hmr = ["ssr"]
-fast-refresh = ["ssr", "hmr"]
-error-overlay = ["ssr", "hmr"]
+data-fetcher = ["ssr", "tairitsu-ssr?/data-fetcher"]
+hmr = ["ssr", "tairitsu-ssr?/hmr"]
+fast-refresh = ["ssr", "hmr", "tairitsu-ssr?/fast-refresh"]
+error-overlay = ["ssr", "hmr", "tairitsu-ssr?/error-overlay"]
 i18n = ["hooks", "dep:iso639_enum"]
 ssr = ["dep:tairitsu", "dep:tairitsu-ssr"]
 packager = ["dep:tairitsu", "dep:tairitsu-packager"]

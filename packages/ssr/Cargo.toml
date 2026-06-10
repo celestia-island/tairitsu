@@ -38,4 +38,3 @@ error-overlay = ["hmr"]
 data-fetcher = ["tokio", "dep:reqwest"]
 dev = ["hmr", "fast-refresh", "error-overlay", "data-fetcher"]
 
-[build-dependencies]

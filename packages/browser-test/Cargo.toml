@@ -16,8 +16,8 @@ path = "src/main.rs"
 tokio = { workspace = true, features = ["full"] }
 chromiumoxide = { workspace = true }
 futures = { workspace = true }
-reqwest = { workspace = true, features = [
-  "rustls",
+reqwest = { workspace = true, default-features = false, features = [
+  "rustls-tls",
   "stream",
 ] }
 zip = { workspace = true }
@@ -26,7 +26,6 @@ indicatif = { workspace = true }
 axum = { workspace = true }
 tower-http = { workspace = true, features = ["fs"] }
 anyhow = { workspace = true }
-thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 dirs = "5"

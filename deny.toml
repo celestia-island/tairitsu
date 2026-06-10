@@ -1,0 +1,37 @@
+[advisories]
+vulnerability = "deny"
+unmaintained = "warn"
+notice = "warn"
+ignore = []
+
+[licenses]
+unlicensed = "deny"
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "ISC",
+    "BSD-3-Clause",
+    "BSL-1.0",
+    "Zlib",
+    "Unicode-3.0",
+    "CC0-1.0",
+]
+deny = []
+confidence-threshold = 0.8
+
+[bans]
+multiple-versions = "warn"
+skip = [
+    { name = "base64", version = "0.21" },
+    { name = "rand", version = "0.7" },
+    { name = "rand", version = "0.8" },
+    { name = "toml", version = "0.8" },
+    { name = "thiserror", version = "1" },
+    { name = "zip", version = "0.6" },
+    { name = "dirs", version = "5" },
+    { name = "which", version = "7" },
+]
+skip-tree = [
+    { name = "chromiumoxide", version = "0.9" },
+    { name = "wasmtime", version = "43" },
+]
