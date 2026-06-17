@@ -109,7 +109,7 @@ base64 = "^0.22"
 crossterm = "^0.28"
 chrono = { version = "^0.4", default-features = false, features = ["clock", "serde"] }
 libc = "^0.2"
-indicatif = "^0.17"
+indicatif = "^0.18"
 zip = { version = "^2", default-features = false, features = ["deflate"] }
 async-trait = "^0.1"
 axum = "^0.8"
