@@ -57,7 +57,7 @@ panic = "abort"
 version = "0.5.13"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
-license = "MIT OR Apache-2.0"
+license = "SySL-1.0"
 repository = "https://github.com/celestia-island/tairitsu"
 
 [workspace.dependencies]

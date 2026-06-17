@@ -10,10 +10,7 @@
   <a href="https://github.com/celestia-island/tairitsu/actions">
     <img src="https://img.shields.io/github/actions/workflow/status/celestia-island/tairitsu/clippy.yml?branch=master" alt="CI" />
   </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg" alt="License" />
-  </a>
-  <a href="https://github.com/casey/just">
+  [[![License: SySL](https://img.shields.io/badge/license-SySL%201.0-blue)](./LICENSE.txt)](./LICENSE.txt)<a href="https://github.com/casey/just">
     <img src="https://img.shields.io/badge/built%20with-just-blue" alt="Built with just" />
   </a>
 </div>
@@ -136,8 +133,7 @@ Same component, two execution paths:
 
 ## License
 
-Tairitsu is dual-licensed under MIT OR Apache-2.0.
-
+Licensed under the [Synthetic Source License (SySL), Version 1.0](./LICENSE.txt).
 ## Name
 
 "Tairitsu" (対立) means "conflict" or "opposition" in Japanese, from the rhythm game [Arcaea](https://arcaea.lowiro.com/).
