@@ -3,6 +3,7 @@
 //! This module provides functions to integrate the reactive runtime
 //! with the web platform's DOM manipulation capabilities.
 
+use anyhow::Result;
 use std::{cell::RefCell, rc::Rc};
 
 use tairitsu_vdom::Patch;
@@ -125,7 +126,7 @@ impl ComponentRenderer {
     }
 
     /// Mount a VNode to the root element.
-    pub fn mount(&self, vnode: tairitsu_vdom::VNode) -> anyhow::Result<()> {
+    pub fn mount(&self, vnode: tairitsu_vdom::VNode) -> Result<()> {
         #[cfg(target_family = "wasm")]
         {
             if let Ok(platform) = crate::WitPlatform::new() {

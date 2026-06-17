@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
     sync::{Arc, RwLock},
+    time::Duration,
 };
 use uuid::Uuid;
 
@@ -61,7 +62,7 @@ impl ModuleInfo {
         self.version = version.into();
         self.loaded_at = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or(Duration::ZERO)
             .as_secs();
     }
 
@@ -111,8 +112,8 @@ impl ModuleRegistry {
         let info = ModuleInfo::new(&path);
         let id = info.id.clone();
 
-        let mut modules = self.modules.write().unwrap();
-        let mut path_to_id = self.path_to_id.write().unwrap();
+        let mut modules = self.modules.write().unwrap_or_else(|e| e.into_inner());
+        let mut path_to_id = self.path_to_id.write().unwrap_or_else(|e| e.into_inner());
 
         path_to_id.insert(path.clone(), id.clone());
         modules.insert(id.clone(), info);
@@ -122,19 +123,19 @@ impl ModuleRegistry {
 
     /// Get module info by ID
     pub fn get(&self, id: &str) -> Option<ModuleInfo> {
-        let modules = self.modules.read().unwrap();
+        let modules = self.modules.read().unwrap_or_else(|e| e.into_inner());
         modules.get(id).cloned()
     }
 
     /// Get module ID by path
     pub fn get_id_by_path(&self, path: &str) -> Option<String> {
-        let path_to_id = self.path_to_id.read().unwrap();
+        let path_to_id = self.path_to_id.read().unwrap_or_else(|e| e.into_inner());
         path_to_id.get(path).cloned()
     }
 
     /// Update module state
     pub fn update_state(&self, id: &str, state: ModuleState) -> Result<(), String> {
-        let mut modules = self.modules.write().unwrap();
+        let mut modules = self.modules.write().unwrap_or_else(|e| e.into_inner());
         let module = modules.get_mut(id).ok_or("Module not found")?;
         module.state = state;
         Ok(())
@@ -142,7 +143,7 @@ impl ModuleRegistry {
 
     /// Mark module as loaded with version
     pub fn mark_loaded(&self, id: &str, version: impl Into<String>) -> Result<(), String> {
-        let mut modules = self.modules.write().unwrap();
+        let mut modules = self.modules.write().unwrap_or_else(|e| e.into_inner());
         let module = modules.get_mut(id).ok_or("Module not found")?;
         module.mark_loaded(version);
         Ok(())
@@ -150,7 +151,7 @@ impl ModuleRegistry {
 
     /// Mark module as failed
     pub fn mark_failed(&self, id: &str, error: impl Into<String>) -> Result<(), String> {
-        let mut modules = self.modules.write().unwrap();
+        let mut modules = self.modules.write().unwrap_or_else(|e| e.into_inner());
         let module = modules.get_mut(id).ok_or("Module not found")?;
         module.mark_failed(error);
         Ok(())
@@ -158,7 +159,7 @@ impl ModuleRegistry {
 
     /// Add dependency relationship
     pub fn add_dependency(&self, module_id: &str, dep_id: &str) -> Result<(), String> {
-        let mut modules = self.modules.write().unwrap();
+        let mut modules = self.modules.write().unwrap_or_else(|e| e.into_inner());
 
         let module = modules.get_mut(module_id).ok_or("Module not found")?;
         module.add_dependency(dep_id);
@@ -207,8 +208,8 @@ impl ModuleRegistry {
 
     /// Remove a module from registry
     pub fn remove(&self, id: &str) -> Result<(), String> {
-        let mut modules = self.modules.write().unwrap();
-        let mut path_to_id = self.path_to_id.write().unwrap();
+        let mut modules = self.modules.write().unwrap_or_else(|e| e.into_inner());
+        let mut path_to_id = self.path_to_id.write().unwrap_or_else(|e| e.into_inner());
 
         let module = modules.get(id).ok_or("Module not found")?;
         path_to_id.remove(&module.path);
@@ -219,8 +220,8 @@ impl ModuleRegistry {
 
     /// Clear all modules
     pub fn clear(&self) {
-        let mut modules = self.modules.write().unwrap();
-        let mut path_to_id = self.path_to_id.write().unwrap();
+        let mut modules = self.modules.write().unwrap_or_else(|e| e.into_inner());
+        let mut path_to_id = self.path_to_id.write().unwrap_or_else(|e| e.into_inner());
 
         modules.clear();
         path_to_id.clear();
@@ -228,19 +229,19 @@ impl ModuleRegistry {
 
     /// Get count of registered modules
     pub fn count(&self) -> usize {
-        let modules = self.modules.read().unwrap();
+        let modules = self.modules.read().unwrap_or_else(|e| e.into_inner());
         modules.len()
     }
 
     /// List all module IDs
     pub fn list_ids(&self) -> Vec<String> {
-        let modules = self.modules.read().unwrap();
+        let modules = self.modules.read().unwrap_or_else(|e| e.into_inner());
         modules.keys().cloned().collect()
     }
 
     /// Find modules by state
     pub fn find_by_state(&self, state: ModuleState) -> Vec<ModuleInfo> {
-        let modules = self.modules.read().unwrap();
+        let modules = self.modules.read().unwrap_or_else(|e| e.into_inner());
         modules
             .values()
             .filter(|m| m.state == state)
@@ -250,14 +251,14 @@ impl ModuleRegistry {
 
     /// Create a snapshot of the registry for transmission
     pub fn snapshot(&self) -> Vec<ModuleInfo> {
-        let modules = self.modules.read().unwrap();
+        let modules = self.modules.read().unwrap_or_else(|e| e.into_inner());
         modules.values().cloned().collect()
     }
 
     /// Restore registry from snapshot
     pub fn restore(&self, snapshot: Vec<ModuleInfo>) {
-        let mut modules = self.modules.write().unwrap();
-        let mut path_to_id = self.path_to_id.write().unwrap();
+        let mut modules = self.modules.write().unwrap_or_else(|e| e.into_inner());
+        let mut path_to_id = self.path_to_id.write().unwrap_or_else(|e| e.into_inner());
 
         modules.clear();
         path_to_id.clear();

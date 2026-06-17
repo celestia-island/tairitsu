@@ -197,8 +197,18 @@ impl UseAnimation {
     }
 
     /// Start the animation with a platform reference
-    /// This initiates the requestAnimationFrame loop
-    pub fn start_with_platform<P>(&self, platform: &P) -> AnimationHandle
+    ///
+    /// # Safety
+    ///
+    /// The caller **must** guarantee that `platform` remains alive at the same
+    /// memory address for the entire duration of the animation (from this call
+    /// until the returned [`AnimationHandle`] is dropped). If the platform is
+    /// dropped or moved while animation frames are still pending, the internal
+    /// pointer dereference will be **undefined behaviour**.
+    ///
+    /// The safe alternative is [`start_with_static_platform`], which requires
+    /// `P: 'static`.
+    pub unsafe fn start_with_platform<P>(&self, platform: &P) -> AnimationHandle
     where
         P: Platform,
     {
@@ -214,6 +224,19 @@ impl UseAnimation {
         }
     }
 
+    /// Start the animation with a `'static` platform reference.
+    ///
+    /// This is the safe alternative to [`start_with_platform`] — the `'static`
+    /// bound guarantees the platform lives for the entire program, so the
+    /// animation can never dangle.
+    pub fn start_with_static_platform<P>(&self, platform: &'static P) -> AnimationHandle
+    where
+        P: Platform,
+    {
+        // SAFETY: P: 'static guarantees the platform is never dropped or moved.
+        unsafe { self.start_with_platform(platform) }
+    }
+
     /// Internal method to start the requestAnimationFrame loop
     /// This method sets up a self-continuing animation loop that reschedules
     /// each frame until the animation completes or is cancelled.
@@ -221,9 +244,18 @@ impl UseAnimation {
     where
         P: Platform,
     {
-        // We need to store a pointer to the platform to use in subsequent frames.
-        // Since we can't capture &P in the closure (lifetime issues), we use
-        // a raw pointer and ensure the platform outlives the animation.
+        // SAFETY NOTE: The platform pointer is stored as a raw `usize` so it can
+        // be used inside `FnOnce` closures scheduled via `request_animation_frame`.
+        //
+        // **Callers must guarantee that `platform` outlives the animation.**
+        // This typically means the platform must be a long-lived object (e.g. a
+        // `'static` singleton or an arena-allocated value). If the platform is
+        // dropped while an animation frame is pending, dereferencing this pointer
+        // is undefined behaviour.
+        //
+        // A more robust design would require `P: 'static` and use `Arc<P>`, but
+        // that would be a breaking API change. For now, we rely on the caller
+        // contract documented on `start_with_platform`.
         let platform_ptr = platform as *const P as usize;
 
         // Use weak references to avoid circular references
@@ -335,7 +367,9 @@ impl UseAnimation {
                 *start_time.borrow_mut() = Some(timestamp);
             }
 
-            let start = start_time.borrow().unwrap();
+            let start = start_time
+                .borrow()
+                .expect("start_time not initialized (invariant: set above)");
             let elapsed = timestamp - start - *paused_time.borrow();
             let delay_ms = config_cb.delay.as_millis() as f64;
 
@@ -428,7 +462,10 @@ impl UseAnimation {
         *next_callback.borrow_mut() = Some(Box::new(callback_logic));
 
         // Schedule the first frame
-        let callback = next_callback.borrow_mut().take().unwrap();
+        let callback = next_callback
+            .borrow_mut()
+            .take()
+            .expect("animation callback not set (invariant: stored above)");
         let id = platform_ref.request_animation_frame(callback);
         *raf_id.borrow_mut() = Some(id);
     }
@@ -446,7 +483,12 @@ impl UseAnimation {
     }
 
     /// Resume animation with platform reference
-    pub fn resume_with_platform<P>(&self, platform: &P)
+    ///
+    /// # Safety
+    ///
+    /// Same safety contract as [`start_with_platform`]: `platform` must outlive
+    /// the animation.
+    pub unsafe fn resume_with_platform<P>(&self, platform: &P)
     where
         P: Platform,
     {
@@ -454,6 +496,17 @@ impl UseAnimation {
             *self.state.borrow_mut() = AnimationState::Running;
             self.start_raf_loop(platform);
         }
+    }
+
+    /// Resume animation with a `'static` platform reference.
+    ///
+    /// Safe because `P: 'static` guarantees the platform lives forever.
+    pub fn resume_with_static_platform<P>(&self, platform: &'static P)
+    where
+        P: Platform,
+    {
+        // SAFETY: P: 'static guarantees the platform is never dropped or moved.
+        unsafe { self.resume_with_platform(platform) }
     }
 
     pub fn stop(&self) {
@@ -1020,5 +1073,103 @@ mod tests {
         assert_eq!(config.duration, Duration::from_millis(u64::MAX));
         assert_eq!(config.delay, Duration::from_millis(u64::MAX));
         assert_eq!(config.iterations, u32::MAX);
+    }
+
+    #[test]
+    fn test_on_update_callback() {
+        let anim = use_simple_animation(300);
+        let called = Rc::new(RefCell::new(false));
+        let c = called.clone();
+
+        anim.on_update(move |_| {
+            *c.borrow_mut() = true;
+        });
+
+        // Verify the callback is stored (internal access via on_update field)
+        let stored = anim.on_update.borrow().is_some();
+        assert!(stored, "on_update callback should be stored");
+    }
+
+    #[test]
+    fn test_clear_on_update() {
+        let anim = use_simple_animation(300);
+        let called = Rc::new(RefCell::new(false));
+        let c = called.clone();
+
+        anim.on_update(move |_| {
+            *c.borrow_mut() = true;
+        });
+        assert!(anim.on_update.borrow().is_some());
+
+        anim.clear_on_update();
+        assert!(anim.on_update.borrow().is_none());
+    }
+
+    #[test]
+    fn test_animation_handle_cancel() {
+        let anim = use_simple_animation(300);
+        let handle = AnimationHandle {
+            state: Rc::clone(&anim.state),
+        };
+
+        anim.start();
+        assert!(anim.is_running());
+
+        handle.cancel();
+        assert_eq!(anim.state(), AnimationState::Idle);
+        assert!(!anim.is_running());
+    }
+
+    #[test]
+    fn test_animation_handle_is_running() {
+        let anim = use_simple_animation(300);
+        let handle = AnimationHandle {
+            state: Rc::clone(&anim.state),
+        };
+
+        assert!(!handle.is_running());
+        anim.start();
+        assert!(handle.is_running());
+    }
+
+    #[test]
+    fn test_stop_clears_state() {
+        let anim = use_simple_animation(300);
+        anim.start();
+        assert!(anim.is_running());
+
+        anim.stop();
+        assert_eq!(anim.state(), AnimationState::Idle);
+        assert_eq!(anim.progress(), 0.0);
+    }
+
+    #[test]
+    fn test_animation_direction_normal() {
+        let config = AnimationConfig {
+            direction: AnimationDirection::Normal,
+            ..Default::default()
+        };
+        let anim = use_animation(Some(config));
+        assert_eq!(anim.config().direction, AnimationDirection::Normal);
+    }
+
+    #[test]
+    fn test_animation_direction_reverse() {
+        let config = AnimationConfig {
+            direction: AnimationDirection::Reverse,
+            ..Default::default()
+        };
+        let anim = use_animation(Some(config));
+        assert_eq!(anim.config().direction, AnimationDirection::Reverse);
+    }
+
+    #[test]
+    fn test_animation_iterations() {
+        let config = AnimationConfig {
+            iterations: 5,
+            ..Default::default()
+        };
+        let anim = use_animation(Some(config));
+        assert_eq!(anim.config().iterations, 5);
     }
 }

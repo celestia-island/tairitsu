@@ -52,7 +52,6 @@ pub struct VttySession {
     alive: AtomicBool,
     pid: Option<u32>,
     reader_running: Arc<AtomicBool>,
-    #[allow(dead_code)]
     reader_handle: Mutex<Option<std::thread::JoinHandle<()>>>,
 }
 
@@ -123,7 +122,11 @@ impl VttySession {
     }
 
     pub fn send_text(&self, text: &str) -> Result<(), String> {
-        let encoded: Vec<u8> = text.replace('\n', "\r").as_bytes().to_vec();
+        let encoded: Vec<u8> = text
+            .replace("\r\n", "\r")
+            .replace('\n', "\r")
+            .as_bytes()
+            .to_vec();
         self.write(&encoded)
     }
 
@@ -149,14 +152,6 @@ impl VttySession {
         self.screen
             .lock()
             .map(|s| s.get_scrollback_with_screen())
-            .unwrap_or_default()
-    }
-
-    #[allow(dead_code)]
-    pub fn get_line(&self, row: usize) -> String {
-        self.screen
-            .lock()
-            .map(|s| s.get_line(row))
             .unwrap_or_default()
     }
 
@@ -303,7 +298,7 @@ impl VttyManager {
             .map_err(|_| "session lock poisoned".to_string())?;
         let info = guard.info();
         if let Err(e) = guard.kill() {
-            eprintln!("[vtty] warning: kill session '{}': {}", sid, e);
+            tracing::warn!("[vtty] kill session '{}': {}", sid, e);
         }
         drop(guard);
         self.sessions
@@ -537,6 +532,40 @@ mod tests {
         let json = serde_json::to_string(&info).unwrap();
         assert!(!json.contains("pid"));
     }
+
+    #[test]
+    fn test_send_text_converts_lf_to_cr() {
+        let encoded: Vec<u8> = "hello\nworld"
+            .replace("\r\n", "\r")
+            .replace('\n', "\r")
+            .as_bytes()
+            .to_vec();
+        assert_eq!(encoded, b"hello\rworld");
+    }
+
+    #[test]
+    fn test_send_text_converts_crlf_to_single_cr() {
+        let encoded: Vec<u8> = "hello\r\nworld"
+            .replace("\r\n", "\r")
+            .replace('\n', "\r")
+            .as_bytes()
+            .to_vec();
+        assert_eq!(
+            encoded, b"hello\rworld",
+            "CRLF should become a single CR, not CR+CR"
+        );
+    }
+
+    #[test]
+    fn test_send_text_mixed_line_endings() {
+        let input = "line1\r\nline2\nline3\r\n";
+        let encoded: Vec<u8> = input
+            .replace("\r\n", "\r")
+            .replace('\n', "\r")
+            .as_bytes()
+            .to_vec();
+        assert_eq!(encoded, b"line1\rline2\rline3\r");
+    }
 }
 
 #[cfg(test)]
@@ -622,7 +651,9 @@ mod smoke_pty {
         let mut session = spawn_session("bash --norc --noprofile");
         std::thread::sleep(std::time::Duration::from_millis(500));
 
-        session.send_text("echo SEND_TEXT_OK").expect("send_text should work");
+        session
+            .send_text("echo SEND_TEXT_OK")
+            .expect("send_text should work");
         session.send_keys("ENTER").expect("enter");
         let found = wait_for_text(&session, "SEND_TEXT_OK", 3000);
         assert!(
@@ -1008,6 +1039,22 @@ mod smoke_pty {
     }
 
     #[test]
+    fn smoke_pty_send_text_with_crlf() {
+        let mut session = spawn_session("bash --norc --noprofile");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        session
+            .send_text("echo CRLF_TEST\r\n")
+            .expect("send_text with CRLF");
+        let found = wait_for_text(&session, "CRLF_TEST", 3000);
+        assert!(
+            found,
+            "send_text \\r\\n translation should work, got:\n{}",
+            session.screenshot()
+        );
+        let _ = session.kill();
+    }
+
+    #[test]
     fn smoke_pty_has_output() {
         let mut session = spawn_session("echo detect_output");
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
@@ -1070,7 +1117,11 @@ mod smoke_pty {
     fn smoke_bash_no_echo_on_start() {
         let mut session = spawn_session("bash --norc --noprofile -i");
         let found = wait_for_text(&session, "$", 5000);
-        assert!(found, "bash prompt should appear, got:\n{}", session.screenshot());
+        assert!(
+            found,
+            "bash prompt should appear, got:\n{}",
+            session.screenshot()
+        );
 
         session.send_keys("ESCAPE").expect("send ESC");
         std::thread::sleep(std::time::Duration::from_millis(300));

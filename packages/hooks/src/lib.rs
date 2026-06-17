@@ -1,3 +1,19 @@
+//! React-like hooks system for Tairitsu.
+//!
+//! Provides 16 composable hooks for state management, side effects, animations,
+//! and asynchronous data fetching in Tairitsu components.
+//!
+//! # Available Hooks
+//!
+//! - **State**: [`use_signal`], [`use_state`], [`use_ref`]
+//! - **Side Effects**: [`use_effect`], [`use_memo`], [`use_callback`]
+//! - **Async**: [`use_suspense`], [`use_resource`]
+//! - **DOM**: [`use_dom_ref`], [`use_element_ref`]
+//! - **Animation**: [`use_animation`], [`use_simple_animation`]
+//! - **Context**: [`provide_context`], [`use_context`]
+//! - **Timer**: [`use_interval`]
+//! - **Interaction**: [`use_interaction_state`]
+
 pub mod animation;
 pub mod callback;
 pub mod context;
@@ -19,7 +35,10 @@ pub use animation::{
     AnimationHandle, AnimationState, EasingFunction,
 };
 pub use callback::{use_callback, use_return_callback, use_void_callback, Callback};
-pub use context::{consume_context, provide_context, use_context, Context};
+pub use context::{
+    clear_all_contexts, consume_context, consume_context_expect, drop_context, provide_context,
+    provide_context_scoped, use_context, Context, ContextGuard,
+};
 pub use dom_ref::{use_dom_ref, DomRef};
 pub use dynamic::{use_dynamic_text, use_dynamic_text_fn};
 pub use effect::use_effect;

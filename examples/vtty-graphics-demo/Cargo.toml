@@ -9,5 +9,5 @@ name = "vtty-graphics-demo"
 path = "src/main.rs"
 
 [dependencies]
-image = "0.25"
-base64 = "0.22"
+image = { workspace = true }
+base64 = { workspace = true }

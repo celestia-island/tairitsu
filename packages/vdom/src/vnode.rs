@@ -90,9 +90,8 @@ impl<T: ToString + Clone> IntoAttrValue for &T {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[allow(clippy::large_enum_variant)]
 pub enum VNode {
-    Element(VElement),
+    Element(Box<VElement>),
     Text(VText),
     Fragment(Vec<VNode>),
     DynamicText(DynamicText),
@@ -102,6 +101,7 @@ pub enum VNode {
 pub struct DynamicText {
     pub initial: String,
     pub compute: Rc<RefCell<dyn FnMut() -> String>>,
+    pub key: Option<String>,
 }
 
 impl DynamicText {
@@ -112,13 +112,20 @@ impl DynamicText {
         Self {
             initial,
             compute: Rc::new(RefCell::new(compute)),
+            key: None,
         }
+    }
+
+    /// Set an identity key for this dynamic text node.
+    pub fn with_key(mut self, key: impl Into<String>) -> Self {
+        self.key = Some(key.into());
+        self
     }
 }
 
 impl PartialEq for DynamicText {
     fn eq(&self, other: &Self) -> bool {
-        self.initial == other.initial
+        self.initial == other.initial && self.key == other.key
     }
 }
 
@@ -169,8 +176,43 @@ impl PartialEq for VElement {
             && self.style == other.style
             && self.class == other.class
             && self.inner_html == other.inner_html
-            && self.dynamic_attributes.len() == other.dynamic_attributes.len()
-            && self.dynamic_styles.len() == other.dynamic_styles.len()
+            && {
+                let mut a: Vec<&str> = self.event_handlers.keys().map(|s| s.as_str()).collect();
+                let mut b: Vec<&str> = other.event_handlers.keys().map(|s| s.as_str()).collect();
+                a.sort();
+                b.sort();
+                a == b
+            }
+            && {
+                let mut a: Vec<&str> = self
+                    .dynamic_attributes
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect();
+                let mut b: Vec<&str> = other
+                    .dynamic_attributes
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect();
+                a.sort();
+                b.sort();
+                a == b
+            }
+            && {
+                let mut a: Vec<&str> = self
+                    .dynamic_styles
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect();
+                let mut b: Vec<&str> = other
+                    .dynamic_styles
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect();
+                a.sort();
+                b.sort();
+                a == b
+            }
             && self.dynamic_classes.len() == other.dynamic_classes.len()
     }
 }
@@ -220,7 +262,7 @@ impl Clone for VElement {
             class: self.class.clone(),
             event_handlers: self.event_handlers.clone(),
             inner_html: self.inner_html.clone(),
-            element_ref: None,
+            element_ref: self.element_ref.clone(),
             dynamic_attributes: self.dynamic_attributes.clone(),
             dynamic_styles: self.dynamic_styles.clone(),
             dynamic_classes: self.dynamic_classes.clone(),
@@ -237,6 +279,19 @@ pub struct VText {
 pub struct Style {
     pub static_styles: String,
     pub css_variables: Vec<(String, String)>,
+}
+
+impl std::fmt::Display for Style {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.static_styles)?;
+        for (i, (name, value)) in self.css_variables.iter().enumerate() {
+            if i > 0 || !self.static_styles.is_empty() {
+                write!(f, ";")?;
+            }
+            write!(f, "{}:{}", name, value)?;
+        }
+        Ok(())
+    }
 }
 
 impl Style {
@@ -258,22 +313,17 @@ impl Style {
         self
     }
 
-    #[allow(clippy::inherent_to_string)]
-    pub fn to_string(&self) -> String {
-        let mut result = self.static_styles.clone();
-        for (name, value) in &self.css_variables {
-            if !result.is_empty() {
-                result.push(';');
-            }
-            result.push_str(&format!("{}:{}", name, value));
-        }
-        result
-    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Classes {
     pub static_classes: String,
+}
+
+impl std::fmt::Display for Classes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.static_classes)
+    }
 }
 
 impl Classes {
@@ -297,10 +347,6 @@ impl Classes {
         self
     }
 
-    #[allow(clippy::inherent_to_string)]
-    pub fn to_string(&self) -> &str {
-        &self.static_classes
-    }
 }
 
 impl VElement {
@@ -523,9 +569,9 @@ impl VElement {
         })
     }
 
-    pub fn on_submit(self, mut handler: impl FnMut(crate::events::ChangeEvent) + 'static) -> Self {
+    pub fn on_submit(self, mut handler: impl FnMut(crate::events::SubmitEvent) + 'static) -> Self {
         self.on_event("submit", move |e: Box<dyn EventData>| {
-            if let Some(event) = e.as_any().downcast_ref::<crate::events::ChangeEvent>() {
+            if let Some(event) = e.as_any().downcast_ref::<crate::events::SubmitEvent>() {
                 handler(event.clone());
             }
         })
@@ -759,15 +805,26 @@ impl VElement {
         self
     }
 
-    /// Set inner HTML directly (dangerously, equivalent to dangerouslySetInnerHTML)
-    pub fn inner_html(mut self, html: impl Into<String>) -> Self {
+    /// Set inner HTML directly (dangerously, equivalent to React's dangerouslySetInnerHTML).
+    ///
+    /// This bypasses all HTML escaping and XSS sanitization. Only use with
+    /// trusted content. For SVG, use [`safe_svg`] instead.
+    pub fn dangerous_inner_html(mut self, html: impl Into<String>) -> Self {
         self.inner_html = Some(html.into());
         self
     }
 
+    #[deprecated(
+        since = "0.6.0",
+        note = "renamed to dangerous_inner_html to match React convention"
+    )]
+    pub fn inner_html(self, html: impl Into<String>) -> Self {
+        self.dangerous_inner_html(html)
+    }
+
     /// Set inner HTML from a sanitized SVG content.
     ///
-    /// This is the safe alternative to `inner_html` for SVG content.
+    /// This is the safe alternative to [`dangerous_inner_html`] for SVG content.
     /// The `SafeSvg` wrapper ensures that the SVG has been sanitized
     /// to remove potentially dangerous elements and attributes.
     ///
@@ -858,6 +915,11 @@ impl From<&str> for Style {
             if !part.is_empty() {
                 if let Some((name, value)) = part.split_once(':') {
                     style = style.add(name.trim(), value.trim());
+                } else {
+                    tracing::warn!(
+                        "Style::from: skipping malformed entry (missing ':'): {:?}",
+                        part
+                    );
                 }
             }
         }
@@ -1005,6 +1067,7 @@ fn html_escape_attr_into(buf: &mut String, s: &str) {
         match ch {
             '&' => buf.push_str("&amp;"),
             '"' => buf.push_str("&quot;"),
+            '\'' => buf.push_str("&#39;"),
             '<' => buf.push_str("&lt;"),
             '>' => buf.push_str("&gt;"),
             _ => buf.push(ch),
@@ -1308,5 +1371,143 @@ impl<T: Clone + std::string::ToString + 'static> IntoStyleValue for crate::react
             "cssText".to_string(),
             Rc::new(RefCell::new(move || signal.get().to_string())),
         ));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_velement_clone_preserves_element_ref() {
+        let mut el = VElement::new("div");
+        el.element_ref = Some(Rc::new(RefCell::new(Some(Box::new(42u64)))));
+        let cloned = el.clone();
+        assert!(
+            cloned.element_ref.is_some(),
+            "Clone should preserve element_ref"
+        );
+    }
+
+    #[test]
+    fn test_velement_clone_is_independent_ref() {
+        let mut el = VElement::new("div");
+        el.element_ref = Some(Rc::new(RefCell::new(Some(Box::new(42u64)))));
+        let cloned = el.clone();
+        // Both original and clone should have a valid element_ref
+        assert!(el.element_ref.is_some());
+        assert!(cloned.element_ref.is_some());
+    }
+
+    #[test]
+    fn test_velement_without_ref_clone() {
+        let el = VElement::new("span");
+        let cloned = el.clone();
+        assert!(cloned.element_ref.is_none());
+    }
+
+    #[test]
+    fn test_velement_eq_different_event_handlers() {
+        let a = VElement::new("button").on_event("click", |_| {});
+        let b = VElement::new("button");
+        assert_ne!(
+            a, b,
+            "element with click handler should not equal one without"
+        );
+    }
+
+    #[test]
+    fn test_velement_eq_same_event_handlers() {
+        let a = VElement::new("button")
+            .on_event("click", |_| {})
+            .on_event("mouseover", |_| {});
+        let b = VElement::new("button")
+            .on_event("click", |_| {})
+            .on_event("mouseover", |_| {});
+        assert_eq!(
+            a, b,
+            "elements with same event handler keys should be equal"
+        );
+    }
+
+    #[test]
+    fn test_velement_eq_different_handler_keys() {
+        let a = VElement::new("button")
+            .on_event("click", |_| {})
+            .on_event("mouseover", |_| {});
+        let b = VElement::new("button")
+            .on_event("click", |_| {})
+            .on_event("mouseout", |_| {});
+        assert_ne!(
+            a, b,
+            "elements with different event handler keys should not be equal"
+        );
+    }
+
+    #[test]
+    fn test_velement_eq_dynamic_attributes() {
+        let a = VElement::new("div").dynamic_attr("data-x", || "1".to_string());
+        let b = VElement::new("div");
+        assert_ne!(
+            a, b,
+            "element with dynamic attr should not equal one without"
+        );
+    }
+
+    #[test]
+    fn test_dynamic_text_eq_same_initial() {
+        let a = DynamicText::new("hello".into(), || "world".into());
+        let b = DynamicText::new("hello".into(), || "different".into());
+        // Same initial + no keys → equal (even though compute differs)
+        assert_eq!(
+            a, b,
+            "DynamicText with same initial and no keys should be equal"
+        );
+    }
+
+    #[test]
+    fn test_dynamic_text_eq_different_initial() {
+        let a = DynamicText::new("hello".into(), || "world".into());
+        let b = DynamicText::new("bye".into(), || "world".into());
+        assert_ne!(
+            a, b,
+            "DynamicText with different initial should not be equal"
+        );
+    }
+
+    #[test]
+    fn test_dynamic_text_eq_with_keys() {
+        let a = DynamicText::new("hello".into(), || "val".into()).with_key("a");
+        let b = DynamicText::new("hello".into(), || "val".into()).with_key("b");
+        assert_ne!(a, b, "DynamicText with different keys should not be equal");
+    }
+
+    #[test]
+    fn test_dynamic_text_eq_same_keys() {
+        let a = DynamicText::new("hello".into(), || "val".into()).with_key("x");
+        let b = DynamicText::new("hello".into(), || "val".into()).with_key("x");
+        assert_eq!(a, b, "DynamicText with same keys should be equal");
+    }
+
+    #[test]
+    fn test_html_render_escapes_attr_single_quote() {
+        let el = VElement::new("div").attr("data-value", "it's");
+        let html = VNode::Element(Box::new(el)).render_to_html();
+        assert!(
+            html.contains("&#39;"),
+            "Single quote should be escaped: {}",
+            html
+        );
+    }
+
+    #[test]
+    fn test_html_render_escapes_attr_double_quote() {
+        let el = VElement::new("div").attr("data-value", r#"he"llo"#);
+        let html = VNode::Element(Box::new(el)).render_to_html();
+        assert!(
+            html.contains("&quot;"),
+            "Double quote should be escaped: {}",
+            html
+        );
     }
 }

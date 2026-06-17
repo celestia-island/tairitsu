@@ -26,7 +26,6 @@ impl HostImportRegistry {
         F: Fn(&[Val]) -> Result<Vec<Val>> + Send + Sync + 'static,
     {
         let import = HostImport {
-            name: name.clone(),
             params,
             results,
             handler: Arc::new(handler),
@@ -68,8 +67,6 @@ type HostImportHandler = Arc<dyn Fn(&[Val]) -> Result<Vec<Val>> + Send + Sync>;
 
 /// Host import function descriptor
 pub struct HostImport {
-    #[allow(dead_code)] // Reserved for future use (e.g., listing imports)
-    name: String,
     params: Vec<Type>,
     results: Vec<Type>,
     handler: HostImportHandler,

@@ -109,11 +109,6 @@ GLUE_SPECIFIER_MAP = {
 
 PACKAGE_TO_CDN_NAME = {
     "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
-    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
-    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
-    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
-    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
-    "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
 }
 
 VERSION = "0.5.0"
@@ -234,9 +229,6 @@ def copy_modular_wasm_packages(dist_dir: Path):
     modules_dir.mkdir(parents=True, exist_ok=True)
     
     wasm_packages = [
-        "celestia-tairitsu-web-glue",
-        "celestia-tairitsu-web-glue",
-        "celestia-tairitsu-web-glue",
         "celestia-tairitsu-web-glue",
     ]
     

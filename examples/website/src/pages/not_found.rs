@@ -15,15 +15,15 @@ pub fn render() -> VNode {
                         div { class: "hi-text-center",
                             h1 { class: "hi-text-2xl hi-text-secondary hi-mb-6", "404" }
                             ..vec![
-                                VNode::Element(el("p").class("hi-text-lg hi-text-primary").child(txt(t.not_found_title))),
-                                VNode::Element(el("p").class("hi-text-sm hi-text-primary").child(txt(t.not_found_desc))),
-                                VNode::Element(el("div").attr("style", "height:2rem")),
-                                VNode::Element(
+                                VNode::Element(Box::new(el("p").class("hi-text-lg hi-text-primary").child(txt(t.not_found_title)))),
+                                VNode::Element(Box::new(el("p").class("hi-text-sm hi-text-primary").child(txt(t.not_found_desc)))),
+                                VNode::Element(Box::new(el("div").attr("style", "height:2rem"))),
+                                VNode::Element(Box::new(
                                     el("a")
                                         .attr("href", "/")
                                         .class("hi-button hi-button-primary hi-button-md hi-button-width-auto hi-justify-center")
                                         .child(txt(t.not_found_action)),
-                                ),
+                                )),
                             ]
                         }
                     }

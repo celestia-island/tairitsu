@@ -124,7 +124,7 @@ macro_rules! stateful_handler {
                 command: &$command_type,
             ) -> Result<<$command_type as $crate::wit_registry::WitCommand>::Response, String>
             {
-                let mut state = self.0.lock().unwrap();
+                let mut state = self.0.lock().unwrap_or_else(|e| e.into_inner());
                 $handler(&mut state, command)
             }
         }

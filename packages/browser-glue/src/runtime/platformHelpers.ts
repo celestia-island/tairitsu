@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 // State stored on globalThis so that when generateModuleCode() stringifies
 // these functions into a blob module, the state is still accessible.
@@ -31,7 +30,7 @@ export const platformHelpers_exports = {
   innerHeight() {
     return window.innerHeight;
   },
-  setTimeout(callbackId, ms) {
+  setTimeout(callbackId: bigint, ms: number) {
     const s = globalThis.__tairitsuTimerState;
     const id = s.nextTimeoutId++;
     const timeoutId = window.setTimeout(() => {
@@ -43,14 +42,14 @@ export const platformHelpers_exports = {
     s.timeoutCallbacks.set(id, timeoutId);
     return id;
   },
-  clearTimeout(id) {
+  clearTimeout(id: number) {
     const s = globalThis.__tairitsuTimerState;
     if (s.timeoutCallbacks.has(id)) {
       window.clearTimeout(s.timeoutCallbacks.get(id));
       s.timeoutCallbacks.delete(id);
     }
   },
-  setInterval(callbackId, ms) {
+  setInterval(callbackId: bigint, ms: number) {
     const s = globalThis.__tairitsuTimerState;
     const id = s.nextTimeoutId++;
     const intervalId = window.setInterval(() => {
@@ -62,14 +61,14 @@ export const platformHelpers_exports = {
     s.intervalCallbacks.set(id, intervalId);
     return id;
   },
-  clearInterval(id) {
+  clearInterval(id: number) {
     const s = globalThis.__tairitsuTimerState;
     if (s.intervalCallbacks.has(id)) {
       window.clearInterval(s.intervalCallbacks.get(id));
       s.intervalCallbacks.delete(id);
     }
   },
-  requestAnimationFrame(callbackId) {
+  requestAnimationFrame(callbackId: bigint) {
     const s = globalThis.__tairitsuAnimState;
     const id = s.nextAnimationId++;
     const animationId = window.requestAnimationFrame((timestamp) => {
@@ -81,14 +80,14 @@ export const platformHelpers_exports = {
     s.animationCallbacks.set(id, animationId);
     return id;
   },
-  cancelAnimationFrame(id) {
+  cancelAnimationFrame(id: number) {
     const s = globalThis.__tairitsuAnimState;
     if (s.animationCallbacks.has(id)) {
       window.cancelAnimationFrame(s.animationCallbacks.get(id));
       s.animationCallbacks.delete(id);
     }
   },
-  getBoundingClientRect(element) {
+  getBoundingClientRect(element: bigint) {
     const el = globalThis.__elementHandles.get(element);
     if (!el) {
       return { x: 0, y: 0, width: 0, height: 0 };
@@ -96,7 +95,7 @@ export const platformHelpers_exports = {
     const rect = el.getBoundingClientRect();
     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
   },
-  createResizeObserver(callbackId) {
+  createResizeObserver(callbackId: bigint) {
     const observer = new ResizeObserver((entries) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"]) {
         const entryHandles = entries.map(entry => {
@@ -113,27 +112,27 @@ export const platformHelpers_exports = {
     });
     return globalThis.__storeElement(observer);
   },
-  observeResize(observer, element) {
+  observeResize(observer: bigint, element: bigint) {
     const obs = globalThis.__elementHandles.get(observer);
     const el = globalThis.__elementHandles.get(element);
     if (obs && el) {
       obs.observe(el);
     }
   },
-  unobserveResize(observer, element) {
+  unobserveResize(observer: bigint, element: bigint) {
     const obs = globalThis.__elementHandles.get(observer);
     const el = globalThis.__elementHandles.get(element);
     if (obs && el) {
       obs.unobserve(el);
     }
   },
-  disconnectResize(observer) {
+  disconnectResize(observer: bigint) {
     const obs = globalThis.__elementHandles.get(observer);
     if (obs) {
       obs.disconnect();
     }
   },
-  createMutationObserver(callbackId) {
+  createMutationObserver(callbackId: bigint) {
     const observer = new MutationObserver((records) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]) {
         const recordHandles = records.map(record => {
@@ -150,7 +149,7 @@ export const platformHelpers_exports = {
     });
     return globalThis.__storeElement(observer);
   },
-  observeMutations(observer, target, _options) {
+  observeMutations(observer: bigint, target: bigint, _options: any) {
     const obs = globalThis.__elementHandles.get(observer);
     const el = globalThis.__elementHandles.get(target);
     if (obs && el) {
@@ -171,7 +170,7 @@ export const platformHelpers_exports = {
     const result = document.querySelectorAll(selector);
     return Array.from(result).map((el) => globalThis.__storeElement(el));
   },
-  disconnectMutation(observer) {
+  disconnectMutation(observer: bigint) {
     const obs = globalThis.__elementHandles.get(observer);
     if (obs) {
       obs.disconnect();
@@ -193,8 +192,7 @@ export const platformHelpers_exports = {
 
   clipboardWriteTextPromise(text: string) {
     if (!navigator.clipboard?.writeText) return 0n;
-    const id = globalThis.__nextHandle ?? 1;
-    if (globalThis.__nextHandle !== undefined) globalThis.__nextHandle++;
+    const id = globalThis.__nextHandle ? globalThis.__nextHandle++ : (globalThis.__nextHandle = 1n, 1n);
     navigator.clipboard.writeText(text).then(() => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.on_promise_resolve?.(id);
@@ -209,8 +207,7 @@ export const platformHelpers_exports = {
 
   clipboardReadTextPromise() {
     if (!navigator.clipboard?.readText) return 0n;
-    const id = globalThis.__nextHandle ?? 1;
-    if (globalThis.__nextHandle !== undefined) globalThis.__nextHandle++;
+    const id = globalThis.__nextHandle ? globalThis.__nextHandle++ : (globalThis.__nextHandle = 1n, 1n);
     navigator.clipboard.readText().then((text) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.on_promise_resolve?.(id, text);
@@ -224,9 +221,18 @@ export const platformHelpers_exports = {
   },
 
   fetchPromise(url: string, options: string | null) {
-    const id = globalThis.__nextHandle ?? 1;
-    if (globalThis.__nextHandle !== undefined) globalThis.__nextHandle++;
-    const opts = options ? JSON.parse(options) : undefined;
+    const id = globalThis.__nextHandle ? globalThis.__nextHandle++ : (globalThis.__nextHandle = 1n, 1n);
+    let opts: RequestInit | undefined;
+    if (options) {
+      try {
+        opts = JSON.parse(options);
+      } catch {
+        if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
+          globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.on_promise_reject?.(id);
+        }
+        return id;
+      }
+    }
     fetch(url, opts).then((resp) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.on_promise_resolve?.(id, resp);
@@ -317,6 +323,9 @@ export const platformHelpers_exports = {
   },
 
   onScroll(callbackId: bigint) {
+    if (!globalThis.__tairitsuScrollListeners) {
+      globalThis.__tairitsuScrollListeners = new Map();
+    }
     const handler = () => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/scroll-callbacks@0.2.0"]) {
         const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -331,17 +340,24 @@ export const platformHelpers_exports = {
       }
     };
     window.addEventListener("scroll", handler, { passive: true });
-    return 0;
+    const handle = globalThis.__nextHandle ? globalThis.__nextHandle++ : (globalThis.__nextHandle = 1n, 1n);
+    globalThis.__tairitsuScrollListeners.set(handle, handler);
+    return handle;
   },
 
   onResizeCallback(callbackId: bigint) {
+    if (!globalThis.__tairitsuResizeListeners) {
+      globalThis.__tairitsuResizeListeners = new Map();
+    }
     const handler = () => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]?.on_resize?.(callbackId);
       }
     };
     window.addEventListener("resize", handler);
-    return 0;
+    const handle = globalThis.__nextHandle ? globalThis.__nextHandle++ : (globalThis.__nextHandle = 1n, 1n);
+    globalThis.__tairitsuResizeListeners.set(handle, handler);
+    return handle;
   },
 
   getScrollTopFromPoint(x: number, y: number) {
@@ -419,13 +435,14 @@ export const platformHelpers_exports = {
     color: string,
     background: string,
   ) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas || !(canvas as HTMLCanvasElement).getContext) return false;
-    const ctx = (canvas as HTMLCanvasElement).getContext("2d");
+    const canvasEl = globalThis.__elementHandles.get(BigInt(canvasId)) ||
+      document.getElementById(canvasId);
+    if (!canvasEl || !(canvasEl as HTMLCanvasElement).getContext) return false;
+    const ctx = (canvasEl as HTMLCanvasElement).getContext("2d");
     if (!ctx) return false;
-    const cellSize = canvas.width / Number(modules);
+    const cellSize = canvasEl.width / Number(modules);
     ctx.fillStyle = background || "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
     ctx.fillStyle = color || "#000000";
     for (let r = 0; r < matrix.length; r++) {
       for (let c = 0; c < matrix[r].length; c++) {
@@ -435,30 +452,38 @@ export const platformHelpers_exports = {
     return true;
   },
 
-  fileReaderSyncReadAsText(blob: bigint, encoding: string | null) {
+  fileReaderSyncReadAsText(blob: bigint, encoding: string | null, callbackId: bigint) {
     const b = globalThis.__elementHandles.get(blob);
-    if (!b) return { tag: "err", val: "Invalid blob handle" };
-    try {
-      const reader = new FileReader();
-      reader.readAsText(b, encoding || "utf-8");
-      return { tag: "ok", val: reader.result || "" };
-    } catch (e: any) {
-      return { tag: "err", val: e.message || "Read failed" };
-    }
+    if (!b) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]) {
+        globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]?.on_file_reader_result?.(callbackId, reader.result || "");
+      }
+    };
+    reader.onerror = () => {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]) {
+        globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]?.on_file_reader_error?.(callbackId, reader.error?.message || "Read failed");
+      }
+    };
+    reader.readAsText(b, encoding || "utf-8");
   },
 
-  fileReaderSyncReadAsArrayBuffer(blob: bigint) {
+  fileReaderSyncReadAsArrayBuffer(blob: bigint, callbackId: bigint) {
     const b = globalThis.__elementHandles.get(blob);
-    if (!b) return { tag: "err", val: "Invalid blob handle" };
-    try {
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(b);
-      return reader.result
-        ? { tag: "ok", val: Array.from(new Uint8Array(reader.result)) }
-        : { tag: "err", val: "No result" };
-    } catch (e: any) {
-      return { tag: "err", val: e.message || "Read failed" };
-    }
+    if (!b) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]) {
+        globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]?.on_file_reader_result?.(callbackId, reader.result ? Array.from(new Uint8Array(reader.result as ArrayBuffer)) : []);
+      }
+    };
+    reader.onerror = () => {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]) {
+        globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]?.on_file_reader_error?.(callbackId, reader.error?.message || "Read failed");
+      }
+    };
+    reader.readAsArrayBuffer(b);
   },
 
   fileReaderReadAsText(blob: bigint, encoding: string | null, callbackId: bigint) {
@@ -674,6 +699,9 @@ export const platformHelpers_exports = {
     ws.onclose = (ev: CloseEvent) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]?.on_web_socket_close?.(closeCbId, ev.code, ev.reason || "");
+      }
+      if (globalThis.__tairitsuWsCallbacks) {
+        globalThis.__tairitsuWsCallbacks.delete(handle);
       }
     };
     ws.onerror = () => {

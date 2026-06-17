@@ -5,7 +5,7 @@
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
 /// Version: 0.2.0
-/// Generated: 2026-05-24 03:36:01 UTC
+/// Generated: 2026-05-31 03:52:06 UTC
 ///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
@@ -588,7 +588,10 @@ interface document {
     set-onfullscreenerror: func(value: u64);
 
     /// `parseHTMLUnsafe()` operation.
-    parse-html-unsafe: func(html: string) -> u64;
+    parse-html-unsafe: func(html: string, options: option<u64>) -> u64;
+
+    /// `parseHTML()` operation.
+    parse-html: func(html: string, options: option<u64>) -> u64;
 
     /// `location` attribute — getter.
     get-location: func() -> option<u64>;

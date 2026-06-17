@@ -185,34 +185,12 @@ struct McpState {
     vtty: std::sync::Arc<crate::vtty::VttyManager>,
 }
 
-impl McpState {
-    #[allow(dead_code)]
-    async fn get_base_url(&self) -> String {
-        self.base_url.read().await.clone()
-    }
-
-    #[allow(dead_code)]
-    async fn require_daemon(&self) -> Result<String, String> {
-        let url = self.base_url.read().await.clone();
-        if url.is_empty() {
-            Err(
-                "Browser tools require a running daemon. Start with: tairitsu dev --daemon"
-                    .to_string(),
-            )
-        } else {
-            Ok(url)
-        }
-    }
-}
-
 // ─────────────────────────────────────────────────────
 // JSON-RPC message types (MCP protocol)
 // ─────────────────────────────────────────────────────
 
 #[derive(Debug, Deserialize)]
 struct JsonRpcRequest {
-    #[allow(dead_code)]
-    jsonrpc: String,
     id: Option<serde_json::Value>,
     method: String,
     params: Option<serde_json::Value>,

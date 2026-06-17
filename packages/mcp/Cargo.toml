@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "Tairitsu MCP server — browser automation + VTty for AI coding assistants"
 authors.workspace = true
-license = "MIT OR Apache-2.0"
+license.workspace = true
 repository.workspace = true
 exclude = ["src/vtty/fonts/"]
 
@@ -13,31 +13,24 @@ name = "tairitsu-mcp"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "^1"
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
-tokio = { version = "^1", default-features = false, features = [
-  "rt",
-  "rt-multi-thread",
-  "macros",
-  "time",
-  "io-util",
-  "io-std",
-] }
-tracing = "^0.1"
-tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
-reqwest = { version = "^0.12", features = ["json"] }
-vte = { version = "^0.15", optional = true }
-portable-pty = { version = "^0.8", optional = true }
-schemars = "1"
-rmcp = { version = "1", features = ["server", "transport-io", "macros", "schemars"] }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "io-std"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+reqwest = { workspace = true, features = ["query"] }
+vte = { workspace = true, optional = true }
+portable-pty = { workspace = true, optional = true }
+schemars = "^1"
+rmcp = { version = "^1", features = ["server", "transport-io", "macros", "schemars"] }
 ab_glyph = { version = "^0.2", optional = true }
-image = { version = "^0.25", optional = true }
-base64 = { version = "^0.22", optional = true }
+image = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
 unicode-width = { version = "^0.2", optional = true }
 
 [target.'cfg(unix)'.dependencies]
-libc = "^0.2"
+libc = { workspace = true }
 
 [features]
 default = ["vtty", "vtty-visual"]
@@ -45,4 +38,4 @@ vtty = ["vte", "portable-pty", "dep:unicode-width"]
 vtty-visual = ["vtty", "dep:ab_glyph", "dep:image", "dep:base64"]
 
 [dev-dependencies]
-crossterm = { version = "^0.28" }
+crossterm = { workspace = true }

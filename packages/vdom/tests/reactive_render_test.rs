@@ -29,8 +29,8 @@ fn test_signal_triggers_dependency_tracking() {
 
 #[test]
 fn test_vnode_diff_produces_patches() {
-    let old = VNode::Element(VElement::new("div").attr("class", "old-class"));
-    let new = VNode::Element(VElement::new("div").attr("class", "new-class"));
+    let old = VNode::Element(Box::new(VElement::new("div").attr("class", "old-class")));
+    let new = VNode::Element(Box::new(VElement::new("div").attr("class", "new-class")));
 
     let patches = tairitsu_vdom::diff::diff(Some(&old), &new);
 

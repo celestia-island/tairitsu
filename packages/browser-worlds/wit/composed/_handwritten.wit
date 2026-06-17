@@ -137,13 +137,6 @@ interface file-reader-callbacks {
     on-file-reader-error: func(callback-id: u64, error: string);
 }
 
-interface web-socket-callbacks {
-    on-web-socket-open: func(callback-id: u64);
-    on-web-socket-message: func(callback-id: u64, data: string);
-    on-web-socket-close: func(callback-id: u64, code: u16, reason: string);
-    on-web-socket-error: func(callback-id: u64);
-}
-
 interface lifecycle {
     start: func() -> result<_, string>;
 }
@@ -293,4 +286,11 @@ interface component-types {
         editable: bool,
         focused: bool,
     }
+}
+
+interface web-socket-callbacks {
+    on-web-socket-open: func(callback-id: u64);
+    on-web-socket-message: func(callback-id: u64, data: string);
+    on-web-socket-close: func(callback-id: u64, code: u16, reason: string);
+    on-web-socket-error: func(callback-id: u64);
 }

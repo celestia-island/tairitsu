@@ -61,7 +61,7 @@ impl HmrClient {
 
     /// Check if connected to the HMR server
     pub fn is_connected(&self) -> bool {
-        *self.connected.read().unwrap()
+        *self.connected.read().unwrap_or_else(|e| e.into_inner())
     }
 
     /// Register a module with the client
@@ -72,7 +72,10 @@ impl HmrClient {
     /// # Returns
     /// Unique module ID
     pub fn register_module(&self, path: impl Into<String>) -> String {
-        let registry = self.module_registry.read().unwrap();
+        let registry = self
+            .module_registry
+            .read()
+            .unwrap_or_else(|e| e.into_inner());
         registry.register(path)
     }
 
@@ -90,7 +93,10 @@ impl HmrClient {
                 code: _,
                 dependencies,
             } => {
-                let registry = self.module_registry.read().unwrap();
+                let registry = self
+                    .module_registry
+                    .read()
+                    .unwrap_or_else(|e| e.into_inner());
 
                 if registry.get(module_id).is_some() {
                     // Module exists, trigger reload
@@ -112,12 +118,12 @@ impl HmrClient {
                 media: _,
             } => {
                 // CSS updates are handled by the browser
-                log::debug!("CSS update received for: {}", url);
+                tracing::debug!("CSS update received for: {}", url);
                 Ok(())
             }
 
             HmrMessage::FullReload { reason } => {
-                log::warn!(
+                tracing::warn!(
                     "Full page reload required: {}",
                     reason.as_deref().unwrap_or("unknown reason")
                 );
@@ -125,7 +131,7 @@ impl HmrClient {
             }
 
             HmrMessage::Error { message, .. } => {
-                log::error!("HMR error: {}", message);
+                tracing::error!("HMR error: {}", message);
                 Err(format!("HMR error: {}", message))
             }
 
@@ -140,13 +146,16 @@ impl HmrClient {
             }
 
             HmrMessage::Connected { .. } => {
-                *self.connected.write().unwrap() = true;
-                log::info!("Connected to HMR server");
+                *self.connected.write().unwrap_or_else(|e| e.into_inner()) = true;
+                tracing::info!("Connected to HMR server");
                 Ok(())
             }
 
             HmrMessage::ModuleState { module_id, state } => {
-                let registry = self.module_registry.read().unwrap();
+                let registry = self
+                    .module_registry
+                    .read()
+                    .unwrap_or_else(|e| e.into_inner());
                 let _ = registry.update_state(module_id, state.clone());
                 Ok(())
             }
@@ -155,7 +164,7 @@ impl HmrClient {
 
     /// Disconnect from the HMR server
     pub fn disconnect(&self) {
-        *self.connected.write().unwrap() = false;
+        *self.connected.write().unwrap_or_else(|e| e.into_inner()) = false;
     }
 }
 

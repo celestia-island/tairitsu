@@ -462,7 +462,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::InnerHtml(expr) => {
                 let expr = interpolate_expr(expr);
-                other_attrs.push(quote! { .inner_html(#expr) });
+                other_attrs.push(quote! { .dangerous_inner_html(#expr) });
             }
             RsxAttr::Ref(expr) => {
                 ref_attr = Some(expr);
@@ -562,13 +562,13 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     };
 
     quote! {
-        tairitsu_vdom::VNode::Element(
+        tairitsu_vdom::VNode::Element(Box::new(
             tairitsu_vdom::VElement::new(#tag_str)
                 #ref_code
                 #(#other_attrs)*
                 #(#event_handlers)*
                 #(#children_code)*
-        )
+        ))
     }
 }
 
@@ -716,7 +716,10 @@ fn expand_custom_component(element: RsxElement) -> TokenStream2 {
         // Check if there's already a children field
         let has_children_field = props_fields
             .iter()
-            .any(|f| f.to_string().starts_with("children :"));
+            .any(|f| {
+                let s = f.to_string();
+                s.starts_with("children") && (s.starts_with("children :") || s.starts_with("children:"))
+            });
 
         if !has_children_field {
             let children_code: Vec<_> = element.children.into_iter().map(expand_child).collect();

@@ -1,3 +1,24 @@
+//! MCP (Model Context Protocol) server for Tairitsu.
+//!
+//! Provides AI coding assistants with tools to interact with the Tairitsu
+//! development server, including browser automation, visual regression testing,
+//! and virtual terminal (VTty) management.
+//!
+//! # Tools
+//!
+//! - Browser navigation, screenshots, snapshots
+//! - Debug API for DOM inspection
+//! - VTty (virtual terminal) for command execution
+//!
+//! # Usage
+//!
+//! Start the MCP server alongside the dev daemon:
+//!
+//! ```ignore
+//! tairitsu dev --daemon --debug
+//! tairitsu-mcp
+//! ```
+
 #[cfg(feature = "vtty")]
 mod vtty;
 
@@ -868,9 +889,9 @@ async fn resolve_default_cwd(context: &RequestContext<RoleServer>) -> Option<Str
 mod daemon {
     use std::path::PathBuf;
 
-    use anyhow::anyhow;
+    use anyhow::{anyhow, Result};
 
-    pub(super) async fn resolve_daemon_url() -> anyhow::Result<String> {
+    pub(super) async fn resolve_daemon_url() -> Result<String> {
         if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL") {
             if !url.is_empty() {
                 return Ok(url);
@@ -897,9 +918,7 @@ mod daemon {
             }
             v
         };
-        if let Some((_port, debug_port, _)) =
-            try_read_ready_port_from_candidates(&priority_dirs)
-        {
+        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&priority_dirs) {
             if let Some(dp) = debug_port {
                 let url = format!("http://localhost:{dp}");
                 if check_daemon_health(&url).await {
@@ -912,9 +931,7 @@ mod daemon {
         }
 
         let searched = search_project_roots_fallback();
-        if let Some((_port, debug_port, _)) =
-            try_read_ready_port_from_candidates(&searched)
-        {
+        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&searched) {
             if let Some(dp) = debug_port {
                 let url = format!("http://localhost:{dp}");
                 if check_daemon_health(&url).await {
@@ -949,11 +966,15 @@ mod daemon {
             let root_path = PathBuf::from(&root);
             add_target_tree(&mut candidates, &root_path, 2);
         }
-        for scan_dir in std::env::var("HOME")
+        let mut scan_dirs: Vec<PathBuf> = std::env::var("HOME")
             .ok()
-            .map(|h| vec![PathBuf::from("/mnt/sdb1"), PathBuf::from(h)])
-            .unwrap_or_default()
-        {
+            .map(PathBuf::from)
+            .into_iter()
+            .collect();
+        if let Ok(dirs) = std::env::var("TAIRITSU_SCAN_DIRS") {
+            scan_dirs.extend(dirs.split(':').map(PathBuf::from));
+        }
+        for scan_dir in scan_dirs {
             if let Ok(entries) = std::fs::read_dir(&scan_dir) {
                 for entry in entries.flatten() {
                     let p = entry.path();
@@ -1001,9 +1022,7 @@ mod daemon {
 
                 if let Ok(metadata) = std::fs::metadata(&ready_path) {
                     if let Ok(modified) = metadata.modified() {
-                        if modified
-                            .elapsed()
-                            .unwrap_or_default()
+                        if modified.elapsed().unwrap_or_default()
                             > std::time::Duration::from_secs(86400)
                         {
                             let pid_path = dir.join("tairitsu-packager.pid");

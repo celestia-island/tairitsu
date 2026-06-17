@@ -282,14 +282,21 @@ pub mod wasm_impl {
     }
 
     pub fn with_render_component<T>(id: tairitsu_vdom::ComponentId, f: impl FnOnce() -> T) -> T {
+        struct Guard;
+        impl Drop for Guard {
+            fn drop(&mut self) {
+                CURRENT_RENDER_COMPONENT.with(|c| {
+                    *c.borrow_mut() = None;
+                });
+            }
+        }
+
         CURRENT_RENDER_COMPONENT.with(|c| {
             *c.borrow_mut() = Some(id);
         });
-        let result = f();
-        CURRENT_RENDER_COMPONENT.with(|c| {
-            *c.borrow_mut() = None;
-        });
-        result
+
+        let _guard = Guard;
+        f()
     }
 
     fn create_tracked_effect<F>(f: F) -> tairitsu_vdom::EffectHandle
@@ -353,19 +360,19 @@ pub mod wasm_impl {
     /// Log an error (native fallback).
     #[cfg(not(target_family = "wasm"))]
     fn log_error(message: &str) {
-        eprintln!("[WitPlatform ERROR] {}", message);
+        tracing::error!("[WitPlatform ERROR] {}", message);
     }
 
     /// Log a warning (native fallback).
     #[cfg(not(target_family = "wasm"))]
     fn log_warning(message: &str) {
-        eprintln!("[WitPlatform WARNING] {}", message);
+        tracing::warn!("[WitPlatform WARNING] {}", message);
     }
 
     /// Log diagnostic information (native fallback).
     #[cfg(not(target_family = "wasm"))]
     fn log_info(message: &str) {
-        eprintln!("[WitPlatform] {}", message);
+        tracing::info!("[WitPlatform] {}", message);
     }
 
     type GeoCallback =
@@ -598,12 +605,14 @@ pub mod wasm_impl {
 
             let event: Box<dyn EventData> = match event_type.as_str() {
                 "submit" => {
-                    let mut evt = tairitsu_vdom::SubmitEvent::new();
+                    let evt = tairitsu_vdom::SubmitEvent::new().with_event_handle(wit_handle);
+                    let mut evt = evt;
                     evt.target = target;
                     Box::new(evt)
                 }
                 "change" => {
-                    let mut evt = tairitsu_vdom::ChangeEvent::new();
+                    let evt = tairitsu_vdom::ChangeEvent::new().with_event_handle(wit_handle);
+                    let mut evt = evt;
                     evt.target = target;
                     Box::new(evt)
                 }
@@ -622,9 +631,23 @@ pub mod wasm_impl {
         EVENT_CALLBACKS.with(|m| {
             let mut handler_opt = m.borrow_mut().remove(&listener_id);
             if let Some(handler) = &mut handler_opt {
-                handler(event);
+                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    handler(event);
+                }));
+                if let Err(e) = result {
+                    let msg = e
+                        .downcast_ref::<String>()
+                        .map(|s| s.as_str())
+                        .or_else(|| e.downcast_ref::<&str>().copied())
+                        .unwrap_or("unknown panic");
+                    tracing::error!(
+                        "Event handler for '{}' (listener {}) panicked: {}",
+                        _event_type,
+                        listener_id,
+                        msg
+                    );
+                }
             }
-            // Re-insert the handler so it can be called again
             if let Some(handler) = handler_opt {
                 m.borrow_mut().insert(listener_id, handler);
             }
@@ -1311,6 +1334,7 @@ pub mod wasm_impl {
         }
 
         fn clear_timeout(&self, id: i32) {
+            TIMEOUT_CALLBACKS.with(|m| m.borrow_mut().remove(&(id as u64)));
             bindings::tairitsu_browser::full::platform_helpers::clear_timeout(id)
         }
 
@@ -1321,6 +1345,7 @@ pub mod wasm_impl {
         }
 
         fn clear_interval(&self, id: i32) {
+            INTERVAL_CALLBACKS.with(|m| m.borrow_mut().remove(&(id as u64)));
             bindings::tairitsu_browser::full::platform_helpers::clear_interval(id)
         }
 
@@ -1331,6 +1356,7 @@ pub mod wasm_impl {
         }
 
         fn cancel_animation_frame(&self, id: u32) {
+            ANIMATION_CALLBACKS.with(|m| m.borrow_mut().remove(&(id as u64)));
             bindings::tairitsu_browser::full::platform_helpers::cancel_animation_frame(id)
         }
     }
@@ -2268,21 +2294,6 @@ pub mod wasm_impl {
             Patch::RemoveEvent { name } => {
                 platform.remove_event_listener(element, name);
             }
-
-            Patch::MoveChild { from, to } => {
-                let child = platform.first_child(element);
-                if let Some(_child) = child {
-                    tracing::trace!("MoveChild from {} to {} (stub)", from, to);
-                }
-            }
-
-            Patch::ReorderChildren { removals, moves } => {
-                tracing::trace!(
-                    "ReorderChildren removals={:?} moves={:?} (stub)",
-                    removals,
-                    moves
-                );
-            }
         }
 
         Ok(())
@@ -2518,7 +2529,7 @@ pub mod wasm_impl {
         }
 
         // If the node is an element, render its children
-        if let VNode::Element(velement) = node {
+        if let VNode::Element(Box::new(velement)) = node {
             for child in &velement.children {
                 render_vnode(platform, child, &new_element)?;
             }
@@ -2569,7 +2580,6 @@ pub fn push_state(url: &str) {
     {
         wasm_impl::wasm_push_state(url);
     }
-    #[allow(unused_variables)]
     let _ = url;
 }
 
@@ -2579,7 +2589,6 @@ pub fn replace_state(url: &str) {
     {
         wasm_impl::wasm_replace_state(url);
     }
-    #[allow(unused_variables)]
     let _ = url;
 }
 
@@ -2838,7 +2847,7 @@ mod tests {
         }
 
         // Test ReplaceNode patch
-        let new_node = VNode::Element(VElement::new("div"));
+        let new_node = VNode::Element(Box::new(VElement::new("div")));
         let replace_patch = Patch::ReplaceNode {
             node: new_node.clone(),
         };

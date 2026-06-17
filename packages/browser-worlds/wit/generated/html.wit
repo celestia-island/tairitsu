@@ -5,7 +5,7 @@
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
 /// Version: 0.2.0
-/// Generated: 2026-05-24 03:36:01 UTC
+/// Generated: 2026-05-31 03:52:06 UTC
 ///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
@@ -4516,6 +4516,46 @@ interface xml-serializer {
     serialize-to-string: func(self: xml-serializer-handle, root: u64) -> string;
 }
 
+/// WebIDL interface: `Sanitizer`
+/// Source: https://github.com/w3c/webref/tree/main/ed/idl/html.idl
+interface sanitizer {
+    /// Opaque handle to a host-side `Sanitizer` instance.
+    type sanitizer-handle = u64;
+
+    /// `get()` operation.
+    get: func(self: sanitizer-handle) -> u64;
+
+    /// `allowElement()` operation.
+    allow-element: func(self: sanitizer-handle, element: u64) -> bool;
+
+    /// `removeElement()` operation.
+    remove-element: func(self: sanitizer-handle, element: u64) -> bool;
+
+    /// `replaceElementWithChildren()` operation.
+    replace-element-with-children: func(self: sanitizer-handle, element: u64) -> bool;
+
+    /// `allowProcessingInstruction()` operation.
+    allow-processing-instruction: func(self: sanitizer-handle, pi: u64) -> bool;
+
+    /// `removeProcessingInstruction()` operation.
+    remove-processing-instruction: func(self: sanitizer-handle, pi: u64) -> bool;
+
+    /// `allowAttribute()` operation.
+    allow-attribute: func(self: sanitizer-handle, attribute: u64) -> bool;
+
+    /// `removeAttribute()` operation.
+    remove-attribute: func(self: sanitizer-handle, attribute: u64) -> bool;
+
+    /// `setComments()` operation.
+    set-comments: func(self: sanitizer-handle, allow: bool) -> bool;
+
+    /// `setDataAttributes()` operation.
+    set-data-attributes: func(self: sanitizer-handle, allow: bool) -> bool;
+
+    /// `removeUnsafe()` operation.
+    remove-unsafe: func(self: sanitizer-handle) -> bool;
+}
+
 /// WebIDL interface: `NavigatorID`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/html.idl
 interface navigator-id {
@@ -5375,7 +5415,7 @@ interface external {
     is-search-provider-installed: func(self: external-handle);
 }
 
-/// Browser html world — all 182 auto-generated interfaces.
+/// Browser html world — all 183 auto-generated interfaces.
 world html-world {
     import html-all-collection;
     import radio-node-list;
@@ -5519,6 +5559,7 @@ world html-world {
     import promise-rejection-event;
     import dom-parser;
     import xml-serializer;
+    import sanitizer;
     import navigator-id;
     import navigator-language;
     import navigator-on-line;

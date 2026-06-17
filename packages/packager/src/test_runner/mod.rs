@@ -40,10 +40,8 @@ pub struct PageResult {
 }
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct ApiResp {
     ok: bool,
-    data: Option<serde_json::Value>,
     error: Option<String>,
 }
 

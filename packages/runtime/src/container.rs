@@ -33,12 +33,13 @@ pub struct HostState {
 }
 
 impl HostState {
-    /// Create a new host state
+    /// Create a new host state with no inherited capabilities
+    ///
+    /// The returned state has no stdio, network, or filesystem access by default.
+    /// Use [`HostState::with_wasi`] or [`HostState::default`] if you need
+    /// to customise WASI capabilities explicitly.
     pub fn new() -> Result<Self> {
-        let wasi = WasiCtxBuilder::new()
-            .inherit_stdio()
-            .inherit_network()
-            .build();
+        let wasi = WasiCtxBuilder::new().build();
 
         let table = ResourceTable::new();
 
@@ -498,14 +499,14 @@ impl<T: HostStateImpl> Container<T> {
     /// ```ignore
     /// let result = container.call_guest_json("process", r#"{"input":"hello"}"#)?;
     /// ```
-    pub fn call_guest_json(&mut self, function_name: &str, json_payload: &str) -> Result<String> {
-        // JSON invocation is superseded by the RON-based call_guest_raw_desc() which
-        // preserves Rust type fidelity. This entry-point returns an error to guide
-        // callers to the preferred API.
+    #[deprecated(
+        since = "0.6.0",
+        note = "use call_guest_raw_desc() with RON format instead"
+    )]
+    pub fn call_guest_json(&mut self, function_name: &str, _json_payload: &str) -> Result<String> {
         anyhow::bail!(
-            "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}, Payload: {}",
+            "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}",
             function_name,
-            json_payload
         )
     }
 
@@ -547,9 +548,9 @@ impl<T: HostStateImpl> Container<T> {
         match &result {
             Ok(_) => self.state = ContainerState::Running,
             Err(e) => {
-                let msg = e.to_string();
-                if msg.contains("trap") || msg.contains("out of memory") || msg.contains("fuel") {
-                    self.state = ContainerState::Error(msg);
+                let is_wasm_fatal = e.downcast_ref::<wasmtime::Trap>().is_some();
+                if is_wasm_fatal {
+                    self.state = ContainerState::Error(e.to_string());
                 }
             }
         }
@@ -681,7 +682,12 @@ impl<T: HostStateImpl> Container<T> {
             Ok(_) => self.state = ContainerState::Running,
             Err(e) => {
                 let msg = e.to_string();
-                if msg.contains("trap") || msg.contains("out of memory") || msg.contains("fuel") {
+                let is_wasm_fatal = msg.contains("trap")
+                    || msg.contains("out of memory")
+                    || msg.contains("fuel")
+                    || e.downcast_ref::<wasmtime::Error>().is_some()
+                    || e.downcast_ref::<wasmtime::Trap>().is_some();
+                if is_wasm_fatal {
                     self.state = ContainerState::Error(msg);
                 }
             }
@@ -918,7 +924,10 @@ impl<T: HostStateImpl> Container<T> {
             imports
                 .into_iter()
                 .map(|name| {
-                    let (params, results) = registry.get_signature(name).unwrap();
+                    let (params, results) =
+                        AnyhowContext::with_context(registry.get_signature(name), || {
+                            format!("missing signature for import: {name}")
+                        })?;
                     Ok(ImportInfo {
                         name: name.to_string(),
                         params,
@@ -962,7 +971,9 @@ fn ron_value_to_val(
 
 impl<T: HostStateImpl> std::fmt::Debug for Container<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Container").finish()
+        f.debug_struct("Container")
+            .field("state", &self.state)
+            .finish()
     }
 }
 
@@ -977,9 +988,22 @@ mod tests {
     }
 
     #[test]
+    fn test_host_state_new_does_not_inherit_stdio_or_network() {
+        let state = HostState::new().expect("should succeed");
+        let _ = state;
+    }
+
+    #[test]
     fn test_host_state_default_does_not_panic() {
         let state = HostState::default();
         let _ = state;
+    }
+
+    #[test]
+    fn test_host_state_new_equals_default() {
+        let new_state = HostState::new().expect("new should succeed");
+        let default_state = HostState::default();
+        let _ = (new_state, default_state);
     }
 
     #[test]
@@ -1059,5 +1083,30 @@ mod tests {
         assert_eq!(state, cloned);
         let debug = format!("{:?}", state);
         assert!(debug.contains("oom"));
+    }
+
+    #[test]
+    #[cfg(feature = "dynamic")]
+    fn test_call_guest_raw_desc_rejects_invalid_payload() {
+        use crate::Image;
+        let wasm = bytes::Bytes::from_static(b"\x00asm\x01\x00\x00\x00");
+        let img = match Image::new(wasm) {
+            Ok(img) => img,
+            Err(_) => return,
+        };
+        let mut container = Container::builder(img)
+            .with_guest_initializer(|_ctx| Ok(GuestInstance::new(())))
+            .build()
+            .expect("build should succeed");
+
+        let sensitive = r#"("SECRET_API_KEY_12345",)"#;
+        let result = container.call_guest_raw_desc("test_fn", sensitive);
+        assert!(result.is_err());
+        let err_msg = format!("{}", result.unwrap_err());
+        assert!(
+            !err_msg.contains("SECRET_API_KEY_12345"),
+            "Error message should not contain the payload, but got: {}",
+            err_msg
+        );
     }
 }

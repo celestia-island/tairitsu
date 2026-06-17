@@ -1,6 +1,4 @@
 pub struct ColorScheme {
-    #[allow(dead_code)]
-    pub name: &'static str,
     pub fg: [u8; 3],
     pub bg: [u8; 3],
     pub cursor: [u8; 3],
@@ -8,7 +6,6 @@ pub struct ColorScheme {
 }
 
 pub const SOLARIZED_DARK: ColorScheme = ColorScheme {
-    name: "solarized-dark",
     fg: [147, 161, 161],
     bg: [0, 43, 54],
     cursor: [220, 50, 47],
@@ -33,7 +30,6 @@ pub const SOLARIZED_DARK: ColorScheme = ColorScheme {
 };
 
 pub const SOLARIZED_LIGHT: ColorScheme = ColorScheme {
-    name: "solarized-light",
     fg: [101, 123, 131],
     bg: [253, 246, 227],
     cursor: [220, 50, 47],
@@ -58,7 +54,6 @@ pub const SOLARIZED_LIGHT: ColorScheme = ColorScheme {
 };
 
 pub const ONE_HALF_DARK: ColorScheme = ColorScheme {
-    name: "one-half-dark",
     fg: [220, 223, 228],
     bg: [40, 44, 52],
     cursor: [198, 120, 221],
@@ -83,7 +78,6 @@ pub const ONE_HALF_DARK: ColorScheme = ColorScheme {
 };
 
 pub const ONE_HALF_LIGHT: ColorScheme = ColorScheme {
-    name: "one-half-light",
     fg: [56, 58, 66],
     bg: [250, 250, 250],
     cursor: [152, 52, 115],
@@ -108,7 +102,6 @@ pub const ONE_HALF_LIGHT: ColorScheme = ColorScheme {
 };
 
 pub const IBM_5153: ColorScheme = ColorScheme {
-    name: "ibm-5153",
     fg: [51, 255, 0],
     bg: [0, 0, 0],
     cursor: [51, 255, 0],
@@ -143,7 +136,7 @@ pub fn get_scheme(name: &str) -> &'static ColorScheme {
     }
 }
 
-#[allow(dead_code)]
+#[cfg(test)]
 pub fn scheme_names() -> &'static [&'static str] {
     &[
         "solarized-dark",

@@ -5,14 +5,14 @@ edition.workspace = true
 publish = false
 
 [dependencies]
-anyhow = "^1"
-bytes = "^1"
+anyhow = { workspace = true }
+bytes = { workspace = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 tairitsu = { path = "../../packages/runtime", features = ["dynamic"] }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-wit-bindgen = { version = "^0.50", features = ["macros"] }
+wit-bindgen = { version = "^0.57", features = ["macros"] }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

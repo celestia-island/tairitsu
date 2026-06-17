@@ -8,32 +8,26 @@ pub type Event = Box<dyn EventData>;
 
 type EventControlFn = fn(u64);
 
-static mut PREVENT_DEFAULT_FN: Option<EventControlFn> = None;
-static mut STOP_PROPAGATION_FN: Option<EventControlFn> = None;
+static PREVENT_DEFAULT_FN: std::sync::OnceLock<EventControlFn> = std::sync::OnceLock::new();
+static STOP_PROPAGATION_FN: std::sync::OnceLock<EventControlFn> = std::sync::OnceLock::new();
 
 pub fn register_event_control_functions(
     prevent_default: EventControlFn,
     stop_propagation: EventControlFn,
 ) {
-    unsafe {
-        PREVENT_DEFAULT_FN = Some(prevent_default);
-        STOP_PROPAGATION_FN = Some(stop_propagation);
-    }
+    let _ = PREVENT_DEFAULT_FN.set(prevent_default);
+    let _ = STOP_PROPAGATION_FN.set(stop_propagation);
 }
 
 fn call_prevent_default(handle: u64) {
-    unsafe {
-        if let Some(f) = PREVENT_DEFAULT_FN {
-            f(handle);
-        }
+    if let Some(f) = PREVENT_DEFAULT_FN.get() {
+        f(handle);
     }
 }
 
 fn call_stop_propagation(handle: u64) {
-    unsafe {
-        if let Some(f) = STOP_PROPAGATION_FN {
-            f(handle);
-        }
+    if let Some(f) = STOP_PROPAGATION_FN.get() {
+        f(handle);
     }
 }
 
@@ -445,6 +439,11 @@ impl ChangeEvent {
         }
     }
 
+    pub fn with_event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
     pub fn value(mut self, value: impl Into<String>) -> Self {
         self.value = value.into();
         self
@@ -465,6 +464,7 @@ impl Default for ChangeEvent {
     }
 }
 
+#[derive(Clone)]
 pub struct SubmitEvent {
     pub target: Option<u64>,
     pub form_data: Vec<(String, String)>,
@@ -484,6 +484,11 @@ impl SubmitEvent {
             form_data: Vec::new(),
             event_handle: EventWitHandle::placeholder(),
         }
+    }
+
+    pub fn with_event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
     }
 
     pub fn prevent_default(&self) {
@@ -893,10 +898,7 @@ impl DragEvent {
 
     /// Get mutable access to data transfer, creating it if needed
     pub fn data_transfer_mut(&mut self) -> &mut DataTransfer {
-        if self.data_transfer.is_none() {
-            self.data_transfer = Some(DataTransfer::new());
-        }
-        self.data_transfer.as_mut().unwrap()
+        self.data_transfer.get_or_insert_with(DataTransfer::new)
     }
 
     /// Builder method to set the data transfer object

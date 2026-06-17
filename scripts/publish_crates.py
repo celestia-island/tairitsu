@@ -15,7 +15,7 @@ EXCLUDE_PACKAGES = {"tairitsu-e2e", "tairitsu-browser-test"}
 
 
 def run_captured(cmd):
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True)
     if result.stdout.strip():
         print(result.stdout.strip())
     return result
@@ -24,8 +24,9 @@ def run_captured(cmd):
 def run_streaming(cmd):
     print(f"  $ {cmd}")
     sys.stdout.flush()
+    parts = cmd.split() if isinstance(cmd, str) else cmd
     proc = subprocess.Popen(
-        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        parts, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
     for line in proc.stdout:
         print(line, end="")

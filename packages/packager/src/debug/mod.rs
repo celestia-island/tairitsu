@@ -88,11 +88,9 @@ struct NavigateResponse {
 }
 
 #[derive(Debug, Clone, Deserialize, Default)]
-#[allow(dead_code)]
 struct ScreenshotParams {
     selector: Option<String>,
     full_page: Option<bool>,
-    format: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -104,11 +102,8 @@ struct ScreenshotResponse {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[allow(dead_code)]
 struct ClickRequest {
     selector: String,
-    button: Option<String>,
-    modifiers: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -195,8 +190,6 @@ struct ComputedStyleResponse {
 #[derive(Debug, Clone, Deserialize)]
 struct PressRequest {
     key: String,
-    modifiers: Option<Vec<String>>,
-    count: Option<u32>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -317,12 +310,6 @@ struct BatchResult {
     duration_ms: u64,
 }
 
-#[derive(Debug, Clone, Deserialize, Default)]
-#[allow(dead_code)]
-struct NetworkQueryParams {
-    limit: Option<usize>,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct NetworkResource {
     name: String,
@@ -387,7 +374,6 @@ struct StackFrame {
 
 // ── Browser command channel ───────────────────────────────────────────────
 
-#[allow(dead_code)]
 enum BrowserCommand {
     Navigate {
         url: String,
@@ -426,8 +412,6 @@ enum BrowserCommand {
     },
     Press {
         key: String,
-        modifiers: Vec<String>,
-        count: u32,
         resp: oneshot::Sender<Result<(), String>>,
     },
     Scroll {
@@ -464,8 +448,6 @@ enum BrowserCommand {
     WebSocket {
         resp: oneshot::Sender<Result<WebSocketInfo, String>>,
     },
-    #[allow(dead_code)]
-    Shutdown,
 }
 
 struct BrowserHandle {
@@ -725,7 +707,6 @@ mod engine {
                 let r = cmd_websocket(page).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Shutdown => {}
         }
     }
 
@@ -1084,21 +1065,6 @@ struct DebugState {
 }
 
 impl DebugState {
-    #[allow(dead_code)]
-    fn new(config: Config, dev_port: u16, debug_port: u16) -> Self {
-        Self {
-            base_url: format!("http://localhost:{}", dev_port),
-            config,
-            dev_port,
-            debug_port,
-            start_time: Instant::now(),
-            console_log: Arc::new(RwLock::new(Vec::new())),
-            errors: Arc::new(RwLock::new(Vec::new())),
-            rejections: Arc::new(RwLock::new(Vec::new())),
-            browser: None,
-            browser_engine: "none".into(),
-        }
-    }
     fn uptime_secs(&self) -> u64 {
         self.start_time.elapsed().as_secs()
     }
@@ -1359,8 +1325,6 @@ async fn press_handler(
     if br
         .send(BrowserCommand::Press {
             key: req.key,
-            modifiers: req.modifiers.unwrap_or_default(),
-            count: req.count.unwrap_or(1),
             resp: tx,
         })
         .await

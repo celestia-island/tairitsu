@@ -15,13 +15,23 @@ fn find_workspace_root(start: &Path) -> PathBuf {
         start.to_path_buf()
     };
 
+    let mut depth = 0u32;
     loop {
         if current.join("packages").is_dir() && current.join("Cargo.toml").is_file() {
             return current;
         }
         match current.parent() {
-            Some(parent) => current = parent.to_path_buf(),
+            Some(parent) => {
+                if parent == current {
+                    return start.to_path_buf();
+                }
+                current = parent.to_path_buf();
+            }
             None => return start.to_path_buf(),
+        }
+        depth += 1;
+        if depth > 64 {
+            return start.to_path_buf();
         }
     }
 }
@@ -512,10 +522,7 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
     }
 
     if cli.daemon && !daemon::is_daemon() && !cli.dry_run {
-        // SAFETY: single-threaded at this point
-        unsafe {
-            std::env::set_var("TAIRITSU_LOG_TS", "1");
-        }
+        std::env::set_var("TAIRITSU_LOG_TS", "1");
         let was_running = daemon::is_daemon_running();
         if was_running {
             let killed_pid = daemon::read_pid().unwrap_or(0);
@@ -830,8 +837,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         }
         Some(Commands::Preview { port }) => {
             crate::log_info!("{}", t.cli.preview_starting);
-            let port = port.unwrap_or(3000);
-            let _port = port;
+            let _port = port.unwrap_or(3000);
             crate::log_fail!("{}", t.cli.preview_not_implemented);
             std::process::exit(1);
         }
@@ -926,8 +932,10 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                             continue;
                         }
 
-                        let mut fake_meta = crate::icons::HikariIconsMetadata::default();
-                        fake_meta.sets = vec![set_name.clone()];
+                        let fake_meta = crate::icons::HikariIconsMetadata {
+                            sets: vec![set_name.clone()],
+                            ..Default::default()
+                        };
                         let result = crate::icons::resolve(&fake_meta, &cache)?;
                         if result.sets.is_empty() {
                             crate::log_fail!("{} — failed to fetch", set_name);
@@ -1166,8 +1174,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
             }
         }
-        #[allow(unused_variables)]
-        Some(Commands::Mcp { url, action }) => {
+        Some(Commands::Mcp { url, action: _ }) => {
             let config = crate::mcp::McpConfig {
                 base_url: url.unwrap_or_default(),
             };

@@ -21,23 +21,28 @@ def main():
         print("Error: NPM_TOKEN environment variable is not set.", file=sys.stderr)
         sys.exit(1)
 
-    run(["npm", "config", "set", "//registry.npmjs.org/:_authToken", token])
+    # Use a temporary .npmrc instead of overwriting the user's
+    temp_npmrc = REPO_ROOT / ".npmrc.temp"
+    temp_npmrc.write_text(f"//registry.npmjs.org/:_authToken={token}\n")
+    temp_npmrc.chmod(0o600)
+
+    env = os.environ.copy()
+    env["NPM_CONFIG_USERCONFIG"] = str(temp_npmrc)
 
     glue_dir = REPO_ROOT / "packages" / "npm" / "celestia-tairitsu-web-glue"
 
-    for _ in range(2):
-        run(["npm", "run", "build"], cwd=str(glue_dir))
-    run(["npm", "run", "build:production"], cwd=str(glue_dir))
+    run(["npm", "run", "build"], cwd=str(glue_dir), env=env)
+    run(["npm", "run", "build:production"], cwd=str(glue_dir), env=env)
 
-    run(["npm", "publish", "--access", "public"], cwd=str(glue_dir))
+    run(["npm", "publish", "--access", "public"], cwd=str(glue_dir), env=env)
 
     for d in sorted((REPO_ROOT / "packages" / "npm").glob("glue-*/")):
-        run(["npm", "publish", "--access", "public"], cwd=str(d))
+        run(["npm", "publish", "--access", "public"], cwd=str(d), env=env)
 
     for d in sorted((REPO_ROOT / "packages" / "npm").glob("*-wasm/")):
-        run(["npm", "publish", "--access", "public"], cwd=str(d))
+        run(["npm", "publish", "--access", "public"], cwd=str(d), env=env)
 
-    print("All npm packages published (LIVE)!")
+    temp_npmrc.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

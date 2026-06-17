@@ -9,6 +9,13 @@ fn locale() -> &'static crate::i18n::Translations {
 }
 
 fn find_workspace_root(manifest_dir: &std::path::Path) -> crate::Result<std::path::PathBuf> {
+    let manifest_path = manifest_dir
+        .join("Cargo.toml")
+        .to_str()
+        .ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError("manifest path is not valid UTF-8".to_string())
+        })?
+        .to_string();
     let output = std::process::Command::new("cargo")
         .args([
             "metadata",
@@ -17,7 +24,7 @@ fn find_workspace_root(manifest_dir: &std::path::Path) -> crate::Result<std::pat
             "--format-version",
             "1",
             "--manifest-path",
-            manifest_dir.join("Cargo.toml").to_str().unwrap(),
+            &manifest_path,
         ])
         .output()?;
 
@@ -123,7 +130,7 @@ pub fn build_component(
     let pb_raw = ProgressBar::new(5);
     pb_raw.set_style(
         ProgressStyle::with_template("  {spinner:.bold.cyan}  {prefix:.bold.dim}  {wide_msg}")
-            .unwrap()
+            .expect("invalid progress bar template")
             .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
     );
     pb_raw.enable_steady_tick(Duration::from_millis(80));
@@ -289,7 +296,15 @@ fn build_wasm_component(
         "--package",
         pkg_name,
         "--manifest-path",
-        config.manifest_dir.join("Cargo.toml").to_str().unwrap(),
+        config
+            .manifest_dir
+            .join("Cargo.toml")
+            .to_str()
+            .ok_or_else(|| {
+                crate::TairitsuPackagerError::BuildError(
+                    "manifest path is not valid UTF-8".to_string(),
+                )
+            })?,
         "--message-format=json-diagnostic-rendered-ansi",
     ]);
     if release {
@@ -569,8 +584,8 @@ fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<
                 ))
             });
         }
-        eprintln!(
-            "[tairitsu] Warning: TAIRITSU_RUNTIME_BUNDLE={} does not exist, falling back to default search",
+        tracing::warn!(
+            "TAIRITSU_RUNTIME_BUNDLE={} does not exist, falling back to default search",
             path.display()
         );
     }
@@ -1191,10 +1206,10 @@ fn try_generate_component_wrapper(
 
     let re_import =
         regex::Regex::new(r"(?:import\s*\{([^}]+)\}\s*from\s*'@tairitsu-glue/([^']*)'\s*;?)")
-            .unwrap();
+            .expect("static regex is valid");
     let re_import_d =
         regex::Regex::new(r#"(?:import\s*\{([^}]+)\}\s*from\s*"@tairitsu-glue/([^"]*)"\s*;?)"#)
-            .unwrap();
+            .expect("static regex is valid");
 
     for (bin, args) in attempts {
         let command_preview = format!("{} {}", bin, args.join(" "));
@@ -1222,18 +1237,13 @@ fn try_generate_component_wrapper(
                                     "from \"@tairitsu-glue/",
                                 );
 
-                                let _import_map_interfaces: std::collections::HashSet<&str> =
-                                    [].into_iter().collect();
-
                                 content = re_import
                                     .replace_all(&content, |caps: &regex::Captures| {
-                                        let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
                                         let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
                                         let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
                                         if m1.is_empty() {
                                             return String::new();
                                         }
-                                        let _iface_name = m2.split('/').next().unwrap_or("");
 
                                         // Split symbols: import-map-available vs needs-glue-fallback
                                         let mut map_syms = Vec::new();
@@ -1260,13 +1270,11 @@ fn try_generate_component_wrapper(
                                     .to_string();
                                 content = re_import_d
                                     .replace_all(&content, |caps: &regex::Captures| {
-                                        let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
                                         let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
                                         let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
                                         if m1.is_empty() {
                                             return String::new();
                                         }
-                                        let _iface_name = m2.split('/').next().unwrap_or("");
 
                                         let mut map_syms = Vec::new();
                                         for sym in m1.trim().split(',') {
@@ -1966,7 +1974,8 @@ pub async fn dev_server(
             #[cfg(unix)]
             {
                 use tokio::signal::unix::{signal, SignalKind};
-                let mut sigterm = signal(SignalKind::terminate()).unwrap();
+                let mut sigterm =
+                    signal(SignalKind::terminate()).expect("failed to register SIGTERM handler");
                 tokio::select! {
                     _ = tokio::signal::ctrl_c() => {},
                     _ = sigterm.recv() => {},
@@ -2241,7 +2250,7 @@ async fn run_watch_loop(
                 #[cfg(unix)]
                 {
                     use tokio::signal::unix::{SignalKind, signal};
-                    let mut sigterm = signal(SignalKind::terminate()).unwrap();
+                    let mut sigterm = signal(SignalKind::terminate()).expect("failed to register SIGTERM handler");
                     tokio::select! {
                         _ = tokio::signal::ctrl_c() => {},
                         _ = sigterm.recv() => {},

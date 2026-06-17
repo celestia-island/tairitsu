@@ -111,7 +111,6 @@ pub(crate) fn decode_sixel(data: &[u8]) -> Option<super::ImgBuf> {
                     }
 
                     if color_parts.len() >= 4 {
-                        let _colorspace = color_parts[0];
                         let r = color_parts[1];
                         let g = color_parts[2];
                         let b = color_parts[3];

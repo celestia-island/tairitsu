@@ -40,7 +40,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::Result;
+use anyhow::Result;
 
 /// A single WIT file registered as a plugin extension.
 #[derive(Debug, Clone)]

@@ -34,7 +34,7 @@ pub fn render_markdown(md: &str) -> VNode {
                     let img = el("img")
                         .attr("src", dest_url.as_ref())
                         .attr("alt", title.as_ref());
-                    push_child(&mut stack, &mut root, VNode::Element(img));
+                    push_child(&mut stack, &mut root, VNode::Element(Box::new(img)));
                     stack.push(el("span"));
                 }
                 Tag::Table(_) => stack.push(el("table")),
@@ -62,25 +62,25 @@ pub fn render_markdown(md: &str) -> VNode {
                             .unwrap_or_else(|| "hi-code-block".to_string());
                         let wrapped = el("div")
                             .class(class_str.as_str())
-                            .child(VNode::Element(el("pre").child(VNode::Element(elem))));
-                        push_child(&mut stack, &mut root, VNode::Element(wrapped));
+                            .child(VNode::Element(Box::new(el("pre").child(VNode::Element(Box::new(elem))))));
+                        push_child(&mut stack, &mut root, VNode::Element(Box::new(wrapped)));
                     }
                     TagEnd::List(is_ordered) => {
                         let mut list = elem;
                         if is_ordered {
                             list.tag = "ol".to_string();
                         }
-                        push_child(&mut stack, &mut root, VNode::Element(list));
+                        push_child(&mut stack, &mut root, VNode::Element(Box::new(list)));
                     }
                     TagEnd::TableHead => {
-                        let thead = el("thead").child(VNode::Element(elem));
-                        push_child(&mut stack, &mut root, VNode::Element(thead));
+                        let thead = el("thead").child(VNode::Element(Box::new(elem)));
+                        push_child(&mut stack, &mut root, VNode::Element(Box::new(thead)));
                     }
                     TagEnd::Image => {
                         stack.pop();
                     }
                     _ => {
-                        push_child(&mut stack, &mut root, VNode::Element(elem));
+                        push_child(&mut stack, &mut root, VNode::Element(Box::new(elem)));
                     }
                 }
             }
@@ -91,24 +91,24 @@ pub fn render_markdown(md: &str) -> VNode {
                 push_child(
                     &mut stack,
                     &mut root,
-                    VNode::Element(el("code").class("hi-inline-code").child(txt(&code))),
+                    VNode::Element(Box::new(el("code").class("hi-inline-code").child(txt(&code)))),
                 );
             }
             Event::SoftBreak => {
                 push_child(&mut stack, &mut root, txt(" "));
             }
             Event::HardBreak => {
-                push_child(&mut stack, &mut root, VNode::Element(el("br")));
+                push_child(&mut stack, &mut root, VNode::Element(Box::new(el("br"))));
             }
             Event::Rule => {
-                push_child(&mut stack, &mut root, VNode::Element(el("hr")));
+                push_child(&mut stack, &mut root, VNode::Element(Box::new(el("hr"))));
             }
             Event::TaskListMarker(checked) => {
                 let cb = el("input")
                     .attr("type", "checkbox")
                     .attr("checked", checked)
                     .attr("disabled", true);
-                push_child(&mut stack, &mut root, VNode::Element(cb));
+                push_child(&mut stack, &mut root, VNode::Element(Box::new(cb)));
             }
             _ => {}
         }
@@ -122,11 +122,11 @@ pub fn render_markdown(md: &str) -> VNode {
 }
 
 pub fn markdown_content(md: &str) -> VNode {
-    VNode::Element(
+    VNode::Element(Box::new(
         el("div")
             .class("hi-markdown-content")
             .child(render_markdown(md)),
-    )
+    ))
 }
 
 fn heading_tag(level: HeadingLevel) -> &'static str {

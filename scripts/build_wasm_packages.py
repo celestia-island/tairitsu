@@ -89,7 +89,14 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
     )
     if result.returncode != 0:
         print(f"    FAIL: cargo build failed")
-        print(f"    {result.stderr[-500:]}")
+        stderr = result.stderr
+        if len(stderr) > 3000:
+            print(f"    ... (truncated) ...")
+            print(f"    {stderr[:1500]}")
+            print(f"    ...")
+            print(f"    {stderr[-1500:]}")
+        else:
+            print(f"    {stderr}")
         return False
 
     wasm_path = WORKSPACE_ROOT / "target" / "wasm32-wasip2" / "release" / f"{wasm_stem}.wasm"

@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 export const window_exports = {
   getInnerWidth() {

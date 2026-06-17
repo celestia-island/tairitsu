@@ -2,7 +2,7 @@ name: Publish
 
 on:
   push:
-    tags: [v*]
+    tags: [v[0-9]+.[0-9]+.[0-9]+]
 
 jobs:
   verify:
@@ -30,36 +30,43 @@ jobs:
             "tairitsu-web:packages/web"
             "tairitsu-mcp:packages/mcp"
           )
-          for ENTRY in "${PACKAGES[@]}"; do
-            PKG="${ENTRY%%:*}"
-            DIR="${ENTRY##*:}"
-            TOML="$DIR/Cargo.toml"
-            if [ ! -f "$TOML" ]; then
-              echo "::error::$TOML not found"
-              FAIL=1
-              continue
-            fi
-            VER=$(grep -oP '^version\s*=\s*"\K[^"]+' "$TOML" 2>/dev/null || true)
-            if [ -z "$VER" ]; then
-              VER=$(grep -q 'version\.workspace\s*=\s*true' "$TOML" && echo "workspace" || echo "MISSING")
-            fi
-            if [ "$VER" = "workspace" ]; then
-              ROOT_VER=$(grep -oP '^version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
-              echo "::notice::$PKG uses workspace version ($ROOT_VER)"
-            elif [ "$VER" = "$TAG" ]; then
-              echo "::notice::$PKG version ($VER) matches tag"
-            else
-              echo "::error::$PKG version ($VER) != tag ($TAG) in $TOML"
-              FAIL=1
-            fi
-          done
-          ROOT_VER=$(grep -oP '^version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
-          if [ "$ROOT_VER" != "$TAG" ]; then
-            echo "::error::workspace.package version ($ROOT_VER) != tag ($TAG)"
-            FAIL=1
-          fi
-          [ "$FAIL" -eq 0 ] || exit 1
-          echo "All versions match v$TAG"
+          pip install tomlkit
+          python3 -c "
+          import tomlkit, sys
+          TAG = '$TAG'
+          PACKAGES = '''${
+            IFS=','
+            echo "${PACKAGES[*]}"
+          }'''.split(',')
+          FAIL = 0
+          with open('Cargo.toml') as f:
+              root = tomlkit.load(f)
+          root_ver = root.get('workspace', {}).get('package', {}).get('version', '')
+          if root_ver != TAG:
+              print(f'::error::workspace.package version ({root_ver}) != tag ({TAG})')
+              FAIL = 1
+          for entry in PACKAGES:
+              entry = entry.strip()
+              if not entry: continue
+              pkg, _, dir_ = entry.partition(':')
+              toml_path = f'{dir_}/Cargo.toml'
+              try:
+                  with open(toml_path) as f:
+                      d = tomlkit.load(f)
+              except FileNotFoundError:
+                  print(f'::error::{toml_path} not found')
+                  FAIL = 1
+                  continue
+              ver = d.get('package', {}).get('version', '')
+              if ver == root_ver:
+                  print(f'::notice::{pkg} uses workspace version ({root_ver})')
+              elif ver == TAG:
+                  print(f'::notice::{pkg} version ({ver}) matches tag')
+              else:
+                  print(f'::error::{pkg} version ({ver}) != tag ({TAG}) in {toml_path}')
+                  FAIL = 1
+          sys.exit(1 if FAIL else 0)
+          "
 
   publish-crates:
     name: Publish to crates.io
@@ -81,7 +88,7 @@ jobs:
           with open('Cargo.toml', 'w') as f: tomlkit.dump(d, f)
           "
 
-      - run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
+      - run: echo "${{ secrets.CRATES_IO_API_TOKEN }}" | cargo login
 
       - run: python3 scripts/publish_crates.py
 
@@ -94,10 +101,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
+          node-version: '22'
           registry-url: https://registry.npmjs.org/
 
       - name: Install esbuild
-        run: npm install -g esbuild
+        run: npm install -g esbuild@0.25.4
 
       - name: Build glue packages
         run: python3 scripts/build_npm_glue_packages.py

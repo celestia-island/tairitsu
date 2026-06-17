@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 // Initialize global handle tables for event listeners
 globalThis.__listenerHandles = globalThis.__listenerHandles || new Map();
@@ -38,10 +37,15 @@ export const eventTarget_exports = {
               globalThis.__eventHandles.set(eventHandle, event);
 
               let listenerId = 0n;
-              for (const [id, info] of globalThis.__listenerHandles) {
-                if (info.element === element && info.type === eventType) {
-                  listenerId = id;
-                  break;
+              const cached = globalThis.__listenerByElement?.get(element)?.get(eventType);
+              if (cached) {
+                listenerId = cached;
+              } else {
+                for (const [id, info] of globalThis.__listenerHandles) {
+                  if (info.element === element && info.type === eventType) {
+                    listenerId = id;
+                    break;
+                  }
                 }
               }
 
@@ -102,6 +106,17 @@ export const eventTarget_exports = {
       const handle = globalThis.__nextListenerHandle++;
       globalThis.__listenerHandles.set(handle, { element, type: eventType, listener });
 
+      // Maintain a reverse index for O(1) listener lookup by element+type
+      if (!globalThis.__listenerByElement) {
+        globalThis.__listenerByElement = new Map();
+      }
+      let byType = globalThis.__listenerByElement.get(element);
+      if (!byType) {
+        byType = new Map();
+        globalThis.__listenerByElement.set(element, byType);
+      }
+      byType.set(eventType, handle);
+
       return handle;
     } catch (error) {
       return `Error adding event listener: ${error}`;
@@ -122,6 +137,11 @@ export const eventTarget_exports = {
       if (listenerInfo && listenerInfo.element === element && listenerInfo.type === eventType) {
         element.removeEventListener(eventType, listenerInfo.listener);
         globalThis.__listenerHandles.delete(listenerHandle);
+        const byType = globalThis.__listenerByElement?.get(element);
+        if (byType && byType.get(eventType) === listenerHandle) {
+          byType.delete(eventType);
+          if (byType.size === 0) globalThis.__listenerByElement.delete(element);
+        }
       }
     } catch (error) {
       console.error(`Error removing event listener: ${error}`);

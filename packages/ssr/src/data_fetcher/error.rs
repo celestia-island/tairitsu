@@ -1,28 +1,41 @@
 //! Error types for data fetching operations
 
-use std::fmt;
+use thiserror::Error;
 
 /// Errors that can occur during fetch operations
-#[derive(Clone, Debug)]
+#[derive(Error, Clone, Debug)]
 pub enum FetchError {
     /// Network error (connection refused, timeout, etc.)
+    #[error("Network error: {0}")]
     Network(String),
+
     /// HTTP error (4xx, 5xx status codes)
+    #[error("HTTP error: {status} - {message}")]
     Http {
         /// HTTP status code
         status: u16,
         /// Error message
         message: String,
     },
+
     /// Invalid URL
+    #[error("Invalid URL: {0}")]
     InvalidUrl(String),
+
     /// Serialization/deserialization error
+    #[error("Serialization error: {0}")]
     Serialization(String),
+
     /// Cache error
+    #[error("Cache error: {0}")]
     Cache(String),
+
     /// Request was cancelled
+    #[error("Request cancelled")]
     Cancelled,
+
     /// Other error
+    #[error("Error: {0}")]
     Other(String),
 }
 
@@ -78,24 +91,6 @@ impl FetchError {
         }
     }
 }
-
-impl fmt::Display for FetchError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Network(msg) => write!(f, "Network error: {}", msg),
-            Self::Http { status, message } => {
-                write!(f, "HTTP error: {} - {}", status, message)
-            }
-            Self::InvalidUrl(msg) => write!(f, "Invalid URL: {}", msg),
-            Self::Serialization(msg) => write!(f, "Serialization error: {}", msg),
-            Self::Cache(msg) => write!(f, "Cache error: {}", msg),
-            Self::Cancelled => write!(f, "Request cancelled"),
-            Self::Other(msg) => write!(f, "Error: {}", msg),
-        }
-    }
-}
-
-impl std::error::Error for FetchError {}
 
 #[cfg(test)]
 mod tests {

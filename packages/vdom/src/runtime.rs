@@ -7,7 +7,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use tracing::trace;
 
-use crate::{patch::Patch, reactive::EffectHandle, VNode};
+use crate::{patch::Patch, reactive::EffectHandle, reactive::SignalId, VNode};
 
 /// Component ID - unique identifier for each component instance
 pub type ComponentId = usize;
@@ -20,6 +20,33 @@ type ScheduleCallback = Rc<RefCell<dyn FnMut(Box<dyn FnOnce()>)>>;
 
 /// Callback type for applying patches to the DOM
 type ApplyPatchesCallback = Rc<RefCell<dyn FnMut(ComponentId, Vec<Patch>)>>;
+
+thread_local! {
+    static HOOK_SLOT: RefCell<HashMap<(ComponentId, String), Box<dyn std::any::Any>>> = RefCell::new(HashMap::new());
+}
+
+/// Retrieve or initialize a hook slot for the given component and key.
+/// Returns a clone of the stored value if present, otherwise stores and
+/// returns the result of `init_fn`.
+pub fn hook_slot<T: Clone + 'static>(component_id: ComponentId, key: &str, init_fn: impl FnOnce() -> T) -> T {
+    HOOK_SLOT.with(|slots| {
+        let mut slots = slots.borrow_mut();
+        let entry = slots.entry((component_id, key.to_string())).or_insert_with(|| Box::new(init_fn()));
+        entry.downcast_ref::<T>().cloned().unwrap()
+    })
+}
+
+/// Clear all hook slots for a component (called during cleanup).
+pub fn clear_hook_slots(component_id: ComponentId) {
+    HOOK_SLOT.with(|slots| {
+        slots.borrow_mut().retain(|(cid, _), _| *cid != component_id);
+    });
+}
+
+/// Reset the hook slot counter (useful for testing).
+pub fn reset_hook_slots() {
+    HOOK_SLOT.with(|slots| slots.borrow_mut().clear());
+}
 
 /// Inner state of the reactive runtime
 struct RuntimeInner {
@@ -119,6 +146,24 @@ pub fn update_render_function(id: ComponentId, render_fn: impl FnMut() -> VNode 
     });
 }
 
+/// Mark a component as dirty without triggering an immediate flush.
+///
+/// Unlike [`mark_dirty`], this does NOT flush synchronously. It only adds
+/// the component to the dirty list. The actual re-render happens on the
+/// next scheduled frame or explicit `flush_render` call.
+///
+/// This is safe to call while holding a `RefMut` on a signal's inner `RefCell`,
+/// because it never invokes render functions synchronously.
+pub fn mark_dirty_deferred(id: ComponentId) {
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        if !rt.dirty_components.contains(&id) {
+            rt.dirty_components.push(id);
+            trace!("Deferred: marked component {} as dirty", id);
+        }
+    });
+}
+
 /// Mark a component as dirty and schedule a re-render.
 pub fn mark_dirty(id: ComponentId) {
     let should_flush_sync = RUNTIME.with(|runtime| {
@@ -175,25 +220,46 @@ pub fn active_component_id() -> Option<ComponentId> {
 }
 
 /// Track a signal dependency for the current component.
-pub fn track_signal(signal_ptr: usize) {
+pub fn track_signal(signal_id: SignalId) {
     RUNTIME.with(|runtime| {
-        let rt = runtime.borrow_mut();
-
+        let mut rt = runtime.borrow_mut();
         if let Some(component_id) = rt.active_component {
-            drop(rt);
-            RUNTIME.with(|runtime| {
-                let mut rt = runtime.borrow_mut();
-                rt.signal_dependencies
-                    .entry(signal_ptr)
-                    .or_insert_with(Vec::new)
-                    .push(component_id);
-                trace!(
-                    "Component {} now depends on signal {:?}",
-                    component_id,
-                    signal_ptr
-                );
-            });
+            rt.signal_dependencies
+                .entry(signal_id)
+                .or_insert_with(Vec::new)
+                .push(component_id);
+            trace!(
+                "Component {} now depends on signal {:?}",
+                component_id,
+                signal_id
+            );
         }
+    });
+}
+
+/// Check if a signal is currently tracked in the dependency graph.
+#[cfg(test)]
+pub fn signal_is_tracked(signal_id: SignalId) -> bool {
+    RUNTIME
+        .try_with(|runtime| {
+            runtime
+                .borrow()
+                .signal_dependencies
+                .contains_key(&signal_id)
+        })
+        .unwrap_or(false)
+}
+
+/// Remove a signal from the dependency tracking. Called automatically when a Signal is dropped.
+///
+/// Uses `try_with` to handle the case where the thread-local RUNTIME has already
+/// been destroyed (e.g. during thread shutdown when signals are dropped after
+/// the runtime).
+pub fn unregister_signal(signal_id: SignalId) {
+    let _ = RUNTIME.try_with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        rt.signal_dependencies.remove(&signal_id);
+        trace!("Unregistered signal {:?}", signal_id);
     });
 }
 
@@ -309,28 +375,28 @@ pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
 }
 
 /// Subscribe a component to a signal's changes.
-pub fn subscribe_component(signal_ptr: usize, component_id: ComponentId) {
+pub fn subscribe_component(signal_id: SignalId, component_id: ComponentId) {
     RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
         rt.signal_dependencies
-            .entry(signal_ptr)
+            .entry(signal_id)
             .or_insert_with(Vec::new)
             .push(component_id);
         trace!(
             "Component {} subscribed to signal {:?}",
             component_id,
-            signal_ptr
+            signal_id
         );
     });
 }
 
 /// Notify all dependent components that a signal has changed.
-pub fn notify_signal(signal_ptr: usize) {
+pub fn notify_signal(signal_id: SignalId) {
     let components: Vec<ComponentId> = RUNTIME.with(|runtime| {
         runtime
             .borrow()
             .signal_dependencies
-            .get(&signal_ptr)
+            .get(&signal_id)
             .cloned()
             .unwrap_or_default()
     });
@@ -349,9 +415,10 @@ pub fn cleanup_component(id: ComponentId) {
         rt.dirty_components.retain(|&c| c != id);
         rt.element_to_component.retain(|_, &mut c| c != id);
 
-        for deps in rt.signal_dependencies.values_mut() {
+        rt.signal_dependencies.retain(|_, deps| {
             deps.retain(|&c| c != id);
-        }
+            !deps.is_empty()
+        });
 
         if let Some(handles) = rt.effect_handles.remove(&id) {
             for handle in handles {
@@ -361,6 +428,8 @@ pub fn cleanup_component(id: ComponentId) {
 
         trace!("Cleaned up component {}", id);
     });
+
+    clear_hook_slots(id);
 }
 
 pub fn register_effect_handle(id: ComponentId, handle: EffectHandle) {

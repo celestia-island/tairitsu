@@ -227,10 +227,12 @@ async fn no_cache_headers(request: Request, next: Next) -> Response {
     let headers = response.headers_mut();
     headers.insert(
         "Cache-Control",
-        "no-cache, no-store, must-revalidate".parse().unwrap(),
+        "no-cache, no-store, must-revalidate"
+            .parse()
+            .expect("valid header value"),
     );
-    headers.insert("Pragma", "no-cache".parse().unwrap());
-    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Pragma", "no-cache".parse().expect("valid header value"));
+    headers.insert("Expires", "0".parse().expect("valid header value"));
     response
 }
 
@@ -332,7 +334,13 @@ pub fn prerender_routes(
                 output_dir.join("index.html")
             } else {
                 let route_path = output_dir.join(clean_route).join("index.html");
-                fs::create_dir_all(route_path.parent().unwrap())?;
+                let parent = route_path.parent().ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "route path {} has no parent directory",
+                        route_path.display()
+                    )
+                })?;
+                fs::create_dir_all(parent)?;
                 route_path
             };
 

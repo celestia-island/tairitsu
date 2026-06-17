@@ -177,10 +177,9 @@ pub async fn register_cleanup_on_exit() {
         let ready_sig = ready;
         let pid_sig = pid;
         tokio::spawn(async move {
-            let mut sigterm = tokio::signal::unix::signal(
-                tokio::signal::unix::SignalKind::terminate(),
-            )
-            .unwrap();
+            let mut sigterm =
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                    .expect("failed to register SIGTERM handler");
             sigterm.recv().await;
             let _ = fs::remove_file(&ready_sig);
             let _ = fs::remove_file(&pid_sig);
@@ -296,26 +295,29 @@ pub fn daemonize_self() -> std::io::Result<()> {
         }
 
         // Redirect stdin to /dev/null
-        let devnull = std::ffi::CString::new("/dev/null").unwrap();
+        let devnull = std::ffi::CString::new("/dev/null").expect("literal contains no null bytes");
         let null_fd = libc::open(devnull.as_ptr(), libc::O_RDWR);
         if null_fd == -1 {
             return Err(std::io::Error::last_os_error());
         }
         if libc::dup2(null_fd, libc::STDIN_FILENO) == -1 {
+            let err = std::io::Error::last_os_error();
             libc::close(null_fd);
-            return Err(std::io::Error::last_os_error());
+            return Err(err);
         }
 
         // Redirect stdout
         if libc::dup2(stdout.as_raw_fd(), libc::STDOUT_FILENO) == -1 {
+            let err = std::io::Error::last_os_error();
             libc::close(null_fd);
-            return Err(std::io::Error::last_os_error());
+            return Err(err);
         }
 
         // Redirect stderr
         if libc::dup2(stderr.as_raw_fd(), libc::STDERR_FILENO) == -1 {
+            let err = std::io::Error::last_os_error();
             libc::close(null_fd);
-            return Err(std::io::Error::last_os_error());
+            return Err(err);
         }
 
         libc::close(null_fd);
@@ -876,17 +878,14 @@ where
             fs::create_dir_all(parent)?;
         }
 
-        // SAFETY: single-threaded at this point, no concurrent env access
-        unsafe {
-            env::set_var(
-                "TAIRITSU_COLOR",
-                if std::io::stderr().is_terminal() {
-                    "1"
-                } else {
-                    "0"
-                },
-            );
-        }
+        env::set_var(
+            "TAIRITSU_COLOR",
+            if std::io::stderr().is_terminal() {
+                "1"
+            } else {
+                "0"
+            },
+        );
 
         let pid = spawn_daemon_process_windows(&exe, &args)?;
         Ok(pid)

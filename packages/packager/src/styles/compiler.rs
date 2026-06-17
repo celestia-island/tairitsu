@@ -53,7 +53,6 @@ impl ScssCompiler {
 
         let opts = self.grass_options();
         let css = grass::from_path(path, &opts)
-            .map_err(|e| anyhow::anyhow!("SCSS compilation error in {}: {}", path.display(), e))
             .with_context(|| format!("Failed to compile SCSS file: {:?}", path))?;
 
         tracing::debug!("Compiled CSS ({} bytes)", css.len());

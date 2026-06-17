@@ -155,7 +155,6 @@ enum StdStream {
 
 macro_rules! logfn {
     ($name:ident, $level:expr, $stream:expr) => {
-        #[allow(unused_macros)]
         pub fn $name(args: fmt::Arguments<'_>) {
             emit($level, $stream, args)
         }

@@ -5,13 +5,11 @@
   "description": "Tairitsu - WASM Component Model web framework (monorepo root)",
   "license": "MIT OR Apache-2.0",
   "workspaces": [
-    "packages/browser-glue",
-    "packages/npm/runtime"
+    "packages/browser-glue"
   ],
   "scripts": {
-    "build": "npm run build -w @celestia/tairitsu-browser-glue && npm run build -w @celestia/tairitsu-runtime",
+    "build": "npm run build -w @celestia/tairitsu-browser-glue",
     "build:glue": "npm run build -w @celestia/tairitsu-browser-glue",
-    "build:runtime": "npm run build -w @celestia/tairitsu-runtime",
-    "clean": "npm run clean -w @celestia/tairitsu-browser-glue && npm run clean -w @celestia/tairitsu-runtime"
+    "clean": "npm run clean -w @celestia/tairitsu-browser-glue"
   }
 }
