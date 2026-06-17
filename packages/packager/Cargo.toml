@@ -28,7 +28,7 @@ clap = { workspace = true, optional = true }
 indicatif = { workspace = true }
 webbrowser = "^1"
 walkdir = "^2"
-notify = { version = "^6", optional = true }
+notify = { version = "^8", optional = true }
 axum = { workspace = true, optional = true }
 tower-http = { workspace = true, features = ["fs", "cors", "compression-gzip"], optional = true }
 tokio-stream = { workspace = true, features = ["sync"], optional = true }
