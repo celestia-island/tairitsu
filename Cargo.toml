@@ -98,7 +98,7 @@ tracing-subscriber = "^0.3"
 regex = "^1"
 toml = "^0.9"
 grass = "^0.13"
-wit-parser = "^0.245"
+wit-parser = "^0.252"
 wit-component = "^0.245"
 wit-bindgen = { version = "0.57", features = ["macros"] }
 tempfile = "^3"
