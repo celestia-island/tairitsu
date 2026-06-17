@@ -110,7 +110,7 @@ crossterm = "^0.28"
 chrono = { version = "^0.4", default-features = false, features = ["clock", "serde"] }
 libc = "^0.2"
 indicatif = "^0.17"
-zip = { version = "^2", default-features = false, features = ["deflate"] }
+zip = { version = "^8", default-features = false, features = ["deflate"] }
 async-trait = "^0.1"
 axum = "^0.8"
 tower-http = "^0.6"
