@@ -10,7 +10,7 @@ publish = false
 
 [dependencies]
 thirtyfour = { version = "^0.37", features = ["reqwest"] }
-scraper = "^0.22"
+scraper = "^0.27"
 tokio = { workspace = true }
 async-trait = { workspace = true }
 log = "^0.4"
