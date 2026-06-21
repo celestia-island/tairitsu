@@ -78,6 +78,8 @@ tokio = { version = "^1", default-features = false, features = [
 wasmtime = { version = "^43", features = ["component-model"] }
 wasmtime-wasi = "^43"
 reqwest = { version = "^0.13", default-features = false, features = ["json", "blocking"] }
+# Used by `packages/browser-test`; the packager's debug engine now uses its own
+# minimal raw-CDP client (see packages/packager/src/debug/mod.rs) instead.
 chromiumoxide = { version = "^0.9" }
 tairitsu = { version = "^0.5.13", path = "packages/runtime" }
 tairitsu-macros = { version = "^0.5.13", path = "packages/macros" }

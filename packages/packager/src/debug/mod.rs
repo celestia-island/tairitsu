@@ -18,8 +18,6 @@ use tower_http::{
     cors::{Any, CorsLayer},
 };
 
-use crate::config::Config;
-
 const DEBUG_API_VERSION: &str = "0.1.0";
 const DEFAULT_VIEWPORT_W: u32 = 1280;
 const DEFAULT_VIEWPORT_H: u32 = 720;
@@ -464,18 +462,112 @@ impl BrowserHandle {
     }
 }
 
-// ── Chromium-based Browser Engine (CDP) ─────────────────────────────────────
+// ── Chromium-based Browser Engine (minimal raw-CDP client) ──────────────────
+//
+// A small, dependency-light CDP client: launch headless chromium, open its
+// devtools websocket, and speak only the handful of CDP domains the debug API
+// needs (Page / Runtime / Emulation). Outbound commands carry an `id`; inbound
+// messages are dispatched by `id` and **everything else (events) is ignored**.
+// Unlike a codegen'd CDP schema — which hard-breaks when Chrome ships a new
+// event variant (the failure that killed chromiumoxide on Chrome ≥147) — this
+// stays compatible across Chrome versions by construction: unknown events are
+// dropped, never deserialized into a closed enum.
 
 #[cfg(feature = "debug-browser")]
 mod engine {
-    use base64::Engine;
-    use chromiumoxide::browser::{Browser, BrowserConfig};
-    use chromiumoxide::cdp::browser_protocol::emulation::SetDeviceMetricsOverrideParams;
-    use chromiumoxide::cdp::browser_protocol::page::CaptureScreenshotFormat;
-    use chromiumoxide::page::ScreenshotParams;
-    use futures::StreamExt;
+    use futures::{SinkExt, StreamExt};
+    use serde_json::{json, Value};
+    use std::collections::HashMap;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
+    use std::time::Duration;
+    use tokio::process::{Child, Command};
+    use tokio::sync::{mpsc, oneshot, Mutex, RwLock};
+    use tokio_tungstenite::tungstenite::Message;
 
     use super::*;
+
+    const DEVTOOLS_POLL: Duration = Duration::from_millis(200);
+    const DEVTOOLS_TIMEOUT: Duration = Duration::from_secs(30);
+    const CMD_TIMEOUT: Duration = Duration::from_secs(30);
+
+    // ── CDP client core ──────────────────────────────────────────────────────
+
+    #[derive(Clone)]
+    struct CdpClient {
+        inner: Arc<CdpInner>,
+    }
+
+    struct CdpInner {
+        outbox: mpsc::UnboundedSender<String>,
+        pending: Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>,
+        next_id: AtomicU64,
+    }
+
+    impl CdpClient {
+        fn new(outbox: mpsc::UnboundedSender<String>) -> Self {
+            Self {
+                inner: Arc::new(CdpInner {
+                    outbox,
+                    pending: Mutex::new(HashMap::new()),
+                    next_id: AtomicU64::new(0),
+                }),
+            }
+        }
+
+        /// Send a CDP command and await its response (correlated by id).
+        async fn command(&self, method: &str, params: Value) -> Result<Value, String> {
+            let id = self.inner.next_id.fetch_add(1, Ordering::SeqCst) + 1;
+            let payload = json!({ "id": id, "method": method, "params": params });
+            let (tx, rx) = oneshot::channel();
+            self.inner.pending.lock().await.insert(id, tx);
+            let raw =
+                serde_json::to_string(&payload).map_err(|e| format!("cdp encode: {e}"))?;
+            self.inner
+                .outbox
+                .send(raw)
+                .map_err(|_| "cdp writer closed".to_string())?;
+            let result = match tokio::time::timeout(CMD_TIMEOUT, rx).await {
+                Ok(Ok(v)) => v?,
+                Ok(Err(_)) => return Err("cdp response channel closed".into()),
+                Err(_) => {
+                    self.inner.pending.lock().await.remove(&id);
+                    return Err(format!("cdp command '{method}' timed out"));
+                }
+            };
+            Ok(result)
+        }
+
+        /// `Runtime.evaluate` with `returnByValue`; returns the JS value (or the
+        /// exception message on throw). The workhorse — most cmd_* below are
+        /// thin wrappers over this.
+        async fn evaluate(&self, expression: &str) -> Result<Value, String> {
+            let resp = self
+                .command(
+                    "Runtime.evaluate",
+                    json!({
+                        "expression": expression,
+                        "returnByValue": true,
+                        "awaitPromise": true,
+                        "userGesture": true,
+                    }),
+                )
+                .await?;
+            if let Some(exc) = resp.get("exceptionDetails") {
+                let msg = exc
+                    .get("exception")
+                    .and_then(|e| e.get("description"))
+                    .and_then(|d| d.as_str())
+                    .or_else(|| exc.get("text").and_then(|t| t.as_str()))
+                    .unwrap_or("runtime exception");
+                return Err(msg.to_string());
+            }
+            let result = resp.get("result").cloned().unwrap_or(Value::Null);
+            Ok(result.get("value").cloned().unwrap_or(Value::Null))
+        }
+    }
+
+    // ── launch + connect ─────────────────────────────────────────────────────
 
     pub(super) async fn spawn_browser(
         base_url: String,
@@ -484,47 +576,112 @@ mod engine {
     ) -> Result<BrowserHandle, String> {
         let (cmd_tx, mut cmd_rx) = mpsc::channel::<BrowserCommand>(64);
         let connected = Arc::new(RwLock::new(false));
-        let conn = connected.clone();
 
-        let config = resolve_browser_config().await?;
+        let exe = resolve_executable()?;
+        let port = pick_free_port().ok_or_else(|| "no free port for devtools".to_string())?;
 
-        let _ = std::fs::remove_file("/tmp/chromiumoxide-runner/SingletonLock");
+        let child: Child = Command::new(&exe)
+            .args([
+                "--headless=new",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--disable-extensions",
+                "--disable-background-networking",
+                "--no-first-run",
+                &format!("--remote-debugging-port={port}"),
+                &format!("--window-size={DEFAULT_VIEWPORT_W},{DEFAULT_VIEWPORT_H}"),
+                &base_url,
+            ])
+            // Keep chrome's stdio off our pipes (it would otherwise wedge the
+            // owning shell once orphaned).
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .kill_on_drop(true)
+            .spawn()
+            .map_err(|e| format!("failed to launch chrome ({exe}): {e}"))?;
 
-        let (browser, mut handler) = Browser::launch(config)
+        // Wait for the devtools HTTP endpoint, then read the browser ws URL.
+        let ws_url = wait_for_devtools(port).await?;
+
+        let (ws, _resp) = tokio_tungstenite::connect_async(&ws_url)
             .await
-            .map_err(|e| format!("Failed to launch Chrome: {e}"))?;
+            .map_err(|e| format!("devtools ws connect failed: {e}"))?;
+        crate::log_ok!("Debug browser connected (chromium raw-CDP)");
 
-        let _handler_guard = tokio::spawn(async move {
-            while let Some(event) = handler.next().await {
-                if event.is_err() {
+        let (mut sink, mut stream) = ws.split();
+        let (outbox, mut inbox) = mpsc::unbounded_channel::<String>();
+        let client = CdpClient::new(outbox);
+
+        // Writer: drain outbound JSON → ws sink.
+        tokio::spawn(async move {
+            while let Some(raw) = inbox.recv().await {
+                if sink.send(Message::Text(raw.into())).await.is_err() {
                     break;
                 }
             }
+            let _ = sink.send(Message::Close(None)).await;
         });
 
-        let page = browser
-            .new_page(&base_url)
-            .await
-            .map_err(|e| format!("Failed to create page: {e}"))?;
+        // Reader: dispatch responses by id; ignore events (version-skew-proof).
+        // TODO: capture Runtime.consoleAPICalled / exceptionThrown into the
+        // console_log buffer so /console and /errors are populated again.
+        let pending = client.inner.clone();
+        let conn_reader = connected.clone();
+        tokio::spawn(async move {
+            while let Some(msg) = stream.next().await {
+                let text = match msg {
+                    Ok(Message::Text(t)) => t.to_string(),
+                    Ok(Message::Ping(_)) => {
+                        // tokio-tungstenite auto-pongs, nothing to do.
+                        continue;
+                    }
+                    Ok(_) => continue,
+                    Err(_) => break,
+                };
+                let v: Value = match serde_json::from_str(&text) {
+                    Ok(v) => v,
+                    Err(_) => continue, // not JSON / partial — ignore
+                };
+                if let Some(id) = v.get("id").and_then(|i| i.as_u64()) {
+                    let entry = pending.pending.lock().await.remove(&id);
+                    if let Some(tx) = entry {
+                        let result = if let Some(err) = v.get("error") {
+                            Err(err
+                                .get("message")
+                                .and_then(|m| m.as_str())
+                                .unwrap_or("cdp error")
+                                .to_string())
+                        } else {
+                            Ok(v.get("result").cloned().unwrap_or(Value::Null))
+                        };
+                        let _ = tx.send(result);
+                    }
+                }
+                // else: an event — deliberately ignored.
+            }
+            *conn_reader.write().await = false;
+        });
+
+        // Enable the domains we use.
+        let _ = client.command("Page.enable", json!({})).await;
+        let _ = client.command("Runtime.enable", json!({})).await;
+        let _ = client.command("Network.enable", json!({})).await;
 
         *connected.write().await = true;
-        crate::log_ok!("Debug browser connected (chromium CDP)");
 
-        let page = Arc::new(page);
-        let browser = Arc::new(browser);
-
-        tokio::spawn({
-            let browser = browser.clone();
-            async move {
-                while let Some(cmd) = cmd_rx.recv().await {
-                    let p = page.clone();
-                    tokio::spawn(async move {
-                        dispatch_command(&p, cmd).await;
-                    });
-                }
-                *conn.write().await = false;
-                drop(browser);
+        // Per-command dispatch loop. Holds the child so chrome is reaped when
+        // every BrowserHandle (and thus cmd_rx) is dropped.
+        tokio::spawn(async move {
+            let client = client;
+            while let Some(cmd) = cmd_rx.recv().await {
+                let c = client.clone();
+                tokio::spawn(async move {
+                    dispatch_command(&c, cmd).await;
+                });
             }
+            drop(child); // kill_on_drop reaps chrome here.
         });
 
         Ok(BrowserHandle {
@@ -533,49 +690,62 @@ mod engine {
         })
     }
 
-    async fn resolve_browser_config() -> Result<BrowserConfig, String> {
-        let mut builder = BrowserConfig::builder()
-            .window_size(DEFAULT_VIEWPORT_W, DEFAULT_VIEWPORT_H)
-            .arg("--no-sandbox")
-            .arg("--disable-dev-shm-usage")
-            .arg("--disable-gpu");
+    async fn wait_for_devtools(port: u16) -> Result<String, String> {
+        // We need a PAGE-level devtools endpoint: the browser-level ws served
+        // by /json/version only handles Target.*/Browser.*, and rejects
+        // Page.*/Runtime.* with "<method> wasn't found". Poll /json/list for
+        // the first page target's websocket URL instead.
+        let list_url = format!("http://127.0.0.1:{port}/json/list");
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(2))
+            .build()
+            .map_err(|e| format!("http client: {e}"))?;
+        let deadline = std::time::Instant::now() + DEVTOOLS_TIMEOUT;
+        loop {
+            if std::time::Instant::now() > deadline {
+                return Err(format!("devtools never came up on :{port}"));
+            }
+            if let Ok(resp) = client.get(&list_url).send().await {
+                if resp.status().is_success() {
+                    if let Ok(Value::Array(targets)) = resp.json::<Value>().await {
+                        for t in &targets {
+                            if t.get("type").and_then(|v| v.as_str()) == Some("page") {
+                                if let Some(ws) = t
+                                    .get("webSocketDebuggerUrl")
+                                    .and_then(|w| w.as_str())
+                                    .map(|s| s.to_string())
+                                {
+                                    return Ok(ws);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            tokio::time::sleep(DEVTOOLS_POLL).await;
+        }
+    }
 
+    fn pick_free_port() -> Option<u16> {
+        std::net::TcpListener::bind(("127.0.0.1", 0))
+            .ok()
+            .and_then(|l| l.local_addr().ok())
+            .map(|a| a.port())
+    }
+
+    fn resolve_executable() -> Result<String, String> {
         if let Ok(exe) = std::env::var("CHROME_PATH") {
             if !exe.is_empty() {
-                crate::log_info!("[debug-browser] Using CHROME_PATH={}", exe);
-                builder = builder.chrome_executable(exe);
-                return builder
-                    .build()
-                    .map_err(|e| format!("Bad browser config: {e}"));
+                return Ok(exe);
             }
         }
-
         if let Ok(exe) = which_chromium() {
-            crate::log_info!("[debug-browser] Found browser: {}", exe);
-            builder = builder.chrome_executable(exe);
-            return builder
-                .build()
-                .map_err(|e| format!("Bad browser config: {e}"));
+            return Ok(exe);
         }
-
-        crate::log_info!("[debug-browser] No browser found, auto-downloading Chromium...");
-        let fetcher = chromiumoxide::fetcher::BrowserFetcher::new(
-            chromiumoxide::fetcher::BrowserFetcherOptions::builder()
-                .build()
-                .map_err(|e| format!("Fetcher config: {e}"))?,
-        );
-        let info = fetcher
-            .fetch()
-            .await
-            .map_err(|e| format!("Fetcher download: {e}"))?;
-        crate::log_ok!(
-            "[debug-browser] Chromium downloaded: {}",
-            info.executable_path.display()
-        );
-        builder = builder.chrome_executable(&info.executable_path);
-        builder
-            .build()
-            .map_err(|e| format!("Bad browser config: {e}"))
+        Err(
+            "no chrome/chromium found. Set CHROME_PATH or install chromium on PATH."
+                .to_string(),
+        )
     }
 
     fn which_chromium() -> Result<String, ()> {
@@ -599,239 +769,223 @@ mod engine {
         Err(())
     }
 
-    async fn dispatch_command(page: &chromiumoxide::Page, cmd: BrowserCommand) {
+    // ── command dispatch ─────────────────────────────────────────────────────
+
+    async fn dispatch_command(client: &CdpClient, cmd: BrowserCommand) {
         match cmd {
-            BrowserCommand::Navigate {
-                url,
-                wait_for,
-                resp,
-            } => {
-                let r = cmd_navigate(page, &url, wait_for.as_deref()).await;
+            BrowserCommand::Navigate { url, wait_for, resp } => {
+                let r = cmd_navigate(client, &url, wait_for.as_deref()).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Screenshot {
-                selector,
-                full_page,
-                resp,
-            } => {
-                let r = cmd_screenshot(page, selector.as_deref(), full_page).await;
+            BrowserCommand::Screenshot { selector, full_page, resp } => {
+                let r = cmd_screenshot(client, selector.as_deref(), full_page).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::Click { selector, resp } => {
-                let r = cmd_click(page, &selector).await;
+                let r = cmd_click(client, &selector).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::TypeText {
-                selector,
-                text,
-                clear_first,
-                submit,
-                resp,
-            } => {
-                let r = cmd_type(page, &selector, &text, clear_first, submit).await;
+            BrowserCommand::TypeText { selector, text, clear_first, submit, resp } => {
+                let r = cmd_type(client, &selector, &text, clear_first, submit).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Evaluate {
-                expression,
-                await_promise,
-                resp,
-            } => {
-                let r = cmd_evaluate(page, &expression, await_promise).await;
+            BrowserCommand::Evaluate { expression, await_promise, resp } => {
+                let r = cmd_evaluate(client, &expression, await_promise).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::DomQuery {
-                selector,
-                attribute,
-                computed,
-                resp,
-            } => {
-                let r =
-                    cmd_dom_query(page, &selector, attribute.as_deref(), computed.as_deref()).await;
+            BrowserCommand::DomQuery { selector, attribute, computed, resp } => {
+                let r = cmd_dom_query(client, &selector, attribute.as_deref(), computed.as_deref()).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::IsReady { resp } => {
-                let r = cmd_is_ready(page).await;
+                let r = cmd_is_ready(client).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::Press { key, resp, .. } => {
-                let r = cmd_press(page, &key).await;
+                let r = cmd_press(client, &key).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Scroll {
-                selector,
-                x,
-                y,
-                resp,
-            } => {
-                let r = cmd_scroll(page, selector.as_deref(), x, y).await;
+            BrowserCommand::Scroll { selector, x, y, resp } => {
+                let r = cmd_scroll(client, selector.as_deref(), x, y).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Resize {
-                width,
-                height,
-                resp,
-            } => {
-                let r = cmd_resize(page, width, height).await;
+            BrowserCommand::Resize { width, height, resp } => {
+                let r = cmd_resize(client, width, height).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::Viewport { resp } => {
-                let r = cmd_viewport(page).await;
+                let r = cmd_viewport(client).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::A11y {
-                selector,
-                depth,
-                resp,
-            } => {
-                let r = cmd_a11y(page, selector.as_deref(), depth).await;
+            BrowserCommand::A11y { selector, depth, resp } => {
+                let r = cmd_a11y(client, selector.as_deref(), depth).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::Network { resp } => {
-                let r = cmd_network(page).await;
+                let r = cmd_network(client).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::Performance { resp } => {
-                let r = cmd_performance(page).await;
+                let r = cmd_performance(client).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Drag {
-                from_selector,
-                to_selector,
-                steps,
-                resp,
-            } => {
-                let r = cmd_drag(page, &from_selector, &to_selector, steps).await;
+            BrowserCommand::Drag { from_selector, to_selector, steps, resp } => {
+                let r = cmd_drag(client, &from_selector, &to_selector, steps).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::WebSocket { resp } => {
-                let r = cmd_websocket(page).await;
+                let r = cmd_websocket(client).await;
                 let _ = resp.send(r);
             }
         }
     }
 
     async fn cmd_navigate(
-        page: &chromiumoxide::Page,
+        client: &CdpClient,
         url: &str,
         wait_for: Option<&str>,
     ) -> Result<NavigateResponse, String> {
-        page.goto(url).await.map_err(|e| format!("navigate: {e}"))?;
+        let resp = client
+            .command("Page.navigate", json!({ "url": url }))
+            .await
+            .map_err(|e| format!("navigate: {e}"))?;
+        if let Some(err) = resp.get("errorText").and_then(|t| t.as_str()) {
+            return Err(format!("navigate: {err}"));
+        }
         if matches!(wait_for, Some("hydration") | Some("ready")) {
             tokio::time::sleep(Duration::from_secs(3)).await;
         } else if matches!(wait_for, Some("load")) {
             tokio::time::sleep(Duration::from_millis(500)).await;
+        } else {
+            tokio::time::sleep(Duration::from_millis(200)).await;
         }
-        let title = page.get_title().await.ok().flatten().unwrap_or_default();
-        Ok(NavigateResponse {
-            url: url.to_string(),
-            title,
-        })
+        let title = client
+            .evaluate("document.title")
+            .await
+            .ok()
+            .and_then(|v| v.as_str().map(|s| s.to_string()))
+            .unwrap_or_default();
+        Ok(NavigateResponse { url: url.to_string(), title })
     }
 
     async fn cmd_screenshot(
-        page: &chromiumoxide::Page,
+        client: &CdpClient,
         selector: Option<&str>,
         full_page: bool,
     ) -> Result<ScreenshotResponse, String> {
         if let Some(sel) = selector {
-            let element = page
-                .find_element(sel)
-                .await
-                .map_err(|e| format!("element not found: {e}"))?;
-            let png = element
-                .screenshot(CaptureScreenshotFormat::Png)
+            let rect_js = format!(
+                r#"(() => {{ const e = document.querySelector({sel:?}); if (!e) throw 'element not found'; const r = e.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; return JSON.stringify({{ x: r.x, y: r.y, width: r.width, height: r.height, scale: dpr }}); }})()"#,
+            );
+            let raw = client.evaluate(&rect_js).await.map_err(|e| format!("screenshot rect: {e}"))?;
+            let s = raw.as_str().ok_or_else(|| "screenshot rect: non-string".to_string())?;
+            let rect: Value = serde_json::from_str(s).map_err(|e| format!("screenshot rect parse: {e}"))?;
+            let clip = json!({
+                "x": rect["x"], "y": rect["y"],
+                "width": rect["width"], "height": rect["height"],
+                "scale": rect["scale"],
+            });
+            let resp = client
+                .command("Page.captureScreenshot", json!({ "format": "png", "clip": clip }))
                 .await
                 .map_err(|e| format!("screenshot element: {e}"))?;
-            let b64 = base64::engine::general_purpose::STANDARD.encode(&png);
-            return Ok(ScreenshotResponse {
-                data: b64,
-                mime_type: "image/png".into(),
-                width: 0,
-                height: 0,
-            });
+            return screenshot_response_from(&resp);
         }
-        let mut params = ScreenshotParams::builder()
-            .format(CaptureScreenshotFormat::Png)
-            .omit_background(false);
-        if full_page {
-            params = params.full_page(true);
-        }
-        let png = page
-            .screenshot(params.build())
+        let params = if full_page {
+            json!({ "format": "png", "captureBeyondViewport": true, "fromSurface": true })
+        } else {
+            json!({ "format": "png" })
+        };
+        let resp = client
+            .command("Page.captureScreenshot", params)
             .await
             .map_err(|e| format!("screenshot: {e}"))?;
-        let b64 = base64::engine::general_purpose::STANDARD.encode(&png);
+        screenshot_response_from(&resp)
+    }
+
+    fn screenshot_response_from(resp: &Value) -> Result<ScreenshotResponse, String> {
+        let data = resp
+            .get("data")
+            .and_then(|d| d.as_str())
+            .ok_or_else(|| "screenshot: no data".to_string())?
+            .to_string();
         Ok(ScreenshotResponse {
-            data: b64,
+            data,
             mime_type: "image/png".into(),
             width: DEFAULT_VIEWPORT_W,
             height: DEFAULT_VIEWPORT_H,
         })
     }
 
-    async fn cmd_click(page: &chromiumoxide::Page, selector: &str) -> Result<(), String> {
-        page.find_element(selector)
-            .await
-            .map_err(|e| format!("click: element not found: {e}"))?
-            .click()
-            .await
-            .map_err(|e| format!("click: {e}"))?;
+    async fn cmd_click(client: &CdpClient, selector: &str) -> Result<(), String> {
+        let js = format!(
+            r#"(() => {{ const el = document.querySelector({selector:?}); if (!el) throw 'element not found'; el.scrollIntoView({{ block: 'center' }}); el.click(); }})()"#,
+        );
+        client.evaluate(&js).await.map_err(|e| format!("click: {e}"))?;
         tokio::time::sleep(Duration::from_millis(100)).await;
         Ok(())
     }
 
     async fn cmd_type(
-        page: &chromiumoxide::Page,
+        client: &CdpClient,
         selector: &str,
         text: &str,
         clear_first: bool,
         _submit: bool,
     ) -> Result<(), String> {
-        let el = page
-            .find_element(selector)
-            .await
-            .map_err(|e| format!("type: element not found: {e}"))?;
-        el.click().await.map_err(|e| format!("type click: {e}"))?;
-        if clear_first {
-            let js = format!(
-                r#"(() => {{ const el = document.querySelector({selector:?}); if (el) {{ el.value = ''; el.dispatchEvent(new Event('input', {{bubbles: true}})); }} }})()"#,
-            );
-            page.evaluate(js)
-                .await
-                .map_err(|e| format!("type clear: {e}"))?;
-        }
-        el.type_str(text).await.map_err(|e| format!("type: {e}"))?;
+        let js = format!(
+            r#"(() => {{ const el = document.querySelector({selector:?}); if (!el) throw 'element not found'; el.focus(); if ({clear}) {{ el.value = ''; }} else {{ el.value = el.value; }} el.value += {text:?}; el.dispatchEvent(new Event('input', {{ bubbles: true }})); el.dispatchEvent(new Event('change', {{ bubbles: true }})); }})()"#,
+            clear = clear_first,
+            text = text,
+        );
+        client.evaluate(&js).await.map_err(|e| format!("type: {e}"))?;
         tokio::time::sleep(Duration::from_millis(100)).await;
         Ok(())
     }
 
     async fn cmd_evaluate(
-        page: &chromiumoxide::Page,
+        client: &CdpClient,
         expression: &str,
-        _await_promise: bool,
+        await_promise: bool,
     ) -> Result<EvaluateResponse, String> {
-        let result = page
-            .evaluate(expression.to_string())
+        let resp = client
+            .command(
+                "Runtime.evaluate",
+                json!({
+                    "expression": expression,
+                    "returnByValue": true,
+                    "awaitPromise": await_promise,
+                    "userGesture": true,
+                }),
+            )
             .await
             .map_err(|e| format!("evaluate: {e}"))?;
-
-        let val: serde_json::Value = result.into_value().unwrap_or(serde_json::Value::Null);
-
+        if let Some(exc) = resp.get("exceptionDetails") {
+            let msg = exc
+                .get("exception")
+                .and_then(|e| e.get("description"))
+                .and_then(|d| d.as_str())
+                .or_else(|| exc.get("text").and_then(|t| t.as_str()))
+                .unwrap_or("runtime exception");
+            return Err(msg.to_string());
+        }
+        let val = resp
+            .get("result")
+            .and_then(|r| r.get("value"))
+            .cloned()
+            .unwrap_or(Value::Null);
         let type_name = match &val {
-            serde_json::Value::Null => "null",
-            serde_json::Value::Bool(_) => "boolean",
-            serde_json::Value::Number(_) => "number",
-            serde_json::Value::String(_) => "string",
-            serde_json::Value::Array(_) | serde_json::Value::Object(_) => "object",
+            Value::Null => "null",
+            Value::Bool(_) => "boolean",
+            Value::Number(_) => "number",
+            Value::String(_) => "string",
+            Value::Array(_) | Value::Object(_) => "object",
         };
-        Ok(EvaluateResponse {
-            result: val,
-            r#type: type_name.into(),
-        })
+        Ok(EvaluateResponse { result: val, r#type: type_name.into() })
     }
 
     async fn cmd_dom_query(
-        page: &chromiumoxide::Page,
+        client: &CdpClient,
         selector: &str,
         attribute: Option<&str>,
         _computed: Option<&[String]>,
@@ -842,110 +996,77 @@ mod engine {
                 sel = selector,
                 attr = attr,
             );
-            let val = page
-                .evaluate(js)
-                .await
-                .map_err(|e| format!("dom query: {e}"))?;
-            let r: Option<String> = val.into_value().ok();
+            let val = client.evaluate(&js).await.map_err(|e| format!("dom query: {e}"))?;
+            let r = val.as_str().map(|s| s.to_string());
             let count = if r.is_some() { 1 } else { 0 };
             return Ok(DomNodeResponse {
-                tag: None,
-                text: r,
-                html: None,
-                attributes: None,
-                visible: None,
-                count,
-                rect: None,
-                computed: None,
+                tag: None, text: r, html: None, attributes: None,
+                visible: None, count, rect: None, computed: None,
             });
         }
         let js = format!(
             r#"(() => {{ const els = document.querySelectorAll({sel:?}); if (!els.length) throw 'not found'; const el = els[0]; const r = el.getBoundingClientRect(); return JSON.stringify({{ tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().substring(0, 2000), html: el.outerHTML.substring(0, 5000), attrs: Object.fromEntries(Array.from(el.attributes).map(a => [a.name, a.value])), visible: r.width > 0 && r.height > 0, count: els.length, rect: {{ x: r.x, y: r.y, width: r.width, height: r.height }} }}); }})()"#,
             sel = selector,
         );
-        let val = page
-            .evaluate(js)
-            .await
-            .map_err(|e| format!("dom query: {e}"))?;
-        let json_str: String = val
-            .into_value()
-            .map_err(|e| format!("dom query parse: {e}"))?;
-        serde_json::from_str::<DomNodeResponse>(&json_str)
+        let val = client.evaluate(&js).await.map_err(|e| format!("dom query: {e}"))?;
+        let json_str = val.as_str().ok_or_else(|| "dom query: non-string result".to_string())?;
+        serde_json::from_str::<DomNodeResponse>(json_str)
             .map_err(|e| format!("dom query deserialize: {e}"))
     }
 
-    async fn cmd_is_ready(page: &chromiumoxide::Page) -> Result<ReadyResponse, String> {
+    async fn cmd_is_ready(client: &CdpClient) -> Result<ReadyResponse, String> {
         let js = r#"(() => { const w = !!globalThis.__wasmExports; const h = document.documentElement.dataset.tairitsuReady === 'hydrated'; return JSON.stringify({ ready: w && h, wasm_loaded: w, hydrated: h, url: location.href }); })()"#;
-        let val = page
-            .evaluate(js)
-            .await
-            .map_err(|e| format!("is_ready: {e}"))?;
-        let json_str: String = val
-            .into_value()
-            .map_err(|e| format!("is_ready parse: {e}"))?;
-        serde_json::from_str::<ReadyResponse>(&json_str)
-            .map_err(|e| format!("is_ready deserialize: {e}"))
+        let val = client.evaluate(js).await.map_err(|e| format!("is_ready: {e}"))?;
+        let json_str = val.as_str().ok_or_else(|| "is_ready: non-string".to_string())?;
+        serde_json::from_str::<ReadyResponse>(json_str).map_err(|e| format!("is_ready deserialize: {e}"))
     }
 
-    async fn cmd_press(page: &chromiumoxide::Page, key: &str) -> Result<(), String> {
+    async fn cmd_press(client: &CdpClient, key: &str) -> Result<(), String> {
         let js = format!(
             r#"(() => {{ document.dispatchEvent(new KeyboardEvent('keydown', {{key: {key:?}, code: {key:?}, bubbles: true}})); document.dispatchEvent(new KeyboardEvent('keyup', {{key: {key:?}, code: {key:?}, bubbles: true}})); }})()"#,
         );
-        page.evaluate(js).await.map_err(|e| format!("press: {e}"))?;
+        client.evaluate(&js).await.map_err(|e| format!("press: {e}"))?;
         tokio::time::sleep(Duration::from_millis(50)).await;
         Ok(())
     }
 
     async fn cmd_scroll(
-        page: &chromiumoxide::Page,
+        client: &CdpClient,
         selector: Option<&str>,
         x: f64,
         y: f64,
     ) -> Result<(), String> {
         let js = if let Some(sel) = selector {
-            format!(
-                r#"(() => {{ const el = document.querySelector({sel:?}); if (el) el.scrollBy({x}, {y}); }})()"#,
-            )
+            format!(r#"(() => {{ const el = document.querySelector({sel:?}); if (el) el.scrollBy({x}, {y}); }})()"#)
         } else {
             format!(r#"window.scrollBy({x}, {y})"#)
         };
-        page.evaluate(js)
-            .await
-            .map_err(|e| format!("scroll: {e}"))?;
+        client.evaluate(&js).await.map_err(|e| format!("scroll: {e}"))?;
         tokio::time::sleep(Duration::from_millis(100)).await;
         Ok(())
     }
 
-    async fn cmd_resize(page: &chromiumoxide::Page, width: u32, height: u32) -> Result<(), String> {
-        let params = SetDeviceMetricsOverrideParams::builder()
-            .width(width as i64)
-            .height(height as i64)
-            .device_scale_factor(1.0)
-            .mobile(false)
-            .build()
-            .map_err(|e| format!("resize build: {e}"))?;
-        page.execute(params)
+    async fn cmd_resize(client: &CdpClient, width: u32, height: u32) -> Result<(), String> {
+        client
+            .command(
+                "Emulation.setDeviceMetricsOverride",
+                json!({ "width": width, "height": height, "deviceScaleFactor": 1, "mobile": false }),
+            )
             .await
             .map_err(|e| format!("resize: {e}"))?;
         tokio::time::sleep(Duration::from_millis(200)).await;
         Ok(())
     }
 
-    async fn cmd_viewport(page: &chromiumoxide::Page) -> Result<ViewportResponse, String> {
+    async fn cmd_viewport(client: &CdpClient) -> Result<ViewportResponse, String> {
         let js = r#"(() => { const dpr = window.devicePixelRatio || 1; return JSON.stringify({ width: window.innerWidth, height: window.innerHeight, device_pixel_ratio: dpr }); })()"#;
-        let val = page
-            .evaluate(js)
-            .await
-            .map_err(|e| format!("viewport: {e}"))?;
-        let json_str: String = val
-            .into_value()
-            .map_err(|e| format!("viewport parse: {e}"))?;
-        serde_json::from_str::<ViewportResponse>(&json_str)
-            .map_err(|e| format!("viewport deserialize: {e}"))
+        let val = client.evaluate(js).await.map_err(|e| format!("viewport: {e}"))?;
+        let json_str = val.as_str().ok_or_else(|| "viewport: non-string".to_string())?;
+        serde_json::from_str::<ViewportResponse>(json_str).map_err(|e| format!("viewport deserialize: {e}"))
     }
 
     async fn cmd_a11y(
-        page: &chromiumoxide::Page,
+        client: &CdpClient,
         selector: Option<&str>,
         depth: u32,
     ) -> Result<Vec<A11yNode>, String> {
@@ -979,72 +1100,46 @@ if(!root)throw'element not found';
 var tree=getA11y(root,0,DEPTH);
 return JSON.stringify([tree])
 })()
-"#.replace("SEL_JS", &sel_js)
-           .replace("DEPTH", &depth.to_string());
-
-        let val = page
-            .evaluate(js_body)
-            .await
-            .map_err(|e| format!("a11y: {e}"))?;
-        let json_str: String = val.into_value().map_err(|e| format!("a11y parse: {e}"))?;
-        serde_json::from_str::<Vec<A11yNode>>(&json_str)
-            .map_err(|e| format!("a11y deserialize: {e}"))
+"#.replace("SEL_JS", &sel_js).replace("DEPTH", &depth.to_string());
+        let val = client.evaluate(&js_body).await.map_err(|e| format!("a11y: {e}"))?;
+        let json_str = val.as_str().ok_or_else(|| "a11y: non-string".to_string())?;
+        serde_json::from_str::<Vec<A11yNode>>(json_str).map_err(|e| format!("a11y deserialize: {e}"))
     }
 
-    async fn cmd_network(page: &chromiumoxide::Page) -> Result<NetworkResponse, String> {
+    async fn cmd_network(client: &CdpClient) -> Result<NetworkResponse, String> {
         let js = r#"(() => { var entries = performance.getEntriesByType('resource').slice(0, 100).map(function(e) { return { name: e.name, type: e.initiatorType || 'unknown', duration: Math.round(e.duration * 100) / 100, size: e.transferSize || 0, url: e.name }; }); return JSON.stringify({ resources: entries }); })()"#;
-        let val = page
-            .evaluate(js)
-            .await
-            .map_err(|e| format!("network: {e}"))?;
-        let json_str: String = val
-            .into_value()
-            .map_err(|e| format!("network parse: {e}"))?;
-        serde_json::from_str::<NetworkResponse>(&json_str)
-            .map_err(|e| format!("network deserialize: {e}"))
+        let val = client.evaluate(js).await.map_err(|e| format!("network: {e}"))?;
+        let json_str = val.as_str().ok_or_else(|| "network: non-string".to_string())?;
+        serde_json::from_str::<NetworkResponse>(json_str).map_err(|e| format!("network deserialize: {e}"))
     }
 
-    async fn cmd_performance(page: &chromiumoxide::Page) -> Result<PerformanceMetrics, String> {
+    async fn cmd_performance(client: &CdpClient) -> Result<PerformanceMetrics, String> {
         let js = r#"(() => { var nav = performance.getEntriesByType('navigation')[0] || {}; var fcp = null; try { fcp = performance.getEntriesByName('first-contentful-paint')[0].startTime || null; } catch(e) {} var dn = document.querySelectorAll('*').length; var heap = null; try { heap = Math.round((performance.memory ? performance.memory.usedJSHeapSize : 0) / 1048576 * 100) / 100; } catch(e) {} return JSON.stringify({ dom_content_loaded_ms: Math.round((nav.domContentLoadedEventEnd - nav.startTime) * 100) / 100 || null, dom_complete_ms: Math.round((nav.domComplete - nav.startTime) * 100) / 100 || null, load_event_ms: Math.round((nav.loadEventEnd - nav.startTime) * 100) / 100 || null, fcp_ms: fcp ? Math.round(fcp * 100) / 100 : null, lcp_ms: null, cls: null, dom_nodes: dn, js_heap_used_mb: heap, wasm_loaded: !!globalThis.__wasmExports, hydrated: document.documentElement.dataset.tairitsuReady === 'hydrated', timestamp: new Date().toISOString() }); })()"#;
-        let val = page
-            .evaluate(js)
-            .await
-            .map_err(|e| format!("performance: {e}"))?;
-        let json_str: String = val
-            .into_value()
-            .map_err(|e| format!("performance parse: {e}"))?;
-        serde_json::from_str::<PerformanceMetrics>(&json_str)
-            .map_err(|e| format!("performance deserialize: {e}"))
+        let val = client.evaluate(js).await.map_err(|e| format!("performance: {e}"))?;
+        let json_str = val.as_str().ok_or_else(|| "performance: non-string".to_string())?;
+        serde_json::from_str::<PerformanceMetrics>(json_str).map_err(|e| format!("performance deserialize: {e}"))
     }
 
     async fn cmd_drag(
-        page: &chromiumoxide::Page,
+        client: &CdpClient,
         from_selector: &str,
         to_selector: &str,
         steps: u32,
     ) -> Result<(), String> {
         let js = format!(
             r#"(() => {{ var src = document.querySelector({from:?}); var dst = document.querySelector({to:?}); if (!src || !dst) throw 'element not found'; var sr = src.getBoundingClientRect(); var dr = dst.getBoundingClientRect(); var sx = sr.x + sr.width/2, sy = sr.y + sr.height/2; var dx = dr.x + dr.width/2, dy = dr.y + dr.height/2; src.dispatchEvent(new MouseEvent('mousedown', {{clientX: sx, clientY: sy, bubbles: true}})); for (var i = 1; i <= {steps}; i++) {{ var t = i/{steps}; var cx = sx + (dx - sx)*t, cy = sy + (dy - sy)*t; document.dispatchEvent(new MouseEvent('mousemove', {{clientX: cx, clientY: cy, bubbles: true}})); }} dst.dispatchEvent(new MouseEvent('mouseup', {{clientX: dx, clientY: dy, bubbles: true}})); dst.dispatchEvent(new MouseEvent('drop', {{clientX: dx, clientY: dy, bubbles: true}})); }})()"#,
-            from = from_selector,
-            to = to_selector,
-            steps = steps,
+            from = from_selector, to = to_selector, steps = steps,
         );
-        page.evaluate(js).await.map_err(|e| format!("drag: {e}"))?;
+        client.evaluate(&js).await.map_err(|e| format!("drag: {e}"))?;
         tokio::time::sleep(Duration::from_millis(200)).await;
         Ok(())
     }
 
-    async fn cmd_websocket(page: &chromiumoxide::Page) -> Result<WebSocketInfo, String> {
+    async fn cmd_websocket(client: &CdpClient) -> Result<WebSocketInfo, String> {
         let js = r#"(() => { var c = 0; var conns = []; var t = window._wsTracker || []; t.forEach(function(ws) { c++; conns.push({ url: ws.url || 'unknown', state: ws.readyState === 0 ? 'connecting' : ws.readyState === 1 ? 'open' : ws.readyState === 2 ? 'closing' : 'closed', created_at_ms: null }); }); return JSON.stringify({ active_count: c, connections: conns }); })()"#;
-        let val = page
-            .evaluate(js)
-            .await
-            .map_err(|e| format!("websocket: {e}"))?;
-        let json_str: String = val
-            .into_value()
-            .map_err(|e| format!("websocket parse: {e}"))?;
-        serde_json::from_str::<WebSocketInfo>(&json_str)
-            .map_err(|e| format!("websocket deserialize: {e}"))
+        let val = client.evaluate(js).await.map_err(|e| format!("websocket: {e}"))?;
+        let json_str = val.as_str().ok_or_else(|| "websocket: non-string".to_string())?;
+        serde_json::from_str::<WebSocketInfo>(json_str).map_err(|e| format!("websocket deserialize: {e}"))
     }
 }
 
@@ -1052,7 +1147,8 @@ return JSON.stringify([tree])
 
 #[derive(Clone)]
 struct DebugState {
-    config: Config,
+    dist_dir: String,
+    package_name: String,
     dev_port: u16,
     debug_port: u16,
     start_time: Instant,
@@ -1072,12 +1168,27 @@ impl DebugState {
 
 // ── Server startup ───────────────────────────────────────────────────────
 
-pub async fn start_debug_server(
-    config: &Config,
-    dev_port: u16,
-    debug_port: u16,
-) -> crate::Result<()> {
-    let base_url = format!("http://localhost:{}", dev_port);
+/// Inputs needed to launch the standalone debug API + browser. Carries only
+/// what the debug surface actually uses — deliberately decoupled from the
+/// full app [`Config`](crate::config::Config) so the debug server can run
+/// without a tairitsu app project (see the `tairitsu debug` subcommand).
+#[derive(Debug, Clone)]
+pub struct DebugServerConfig {
+    /// URL the browser opens on launch, and the base used to resolve any
+    /// relative path passed to `/navigate`.
+    pub base_url: String,
+    /// Informational only (surfaced via `/info`): the app dev-server port, or
+    /// 0 when running standalone (`tairitsu debug`).
+    pub dev_port: u16,
+    /// Informational only (surfaced via `/info`): the build output dir label.
+    pub dist_dir: String,
+    /// Informational only (surfaced via `/info`): the package name label.
+    pub package_name: String,
+}
+
+pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crate::Result<()> {
+    let base_url = cfg.base_url.clone();
+    let dev_port = cfg.dev_port;
     let console_log = Arc::new(RwLock::new(Vec::new()));
 
     #[cfg(feature = "debug-browser")]
@@ -1110,7 +1221,8 @@ pub async fn start_debug_server(
     };
 
     let state = DebugState {
-        config: config.clone(),
+        dist_dir: cfg.dist_dir.clone(),
+        package_name: cfg.package_name.clone(),
         dev_port,
         debug_port,
         base_url,
@@ -1192,8 +1304,8 @@ async fn info_handler(State(state): State<DebugState>) -> impl IntoResponse {
         api_version: DEBUG_API_VERSION.into(),
         dev_port: state.dev_port,
         debug_port: state.debug_port,
-        dist_dir: state.config.build.output_dir.display().to_string(),
-        package_name: state.config.package.name.clone(),
+        dist_dir: state.dist_dir.clone(),
+        package_name: state.package_name.clone(),
         pid: std::process::id(),
         started_at_iso: chrono::Utc::now().to_rfc3339(),
         uptime_secs: state.uptime_secs(),

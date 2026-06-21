@@ -118,6 +118,23 @@ enum Commands {
         clean: bool,
     },
 
+    /// Standalone browser + debug API server (no app project required).
+    ///
+    /// Launches a headless chromium and serves the agent-automation debug API,
+    /// so the MCP browser tools can drive ANY url — not just a tairitsu app's
+    /// dev server. Useful for screenshotting/automating arbitrary web pages
+    /// (e.g. a Vite dev server for a non-tairitsu frontend).
+    Debug {
+        /// Debug API port to listen on (default: 3001)
+        #[arg(short, long, default_value = "3001")]
+        port: u16,
+
+        /// Initial URL the browser opens (default: about:blank). The MCP
+        /// `navigate` tool can still go anywhere afterwards.
+        #[arg(short, long, default_value = "about:blank")]
+        url: String,
+    },
+
     /// Build for production
     Build {
         /// Build target (wasm, native)
@@ -773,6 +790,30 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     );
                     std::process::exit(1);
                 }
+            }
+        }
+        #[allow(unused_variables)]
+        Some(Commands::Debug { port, url }) => {
+            #[cfg(feature = "dev-server")]
+            {
+                crate::log_info!("Starting standalone debug browser (no app project)...");
+                let cfg = crate::debug::DebugServerConfig {
+                    base_url: url,
+                    dev_port: 0,
+                    dist_dir: "(standalone)".to_string(),
+                    package_name: "(browser-only)".to_string(),
+                };
+                // Advertise readiness so a co-located `tairitsu mcp` (or the
+                // standalone tairitsu-mcp bin) auto-discovers this debug API.
+                let _ = crate::daemon::signal_ready(0, Some(port));
+                crate::debug::start_debug_server(cfg, port).await?;
+            }
+            #[cfg(not(feature = "dev-server"))]
+            {
+                crate::log_fail!(
+                    "Dev-server feature is not enabled. Please enable the 'dev-server' feature."
+                );
+                std::process::exit(1);
             }
         }
         #[allow(unused_variables)]
