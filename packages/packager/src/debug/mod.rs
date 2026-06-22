@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::{
     net::SocketAddr,
     sync::Arc,
@@ -311,10 +312,16 @@ struct BatchResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct NetworkResource {
     name: String,
+    url: String,
+    method: Option<String>,
     r#type: String,
+    status: Option<u16>,
     duration: f64,
     size: f64,
-    url: String,
+    failed: Option<String>,
+    /// CDP timestamp the request started (not serialized; used to order /network).
+    #[serde(skip)]
+    started: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -437,14 +444,8 @@ enum BrowserCommand {
         depth: u32,
         resp: oneshot::Sender<Result<Vec<A11yNode>, String>>,
     },
-    Network {
-        resp: oneshot::Sender<Result<NetworkResponse, String>>,
-    },
     Performance {
         resp: oneshot::Sender<Result<PerformanceMetrics, String>>,
-    },
-    WebSocket {
-        resp: oneshot::Sender<Result<WebSocketInfo, String>>,
     },
     NavigateHistory {
         /// true = back, false = forward
@@ -614,6 +615,18 @@ mod engine {
         }
     }
 
+    /// Same idea for the network/websocket capture maps (evict arbitrary
+    /// entries once over the cap — order isn't load-bearing for the snapshot).
+    fn cap_map<K: std::hash::Hash + Eq + Clone, V>(m: &mut HashMap<K, V>, cap: usize) {
+        while m.len() > cap {
+            let k = match m.keys().next().cloned() {
+                Some(k) => k,
+                None => break,
+            };
+            m.remove(&k);
+        }
+    }
+
     // ── launch + connect ─────────────────────────────────────────────────────
 
     pub(super) async fn spawn_browser(
@@ -621,6 +634,8 @@ mod engine {
         _initial_url: Option<String>,
         console_log: Arc<RwLock<Vec<ConsoleEntry>>>,
         errors: Arc<RwLock<Vec<ErrorEntry>>>,
+        network: Arc<RwLock<HashMap<String, NetworkResource>>>,
+        websockets: Arc<RwLock<HashMap<String, WebSocketConn>>>,
     ) -> Result<BrowserHandle, String> {
         let (cmd_tx, mut cmd_rx) = mpsc::channel::<BrowserCommand>(64);
         let connected = Arc::new(RwLock::new(false));
@@ -681,6 +696,8 @@ mod engine {
         let conn_reader = connected.clone();
         let console_buf = console_log;
         let error_buf = errors;
+        let network_buf = network;
+        let ws_buf = websockets;
         tokio::spawn(async move {
             while let Some(msg) = stream.next().await {
                 let text = match msg {
@@ -793,6 +810,131 @@ mod engine {
                                 ),
                             });
                             truncate_vec(&mut buf, 500);
+                        }
+                    }
+                    // Network request lifecycle → /network buffer (real CDP
+                    // capture, replacing the old performance-API polyfill).
+                    "Network.requestWillBeSent" => {
+                        if let Some(p) = v.get("params") {
+                            if let Some(id) = p.get("requestId").and_then(|x| x.as_str()) {
+                                let req = p.get("request");
+                                let url = req
+                                    .and_then(|r| r.get("url"))
+                                    .and_then(|x| x.as_str())
+                                    .unwrap_or("")
+                                    .to_string();
+                                let method =
+                                    req.and_then(|r| r.get("method")).and_then(|x| x.as_str()).map(String::from);
+                                let typ =
+                                    p.get("type").and_then(|x| x.as_str()).unwrap_or("Other").to_string();
+                                let started =
+                                    p.get("timestamp").and_then(|t| t.as_f64()).unwrap_or(0.0);
+                                let mut buf = network_buf.write().await;
+                                buf.insert(
+                                    id.to_string(),
+                                    NetworkResource {
+                                        name: url.clone(),
+                                        url,
+                                        method,
+                                        r#type: typ,
+                                        status: None,
+                                        duration: 0.0,
+                                        size: 0.0,
+                                        failed: None,
+                                        started,
+                                    },
+                                );
+                                cap_map(&mut buf, 300);
+                            }
+                        }
+                    }
+                    "Network.responseReceived" => {
+                        if let Some(p) = v.get("params") {
+                            if let Some(id) = p.get("requestId").and_then(|x| x.as_str()) {
+                                let mut buf = network_buf.write().await;
+                                if let Some(entry) = buf.get_mut(id) {
+                                    if let Some(resp) = p.get("response") {
+                                        entry.status = resp
+                                            .get("status")
+                                            .and_then(|s| s.as_u64())
+                                            .map(|s| s as u16);
+                                        if let Some(mt) =
+                                            resp.get("mimeType").and_then(|x| x.as_str())
+                                        {
+                                            entry.r#type = mt.to_string();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    "Network.loadingFinished" => {
+                        if let Some(p) = v.get("params") {
+                            if let Some(id) = p.get("requestId").and_then(|x| x.as_str()) {
+                                let finished_ts =
+                                    p.get("timestamp").and_then(|t| t.as_f64()).unwrap_or(0.0);
+                                let size = p
+                                    .get("encodedDataLength")
+                                    .and_then(|x| x.as_f64())
+                                    .unwrap_or(0.0);
+                                let mut buf = network_buf.write().await;
+                                if let Some(entry) = buf.get_mut(id) {
+                                    entry.size = size;
+                                    entry.duration = (finished_ts - entry.started).max(0.0);
+                                }
+                            }
+                        }
+                    }
+                    "Network.loadingFailed" => {
+                        if let Some(p) = v.get("params") {
+                            if let Some(id) = p.get("requestId").and_then(|x| x.as_str()) {
+                                let err = p
+                                    .get("errorText")
+                                    .and_then(|x| x.as_str())
+                                    .unwrap_or("failed")
+                                    .to_string();
+                                let mut buf = network_buf.write().await;
+                                if let Some(entry) = buf.get_mut(id) {
+                                    entry.failed = Some(err);
+                                }
+                            }
+                        }
+                    }
+                    // WebSocket lifecycle → /websocket buffer (real CDP capture,
+                    // replacing the old app-side _wsTracker polyfill).
+                    "Network.webSocketCreated" => {
+                        if let Some(p) = v.get("params") {
+                            if let Some(id) = p.get("requestId").and_then(|x| x.as_str()) {
+                                let url =
+                                    p.get("url").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                                let ts = p.get("timestamp").and_then(|t| t.as_f64());
+                                let mut buf = ws_buf.write().await;
+                                buf.insert(
+                                    id.to_string(),
+                                    WebSocketConn { url, state: "connecting".into(), created_at_ms: ts },
+                                );
+                                cap_map(&mut buf, 100);
+                            }
+                        }
+                    }
+                    "Network.webSocketHandshakeResponseReceived" => {
+                        if let Some(p) = v.get("params") {
+                            if let Some(id) = p.get("requestId").and_then(|x| x.as_str()) {
+                                let mut buf = ws_buf.write().await;
+                                if let Some(c) = buf.get_mut(id) {
+                                    c.state = "open".into();
+                                }
+                            }
+                        }
+                    }
+                    "Network.webSocketClosed" => {
+                        if let Some(p) = v.get("params") {
+                            if let Some(id) = p.get("requestId").and_then(|x| x.as_str()) {
+                                let mut buf = ws_buf.write().await;
+                                if let Some(c) = buf.get_mut(id) {
+                                    c.state = "closed".into();
+                                }
+                            }
                         }
                     }
                     _ => {} // unknown event — deliberately ignored (skew-proof)
@@ -958,20 +1100,12 @@ mod engine {
                 let r = cmd_a11y(client, selector.as_deref(), depth).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Network { resp } => {
-                let r = cmd_network(client).await;
-                let _ = resp.send(r);
-            }
             BrowserCommand::Performance { resp } => {
                 let r = cmd_performance(client).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::Drag { from_selector, to_selector, steps, resp } => {
                 let r = cmd_drag(client, &from_selector, &to_selector, steps).await;
-                let _ = resp.send(r);
-            }
-            BrowserCommand::WebSocket { resp } => {
-                let r = cmd_websocket(client).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::NavigateHistory { back, resp } => {
@@ -1640,13 +1774,6 @@ return JSON.stringify([tree])
         serde_json::from_str::<Vec<A11yNode>>(json_str).map_err(|e| format!("a11y deserialize: {e}"))
     }
 
-    async fn cmd_network(client: &CdpClient) -> Result<NetworkResponse, String> {
-        let js = r#"(() => { var entries = performance.getEntriesByType('resource').slice(0, 100).map(function(e) { return { name: e.name, type: e.initiatorType || 'unknown', duration: Math.round(e.duration * 100) / 100, size: e.transferSize || 0, url: e.name }; }); return JSON.stringify({ resources: entries }); })()"#;
-        let val = client.evaluate(js).await.map_err(|e| format!("network: {e}"))?;
-        let json_str = val.as_str().ok_or_else(|| "network: non-string".to_string())?;
-        serde_json::from_str::<NetworkResponse>(json_str).map_err(|e| format!("network deserialize: {e}"))
-    }
-
     async fn cmd_performance(client: &CdpClient) -> Result<PerformanceMetrics, String> {
         let js = r#"(() => { var nav = performance.getEntriesByType('navigation')[0] || {}; var fcp = null; try { fcp = performance.getEntriesByName('first-contentful-paint')[0].startTime || null; } catch(e) {} var dn = document.querySelectorAll('*').length; var heap = null; try { heap = Math.round((performance.memory ? performance.memory.usedJSHeapSize : 0) / 1048576 * 100) / 100; } catch(e) {} return JSON.stringify({ dom_content_loaded_ms: Math.round((nav.domContentLoadedEventEnd - nav.startTime) * 100) / 100 || null, dom_complete_ms: Math.round((nav.domComplete - nav.startTime) * 100) / 100 || null, load_event_ms: Math.round((nav.loadEventEnd - nav.startTime) * 100) / 100 || null, fcp_ms: fcp ? Math.round(fcp * 100) / 100 : null, lcp_ms: null, cls: null, dom_nodes: dn, js_heap_used_mb: heap, wasm_loaded: !!globalThis.__wasmExports, hydrated: document.documentElement.dataset.tairitsuReady === 'hydrated', timestamp: new Date().toISOString() }); })()"#;
         let val = client.evaluate(js).await.map_err(|e| format!("performance: {e}"))?;
@@ -1668,13 +1795,6 @@ return JSON.stringify([tree])
         tokio::time::sleep(Duration::from_millis(200)).await;
         Ok(())
     }
-
-    async fn cmd_websocket(client: &CdpClient) -> Result<WebSocketInfo, String> {
-        let js = r#"(() => { var c = 0; var conns = []; var t = window._wsTracker || []; t.forEach(function(ws) { c++; conns.push({ url: ws.url || 'unknown', state: ws.readyState === 0 ? 'connecting' : ws.readyState === 1 ? 'open' : ws.readyState === 2 ? 'closing' : 'closed', created_at_ms: null }); }); return JSON.stringify({ active_count: c, connections: conns }); })()"#;
-        let val = client.evaluate(js).await.map_err(|e| format!("websocket: {e}"))?;
-        let json_str = val.as_str().ok_or_else(|| "websocket: non-string".to_string())?;
-        serde_json::from_str::<WebSocketInfo>(json_str).map_err(|e| format!("websocket deserialize: {e}"))
-    }
 }
 
 // ── DebugState ────────────────────────────────────────────────────────────
@@ -1690,6 +1810,8 @@ struct DebugState {
     console_log: Arc<RwLock<Vec<ConsoleEntry>>>,
     errors: Arc<RwLock<Vec<ErrorEntry>>>,
     rejections: Arc<RwLock<Vec<ErrorEntry>>>,
+    network: Arc<RwLock<HashMap<String, NetworkResource>>>,
+    websockets: Arc<RwLock<HashMap<String, WebSocketConn>>>,
     browser: Option<Arc<BrowserHandle>>,
     browser_engine: String,
 }
@@ -1725,13 +1847,22 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
     let dev_port = cfg.dev_port;
     let console_log = Arc::new(RwLock::new(Vec::new()));
     let errors = Arc::new(RwLock::new(Vec::new()));
+    let network = Arc::new(RwLock::new(HashMap::new()));
+    let websockets = Arc::new(RwLock::new(HashMap::new()));
 
     #[cfg(feature = "debug-browser")]
     let (browser, browser_engine) = {
         crate::log_info!("Debug browser engine: chromium (headless CDP)");
         match tokio::time::timeout(
             Duration::from_secs(30),
-            engine::spawn_browser(base_url.clone(), None, console_log.clone(), errors.clone()),
+            engine::spawn_browser(
+                base_url.clone(),
+                None,
+                console_log.clone(),
+                errors.clone(),
+                network.clone(),
+                websockets.clone(),
+            ),
         )
         .await
         {
@@ -1764,6 +1895,8 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
         console_log,
         errors,
         rejections: Arc::new(RwLock::new(Vec::new())),
+        network,
+        websockets,
         browser,
         browser_engine,
         start_time: Instant::now(),
@@ -2454,15 +2587,10 @@ async fn execute_batch_op(
 }
 
 async fn network_handler(State(state): State<DebugState>) -> impl IntoResponse {
-    let br = match &state.browser {
-        Some(b) => b,
-        None => return svc_unavailable::<NetworkResponse>(),
-    };
-    let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Network { resp: tx }).await.is_err() {
-        return chan_closed::<NetworkResponse>();
-    }
-    await_op(rx).await
+    let map = state.network.read().await;
+    let mut resources: Vec<NetworkResource> = map.values().cloned().collect();
+    resources.sort_by(|a, b| a.started.partial_cmp(&b.started).unwrap_or(std::cmp::Ordering::Equal));
+    ResponseJson(ApiResponse::ok(NetworkResponse { resources }))
 }
 
 async fn performance_handler(State(state): State<DebugState>) -> impl IntoResponse {
@@ -2482,19 +2610,13 @@ async fn performance_handler(State(state): State<DebugState>) -> impl IntoRespon
 }
 
 async fn websocket_handler(State(state): State<DebugState>) -> impl IntoResponse {
-    let br = match &state.browser {
-        Some(b) => b,
-        None => return svc_unavailable::<WebSocketInfo>(),
-    };
-    let (tx, rx) = oneshot::channel();
-    if br
-        .send(BrowserCommand::WebSocket { resp: tx })
-        .await
-        .is_err()
-    {
-        return chan_closed::<WebSocketInfo>();
-    }
-    await_op(rx).await
+    let map = state.websockets.read().await;
+    let connections: Vec<WebSocketConn> = map.values().cloned().collect();
+    let active_count = connections
+        .iter()
+        .filter(|c| c.state == "open" || c.state == "connecting")
+        .count() as u32;
+    ResponseJson(ApiResponse::ok(WebSocketInfo { active_count, connections }))
 }
 
 async fn source_map_handler(Json(req): Json<SourceMapRequest>) -> impl IntoResponse {
