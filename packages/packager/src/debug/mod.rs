@@ -1134,14 +1134,36 @@ mod engine {
         selector: &str,
         text: &str,
         clear_first: bool,
-        _submit: bool,
+        submit: bool,
     ) -> Result<(), String> {
-        let js = format!(
-            r#"(() => {{ const el = document.querySelector({selector:?}); if (!el) throw 'element not found'; el.focus(); if ({clear}) {{ el.value = ''; }} else {{ el.value = el.value; }} el.value += {text:?}; el.dispatchEvent(new Event('input', {{ bubbles: true }})); el.dispatchEvent(new Event('change', {{ bubbles: true }})); }})()"#,
+        // Focus the field (and clear it if asked) via the DOM, then type the
+        // text through the browser's real insertion path — fires input events
+        // and handles unicode / IME / caret like a real user (previously this
+        // stomped el.value directly, bypassing the keyboard entirely).
+        let focus_js = format!(
+            r#"(() => {{ const el = document.querySelector({sel:?}); if (!el) throw 'element not found'; el.focus(); if ({clear}) {{ el.value = ''; el.dispatchEvent(new Event('input', {{ bubbles: true }})); }} }})()"#,
+            sel = selector,
             clear = clear_first,
-            text = text,
         );
-        client.evaluate(&js).await.map_err(|e| format!("type: {e}"))?;
+        client.evaluate(&focus_js).await.map_err(|e| format!("type focus: {e}"))?;
+        if !text.is_empty() {
+            client
+                .command("Input.insertText", json!({ "text": text }))
+                .await
+                .map_err(|e| format!("type: {e}"))?;
+        }
+        if submit {
+            // Press Enter to submit the surrounding form.
+            for ty in ["keyDown", "keyUp"] {
+                client
+                    .command(
+                        "Input.dispatchKeyEvent",
+                        json!({ "type": ty, "key": "Enter", "code": "Enter", "windowsVirtualKeyCode": 13 }),
+                    )
+                    .await
+                    .map_err(|e| format!("type submit ({ty}): {e}"))?;
+            }
+        }
         tokio::time::sleep(Duration::from_millis(100)).await;
         Ok(())
     }
