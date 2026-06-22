@@ -972,6 +972,28 @@ mod engine {
         }
     }
 
+    /// Poll `document.readyState` until "complete" or `timeout_ms` elapses.
+    /// Replaces fixed sleeps — faster on quick pages, robust against slow ones.
+    /// Gives up (returns Ok) rather than failing the navigation on a timeout.
+    async fn wait_ready_state(client: &CdpClient, timeout_ms: u64) -> Result<(), String> {
+        let deadline = std::time::Instant::now() + Duration::from_millis(timeout_ms);
+        // Let the navigation kick in before the first read (avoids reading the
+        // previous document's readyState immediately after Page.navigate).
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        loop {
+            let done = client
+                .evaluate("document.readyState")
+                .await
+                .ok()
+                .and_then(|v| v.as_str().map(|s| s == "complete"))
+                .unwrap_or(false);
+            if done || std::time::Instant::now() > deadline {
+                return Ok(());
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+    }
+
     async fn cmd_navigate(
         client: &CdpClient,
         url: &str,
@@ -985,11 +1007,25 @@ mod engine {
             return Err(format!("navigate: {err}"));
         }
         if matches!(wait_for, Some("hydration") | Some("ready")) {
-            tokio::time::sleep(Duration::from_secs(3)).await;
-        } else if matches!(wait_for, Some("load")) {
-            tokio::time::sleep(Duration::from_millis(500)).await;
+            // Wait for the new document to finish loading, then poll the
+            // tairitsu hydration marker (set after WASM hydrates the tree).
+            let _ = wait_ready_state(client, 8_000).await;
+            let deadline = std::time::Instant::now() + Duration::from_secs(10);
+            loop {
+                let hydrated = client
+                    .evaluate("document.documentElement.dataset.tairitsuReady === 'hydrated'")
+                    .await
+                    .ok()
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                if hydrated || std::time::Instant::now() > deadline {
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(100)).await;
+            }
         } else {
-            tokio::time::sleep(Duration::from_millis(200)).await;
+            // Default / "load": just wait for the document to finish loading.
+            let _ = wait_ready_state(client, 8_000).await;
         }
         let title = client
             .evaluate("document.title")
@@ -1468,7 +1504,15 @@ async fn navigate_handler(
         Some(b) => b,
         None => return svc_unavailable::<NavigateResponse>(),
     };
-    let target = if req.url.starts_with("http") {
+    // Treat absolute schemes as-is; only relative paths get resolved against
+    // the app's dev-server base_url.
+    let target = if req.url.starts_with("http:")
+        || req.url.starts_with("https:")
+        || req.url.starts_with("data:")
+        || req.url.starts_with("about:")
+        || req.url.starts_with("blob:")
+        || req.url.starts_with("file:")
+    {
         req.url
     } else {
         format!("{}{}", state.base_url, req.url)
