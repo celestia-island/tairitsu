@@ -567,12 +567,55 @@ mod engine {
         }
     }
 
+    // ── event/payload helpers ────────────────────────────────────────────────
+
+    /// Render a CDP `RemoteObject` (e.g. a `console.log` argument) to a string.
+    fn remote_object_text(o: &Value) -> String {
+        if let Some(val) = o.get("value") {
+            match val {
+                Value::String(s) => s.clone(),
+                other => other.to_string(),
+            }
+        } else if let Some(d) = o.get("description").and_then(|d| d.as_str()) {
+            d.to_string()
+        } else if let Some(t) = o.get("type").and_then(|t| t.as_str()) {
+            format!("[{t}]")
+        } else {
+            String::new()
+        }
+    }
+
+    /// Convert a CDP timestamp to an RFC3339 string; falls back to "now" if
+    /// absent. CDP emits some timestamps in seconds-since-epoch and others in
+    /// milliseconds-since-epoch (the Runtime.consoleAPICalled/exceptionThrown
+    /// ones are ms); auto-detect so both render sanely.
+    fn cdp_ts(ts: Option<f64>) -> String {
+        let raw = match ts {
+            Some(t) => t,
+            None => return chrono::Utc::now().to_rfc3339(),
+        };
+        let secs = if raw > 4_000_000_000.0 { raw / 1000.0 } else { raw };
+        let whole = secs.floor() as i64;
+        let nanos = ((secs - secs.floor()) * 1e9) as u32;
+        chrono::DateTime::from_timestamp(whole, nanos)
+            .map(|dt| dt.to_rfc3339())
+            .unwrap_or_else(|| chrono::Utc::now().to_rfc3339())
+    }
+
+    /// Keep a buffer bounded so a chatty page can't grow it without limit.
+    fn truncate_vec<T>(v: &mut Vec<T>, cap: usize) {
+        if v.len() > cap {
+            v.drain(0..v.len() - cap);
+        }
+    }
+
     // ── launch + connect ─────────────────────────────────────────────────────
 
     pub(super) async fn spawn_browser(
         base_url: String,
         _initial_url: Option<String>,
-        _console_log: Arc<RwLock<Vec<ConsoleEntry>>>,
+        console_log: Arc<RwLock<Vec<ConsoleEntry>>>,
+        errors: Arc<RwLock<Vec<ErrorEntry>>>,
     ) -> Result<BrowserHandle, String> {
         let (cmd_tx, mut cmd_rx) = mpsc::channel::<BrowserCommand>(64);
         let connected = Arc::new(RwLock::new(false));
@@ -624,19 +667,20 @@ mod engine {
             let _ = sink.send(Message::Close(None)).await;
         });
 
-        // Reader: dispatch responses by id; ignore events (version-skew-proof).
-        // TODO: capture Runtime.consoleAPICalled / exceptionThrown into the
-        // console_log buffer so /console and /errors are populated again.
+        // Reader: dispatch command responses by id; capture the few events we
+        // actually need (console output + uncaught exceptions); ignore
+        // everything else. Handling known events while dropping unknown ones
+        // is precisely what keeps this client skew-proof across Chrome
+        // versions — a brand-new event variant never crashes the deserializer.
         let pending = client.inner.clone();
         let conn_reader = connected.clone();
+        let console_buf = console_log;
+        let error_buf = errors;
         tokio::spawn(async move {
             while let Some(msg) = stream.next().await {
                 let text = match msg {
                     Ok(Message::Text(t)) => t.to_string(),
-                    Ok(Message::Ping(_)) => {
-                        // tokio-tungstenite auto-pongs, nothing to do.
-                        continue;
-                    }
+                    Ok(Message::Ping(_)) => continue, // auto-ponged by the runtime
                     Ok(_) => continue,
                     Err(_) => break,
                 };
@@ -644,9 +688,9 @@ mod engine {
                     Ok(v) => v,
                     Err(_) => continue, // not JSON / partial — ignore
                 };
+                // Command response — resolve by id.
                 if let Some(id) = v.get("id").and_then(|i| i.as_u64()) {
-                    let entry = pending.pending.lock().await.remove(&id);
-                    if let Some(tx) = entry {
+                    if let Some(tx) = pending.pending.lock().await.remove(&id) {
                         let result = if let Some(err) = v.get("error") {
                             Err(err
                                 .get("message")
@@ -658,8 +702,96 @@ mod engine {
                         };
                         let _ = tx.send(result);
                     }
+                    continue;
                 }
-                // else: an event — deliberately ignored.
+                // Event — handle the ones we need, ignore the rest.
+                let method = match v.get("method").and_then(|m| m.as_str()) {
+                    Some(m) => m,
+                    None => continue,
+                };
+                match method {
+                    "Runtime.consoleAPICalled" => {
+                        if let Some(p) = v.get("params") {
+                            let level = p
+                                .get("type")
+                                .and_then(|t| t.as_str())
+                                .unwrap_or("log")
+                                .to_string();
+                            let text = p
+                                .get("args")
+                                .and_then(|a| a.as_array())
+                                .map(|args| {
+                                    args.iter().map(remote_object_text).collect::<Vec<_>>().join(" ")
+                                })
+                                .unwrap_or_default();
+                            let mut buf = console_buf.write().await;
+                            buf.push(ConsoleEntry {
+                                level,
+                                text,
+                                timestamp: cdp_ts(
+                                    p.get("timestamp").and_then(|t| t.as_f64()),
+                                ),
+                                source: Some("runtime".into()),
+                            });
+                            truncate_vec(&mut buf, 500);
+                        }
+                    }
+                    "Runtime.exceptionThrown" => {
+                        if let Some(ed) =
+                            v.get("params").and_then(|p| p.get("exceptionDetails"))
+                        {
+                            let message = ed
+                                .get("exception")
+                                .and_then(|e| e.get("description"))
+                                .and_then(|d| d.as_str())
+                                .or_else(|| ed.get("text").and_then(|t| t.as_str()))
+                                .unwrap_or("uncaught exception")
+                                .to_string();
+                            let stack = ed
+                                .get("stackTrace")
+                                .and_then(|s| s.get("callFrames"))
+                                .and_then(|f| f.as_array())
+                                .map(|frames| {
+                                    frames
+                                        .iter()
+                                        .filter_map(|f| {
+                                            let fn_ = f
+                                                .get("functionName")
+                                                .and_then(|x| x.as_str())
+                                                .unwrap_or("<anon>");
+                                            let url = f
+                                                .get("url")
+                                                .and_then(|x| x.as_str())
+                                                .unwrap_or("");
+                                            let ln = f
+                                                .get("lineNumber")
+                                                .and_then(|x| x.as_i64())
+                                                .unwrap_or(0);
+                                            let co = f
+                                                .get("columnNumber")
+                                                .and_then(|x| x.as_i64())
+                                                .unwrap_or(0);
+                                            Some(format!("    at {fn_} ({url}:{ln}:{co})"))
+                                        })
+                                        .collect::<Vec<_>>()
+                                        .join("\n")
+                                });
+                            let mut buf = error_buf.write().await;
+                            buf.push(ErrorEntry {
+                                message,
+                                stack,
+                                r#type: "exception".into(),
+                                timestamp: cdp_ts(
+                                    v.get("params")
+                                        .and_then(|p| p.get("timestamp"))
+                                        .and_then(|t| t.as_f64()),
+                                ),
+                            });
+                            truncate_vec(&mut buf, 500);
+                        }
+                    }
+                    _ => {} // unknown event — deliberately ignored (skew-proof)
+                }
             }
             *conn_reader.write().await = false;
         });
@@ -1190,13 +1322,14 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
     let base_url = cfg.base_url.clone();
     let dev_port = cfg.dev_port;
     let console_log = Arc::new(RwLock::new(Vec::new()));
+    let errors = Arc::new(RwLock::new(Vec::new()));
 
     #[cfg(feature = "debug-browser")]
     let (browser, browser_engine) = {
         crate::log_info!("Debug browser engine: chromium (headless CDP)");
         match tokio::time::timeout(
             Duration::from_secs(30),
-            engine::spawn_browser(base_url.clone(), None, console_log.clone()),
+            engine::spawn_browser(base_url.clone(), None, console_log.clone(), errors.clone()),
         )
         .await
         {
@@ -1227,7 +1360,7 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
         debug_port,
         base_url,
         console_log,
-        errors: Arc::new(RwLock::new(Vec::new())),
+        errors,
         rejections: Arc::new(RwLock::new(Vec::new())),
         browser,
         browser_engine,
