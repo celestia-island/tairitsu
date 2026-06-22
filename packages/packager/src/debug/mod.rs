@@ -446,6 +446,11 @@ enum BrowserCommand {
     WebSocket {
         resp: oneshot::Sender<Result<WebSocketInfo, String>>,
     },
+    NavigateHistory {
+        /// true = back, false = forward
+        back: bool,
+        resp: oneshot::Sender<Result<(), String>>,
+    },
 }
 
 struct BrowserHandle {
@@ -969,6 +974,10 @@ mod engine {
                 let r = cmd_websocket(client).await;
                 let _ = resp.send(r);
             }
+            BrowserCommand::NavigateHistory { back, resp } => {
+                let r = cmd_navigate_history(client, back).await;
+                let _ = resp.send(r);
+            }
         }
     }
 
@@ -1034,6 +1043,39 @@ mod engine {
             .and_then(|v| v.as_str().map(|s| s.to_string()))
             .unwrap_or_default();
         Ok(NavigateResponse { url: url.to_string(), title })
+    }
+
+    /// Navigate the page history back (back=true) or forward (back=false) via
+    /// `Page.getNavigationHistory` + `Page.navigateToHistoryEntry`. No-op (not
+    /// an error) when already at the start/end of the history.
+    async fn cmd_navigate_history(client: &CdpClient, back: bool) -> Result<(), String> {
+        let resp = client
+            .command("Page.getNavigationHistory", json!({}))
+            .await
+            .map_err(|e| format!("history: {e}"))?;
+        let entries = resp
+            .get("entries")
+            .and_then(|e| e.as_array())
+            .ok_or_else(|| "history: no entries".to_string())?;
+        let curr = resp
+            .get("currentIndex")
+            .and_then(|i| i.as_u64())
+            .ok_or_else(|| "history: no currentIndex".to_string())?;
+        let target = if back { curr.checked_sub(1) } else { curr.checked_add(1) };
+        let target = match target {
+            Some(t) if (t as usize) < entries.len() => t,
+            _ => return Ok(()), // at the start/end of history — nothing to do
+        };
+        let entry_id = entries[target as usize]
+            .get("id")
+            .and_then(|i| i.as_u64())
+            .ok_or_else(|| "history: entry has no id".to_string())?;
+        client
+            .command("Page.navigateToHistoryEntry", json!({ "entryId": entry_id }))
+            .await
+            .map_err(|e| format!("history nav: {e}"))?;
+        let _ = wait_ready_state(client, 8_000).await;
+        Ok(())
     }
 
     async fn cmd_screenshot(
@@ -1733,6 +1775,8 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
         .route("/info", get(info_handler))
         .route("/ready", get(ready_handler))
         .route("/navigate", post(navigate_handler))
+        .route("/back", post(back_handler))
+        .route("/forward", post(forward_handler))
         .route("/screenshot", post(screenshot_handler))
         .route("/click", post(click_handler))
         .route("/type", post(type_handler))
@@ -1854,6 +1898,37 @@ async fn navigate_handler(
         return chan_closed::<NavigateResponse>();
     }
     await_op(rx).await
+}
+
+async fn back_handler(State(state): State<DebugState>) -> impl IntoResponse {
+    history_step(&state, true).await
+}
+
+async fn forward_handler(State(state): State<DebugState>) -> impl IntoResponse {
+    history_step(&state, false).await
+}
+
+async fn history_step(
+    state: &DebugState,
+    back: bool,
+) -> ResponseJson<ApiResponse<serde_json::Value>> {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return ResponseJson(ApiResponse::err("browser not connected")),
+    };
+    let (tx, rx) = oneshot::channel();
+    if br
+        .send(BrowserCommand::NavigateHistory { back, resp: tx })
+        .await
+        .is_err()
+    {
+        return ResponseJson(ApiResponse::err("browser channel closed"));
+    }
+    match rx.await {
+        Ok(Ok(())) => ResponseJson(ApiResponse::ok(serde_json::Value::Null)),
+        Ok(Err(e)) => ResponseJson(ApiResponse::err(e)),
+        Err(_) => ResponseJson(ApiResponse::err("browser channel closed")),
+    }
 }
 
 async fn screenshot_handler(

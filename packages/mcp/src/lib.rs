@@ -286,9 +286,9 @@ impl Server {
         &self,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        Ok(Self::tool_result(
-            "(navigate-back: not yet supported via debug API)",
-        ))
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("back", json!({})).await?;
+        Ok(Self::tool_result("Navigated back"))
     }
 
     #[tool(description = "Go forward to the next page")]
@@ -296,9 +296,9 @@ impl Server {
         &self,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        Ok(Self::tool_result(
-            "(navigate-forward: not yet supported via debug API)",
-        ))
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("forward", json!({})).await?;
+        Ok(Self::tool_result("Navigated forward"))
     }
 
     #[tool(
