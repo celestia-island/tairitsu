@@ -1986,7 +1986,7 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
         debug_port
     );
     crate::log_info!(
-        "Endpoints: /health /info /ready /navigate /screenshot /click /type /press /scroll /evaluate /console /dom /dom/computed /viewport /resize /errors /drag /a11y /batch /network /performance /websocket /source-map"
+        "Endpoints: /health /info /ready /navigate /back /forward /screenshot /click /type /press /scroll /evaluate /console /dom /viewport /resize /errors /drag /a11y /batch /network /performance /websocket /source-map"
     );
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
