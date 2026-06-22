@@ -162,6 +162,14 @@ struct SnapshotArgs {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+struct DomQueryArgs {
+    /// CSS selector for the element(s) to describe.
+    selector: String,
+    /// If set, return only this single attribute's value instead of the full element.
+    attribute: Option<String>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
 struct ScreenshotArgs {
     element: Option<String>,
     #[serde(rename = "fullPage")]
@@ -317,6 +325,29 @@ impl Server {
             .map(|s| vec![("selector", s)])
             .unwrap_or_default();
         let v = self.http_get("a11y", &query).await?;
+        Ok(Self::tool_result(
+            v.get("data")
+                .map(|d| serde_json::to_string(d).unwrap_or_else(|_| "{}".into()))
+                .unwrap_or_else(|| "{}".into()),
+        ))
+    }
+
+    #[tool(
+        description = "Query a DOM element by CSS selector — returns its tag, text, html, attributes, visibility, bounding rect, and match count. Pass `attribute` to fetch just one attribute's value. Complements `browser_snapshot` (semantic a11y tree) with exact element details."
+    )]
+    async fn browser_dom(
+        &self,
+        Parameters(args): Parameters<DomQueryArgs>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        self.ensure_daemon().await?;
+        let mut query: Vec<(&str, &str)> = vec![("selector", args.selector.as_str())];
+        if let Some(attr) = args.attribute.as_deref() {
+            if !attr.is_empty() {
+                query.push(("attribute", attr));
+            }
+        }
+        let v = self.http_get("dom", &query).await?;
         Ok(Self::tool_result(
             v.get("data")
                 .map(|d| serde_json::to_string(d).unwrap_or_else(|_| "{}".into()))
