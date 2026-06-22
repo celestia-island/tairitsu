@@ -144,6 +144,8 @@ struct DomQueryParams {
     attribute: Option<String>,
     /// When true, include a default set of computed styles for the element.
     computed: Option<bool>,
+    /// When true, describe every match (not just the first).
+    all: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -156,6 +158,18 @@ struct DomNodeResponse {
     count: usize,
     rect: Option<RectResponse>,
     computed: Option<serde_json::Map<String, serde_json::Value>>,
+    /// Populated when `all=true`: every matching element (not just the first).
+    matches: Option<Vec<DomMatchEntry>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct DomMatchEntry {
+    tag: Option<String>,
+    text: Option<String>,
+    html: Option<String>,
+    attributes: Option<serde_json::Map<String, serde_json::Value>>,
+    visible: Option<bool>,
+    rect: Option<RectResponse>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -401,6 +415,8 @@ enum BrowserCommand {
         attribute: Option<String>,
         /// Fetch a default set of computed styles for the element.
         computed: bool,
+        /// Describe every match (not just the first) into `matches`.
+        all: bool,
         resp: oneshot::Sender<Result<DomNodeResponse, String>>,
     },
     IsReady {
@@ -1063,8 +1079,8 @@ mod engine {
                 let r = cmd_evaluate(client, &expression, await_promise).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::DomQuery { selector, attribute, computed, resp } => {
-                let r = cmd_dom_query(client, &selector, attribute.as_deref(), computed).await;
+            BrowserCommand::DomQuery { selector, attribute, computed, all, resp } => {
+                let r = cmd_dom_query(client, &selector, attribute.as_deref(), computed, all).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::IsReady { resp } => {
@@ -1381,6 +1397,7 @@ mod engine {
         selector: &str,
         attribute: Option<&str>,
         computed: bool,
+        all: bool,
     ) -> Result<DomNodeResponse, String> {
         if let Some(attr) = attribute {
             let js = format!(
@@ -1393,8 +1410,26 @@ mod engine {
             let count = if r.is_some() { 1 } else { 0 };
             return Ok(DomNodeResponse {
                 tag: None, text: r, html: None, attributes: None,
-                visible: None, count, rect: None, computed: None,
+                visible: None, count, rect: None, computed: None, matches: None,
             });
+        }
+        // Describe every match (list query) — returns {count, matches:[…]}.
+        if all {
+            let js_all = r#"
+(() => {
+  const els = document.querySelectorAll(__SEL__);
+  const matches = Array.from(els).map(el => {
+    const r = el.getBoundingClientRect();
+    return { tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().substring(0, 500), html: el.outerHTML.substring(0, 2000), attributes: Object.fromEntries(Array.from(el.attributes).map(a => [a.name, a.value])), visible: r.width > 0 && r.height > 0, rect: { x: r.x, y: r.y, width: r.width, height: r.height } };
+  });
+  if (!matches.length) throw 'not found';
+  return JSON.stringify({ count: matches.length, matches: matches });
+})()
+"#.replace("__SEL__", &format!("{selector:?}"));
+            let val = client.evaluate(&js_all).await.map_err(|e| format!("dom query: {e}"))?;
+            let json_str = val.as_str().ok_or_else(|| "dom query: non-string result".to_string())?;
+            return serde_json::from_str::<DomNodeResponse>(json_str)
+                .map_err(|e| format!("dom query deserialize: {e}"));
         }
         // Full element description. `attributes` (not `attrs`) so it maps to the
         // DomNodeResponse field; `computed` fetches a default property set when
@@ -2264,6 +2299,7 @@ async fn dom_query_handler(
             selector: params.selector,
             attribute: params.attribute,
             computed: params.computed.unwrap_or(false),
+            all: params.all.unwrap_or(false),
             resp: tx,
         })
         .await

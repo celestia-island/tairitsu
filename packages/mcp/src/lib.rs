@@ -170,6 +170,9 @@ struct DomQueryArgs {
     /// If true, also include a default set of computed styles (display/color/dimensions/...).
     #[serde(rename = "computed")]
     computed: Option<bool>,
+    /// If true, describe every match (not just the first) into `matches`.
+    #[serde(rename = "all")]
+    all: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -352,6 +355,9 @@ impl Server {
         }
         if matches!(args.computed, Some(true)) {
             query.push(("computed", "true"));
+        }
+        if matches!(args.all, Some(true)) {
+            query.push(("all", "true"));
         }
         let v = self.http_get("dom", &query).await?;
         Ok(Self::tool_result(
