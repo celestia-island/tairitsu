@@ -160,7 +160,9 @@ pub fn provide_i18n(language: Language, translations: HashMap<Language, HashMap<
 ///
 /// Panics if `provide_i18n` has not been called.
 pub fn use_locale() -> Language {
-    consume_context::<I18nState>().current
+    consume_context::<I18nState>()
+        .expect("provide_i18n() not called")
+        .current
 }
 
 /// Switch the active locale at runtime.
@@ -183,13 +185,13 @@ pub fn set_locale(locale: Language) {
 ///
 /// Panics if `provide_i18n` has not been called.
 pub fn translate(key: &str) -> Option<String> {
-    let state = consume_context::<I18nState>();
+    let state = consume_context::<I18nState>().expect("provide_i18n() not called");
     state.t(key).map(|s| s.to_string())
 }
 
 /// Translate a key, returning the key itself as fallback if not found.
 pub fn translate_or_key(key: &str) -> String {
-    let state = consume_context::<I18nState>();
+    let state = consume_context::<I18nState>().expect("provide_i18n() not called");
     state.t_or_key(key).to_string()
 }
 
