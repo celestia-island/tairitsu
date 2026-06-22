@@ -1086,11 +1086,46 @@ mod engine {
     }
 
     async fn cmd_click(client: &CdpClient, selector: &str) -> Result<(), String> {
-        let js = format!(
-            r#"(() => {{ const el = document.querySelector({selector:?}); if (!el) throw 'element not found'; el.scrollIntoView({{ block: 'center' }}); el.click(); }})()"#,
+        // Scroll the element into view and read its center in viewport
+        // coordinates — that's where the real mouse events land.
+        let rect_js = format!(
+            r#"(() => {{ const el = document.querySelector({sel:?}); if (!el) throw 'element not found'; el.scrollIntoView({{ block: 'center', inline: 'center' }}); const r = el.getBoundingClientRect(); return JSON.stringify({{ x: r.x + r.width / 2, y: r.y + r.height / 2 }}); }})()"#,
+            sel = selector,
         );
-        client.evaluate(&js).await.map_err(|e| format!("click: {e}"))?;
+        let v = client.evaluate(&rect_js).await.map_err(|e| format!("click: {e}"))?;
+        let s = v.as_str().ok_or_else(|| "click: rect not a string".to_string())?;
+        let xy: Value =
+            serde_json::from_str(s).map_err(|e| format!("click rect parse: {e}"))?;
+        let x = xy.get("x").and_then(|n| n.as_f64()).ok_or_else(|| "click: no x".to_string())?;
+        let y = xy.get("y").and_then(|n| n.as_f64()).ok_or_else(|| "click: no y".to_string())?;
+        dispatch_mouse_click(client, x, y).await?;
         tokio::time::sleep(Duration::from_millis(100)).await;
+        Ok(())
+    }
+
+    /// Dispatch a real left-button click (move → press → release) via CDP input
+    /// events at viewport coords (x, y). Unlike a synthetic `el.click()`, this
+    /// fires the full mousedown/mouseup/pointer sequence at real coordinates,
+    /// so components driven by pointer events or hit-testing behave correctly.
+    async fn dispatch_mouse_click(client: &CdpClient, x: f64, y: f64) -> Result<(), String> {
+        client
+            .command("Input.dispatchMouseEvent", json!({ "type": "mouseMoved", "x": x, "y": y }))
+            .await
+            .map_err(|e| format!("click move: {e}"))?;
+        client
+            .command(
+                "Input.dispatchMouseEvent",
+                json!({ "type": "mousePressed", "x": x, "y": y, "button": "left", "clickCount": 1 }),
+            )
+            .await
+            .map_err(|e| format!("click press: {e}"))?;
+        client
+            .command(
+                "Input.dispatchMouseEvent",
+                json!({ "type": "mouseReleased", "x": x, "y": y, "button": "left", "clickCount": 1 }),
+            )
+            .await
+            .map_err(|e| format!("click release: {e}"))?;
         Ok(())
     }
 
