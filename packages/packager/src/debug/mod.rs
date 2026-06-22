@@ -1247,12 +1247,132 @@ mod engine {
     }
 
     async fn cmd_press(client: &CdpClient, key: &str) -> Result<(), String> {
-        let js = format!(
-            r#"(() => {{ document.dispatchEvent(new KeyboardEvent('keydown', {{key: {key:?}, code: {key:?}, bubbles: true}})); document.dispatchEvent(new KeyboardEvent('keyup', {{key: {key:?}, code: {key:?}, bubbles: true}})); }})()"#,
-        );
-        client.evaluate(&js).await.map_err(|e| format!("press: {e}"))?;
+        let k = resolve_key(key)?;
+        // A bare printable char (no modifiers) is inserted via the real text
+        // path; everything else (special keys, modifier combos) goes through
+        // raw keyDown/keyUp dispatch. The keyDown carries `text` ("\r" for
+        // Enter, "\t" for Tab, …) so the browser performs its default action
+        // (form-submit, focus-traverse). All real CDP input — not the
+        // synthetic JS KeyboardEvent this used to dispatch on `document`.
+        if k.printable && k.modifiers == 0 {
+            client
+                .command("Input.insertText", json!({ "text": k.text }))
+                .await
+                .map_err(|e| format!("press: {e}"))?;
+        } else {
+            // type "keyDown" (not "rawKeyDown") when there's text, matching
+            // how Playwright dispatches keys that carry a text payload — this
+            // is what lets default actions (form submit on Enter, focus
+            // traversal on Tab) actually fire.
+            let key_type = if k.text.is_empty() { "rawKeyDown" } else { "keyDown" };
+            let mut down = json!({
+                "type": key_type, "key": k.key, "code": k.code, "modifiers": k.modifiers
+            });
+            if k.vk != 0 {
+                down["windowsVirtualKeyCode"] = json!(k.vk);
+            }
+            if !k.text.is_empty() {
+                down["text"] = json!(k.text);
+            }
+            client
+                .command("Input.dispatchKeyEvent", down)
+                .await
+                .map_err(|e| format!("press down: {e}"))?;
+            let mut up = json!({
+                "type": "keyUp", "key": k.key, "code": k.code, "modifiers": k.modifiers
+            });
+            if k.vk != 0 {
+                up["windowsVirtualKeyCode"] = json!(k.vk);
+            }
+            client
+                .command("Input.dispatchKeyEvent", up)
+                .await
+                .map_err(|e| format!("press up: {e}"))?;
+        }
         tokio::time::sleep(Duration::from_millis(50)).await;
         Ok(())
+    }
+
+    struct KeySpec {
+        modifiers: u8,
+        key: String,
+        code: String,
+        vk: u32,
+        /// `text` to carry on the keyDown (e.g. "\r" for Enter, "\t" for Tab,
+        /// the char itself for printable keys). Drives the browser's default
+        /// actions (form-submit on Enter, focus traversal on Tab, …).
+        text: String,
+        /// A bare printable character with no modifiers — type it via
+        /// `Input.insertText` rather than keyDown/keyUp.
+        printable: bool,
+    }
+
+    /// Resolve a press-key spec (e.g. "Enter", "ArrowUp", "Ctrl+a", "F2") into
+    /// the CDP input fields. Modifier prefixes (Alt/Ctrl/Control/Meta/Command/
+    /// Cmd/Shift) are parsed off; the remainder is matched against the named
+    /// keys (Enter, Tab, arrows, F1-F12, …) or treated as a single printable
+    /// character.
+    fn resolve_key(spec: &str) -> Result<KeySpec, String> {
+        let mut modifiers: u8 = 0;
+        let mut name = String::new();
+        for part in spec.split('+') {
+            match part.trim() {
+                "Alt" | "AltGraph" => modifiers |= 1,
+                "Control" | "Ctrl" => modifiers |= 2,
+                "Meta" | "Command" | "Cmd" => modifiers |= 4,
+                "Shift" => modifiers |= 8,
+                other => {
+                    if !name.is_empty() {
+                        name.push('+');
+                    }
+                    name.push_str(other);
+                }
+            }
+        }
+        if name.is_empty() {
+            return Err(format!("empty key spec: {spec}"));
+        }
+        // (key, code, vk, text, printable)
+        let (key, code, vk, text, printable): (String, String, u32, String, bool) =
+            match name.as_str() {
+                "Enter" | "Return" => ("Enter".into(), "Enter".into(), 13, "\r".into(), false),
+                "Tab" => ("Tab".into(), "Tab".into(), 9, "\t".into(), false),
+                "Escape" | "Esc" => ("Escape".into(), "Escape".into(), 27, String::new(), false),
+                "Backspace" => {
+                    ("Backspace".into(), "Backspace".into(), 8, String::new(), false)
+                }
+                "Delete" => ("Delete".into(), "Delete".into(), 46, String::new(), false),
+                "ArrowUp" => ("ArrowUp".into(), "ArrowUp".into(), 38, String::new(), false),
+                "ArrowDown" => ("ArrowDown".into(), "ArrowDown".into(), 40, String::new(), false),
+                "ArrowLeft" => ("ArrowLeft".into(), "ArrowLeft".into(), 37, String::new(), false),
+                "ArrowRight" => {
+                    ("ArrowRight".into(), "ArrowRight".into(), 39, String::new(), false)
+                }
+                "Home" => ("Home".into(), "Home".into(), 36, String::new(), false),
+                "End" => ("End".into(), "End".into(), 35, String::new(), false),
+                "PageUp" => ("PageUp".into(), "PageUp".into(), 33, String::new(), false),
+                "PageDown" => ("PageDown".into(), "PageDown".into(), 34, String::new(), false),
+                "Space" => (" ".into(), "Space".into(), 32, " ".into(), false),
+                f if f.starts_with('F') && f.len() >= 2 => {
+                    let n: u32 = f[1..].parse().map_err(|_| format!("bad function key: {f}"))?;
+                    if !(1..=12).contains(&n) {
+                        return Err(format!("unsupported function key: {f}"));
+                    }
+                    (f.to_string(), f.to_string(), 111 + n, String::new(), false)
+                }
+                c if c.chars().count() == 1 => {
+                    let ch = c.chars().next().unwrap();
+                    let code = match ch {
+                        'a'..='z' => format!("Key{}", ch.to_ascii_uppercase()),
+                        'A'..='Z' => format!("Key{ch}"),
+                        '0'..='9' => format!("Digit{ch}"),
+                        _ => String::new(),
+                    };
+                    (c.to_string(), code, 0, c.to_string(), true)
+                }
+                other => return Err(format!("unknown key: {other}")),
+            };
+        Ok(KeySpec { modifiers, key, code, vk, text, printable })
     }
 
     async fn cmd_scroll(
