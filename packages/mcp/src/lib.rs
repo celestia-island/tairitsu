@@ -167,6 +167,9 @@ struct DomQueryArgs {
     selector: String,
     /// If set, return only this single attribute's value instead of the full element.
     attribute: Option<String>,
+    /// If true, also include a default set of computed styles (display/color/dimensions/...).
+    #[serde(rename = "computed")]
+    computed: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -346,6 +349,9 @@ impl Server {
             if !attr.is_empty() {
                 query.push(("attribute", attr));
             }
+        }
+        if matches!(args.computed, Some(true)) {
+            query.push(("computed", "true"));
         }
         let v = self.http_get("dom", &query).await?;
         Ok(Self::tool_result(

@@ -142,6 +142,8 @@ struct ConsoleResponse {
 struct DomQueryParams {
     selector: String,
     attribute: Option<String>,
+    /// When true, include a default set of computed styles for the element.
+    computed: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -172,18 +174,6 @@ struct ReadyResponse {
     wasm_loaded: bool,
     hydrated: bool,
     url: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-struct ComputedStyleParams {
-    selector: String,
-    properties: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ComputedStyleResponse {
-    selector: String,
-    properties: serde_json::Map<String, serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -409,7 +399,8 @@ enum BrowserCommand {
     DomQuery {
         selector: String,
         attribute: Option<String>,
-        computed: Option<Vec<String>>,
+        /// Fetch a default set of computed styles for the element.
+        computed: bool,
         resp: oneshot::Sender<Result<DomNodeResponse, String>>,
     },
     IsReady {
@@ -1073,7 +1064,7 @@ mod engine {
                 let _ = resp.send(r);
             }
             BrowserCommand::DomQuery { selector, attribute, computed, resp } => {
-                let r = cmd_dom_query(client, &selector, attribute.as_deref(), computed.as_deref()).await;
+                let r = cmd_dom_query(client, &selector, attribute.as_deref(), computed).await;
                 let _ = resp.send(r);
             }
             BrowserCommand::IsReady { resp } => {
@@ -1389,7 +1380,7 @@ mod engine {
         client: &CdpClient,
         selector: &str,
         attribute: Option<&str>,
-        _computed: Option<&[String]>,
+        computed: bool,
     ) -> Result<DomNodeResponse, String> {
         if let Some(attr) = attribute {
             let js = format!(
@@ -1405,11 +1396,27 @@ mod engine {
                 visible: None, count, rect: None, computed: None,
             });
         }
-        let js = format!(
-            r#"(() => {{ const els = document.querySelectorAll({sel:?}); if (!els.length) throw 'not found'; const el = els[0]; const r = el.getBoundingClientRect(); return JSON.stringify({{ tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().substring(0, 2000), html: el.outerHTML.substring(0, 5000), attrs: Object.fromEntries(Array.from(el.attributes).map(a => [a.name, a.value])), visible: r.width > 0 && r.height > 0, count: els.length, rect: {{ x: r.x, y: r.y, width: r.width, height: r.height }} }}); }})()"#,
-            sel = selector,
-        );
-        let val = client.evaluate(&js).await.map_err(|e| format!("dom query: {e}"))?;
+        // Full element description. `attributes` (not `attrs`) so it maps to the
+        // DomNodeResponse field; `computed` fetches a default property set when
+        // requested (folding the old /dom/computed endpoint into /dom).
+        let js_body = r#"
+(() => {
+  const els = document.querySelectorAll(__SEL__);
+  if (!els.length) throw 'not found';
+  const el = els[0];
+  const r = el.getBoundingClientRect();
+  const attributes = Object.fromEntries(Array.from(el.attributes).map(a => [a.name, a.value]));
+  var computed = null;
+  if (__COMPUTED__) {
+    const cs = getComputedStyle(el);
+    const props = ['display','visibility','opacity','color','background-color','width','height','margin-top','margin-right','margin-bottom','margin-left','padding-top','padding-right','padding-bottom','padding-left','border-width','border-radius','font-size','font-weight','line-height','position','z-index','overflow','cursor'];
+    computed = Object.fromEntries(props.map(p => [p, cs.getPropertyValue(p)]));
+  }
+  return JSON.stringify({ tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().substring(0, 2000), html: el.outerHTML.substring(0, 5000), attributes: attributes, visible: r.width > 0 && r.height > 0, count: els.length, rect: { x: r.x, y: r.y, width: r.width, height: r.height }, computed: computed });
+})()
+"#.replace("__SEL__", &format!("{selector:?}"))
+   .replace("__COMPUTED__", &computed.to_string());
+        let val = client.evaluate(&js_body).await.map_err(|e| format!("dom query: {e}"))?;
         let json_str = val.as_str().ok_or_else(|| "dom query: non-string result".to_string())?;
         serde_json::from_str::<DomNodeResponse>(json_str)
             .map_err(|e| format!("dom query deserialize: {e}"))
@@ -1919,7 +1926,6 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
         .route("/console", get(console_handler))
         .route("/console", delete(console_clear_handler))
         .route("/dom", get(dom_query_handler))
-        .route("/dom/computed", post(computed_style_handler))
         .route("/viewport", get(viewport_handler))
         .route("/resize", post(resize_handler))
         .route("/errors", get(errors_handler))
@@ -2257,7 +2263,7 @@ async fn dom_query_handler(
         .send(BrowserCommand::DomQuery {
             selector: params.selector,
             attribute: params.attribute,
-            computed: None,
+            computed: params.computed.unwrap_or(false),
             resp: tx,
         })
         .await
@@ -2266,47 +2272,6 @@ async fn dom_query_handler(
         return chan_closed::<DomNodeResponse>();
     }
     await_op(rx).await
-}
-
-async fn computed_style_handler(
-    State(state): State<DebugState>,
-    Json(params): Json<ComputedStyleParams>,
-) -> impl IntoResponse {
-    let br = match &state.browser {
-        Some(b) => b,
-        None => return svc_unavailable::<ComputedStyleResponse>(),
-    };
-    let (tx, rx) = oneshot::channel();
-    if br
-        .send(BrowserCommand::DomQuery {
-            selector: params.selector.clone(),
-            attribute: None,
-            computed: params.properties,
-            resp: tx,
-        })
-        .await
-        .is_err()
-    {
-        return chan_closed::<ComputedStyleResponse>();
-    }
-    match tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await {
-        Ok(Ok(Ok(dom))) => {
-            let computed = dom.computed.unwrap_or_default();
-            (
-                StatusCode::OK,
-                ResponseJson(ApiResponse::ok(ComputedStyleResponse {
-                    selector: params.selector,
-                    properties: computed,
-                })),
-            )
-        }
-        Ok(Ok(Err(e))) => (StatusCode::BAD_REQUEST, ResponseJson(ApiResponse::err(e))),
-        Ok(Err(_)) => chan_closed::<ComputedStyleResponse>(),
-        Err(_) => (
-            StatusCode::GATEWAY_TIMEOUT,
-            ResponseJson(ApiResponse::err("Operation timed out")),
-        ),
-    }
 }
 
 async fn viewport_handler(State(state): State<DebugState>) -> impl IntoResponse {
