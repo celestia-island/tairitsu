@@ -1415,6 +1415,153 @@ mod engine {
         selector: Option<&str>,
         depth: u32,
     ) -> Result<Vec<A11yNode>, String> {
+        // Selector-scoped snapshots keep the JS walker (it scopes to an element
+        // easily). Whole-page snapshots prefer the browser's real accessibility
+        // tree — accurate computed names/roles, shadow-DOM aware — and fall
+        // back to the JS walker if the CDP tree is unavailable or empty.
+        if selector.is_some() {
+            return a11y_via_js(client, selector, depth).await;
+        }
+        match a11y_via_cdp(client, depth).await {
+            Ok(nodes) if !nodes.is_empty() => Ok(nodes),
+            _ => a11y_via_js(client, selector, depth).await,
+        }
+    }
+
+    /// Whole-page accessibility tree from the browser's real a11y domain — more
+    /// accurate than the JS walker (computed names, implicit/ARIA roles, shadow
+    /// DOM). Ignored nodes are hoisted so structural wrappers don't consume the
+    /// caller's depth budget.
+    async fn a11y_via_cdp(client: &CdpClient, depth: u32) -> Result<Vec<A11yNode>, String> {
+        let resp = client
+            .command("Accessibility.getFullAXTree", json!({}))
+            .await
+            .map_err(|e| format!("a11y cdp: {e}"))?;
+        let nodes = resp
+            .get("nodes")
+            .and_then(|n| n.as_array())
+            .cloned()
+            .unwrap_or_default();
+        if nodes.is_empty() {
+            return Ok(vec![]);
+        }
+        let by_id: HashMap<String, Value> = nodes
+            .iter()
+            .filter_map(|n| {
+                n.get("nodeId")
+                    .and_then(|v| v.as_str())
+                    .map(|id| (id.to_string(), n.clone()))
+            })
+            .collect();
+        // Roots: nodes with no parent (or a parent absent from the tree).
+        let mut root_ids: Vec<String> = nodes
+            .iter()
+            .filter_map(|n| {
+                let id = n.get("nodeId").and_then(|v| v.as_str())?;
+                let pid = n.get("parentId").and_then(|v| v.as_str());
+                match pid {
+                    None => Some(id.to_string()),
+                    Some(p) if !by_id.contains_key(p) => Some(id.to_string()),
+                    _ => None,
+                }
+            })
+            .collect();
+        if root_ids.is_empty() {
+            if let Some(id) = nodes.first().and_then(|n| n.get("nodeId")).and_then(|v| v.as_str()) {
+                root_ids.push(id.to_string());
+            }
+        }
+        Ok(root_ids
+            .iter()
+            .flat_map(|id| a11y_collect(id, &by_id, 0, depth))
+            .collect())
+    }
+
+    fn a11y_collect(
+        id: &str,
+        by_id: &HashMap<String, Value>,
+        depth: u32,
+        max_depth: u32,
+    ) -> Vec<A11yNode> {
+        let n = match by_id.get(id) {
+            Some(n) => n,
+            None => return vec![],
+        };
+        let child_ids: Vec<String> = n
+            .get("childIds")
+            .and_then(|c| c.as_array())
+            .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .unwrap_or_default();
+        // Ignored nodes aren't exposed to assistive tech — surface their
+        // children at the same depth instead of emitting the wrapper.
+        if n.get("ignored").and_then(|v| v.as_bool()).unwrap_or(false) {
+            return child_ids
+                .iter()
+                .flat_map(|c| a11y_collect(c, by_id, depth, max_depth))
+                .collect();
+        }
+        if depth > max_depth {
+            return vec![];
+        }
+        let children: Vec<A11yNode> = if depth < max_depth {
+            child_ids
+                .iter()
+                .flat_map(|c| a11y_collect(c, by_id, depth + 1, max_depth))
+                .collect()
+        } else {
+            vec![]
+        };
+        vec![A11yNode {
+            name: a11y_str(n, "name"),
+            role: a11y_str(n, "role"),
+            description: a11y_str(n, "description"),
+            states: a11y_states(n),
+            tag: None,
+            children,
+        }]
+    }
+
+    fn a11y_str(n: &Value, field: &str) -> Option<String> {
+        n.get(field)
+            .and_then(|o| o.get("value"))
+            .and_then(|v| v.as_str())
+            .map(String::from)
+    }
+
+    fn a11y_states(n: &Value) -> Vec<String> {
+        let mut out = Vec::new();
+        let Some(props) = n.get("properties").and_then(|p| p.as_array()) else {
+            return out;
+        };
+        for p in props {
+            let name = p.get("name").and_then(|v| v.as_str()).unwrap_or("");
+            let val = p.get("value").and_then(|v| v.get("value"));
+            match name {
+                "disabled" if val.and_then(|v| v.as_bool()).unwrap_or(false) => out.push("disabled".into()),
+                "expanded" => match val.and_then(|v| v.as_bool()) {
+                    Some(true) => out.push("expanded".into()),
+                    Some(false) => out.push("collapsed".into()),
+                    _ => {}
+                },
+                "checked" => match val {
+                    Some(v) if v.as_bool() == Some(true) => out.push("checked".into()),
+                    Some(v) if v.as_str() == Some("mixed") => out.push("mixed".into()),
+                    _ => {}
+                },
+                "selected" if val.and_then(|v| v.as_bool()).unwrap_or(false) => out.push("selected".into()),
+                "focused" if val.and_then(|v| v.as_bool()).unwrap_or(false) => out.push("focused".into()),
+                "hidden" if val.and_then(|v| v.as_bool()).unwrap_or(false) => out.push("hidden".into()),
+                _ => {}
+            }
+        }
+        out
+    }
+
+    async fn a11y_via_js(
+        client: &CdpClient,
+        selector: Option<&str>,
+        depth: u32,
+    ) -> Result<Vec<A11yNode>, String> {
         let sel_js = match selector {
             Some(s) => format!("document.querySelector({s:?})"),
             None => "document.body".to_string(),
