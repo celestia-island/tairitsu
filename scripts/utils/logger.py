@@ -54,6 +54,13 @@ _LEVELS = {
     "ERROR": "red",
 }
 
+# Canonical column widths — the single source of truth. Every caller shares
+# these so the TIME/LEVEL/MODULE columns align across processes in one session
+# (e.g. dev.py + its imported preflight + its check_i18n subprocess). Override
+# only if a whole session genuinely needs different widths.
+SOURCE_WIDTH = 13
+MODULE_WIDTH = 12
+
 _ANSI = {
     "dim": "\033[2m",
     "cyan": "\033[0;36m",
@@ -120,8 +127,8 @@ class Logger:
         source: str = "dev",
         module: Optional[str] = None,
         *,
-        source_width: int = 10,
-        module_width: int = 12,
+        source_width: int = SOURCE_WIDTH,
+        module_width: int = MODULE_WIDTH,
         stream: Optional[IO] = None,
     ) -> None:
         self.source = source

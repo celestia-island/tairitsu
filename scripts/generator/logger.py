@@ -21,7 +21,7 @@ try:
     _mod = importlib.util.module_from_spec(_spec)
     assert _spec.loader is not None
     _spec.loader.exec_module(_mod)
-    _log = _mod.Logger(source="tairitsu", module="gen", source_width=10, module_width=12)
+    _log = _mod.Logger(source="tairitsu", module="gen")
 except (OSError, ImportError, AssertionError):
     _log = None
 
