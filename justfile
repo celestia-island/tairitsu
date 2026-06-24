@@ -31,6 +31,8 @@ python := if os_family() == "windows" { "python" } else { "python3" }
 default:
     @just --list
 
+import "../just-common/build.just"
+
 # ============================================================================
 # Tool installation and initialization
 # ============================================================================
@@ -82,23 +84,9 @@ clean-idl-cache:
 
 # Build everything (Debug mode)
 # Build everything. Release by default; `--dev` for debug, `--clean` to clean first.
-build *FLAGS='': init
-    #!/usr/bin/env bash
-    set -euo pipefail
-    profile=release
-    for a in {{FLAGS}}; do
-      case "$a" in
-        --dev)   profile=dev ;;
-        --clean) just clean ;;
-      esac
-    done
-    if [ "$profile" = dev ]; then
-      echo "Building all (Debug mode)..."
-      cargo build --all
-    else
-      echo "Building all (Release mode)..."
-      cargo build --release --all
-    fi
+build *FLAGS='':
+    just init
+    just _build ":" "cargo build --all" "cargo build --release --all" {{FLAGS}}
 
 # Build simple example WASM module
 build-simple-wasm:
