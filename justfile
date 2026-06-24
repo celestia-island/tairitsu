@@ -220,8 +220,9 @@ fmt-check:
 
 # Format all code
 fmt:
-    @echo "Formatting all code..."
+    cargo clippy --all-targets --all-features -- -D warnings
     cargo fmt --all
+    python3 scripts/utils/enforce_use_groups.py
 
 # CI checks (format check + clippy + test)
 ci: fmt-check clippy test
