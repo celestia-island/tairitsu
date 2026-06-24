@@ -81,18 +81,24 @@ clean-idl-cache:
 # ============================================================================
 
 # Build everything (Debug mode)
-build-dev: init
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Building all (Debug mode)..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo build --all
-
-# Build everything (Release mode)
-build: init
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Building all (Release mode)..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo build --release --all
+# Build everything. Release by default; `--dev` for debug, `--clean` to clean first.
+build *FLAGS='': init
+    #!/usr/bin/env bash
+    set -euo pipefail
+    profile=release
+    for a in {{FLAGS}}; do
+      case "$a" in
+        --dev)   profile=dev ;;
+        --clean) just clean ;;
+      esac
+    done
+    if [ "$profile" = dev ]; then
+      echo "Building all (Debug mode)..."
+      cargo build --all
+    else
+      echo "Building all (Release mode)..."
+      cargo build --release --all
+    fi
 
 # Build simple example WASM module
 build-simple-wasm:
