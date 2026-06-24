@@ -107,52 +107,15 @@ run-simple-demo:
     @echo "Running simple demo..."
     cargo run --package tairitsu-example-wit-native-simple --bin simple-demo
 
-# Run simple host (complete integration example)
-run-simple-host:
-    @echo "Running simple host..."
-    cargo run --package tairitsu-example-wit-native-simple --bin simple-host
-
-# Run simple WASM example (complete bidirectional communication)
-run-simple-wasm:
-    @echo "Building simple WASM..."
-    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
-    @echo "Running simple WASM example..."
-    cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
-
 # Run macro demo (macro-generated WIT interfaces)
 run-macro-demo:
     @echo "Running macro demo..."
     cargo run --package tairitsu-example-wit-native-macro --bin macro-demo
 
-# Run macro host (complete integration example)
-run-macro-host:
-    @echo "Running macro host..."
-    cargo run --package tairitsu-example-wit-native-macro --bin macro-host
-
-# Run macro WASM example (complete bidirectional communication)
-run-macro-wasm:
-    @echo "Building macro WASM..."
-    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
-    @echo "Running macro WASM example..."
-    cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
-
 # Run dynamic advanced demo (RON + complex types)
 run-dynamic-advanced:
     @echo "Running dynamic advanced example..."
     cargo run --package tairitsu-example-wit-dynamic-advanced --bin dynamic-advanced-demo
-
-# Run all examples
-run-all: run-simple-demo run-simple-host run-simple-wasm run-macro-demo run-macro-host run-macro-wasm run-dynamic-advanced
-
-# Run all WASM examples
-run-all-wasm:
-    @echo "Building all WASM modules..."
-    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
-    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
-    @echo "Running simple WASM example..."
-    cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
-    @echo "Running macro WASM example..."
-    cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
 
 # ============================================================================
 # Test tasks
