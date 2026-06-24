@@ -31,10 +31,6 @@ python := if os_family() == "windows" { "python" } else { "python3" }
 default:
     @just --list
 
-# ── build flag parser (inlined; repos are self-contained, no shared just-common) ──
-#   always-pre — runs before every build (pass ":" for nothing)
-#   --dev      — debug build instead of release
-#   --clean    — `cargo clean` before anything else
 _build always_pre dcmd rcmd *FLAGS='':
     #!/usr/bin/env bash
     set -euo pipefail
