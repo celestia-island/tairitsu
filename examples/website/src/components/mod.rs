@@ -453,18 +453,22 @@ pub fn sidebar() -> VNode {
         ));
     }
 
-    let menu_list = VNode::Element(Box::new(el("ul").class("hi-menu-list").children(category_nodes)));
+    let menu_list = VNode::Element(Box::new(
+        el("ul").class("hi-menu-list").children(category_nodes),
+    ));
 
     VNode::Element(Box::new(
         el("aside")
             .attr("id", "ts-aside")
             .class("hi-aside hi-aside-drawer hi-aside-lg hi-aside-light")
             .child(VNode::Element(Box::new(
-                el("div").class("hi-aside-content").child(VNode::Element(Box::new(
-                    el("nav")
-                        .class("hi-menu hi-menu-vertical hi-menu-compact")
-                        .child(menu_list),
-                ))),
+                el("div")
+                    .class("hi-aside-content")
+                    .child(VNode::Element(Box::new(
+                        el("nav")
+                            .class("hi-menu hi-menu-vertical hi-menu-compact")
+                            .child(menu_list),
+                    ))),
             )))
             .child(aside_footer()),
     ))
@@ -565,7 +569,9 @@ pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
             )));
         }
     }
-    VNode::Element(Box::new(el("nav").class("hi-breadcrumb").children(children)))
+    VNode::Element(Box::new(
+        el("nav").class("hi-breadcrumb").children(children),
+    ))
 }
 
 // ============================================================

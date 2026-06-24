@@ -60,9 +60,12 @@ pub fn render_markdown(md: &str) -> VNode {
                             .take()
                             .map(|l| format!("hi-code-block language-{}", l))
                             .unwrap_or_else(|| "hi-code-block".to_string());
-                        let wrapped = el("div")
-                            .class(class_str.as_str())
-                            .child(VNode::Element(Box::new(el("pre").child(VNode::Element(Box::new(elem))))));
+                        let wrapped =
+                            el("div")
+                                .class(class_str.as_str())
+                                .child(VNode::Element(Box::new(
+                                    el("pre").child(VNode::Element(Box::new(elem))),
+                                )));
                         push_child(&mut stack, &mut root, VNode::Element(Box::new(wrapped)));
                     }
                     TagEnd::List(is_ordered) => {
@@ -91,7 +94,9 @@ pub fn render_markdown(md: &str) -> VNode {
                 push_child(
                     &mut stack,
                     &mut root,
-                    VNode::Element(Box::new(el("code").class("hi-inline-code").child(txt(&code)))),
+                    VNode::Element(Box::new(
+                        el("code").class("hi-inline-code").child(txt(&code)),
+                    )),
                 );
             }
             Event::SoftBreak => {

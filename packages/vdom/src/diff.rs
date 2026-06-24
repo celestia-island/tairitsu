@@ -496,7 +496,9 @@ mod tests {
     #[test]
     fn test_diff_element_attribute_addition() {
         let old = VNode::Element(Box::new(VElement::new("div")));
-        let new = VNode::Element(Box::new(VElement::new("div").attr("id", "app").attr("data-x", "1")));
+        let new = VNode::Element(Box::new(
+            VElement::new("div").attr("id", "app").attr("data-x", "1"),
+        ));
 
         let patches = diff(Some(&old), &new);
 
@@ -546,8 +548,12 @@ mod tests {
 
     #[test]
     fn test_diff_element_attribute_update() {
-        let old = VNode::Element(Box::new(VElement::new("div").attr("class", "old").attr("id", "x")));
-        let new = VNode::Element(Box::new(VElement::new("div").attr("class", "new").attr("id", "x")));
+        let old = VNode::Element(Box::new(
+            VElement::new("div").attr("class", "old").attr("id", "x"),
+        ));
+        let new = VNode::Element(Box::new(
+            VElement::new("div").attr("class", "new").attr("id", "x"),
+        ));
 
         let patches = diff(Some(&old), &new);
 
@@ -565,7 +571,9 @@ mod tests {
 
     #[test]
     fn test_diff_element_style_changes() {
-        let old = VNode::Element(Box::new(VElement::new("div").style(Style::new().add("color", "red"))));
+        let old = VNode::Element(Box::new(
+            VElement::new("div").style(Style::new().add("color", "red")),
+        ));
         let new = VNode::Element(Box::new(
             VElement::new("div").style(Style::new().add("color", "blue").add("font-size", "16px")),
         ));
@@ -589,8 +597,12 @@ mod tests {
 
     #[test]
     fn test_diff_element_style_no_change() {
-        let old = VNode::Element(Box::new(VElement::new("div").style(Style::new().add("color", "red"))));
-        let new = VNode::Element(Box::new(VElement::new("div").style(Style::new().add("color", "red"))));
+        let old = VNode::Element(Box::new(
+            VElement::new("div").style(Style::new().add("color", "red")),
+        ));
+        let new = VNode::Element(Box::new(
+            VElement::new("div").style(Style::new().add("color", "red")),
+        ));
 
         let patches = diff(Some(&old), &new);
 
@@ -604,8 +616,12 @@ mod tests {
 
     #[test]
     fn test_diff_element_class_changes() {
-        let old = VNode::Element(Box::new(VElement::new("div").class(Classes::new().add("a").add("b"))));
-        let new = VNode::Element(Box::new(VElement::new("div").class(Classes::new().add("a").add("c"))));
+        let old = VNode::Element(Box::new(
+            VElement::new("div").class(Classes::new().add("a").add("b")),
+        ));
+        let new = VNode::Element(Box::new(
+            VElement::new("div").class(Classes::new().add("a").add("c")),
+        ));
 
         let patches = diff(Some(&old), &new);
 
@@ -625,8 +641,12 @@ mod tests {
 
     #[test]
     fn test_diff_element_class_no_change() {
-        let old = VNode::Element(Box::new(VElement::new("div").class(Classes::new().add("foo"))));
-        let new = VNode::Element(Box::new(VElement::new("div").class(Classes::new().add("foo"))));
+        let old = VNode::Element(Box::new(
+            VElement::new("div").class(Classes::new().add("foo")),
+        ));
+        let new = VNode::Element(Box::new(
+            VElement::new("div").class(Classes::new().add("foo")),
+        ));
 
         let patches = diff(Some(&old), &new);
 
@@ -909,8 +929,9 @@ mod tests {
 
     #[test]
     fn test_diff_css_variable_change() {
-        let old =
-            VNode::Element(Box::new(VElement::new("div").style(Style::new().add_custom("--color", "red"))));
+        let old = VNode::Element(Box::new(
+            VElement::new("div").style(Style::new().add_custom("--color", "red")),
+        ));
         let new = VNode::Element(Box::new(
             VElement::new("div").style(
                 Style::new()
@@ -928,10 +949,12 @@ mod tests {
 
     #[test]
     fn test_diff_css_variable_only_change() {
-        let old =
-            VNode::Element(Box::new(VElement::new("div").style(Style::new().add_custom("--gap", "8px"))));
-        let new =
-            VNode::Element(Box::new(VElement::new("div").style(Style::new().add_custom("--gap", "16px"))));
+        let old = VNode::Element(Box::new(
+            VElement::new("div").style(Style::new().add_custom("--gap", "8px")),
+        ));
+        let new = VNode::Element(Box::new(
+            VElement::new("div").style(Style::new().add_custom("--gap", "16px")),
+        ));
 
         let patches = diff(Some(&old), &new);
         assert!(
@@ -942,8 +965,12 @@ mod tests {
 
     #[test]
     fn test_diff_event_handler_change_produces_update() {
-        let old = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
-        let new = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
+        let old = VNode::Element(Box::new(
+            VElement::new("button").on_event("click", move |_| {}),
+        ));
+        let new = VNode::Element(Box::new(
+            VElement::new("button").on_event("click", move |_| {}),
+        ));
 
         let patches = diff(Some(&old), &new);
         assert!(
@@ -957,7 +984,9 @@ mod tests {
     #[test]
     fn test_diff_event_handler_add() {
         let old = VNode::Element(Box::new(VElement::new("button")));
-        let new = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
+        let new = VNode::Element(Box::new(
+            VElement::new("button").on_event("click", move |_| {}),
+        ));
 
         let patches = diff(Some(&old), &new);
         assert!(patches.iter().any(|p| matches!(p, Patch::AddEvent { .. })));
@@ -965,7 +994,9 @@ mod tests {
 
     #[test]
     fn test_diff_event_handler_remove() {
-        let old = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
+        let old = VNode::Element(Box::new(
+            VElement::new("button").on_event("click", move |_| {}),
+        ));
         let new = VNode::Element(Box::new(VElement::new("button")));
 
         let patches = diff(Some(&old), &new);
@@ -996,8 +1027,12 @@ mod tests {
 
     #[test]
     fn test_diff_event_handler_unchanged_produces_update() {
-        let old = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
-        let new = VNode::Element(Box::new(VElement::new("button").on_event("click", move |_| {})));
+        let old = VNode::Element(Box::new(
+            VElement::new("button").on_event("click", move |_| {}),
+        ));
+        let new = VNode::Element(Box::new(
+            VElement::new("button").on_event("click", move |_| {}),
+        ));
 
         let patches = diff(Some(&old), &new);
         assert!(
@@ -1031,16 +1066,44 @@ mod tests {
 
     #[test]
     fn test_diff_keyed_with_same_keys_different_order() {
-        let old = VNode::Element(Box::new(VElement::new("ul").children(vec![
-            VNode::Element(Box::new(VElement::new("li").key("a").child(VNode::Text(VText::new("A"))))),
-            VNode::Element(Box::new(VElement::new("li").key("b").child(VNode::Text(VText::new("B"))))),
-            VNode::Element(Box::new(VElement::new("li").key("c").child(VNode::Text(VText::new("C"))))),
-        ])));
-        let new = VNode::Element(Box::new(VElement::new("ul").children(vec![
-            VNode::Element(Box::new(VElement::new("li").key("c").child(VNode::Text(VText::new("C"))))),
-            VNode::Element(Box::new(VElement::new("li").key("a").child(VNode::Text(VText::new("A"))))),
-            VNode::Element(Box::new(VElement::new("li").key("b").child(VNode::Text(VText::new("B"))))),
-        ])));
+        let old = VNode::Element(Box::new(
+            VElement::new("ul").children(vec![
+                VNode::Element(Box::new(
+                    VElement::new("li")
+                        .key("a")
+                        .child(VNode::Text(VText::new("A"))),
+                )),
+                VNode::Element(Box::new(
+                    VElement::new("li")
+                        .key("b")
+                        .child(VNode::Text(VText::new("B"))),
+                )),
+                VNode::Element(Box::new(
+                    VElement::new("li")
+                        .key("c")
+                        .child(VNode::Text(VText::new("C"))),
+                )),
+            ]),
+        ));
+        let new = VNode::Element(Box::new(
+            VElement::new("ul").children(vec![
+                VNode::Element(Box::new(
+                    VElement::new("li")
+                        .key("c")
+                        .child(VNode::Text(VText::new("C"))),
+                )),
+                VNode::Element(Box::new(
+                    VElement::new("li")
+                        .key("a")
+                        .child(VNode::Text(VText::new("A"))),
+                )),
+                VNode::Element(Box::new(
+                    VElement::new("li")
+                        .key("b")
+                        .child(VNode::Text(VText::new("B"))),
+                )),
+            ]),
+        ));
 
         let patches = diff(Some(&old), &new);
         assert!(!patches.is_empty(), "Keyed reorder should produce patches");

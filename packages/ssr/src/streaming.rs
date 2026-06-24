@@ -436,10 +436,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_render_suspense_boundary() {
-        let fallback =
-            VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Loading...")))));
-        let content =
-            VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Hello, World!")))));
+        let fallback = VNode::Element(Box::new(
+            VElement::new("div").child(VNode::Text(VText::new("Loading..."))),
+        ));
+        let content = VNode::Element(Box::new(
+            VElement::new("div").child(VNode::Text(VText::new("Hello, World!"))),
+        ));
 
         let chunks = render_suspense_boundary("test-suspense", fallback, content).await;
 

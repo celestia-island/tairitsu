@@ -1,7 +1,7 @@
 //! Browser management module
 
-pub mod cdp;
 mod cache;
+pub mod cdp;
 mod downloader;
 mod platform;
 

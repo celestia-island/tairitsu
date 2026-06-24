@@ -165,7 +165,9 @@ fn expand_inline_scss(content: &str, scope: Option<&str>) -> TokenStream2 {
 fn expand_file_scss(path: &str, scope: Option<&str>) -> TokenStream2 {
     let crate_root = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(v) => v,
-        Err(_) => return quote! { compile_error!("CARGO_MANIFEST_DIR not set — cannot resolve SCSS file path") },
+        Err(_) => {
+            return quote! { compile_error!("CARGO_MANIFEST_DIR not set — cannot resolve SCSS file path") }
+        }
     };
 
     let full_path = std::path::Path::new(&crate_root).join(path);

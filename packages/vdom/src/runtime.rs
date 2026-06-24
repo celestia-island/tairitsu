@@ -28,10 +28,16 @@ thread_local! {
 /// Retrieve or initialize a hook slot for the given component and key.
 /// Returns a clone of the stored value if present, otherwise stores and
 /// returns the result of `init_fn`.
-pub fn hook_slot<T: Clone + 'static>(component_id: ComponentId, key: &str, init_fn: impl FnOnce() -> T) -> T {
+pub fn hook_slot<T: Clone + 'static>(
+    component_id: ComponentId,
+    key: &str,
+    init_fn: impl FnOnce() -> T,
+) -> T {
     HOOK_SLOT.with(|slots| {
         let mut slots = slots.borrow_mut();
-        let entry = slots.entry((component_id, key.to_string())).or_insert_with(|| Box::new(init_fn()));
+        let entry = slots
+            .entry((component_id, key.to_string()))
+            .or_insert_with(|| Box::new(init_fn()));
         entry.downcast_ref::<T>().cloned().unwrap()
     })
 }
@@ -39,7 +45,9 @@ pub fn hook_slot<T: Clone + 'static>(component_id: ComponentId, key: &str, init_
 /// Clear all hook slots for a component (called during cleanup).
 pub fn clear_hook_slots(component_id: ComponentId) {
     HOOK_SLOT.with(|slots| {
-        slots.borrow_mut().retain(|(cid, _), _| *cid != component_id);
+        slots
+            .borrow_mut()
+            .retain(|(cid, _), _| *cid != component_id);
     });
 }
 

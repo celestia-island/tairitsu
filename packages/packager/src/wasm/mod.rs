@@ -1909,7 +1909,8 @@ pub async fn dev_server(
             package_name: config.package.name.clone(),
         };
         tokio::spawn(async move {
-            if let Err(e) = crate::debug::start_debug_server(debug_cfg, effective_debug_port).await {
+            if let Err(e) = crate::debug::start_debug_server(debug_cfg, effective_debug_port).await
+            {
                 crate::log_warn!("Debug API server error: {}", e);
             }
         });

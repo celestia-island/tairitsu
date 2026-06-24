@@ -374,11 +374,11 @@ impl ErrorDisplay {
                     "error-display {}",
                     self.error.error_type.css_class()
                 ))
-                .child(VNode::Element(Box::new(VElement::new("strong").child(VNode::Text(
-                    tairitsu_vdom::VText {
+                .child(VNode::Element(Box::new(VElement::new("strong").child(
+                    VNode::Text(tairitsu_vdom::VText {
                         text: format!("{}:", self.error.error_type.title()),
-                    },
-                )))))
+                    }),
+                ))))
                 .child(VNode::Text(tairitsu_vdom::VText {
                     text: format!(" {}", self.error.message),
                 })),
@@ -428,7 +428,9 @@ impl ErrorOverlay {
     /// Render the overlay
     pub fn render(&self) -> VNode {
         if self.errors.is_empty() {
-            return VNode::Element(Box::new(VElement::new("div").attr("data-empty-overflow", "")));
+            return VNode::Element(Box::new(
+                VElement::new("div").attr("data-empty-overflow", ""),
+            ));
         }
 
         // Show the first error (most recent)

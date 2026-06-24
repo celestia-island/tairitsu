@@ -534,8 +534,7 @@ mod engine {
             let payload = json!({ "id": id, "method": method, "params": params });
             let (tx, rx) = oneshot::channel();
             self.inner.pending.lock().await.insert(id, tx);
-            let raw =
-                serde_json::to_string(&payload).map_err(|e| format!("cdp encode: {e}"))?;
+            let raw = serde_json::to_string(&payload).map_err(|e| format!("cdp encode: {e}"))?;
             self.inner
                 .outbox
                 .send(raw)
@@ -607,7 +606,11 @@ mod engine {
             Some(t) => t,
             None => return chrono::Utc::now().to_rfc3339(),
         };
-        let secs = if raw > 4_000_000_000.0 { raw / 1000.0 } else { raw };
+        let secs = if raw > 4_000_000_000.0 {
+            raw / 1000.0
+        } else {
+            raw
+        };
         let whole = secs.floor() as i64;
         let nanos = ((secs - secs.floor()) * 1e9) as u32;
         chrono::DateTime::from_timestamp(whole, nanos)
@@ -750,25 +753,24 @@ mod engine {
                                 .get("args")
                                 .and_then(|a| a.as_array())
                                 .map(|args| {
-                                    args.iter().map(remote_object_text).collect::<Vec<_>>().join(" ")
+                                    args.iter()
+                                        .map(remote_object_text)
+                                        .collect::<Vec<_>>()
+                                        .join(" ")
                                 })
                                 .unwrap_or_default();
                             let mut buf = console_buf.write().await;
                             buf.push(ConsoleEntry {
                                 level,
                                 text,
-                                timestamp: cdp_ts(
-                                    p.get("timestamp").and_then(|t| t.as_f64()),
-                                ),
+                                timestamp: cdp_ts(p.get("timestamp").and_then(|t| t.as_f64())),
                                 source: Some("runtime".into()),
                             });
                             truncate_vec(&mut buf, 500);
                         }
                     }
                     "Runtime.exceptionThrown" => {
-                        if let Some(ed) =
-                            v.get("params").and_then(|p| p.get("exceptionDetails"))
-                        {
+                        if let Some(ed) = v.get("params").and_then(|p| p.get("exceptionDetails")) {
                             let message = ed
                                 .get("exception")
                                 .and_then(|e| e.get("description"))
@@ -783,15 +785,13 @@ mod engine {
                                 .map(|frames| {
                                     frames
                                         .iter()
-                                        .filter_map(|f| {
+                                        .map(|f| {
                                             let fn_ = f
                                                 .get("functionName")
                                                 .and_then(|x| x.as_str())
                                                 .unwrap_or("<anon>");
-                                            let url = f
-                                                .get("url")
-                                                .and_then(|x| x.as_str())
-                                                .unwrap_or("");
+                                            let url =
+                                                f.get("url").and_then(|x| x.as_str()).unwrap_or("");
                                             let ln = f
                                                 .get("lineNumber")
                                                 .and_then(|x| x.as_i64())
@@ -800,7 +800,7 @@ mod engine {
                                                 .get("columnNumber")
                                                 .and_then(|x| x.as_i64())
                                                 .unwrap_or(0);
-                                            Some(format!("    at {fn_} ({url}:{ln}:{co})"))
+                                            format!("    at {fn_} ({url}:{ln}:{co})")
                                         })
                                         .collect::<Vec<_>>()
                                         .join("\n")
@@ -830,10 +830,15 @@ mod engine {
                                     .and_then(|x| x.as_str())
                                     .unwrap_or("")
                                     .to_string();
-                                let method =
-                                    req.and_then(|r| r.get("method")).and_then(|x| x.as_str()).map(String::from);
-                                let typ =
-                                    p.get("type").and_then(|x| x.as_str()).unwrap_or("Other").to_string();
+                                let method = req
+                                    .and_then(|r| r.get("method"))
+                                    .and_then(|x| x.as_str())
+                                    .map(String::from);
+                                let typ = p
+                                    .get("type")
+                                    .and_then(|x| x.as_str())
+                                    .unwrap_or("Other")
+                                    .to_string();
                                 let started =
                                     p.get("timestamp").and_then(|t| t.as_f64()).unwrap_or(0.0);
                                 let mut buf = network_buf.write().await;
@@ -912,13 +917,20 @@ mod engine {
                     "Network.webSocketCreated" => {
                         if let Some(p) = v.get("params") {
                             if let Some(id) = p.get("requestId").and_then(|x| x.as_str()) {
-                                let url =
-                                    p.get("url").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                                let url = p
+                                    .get("url")
+                                    .and_then(|x| x.as_str())
+                                    .unwrap_or("")
+                                    .to_string();
                                 let ts = p.get("timestamp").and_then(|t| t.as_f64());
                                 let mut buf = ws_buf.write().await;
                                 buf.insert(
                                     id.to_string(),
-                                    WebSocketConn { url, state: "connecting".into(), created_at_ms: ts },
+                                    WebSocketConn {
+                                        url,
+                                        state: "connecting".into(),
+                                        created_at_ms: ts,
+                                    },
                                 );
                                 cap_map(&mut buf, 100);
                             }
@@ -1028,10 +1040,7 @@ mod engine {
         if let Ok(exe) = which_chromium() {
             return Ok(exe);
         }
-        Err(
-            "no chrome/chromium found. Set CHROME_PATH or install chromium on PATH."
-                .to_string(),
-        )
+        Err("no chrome/chromium found. Set CHROME_PATH or install chromium on PATH.".to_string())
     }
 
     fn which_chromium() -> Result<String, ()> {
@@ -1059,11 +1068,19 @@ mod engine {
 
     async fn dispatch_command(client: &CdpClient, cmd: BrowserCommand) {
         match cmd {
-            BrowserCommand::Navigate { url, wait_for, resp } => {
+            BrowserCommand::Navigate {
+                url,
+                wait_for,
+                resp,
+            } => {
                 let r = cmd_navigate(client, &url, wait_for.as_deref()).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Screenshot { selector, full_page, resp } => {
+            BrowserCommand::Screenshot {
+                selector,
+                full_page,
+                resp,
+            } => {
                 let r = cmd_screenshot(client, selector.as_deref(), full_page).await;
                 let _ = resp.send(r);
             }
@@ -1071,15 +1088,31 @@ mod engine {
                 let r = cmd_click(client, &selector).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::TypeText { selector, text, clear_first, submit, resp } => {
+            BrowserCommand::TypeText {
+                selector,
+                text,
+                clear_first,
+                submit,
+                resp,
+            } => {
                 let r = cmd_type(client, &selector, &text, clear_first, submit).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Evaluate { expression, await_promise, resp } => {
+            BrowserCommand::Evaluate {
+                expression,
+                await_promise,
+                resp,
+            } => {
                 let r = cmd_evaluate(client, &expression, await_promise).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::DomQuery { selector, attribute, computed, all, resp } => {
+            BrowserCommand::DomQuery {
+                selector,
+                attribute,
+                computed,
+                all,
+                resp,
+            } => {
                 let r = cmd_dom_query(client, &selector, attribute.as_deref(), computed, all).await;
                 let _ = resp.send(r);
             }
@@ -1091,11 +1124,20 @@ mod engine {
                 let r = cmd_press(client, &key).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Scroll { selector, x, y, resp } => {
+            BrowserCommand::Scroll {
+                selector,
+                x,
+                y,
+                resp,
+            } => {
                 let r = cmd_scroll(client, selector.as_deref(), x, y).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Resize { width, height, resp } => {
+            BrowserCommand::Resize {
+                width,
+                height,
+                resp,
+            } => {
                 let r = cmd_resize(client, width, height).await;
                 let _ = resp.send(r);
             }
@@ -1103,7 +1145,11 @@ mod engine {
                 let r = cmd_viewport(client).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::A11y { selector, depth, resp } => {
+            BrowserCommand::A11y {
+                selector,
+                depth,
+                resp,
+            } => {
                 let r = cmd_a11y(client, selector.as_deref(), depth).await;
                 let _ = resp.send(r);
             }
@@ -1111,7 +1157,12 @@ mod engine {
                 let r = cmd_performance(client).await;
                 let _ = resp.send(r);
             }
-            BrowserCommand::Drag { from_selector, to_selector, steps, resp } => {
+            BrowserCommand::Drag {
+                from_selector,
+                to_selector,
+                steps,
+                resp,
+            } => {
                 let r = cmd_drag(client, &from_selector, &to_selector, steps).await;
                 let _ = resp.send(r);
             }
@@ -1183,7 +1234,10 @@ mod engine {
             .ok()
             .and_then(|v| v.as_str().map(|s| s.to_string()))
             .unwrap_or_default();
-        Ok(NavigateResponse { url: url.to_string(), title })
+        Ok(NavigateResponse {
+            url: url.to_string(),
+            title,
+        })
     }
 
     /// Navigate the page history back (back=true) or forward (back=false) via
@@ -1202,7 +1256,11 @@ mod engine {
             .get("currentIndex")
             .and_then(|i| i.as_u64())
             .ok_or_else(|| "history: no currentIndex".to_string())?;
-        let target = if back { curr.checked_sub(1) } else { curr.checked_add(1) };
+        let target = if back {
+            curr.checked_sub(1)
+        } else {
+            curr.checked_add(1)
+        };
         let target = match target {
             Some(t) if (t as usize) < entries.len() => t,
             _ => return Ok(()), // at the start/end of history — nothing to do
@@ -1212,7 +1270,10 @@ mod engine {
             .and_then(|i| i.as_u64())
             .ok_or_else(|| "history: entry has no id".to_string())?;
         client
-            .command("Page.navigateToHistoryEntry", json!({ "entryId": entry_id }))
+            .command(
+                "Page.navigateToHistoryEntry",
+                json!({ "entryId": entry_id }),
+            )
             .await
             .map_err(|e| format!("history nav: {e}"))?;
         let _ = wait_ready_state(client, 8_000).await;
@@ -1228,16 +1289,25 @@ mod engine {
             let rect_js = format!(
                 r#"(() => {{ const e = document.querySelector({sel:?}); if (!e) throw 'element not found'; const r = e.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; return JSON.stringify({{ x: r.x, y: r.y, width: r.width, height: r.height, scale: dpr }}); }})()"#,
             );
-            let raw = client.evaluate(&rect_js).await.map_err(|e| format!("screenshot rect: {e}"))?;
-            let s = raw.as_str().ok_or_else(|| "screenshot rect: non-string".to_string())?;
-            let rect: Value = serde_json::from_str(s).map_err(|e| format!("screenshot rect parse: {e}"))?;
+            let raw = client
+                .evaluate(&rect_js)
+                .await
+                .map_err(|e| format!("screenshot rect: {e}"))?;
+            let s = raw
+                .as_str()
+                .ok_or_else(|| "screenshot rect: non-string".to_string())?;
+            let rect: Value =
+                serde_json::from_str(s).map_err(|e| format!("screenshot rect parse: {e}"))?;
             let clip = json!({
                 "x": rect["x"], "y": rect["y"],
                 "width": rect["width"], "height": rect["height"],
                 "scale": rect["scale"],
             });
             let resp = client
-                .command("Page.captureScreenshot", json!({ "format": "png", "clip": clip }))
+                .command(
+                    "Page.captureScreenshot",
+                    json!({ "format": "png", "clip": clip }),
+                )
                 .await
                 .map_err(|e| format!("screenshot element: {e}"))?;
             return screenshot_response_from(&resp);
@@ -1275,12 +1345,22 @@ mod engine {
             r#"(() => {{ const el = document.querySelector({sel:?}); if (!el) throw 'element not found'; el.scrollIntoView({{ block: 'center', inline: 'center' }}); const r = el.getBoundingClientRect(); return JSON.stringify({{ x: r.x + r.width / 2, y: r.y + r.height / 2 }}); }})()"#,
             sel = selector,
         );
-        let v = client.evaluate(&rect_js).await.map_err(|e| format!("click: {e}"))?;
-        let s = v.as_str().ok_or_else(|| "click: rect not a string".to_string())?;
-        let xy: Value =
-            serde_json::from_str(s).map_err(|e| format!("click rect parse: {e}"))?;
-        let x = xy.get("x").and_then(|n| n.as_f64()).ok_or_else(|| "click: no x".to_string())?;
-        let y = xy.get("y").and_then(|n| n.as_f64()).ok_or_else(|| "click: no y".to_string())?;
+        let v = client
+            .evaluate(&rect_js)
+            .await
+            .map_err(|e| format!("click: {e}"))?;
+        let s = v
+            .as_str()
+            .ok_or_else(|| "click: rect not a string".to_string())?;
+        let xy: Value = serde_json::from_str(s).map_err(|e| format!("click rect parse: {e}"))?;
+        let x = xy
+            .get("x")
+            .and_then(|n| n.as_f64())
+            .ok_or_else(|| "click: no x".to_string())?;
+        let y = xy
+            .get("y")
+            .and_then(|n| n.as_f64())
+            .ok_or_else(|| "click: no y".to_string())?;
         dispatch_mouse_click(client, x, y).await?;
         tokio::time::sleep(Duration::from_millis(100)).await;
         Ok(())
@@ -1292,7 +1372,10 @@ mod engine {
     /// so components driven by pointer events or hit-testing behave correctly.
     async fn dispatch_mouse_click(client: &CdpClient, x: f64, y: f64) -> Result<(), String> {
         client
-            .command("Input.dispatchMouseEvent", json!({ "type": "mouseMoved", "x": x, "y": y }))
+            .command(
+                "Input.dispatchMouseEvent",
+                json!({ "type": "mouseMoved", "x": x, "y": y }),
+            )
             .await
             .map_err(|e| format!("click move: {e}"))?;
         client
@@ -1328,7 +1411,10 @@ mod engine {
             sel = selector,
             clear = clear_first,
         );
-        client.evaluate(&focus_js).await.map_err(|e| format!("type focus: {e}"))?;
+        client
+            .evaluate(&focus_js)
+            .await
+            .map_err(|e| format!("type focus: {e}"))?;
         if !text.is_empty() {
             client
                 .command("Input.insertText", json!({ "text": text }))
@@ -1389,7 +1475,10 @@ mod engine {
             Value::String(_) => "string",
             Value::Array(_) | Value::Object(_) => "object",
         };
-        Ok(EvaluateResponse { result: val, r#type: type_name.into() })
+        Ok(EvaluateResponse {
+            result: val,
+            r#type: type_name.into(),
+        })
     }
 
     async fn cmd_dom_query(
@@ -1405,12 +1494,22 @@ mod engine {
                 sel = selector,
                 attr = attr,
             );
-            let val = client.evaluate(&js).await.map_err(|e| format!("dom query: {e}"))?;
+            let val = client
+                .evaluate(&js)
+                .await
+                .map_err(|e| format!("dom query: {e}"))?;
             let r = val.as_str().map(|s| s.to_string());
             let count = if r.is_some() { 1 } else { 0 };
             return Ok(DomNodeResponse {
-                tag: None, text: r, html: None, attributes: None,
-                visible: None, count, rect: None, computed: None, matches: None,
+                tag: None,
+                text: r,
+                html: None,
+                attributes: None,
+                visible: None,
+                count,
+                rect: None,
+                computed: None,
+                matches: None,
             });
         }
         // Describe every match (list query) — returns {count, matches:[…]}.
@@ -1426,8 +1525,13 @@ mod engine {
   return JSON.stringify({ count: matches.length, matches: matches });
 })()
 "#.replace("__SEL__", &format!("{selector:?}"));
-            let val = client.evaluate(&js_all).await.map_err(|e| format!("dom query: {e}"))?;
-            let json_str = val.as_str().ok_or_else(|| "dom query: non-string result".to_string())?;
+            let val = client
+                .evaluate(&js_all)
+                .await
+                .map_err(|e| format!("dom query: {e}"))?;
+            let json_str = val
+                .as_str()
+                .ok_or_else(|| "dom query: non-string result".to_string())?;
             return serde_json::from_str::<DomNodeResponse>(json_str)
                 .map_err(|e| format!("dom query deserialize: {e}"));
         }
@@ -1451,17 +1555,28 @@ mod engine {
 })()
 "#.replace("__SEL__", &format!("{selector:?}"))
    .replace("__COMPUTED__", &computed.to_string());
-        let val = client.evaluate(&js_body).await.map_err(|e| format!("dom query: {e}"))?;
-        let json_str = val.as_str().ok_or_else(|| "dom query: non-string result".to_string())?;
+        let val = client
+            .evaluate(&js_body)
+            .await
+            .map_err(|e| format!("dom query: {e}"))?;
+        let json_str = val
+            .as_str()
+            .ok_or_else(|| "dom query: non-string result".to_string())?;
         serde_json::from_str::<DomNodeResponse>(json_str)
             .map_err(|e| format!("dom query deserialize: {e}"))
     }
 
     async fn cmd_is_ready(client: &CdpClient) -> Result<ReadyResponse, String> {
         let js = r#"(() => { const w = !!globalThis.__wasmExports; const h = document.documentElement.dataset.tairitsuReady === 'hydrated'; return JSON.stringify({ ready: w && h, wasm_loaded: w, hydrated: h, url: location.href }); })()"#;
-        let val = client.evaluate(js).await.map_err(|e| format!("is_ready: {e}"))?;
-        let json_str = val.as_str().ok_or_else(|| "is_ready: non-string".to_string())?;
-        serde_json::from_str::<ReadyResponse>(json_str).map_err(|e| format!("is_ready deserialize: {e}"))
+        let val = client
+            .evaluate(js)
+            .await
+            .map_err(|e| format!("is_ready: {e}"))?;
+        let json_str = val
+            .as_str()
+            .ok_or_else(|| "is_ready: non-string".to_string())?;
+        serde_json::from_str::<ReadyResponse>(json_str)
+            .map_err(|e| format!("is_ready deserialize: {e}"))
     }
 
     async fn cmd_press(client: &CdpClient, key: &str) -> Result<(), String> {
@@ -1482,7 +1597,11 @@ mod engine {
             // how Playwright dispatches keys that carry a text payload — this
             // is what lets default actions (form submit on Enter, focus
             // traversal on Tab) actually fire.
-            let key_type = if k.text.is_empty() { "rawKeyDown" } else { "keyDown" };
+            let key_type = if k.text.is_empty() {
+                "rawKeyDown"
+            } else {
+                "keyDown"
+            };
             let mut down = json!({
                 "type": key_type, "key": k.key, "code": k.code, "modifiers": k.modifiers
             });
@@ -1556,23 +1675,51 @@ mod engine {
                 "Enter" | "Return" => ("Enter".into(), "Enter".into(), 13, "\r".into(), false),
                 "Tab" => ("Tab".into(), "Tab".into(), 9, "\t".into(), false),
                 "Escape" | "Esc" => ("Escape".into(), "Escape".into(), 27, String::new(), false),
-                "Backspace" => {
-                    ("Backspace".into(), "Backspace".into(), 8, String::new(), false)
-                }
+                "Backspace" => (
+                    "Backspace".into(),
+                    "Backspace".into(),
+                    8,
+                    String::new(),
+                    false,
+                ),
                 "Delete" => ("Delete".into(), "Delete".into(), 46, String::new(), false),
                 "ArrowUp" => ("ArrowUp".into(), "ArrowUp".into(), 38, String::new(), false),
-                "ArrowDown" => ("ArrowDown".into(), "ArrowDown".into(), 40, String::new(), false),
-                "ArrowLeft" => ("ArrowLeft".into(), "ArrowLeft".into(), 37, String::new(), false),
-                "ArrowRight" => {
-                    ("ArrowRight".into(), "ArrowRight".into(), 39, String::new(), false)
-                }
+                "ArrowDown" => (
+                    "ArrowDown".into(),
+                    "ArrowDown".into(),
+                    40,
+                    String::new(),
+                    false,
+                ),
+                "ArrowLeft" => (
+                    "ArrowLeft".into(),
+                    "ArrowLeft".into(),
+                    37,
+                    String::new(),
+                    false,
+                ),
+                "ArrowRight" => (
+                    "ArrowRight".into(),
+                    "ArrowRight".into(),
+                    39,
+                    String::new(),
+                    false,
+                ),
                 "Home" => ("Home".into(), "Home".into(), 36, String::new(), false),
                 "End" => ("End".into(), "End".into(), 35, String::new(), false),
                 "PageUp" => ("PageUp".into(), "PageUp".into(), 33, String::new(), false),
-                "PageDown" => ("PageDown".into(), "PageDown".into(), 34, String::new(), false),
+                "PageDown" => (
+                    "PageDown".into(),
+                    "PageDown".into(),
+                    34,
+                    String::new(),
+                    false,
+                ),
                 "Space" => (" ".into(), "Space".into(), 32, " ".into(), false),
                 f if f.starts_with('F') && f.len() >= 2 => {
-                    let n: u32 = f[1..].parse().map_err(|_| format!("bad function key: {f}"))?;
+                    let n: u32 = f[1..]
+                        .parse()
+                        .map_err(|_| format!("bad function key: {f}"))?;
                     if !(1..=12).contains(&n) {
                         return Err(format!("unsupported function key: {f}"));
                     }
@@ -1590,7 +1737,14 @@ mod engine {
                 }
                 other => return Err(format!("unknown key: {other}")),
             };
-        Ok(KeySpec { modifiers, key, code, vk, text, printable })
+        Ok(KeySpec {
+            modifiers,
+            key,
+            code,
+            vk,
+            text,
+            printable,
+        })
     }
 
     async fn cmd_scroll(
@@ -1600,11 +1754,16 @@ mod engine {
         y: f64,
     ) -> Result<(), String> {
         let js = if let Some(sel) = selector {
-            format!(r#"(() => {{ const el = document.querySelector({sel:?}); if (el) el.scrollBy({x}, {y}); }})()"#)
+            format!(
+                r#"(() => {{ const el = document.querySelector({sel:?}); if (el) el.scrollBy({x}, {y}); }})()"#
+            )
         } else {
             format!(r#"window.scrollBy({x}, {y})"#)
         };
-        client.evaluate(&js).await.map_err(|e| format!("scroll: {e}"))?;
+        client
+            .evaluate(&js)
+            .await
+            .map_err(|e| format!("scroll: {e}"))?;
         tokio::time::sleep(Duration::from_millis(100)).await;
         Ok(())
     }
@@ -1623,9 +1782,15 @@ mod engine {
 
     async fn cmd_viewport(client: &CdpClient) -> Result<ViewportResponse, String> {
         let js = r#"(() => { const dpr = window.devicePixelRatio || 1; return JSON.stringify({ width: window.innerWidth, height: window.innerHeight, device_pixel_ratio: dpr }); })()"#;
-        let val = client.evaluate(js).await.map_err(|e| format!("viewport: {e}"))?;
-        let json_str = val.as_str().ok_or_else(|| "viewport: non-string".to_string())?;
-        serde_json::from_str::<ViewportResponse>(json_str).map_err(|e| format!("viewport deserialize: {e}"))
+        let val = client
+            .evaluate(js)
+            .await
+            .map_err(|e| format!("viewport: {e}"))?;
+        let json_str = val
+            .as_str()
+            .ok_or_else(|| "viewport: non-string".to_string())?;
+        serde_json::from_str::<ViewportResponse>(json_str)
+            .map_err(|e| format!("viewport deserialize: {e}"))
     }
 
     async fn cmd_a11y(
@@ -1685,7 +1850,11 @@ mod engine {
             })
             .collect();
         if root_ids.is_empty() {
-            if let Some(id) = nodes.first().and_then(|n| n.get("nodeId")).and_then(|v| v.as_str()) {
+            if let Some(id) = nodes
+                .first()
+                .and_then(|n| n.get("nodeId"))
+                .and_then(|v| v.as_str())
+            {
                 root_ids.push(id.to_string());
             }
         }
@@ -1708,7 +1877,11 @@ mod engine {
         let child_ids: Vec<String> = n
             .get("childIds")
             .and_then(|c| c.as_array())
-            .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_default();
         // Ignored nodes aren't exposed to assistive tech — surface their
         // children at the same depth instead of emitting the wrapper.
@@ -1755,7 +1928,9 @@ mod engine {
             let name = p.get("name").and_then(|v| v.as_str()).unwrap_or("");
             let val = p.get("value").and_then(|v| v.get("value"));
             match name {
-                "disabled" if val.and_then(|v| v.as_bool()).unwrap_or(false) => out.push("disabled".into()),
+                "disabled" if val.and_then(|v| v.as_bool()).unwrap_or(false) => {
+                    out.push("disabled".into())
+                }
                 "expanded" => match val.and_then(|v| v.as_bool()) {
                     Some(true) => out.push("expanded".into()),
                     Some(false) => out.push("collapsed".into()),
@@ -1766,9 +1941,15 @@ mod engine {
                     Some(v) if v.as_str() == Some("mixed") => out.push("mixed".into()),
                     _ => {}
                 },
-                "selected" if val.and_then(|v| v.as_bool()).unwrap_or(false) => out.push("selected".into()),
-                "focused" if val.and_then(|v| v.as_bool()).unwrap_or(false) => out.push("focused".into()),
-                "hidden" if val.and_then(|v| v.as_bool()).unwrap_or(false) => out.push("hidden".into()),
+                "selected" if val.and_then(|v| v.as_bool()).unwrap_or(false) => {
+                    out.push("selected".into())
+                }
+                "focused" if val.and_then(|v| v.as_bool()).unwrap_or(false) => {
+                    out.push("focused".into())
+                }
+                "hidden" if val.and_then(|v| v.as_bool()).unwrap_or(false) => {
+                    out.push("hidden".into())
+                }
                 _ => {}
             }
         }
@@ -1811,16 +1992,26 @@ var tree=getA11y(root,0,DEPTH);
 return JSON.stringify([tree])
 })()
 "#.replace("SEL_JS", &sel_js).replace("DEPTH", &depth.to_string());
-        let val = client.evaluate(&js_body).await.map_err(|e| format!("a11y: {e}"))?;
+        let val = client
+            .evaluate(&js_body)
+            .await
+            .map_err(|e| format!("a11y: {e}"))?;
         let json_str = val.as_str().ok_or_else(|| "a11y: non-string".to_string())?;
-        serde_json::from_str::<Vec<A11yNode>>(json_str).map_err(|e| format!("a11y deserialize: {e}"))
+        serde_json::from_str::<Vec<A11yNode>>(json_str)
+            .map_err(|e| format!("a11y deserialize: {e}"))
     }
 
     async fn cmd_performance(client: &CdpClient) -> Result<PerformanceMetrics, String> {
         let js = r#"(() => { var nav = performance.getEntriesByType('navigation')[0] || {}; var fcp = null; try { fcp = performance.getEntriesByName('first-contentful-paint')[0].startTime || null; } catch(e) {} var dn = document.querySelectorAll('*').length; var heap = null; try { heap = Math.round((performance.memory ? performance.memory.usedJSHeapSize : 0) / 1048576 * 100) / 100; } catch(e) {} return JSON.stringify({ dom_content_loaded_ms: Math.round((nav.domContentLoadedEventEnd - nav.startTime) * 100) / 100 || null, dom_complete_ms: Math.round((nav.domComplete - nav.startTime) * 100) / 100 || null, load_event_ms: Math.round((nav.loadEventEnd - nav.startTime) * 100) / 100 || null, fcp_ms: fcp ? Math.round(fcp * 100) / 100 : null, lcp_ms: null, cls: null, dom_nodes: dn, js_heap_used_mb: heap, wasm_loaded: !!globalThis.__wasmExports, hydrated: document.documentElement.dataset.tairitsuReady === 'hydrated', timestamp: new Date().toISOString() }); })()"#;
-        let val = client.evaluate(js).await.map_err(|e| format!("performance: {e}"))?;
-        let json_str = val.as_str().ok_or_else(|| "performance: non-string".to_string())?;
-        serde_json::from_str::<PerformanceMetrics>(json_str).map_err(|e| format!("performance deserialize: {e}"))
+        let val = client
+            .evaluate(js)
+            .await
+            .map_err(|e| format!("performance: {e}"))?;
+        let json_str = val
+            .as_str()
+            .ok_or_else(|| "performance: non-string".to_string())?;
+        serde_json::from_str::<PerformanceMetrics>(json_str)
+            .map_err(|e| format!("performance deserialize: {e}"))
     }
 
     async fn cmd_drag(
@@ -1831,9 +2022,14 @@ return JSON.stringify([tree])
     ) -> Result<(), String> {
         let js = format!(
             r#"(() => {{ var src = document.querySelector({from:?}); var dst = document.querySelector({to:?}); if (!src || !dst) throw 'element not found'; var sr = src.getBoundingClientRect(); var dr = dst.getBoundingClientRect(); var sx = sr.x + sr.width/2, sy = sr.y + sr.height/2; var dx = dr.x + dr.width/2, dy = dr.y + dr.height/2; src.dispatchEvent(new MouseEvent('mousedown', {{clientX: sx, clientY: sy, bubbles: true}})); for (var i = 1; i <= {steps}; i++) {{ var t = i/{steps}; var cx = sx + (dx - sx)*t, cy = sy + (dy - sy)*t; document.dispatchEvent(new MouseEvent('mousemove', {{clientX: cx, clientY: cy, bubbles: true}})); }} dst.dispatchEvent(new MouseEvent('mouseup', {{clientX: dx, clientY: dy, bubbles: true}})); dst.dispatchEvent(new MouseEvent('drop', {{clientX: dx, clientY: dy, bubbles: true}})); }})()"#,
-            from = from_selector, to = to_selector, steps = steps,
+            from = from_selector,
+            to = to_selector,
+            steps = steps,
         );
-        client.evaluate(&js).await.map_err(|e| format!("drag: {e}"))?;
+        client
+            .evaluate(&js)
+            .await
+            .map_err(|e| format!("drag: {e}"))?;
         tokio::time::sleep(Duration::from_millis(200)).await;
         Ok(())
     }
@@ -2590,7 +2786,11 @@ async fn execute_batch_op(
 async fn network_handler(State(state): State<DebugState>) -> impl IntoResponse {
     let map = state.network.read().await;
     let mut resources: Vec<NetworkResource> = map.values().cloned().collect();
-    resources.sort_by(|a, b| a.started.partial_cmp(&b.started).unwrap_or(std::cmp::Ordering::Equal));
+    resources.sort_by(|a, b| {
+        a.started
+            .partial_cmp(&b.started)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     ResponseJson(ApiResponse::ok(NetworkResponse { resources }))
 }
 
@@ -2617,7 +2817,10 @@ async fn websocket_handler(State(state): State<DebugState>) -> impl IntoResponse
         .iter()
         .filter(|c| c.state == "open" || c.state == "connecting")
         .count() as u32;
-    ResponseJson(ApiResponse::ok(WebSocketInfo { active_count, connections }))
+    ResponseJson(ApiResponse::ok(WebSocketInfo {
+        active_count,
+        connections,
+    }))
 }
 
 async fn source_map_handler(Json(req): Json<SourceMapRequest>) -> impl IntoResponse {

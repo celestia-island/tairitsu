@@ -127,8 +127,12 @@ pub fn render_list() -> VNode {
             VElement::new("div")
                 .class("package-list-item")
                 .children(vec![
-                    VNode::Element(Box::new(VElement::new("code").class("package-name").child(txt(name)))),
-                    VNode::Element(Box::new(VElement::new("span").class("package-desc").child(txt(desc)))),
+                    VNode::Element(Box::new(
+                        VElement::new("code").class("package-name").child(txt(name)),
+                    )),
+                    VNode::Element(Box::new(
+                        VElement::new("span").class("package-desc").child(txt(desc)),
+                    )),
                 ]),
         )));
     }
@@ -143,38 +147,44 @@ pub fn render_list() -> VNode {
                     ("Packages", "/packages"),
                     ("Package List", ""),
                 ]),
-                VNode::Element(Box::new(VElement::new("section").class("page-hero").children(vec![
+                VNode::Element(Box::new(
+                    VElement::new("section").class("page-hero").children(vec![
                         VNode::Element(Box::new(VElement::new("h1").child(txt("Package List")))),
                         VNode::Element(Box::new(
                             VElement::new("p")
                                 .child(txt("Complete listing of all tairitsu workspace crates.")),
                         )),
-                    ]))),
-                VNode::Element(Box::new(VElement::new("div").class("doc-content").children(items))),
+                    ]),
+                )),
+                VNode::Element(Box::new(
+                    VElement::new("div").class("doc-content").children(items),
+                )),
             ]),
     ))
 }
 
 fn package_card_vnode(name: &str, title: &str, desc: &str) -> VNode {
-    VNode::Element(Box::new(VElement::new("div").class("package-card").children(vec![
-                VNode::Element(Box::new(
-                    VElement::new("div")
-                        .class("package-card-header")
-                        .children(vec![
-                            VNode::Element(Box::new(VElement::new("code").child(txt(name)))),
-                            VNode::Element(Box::new(VElement::new("h3").child(txt(title)))),
-                        ]),
-                )),
-                VNode::Element(Box::new(
-                    VElement::new("p")
-                        .class("package-card-desc")
-                        .child(txt(desc)),
-                )),
-                VNode::Element(Box::new(
-                    VElement::new("a")
-                        .attr("href", "#")
-                        .class("hi-button hi-button-ghost hi-button-sm")
-                        .child(txt("View Docs →")),
-                )),
-            ])))
+    VNode::Element(Box::new(
+        VElement::new("div").class("package-card").children(vec![
+            VNode::Element(Box::new(
+                VElement::new("div")
+                    .class("package-card-header")
+                    .children(vec![
+                        VNode::Element(Box::new(VElement::new("code").child(txt(name)))),
+                        VNode::Element(Box::new(VElement::new("h3").child(txt(title)))),
+                    ]),
+            )),
+            VNode::Element(Box::new(
+                VElement::new("p")
+                    .class("package-card-desc")
+                    .child(txt(desc)),
+            )),
+            VNode::Element(Box::new(
+                VElement::new("a")
+                    .attr("href", "#")
+                    .class("hi-button hi-button-ghost hi-button-sm")
+                    .child(txt("View Docs →")),
+            )),
+        ]),
+    ))
 }

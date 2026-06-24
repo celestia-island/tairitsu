@@ -714,12 +714,10 @@ fn expand_custom_component(element: RsxElement) -> TokenStream2 {
     // Handle children
     if !element.children.is_empty() {
         // Check if there's already a children field
-        let has_children_field = props_fields
-            .iter()
-            .any(|f| {
-                let s = f.to_string();
-                s.starts_with("children") && (s.starts_with("children :") || s.starts_with("children:"))
-            });
+        let has_children_field = props_fields.iter().any(|f| {
+            let s = f.to_string();
+            s.starts_with("children") && (s.starts_with("children :") || s.starts_with("children:"))
+        });
 
         if !has_children_field {
             let children_code: Vec<_> = element.children.into_iter().map(expand_child).collect();

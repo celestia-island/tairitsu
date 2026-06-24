@@ -312,7 +312,6 @@ impl Style {
             .push((name.to_string(), value.to_string()));
         self
     }
-
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -346,7 +345,6 @@ impl Classes {
         }
         self
     }
-
 }
 
 impl VElement {

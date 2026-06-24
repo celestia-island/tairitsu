@@ -35,7 +35,9 @@ fn glow_card(title: &str, body: &str) -> VNode {
             .child(VNode::Element(Box::new(
                 el("h3").class("card__title").child(txt(title)),
             )))
-            .child(VNode::Element(Box::new(el("p").class("card__body").child(txt(body))))),
+            .child(VNode::Element(Box::new(
+                el("p").class("card__body").child(txt(body)),
+            ))),
     ));
     VNode::Element(Box::new(
         el("div")
@@ -48,15 +50,21 @@ fn glow_card(title: &str, body: &str) -> VNode {
 pub fn render() -> VNode {
     let t = i18n::text(Language::default_lang());
 
-    let logo = VNode::Element(Box::new(el("div").class("page-hero__logo").child(svg_icon(
-        MdiIcon::CubeOutline,
-        64,
-        "page-hero-logo-icon",
-    ))));
+    let logo = VNode::Element(Box::new(
+        el("div").class("page-hero__logo").child(svg_icon(
+            MdiIcon::CubeOutline,
+            64,
+            "page-hero-logo-icon",
+        )),
+    ));
 
-    let title = VNode::Element(Box::new(el("h1").class("page-hero__title").child(txt(t.hero_title))));
+    let title = VNode::Element(Box::new(
+        el("h1").class("page-hero__title").child(txt(t.hero_title)),
+    ));
 
-    let subtitle = VNode::Element(Box::new(el("p").class("page-hero__subtitle").child(txt(t.hero_copy))));
+    let subtitle = VNode::Element(Box::new(
+        el("p").class("page-hero__subtitle").child(txt(t.hero_copy)),
+    ));
 
     let tagline = VNode::Element(Box::new(
         el("p")

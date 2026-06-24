@@ -95,8 +95,12 @@ pub fn consume_context<T: 'static + Clone>() -> Option<T> {
 /// Consume a context value, panicking if not found.
 /// Prefer [`consume_context`] for fallible access.
 pub fn consume_context_expect<T: 'static + Clone>() -> T {
-    consume_context::<T>()
-        .unwrap_or_else(|| panic!("Context not found for type {}. Make sure to call provide_context first.", std::any::type_name::<T>()))
+    consume_context::<T>().unwrap_or_else(|| {
+        panic!(
+            "Context not found for type {}. Make sure to call provide_context first.",
+            std::any::type_name::<T>()
+        )
+    })
 }
 
 /// A guard that removes a context type from the registry when dropped.

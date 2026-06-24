@@ -122,7 +122,10 @@ impl CdpClient {
             });
         }
 
-        let client = CdpClient { inner, _child: child };
+        let client = CdpClient {
+            inner,
+            _child: child,
+        };
         let _ = client.command("Page.enable", json!({})).await;
         let _ = client.command("Runtime.enable", json!({})).await;
         Ok(client)
