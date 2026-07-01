@@ -369,12 +369,14 @@ fn fetch_with_retry(url: &str) -> anyhow::Result<Vec<u8>> {
         match outcome {
             Ok(b) => {
                 let bytes = b.to_vec();
-                if let Err(e) = verify_checksum(&bytes) {
-                    log(&format!("attempt {attempt}: checksum failed: {e}"));
-                    last_err = Some(e);
-                } else {
-                    return Ok(bytes);
-                }
+                // Checksum mismatch is deterministic (same URL = same bytes) —
+                // fail immediately instead of wastefully re-downloading 90-300 MB.
+                return verify_checksum(&bytes)
+                    .map_err(|e| {
+                        log(&format!("checksum failed (not retrying): {e}"));
+                        e
+                    })
+                    .map(|()| bytes);
             }
             Err(e) => {
                 log(&format!("attempt {attempt}: {e}"));

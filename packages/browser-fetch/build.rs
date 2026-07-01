@@ -13,6 +13,7 @@ const DEFAULT_MIRROR: &str = "https://storage.googleapis.com/chrome-for-testing-
 fn main() {
     println!("cargo:rerun-if-env-changed=TAIRITSU_CHROME_VERSION");
     println!("cargo:rerun-if-env-changed=TAIRITSU_CHROME_MIRROR");
+    println!("cargo:rerun-if-env-changed=TAIRITSU_CHROME_SHA256");
     println!("cargo:rerun-if-env-changed=TAIRITSU_SKIP_BROWSER_FETCH");
     println!("cargo:rerun-if-env-changed=CHROME_PATH");
     // Cache-location vars (cache_dir() reads these); a change must re-bake.
@@ -237,15 +238,15 @@ fn fetch_with_retry(url: &str) -> anyhow::Result<Vec<u8>> {
         match outcome {
             Ok(b) => {
                 let bytes = b.to_vec();
-                match verify_checksum(&bytes) {
-                    Ok(()) => return Ok(bytes),
-                    Err(e) => {
+                // Checksum mismatch is deterministic — fail fast, don't retry.
+                return verify_checksum(&bytes)
+                    .map_err(|e| {
                         eprintln!(
-                            "[tairitsu-browser-fetch] attempt {attempt}: checksum failed: {e}"
+                            "[tairitsu-browser-fetch] checksum failed (not retrying): {e}"
                         );
-                        last_err = Some(e);
-                    }
-                }
+                        e
+                    })
+                    .map(|()| bytes);
             }
             Err(e) => {
                 eprintln!("[tairitsu-browser-fetch] attempt {attempt}: {e}");
