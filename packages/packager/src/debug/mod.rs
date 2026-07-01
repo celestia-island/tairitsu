@@ -685,16 +685,21 @@ mod engine {
         let port = pick_free_port().ok_or_else(|| "no free port for devtools".to_string())?;
 
         let child: Child = {
+            // Try normal multi-process mode first for best stability.
+            // Single-process is a fallback for sandboxed envs where fork is blocked.
+            let use_single_process = std::env::var("TAIRITSU_SINGLE_PROCESS").is_ok();
             let mut args = vec![
                 "--headless=new".to_string(),
                 "--no-sandbox".to_string(),
                 "--disable-gpu".to_string(),
-                "--no-zygote".to_string(),
-                "--single-process".to_string(),
                 "--no-first-run".to_string(),
                 format!("--remote-debugging-port={port}"),
                 format!("--window-size={DEFAULT_VIEWPORT_W},{DEFAULT_VIEWPORT_H}"),
             ];
+            if use_single_process {
+                args.push("--no-zygote".to_string());
+                args.push("--single-process".to_string());
+            }
             if let Some(ref p) = proxy {
                 args.push(format!("--proxy-server={p}"));
             }
