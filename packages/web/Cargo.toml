@@ -22,7 +22,6 @@ tairitsu-macros = { workspace = true, optional = true }
 tairitsu-style = { workspace = true, optional = true }
 tairitsu-ssr = { workspace = true, optional = true }
 tairitsu-packager = { workspace = true, optional = true }
-iso639_enum = { version = "^0.6", optional = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
@@ -42,7 +41,6 @@ data-fetcher = ["ssr", "tairitsu-ssr?/data-fetcher"]
 hmr = ["ssr", "tairitsu-ssr?/hmr"]
 fast-refresh = ["ssr", "hmr", "tairitsu-ssr?/fast-refresh"]
 error-overlay = ["ssr", "hmr", "tairitsu-ssr?/error-overlay"]
-i18n = ["hooks", "dep:iso639_enum"]
 ssr = ["dep:tairitsu", "dep:tairitsu-ssr"]
 packager = ["dep:tairitsu", "dep:tairitsu-packager"]
 browser = ["vdom", "hooks", "macros", "style", "router"]
