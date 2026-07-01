@@ -346,9 +346,8 @@ fn download_to_cache_inner(
     // on Windows rename fails if dest exists, so remove-then-rename there.
     if std::fs::rename(tmp, dest).is_err() {
         let _ = std::fs::remove_dir_all(dest);
-        std::fs::rename(tmp, dest).map_err(|e| {
-            anyhow::anyhow!("failed to finalize browser cache (rename): {e}")
-        })?;
+        std::fs::rename(tmp, dest)
+            .map_err(|e| anyhow::anyhow!("failed to finalize browser cache (rename): {e}"))?;
     }
     log(&format!(
         "installed {} to {}",
