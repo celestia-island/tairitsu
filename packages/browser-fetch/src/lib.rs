@@ -417,8 +417,8 @@ fn which_system_chrome() -> Option<PathBuf> {
         "chrome",
     ];
     let path_var = std::env::var_os("PATH")?;
-    // On Windows, also try each candidate with a `.exe` suffix and honor
-    // `$PATHEXT` extensions.
+    // On Windows, also try each candidate with a `.exe` suffix (Chrome ships as
+    // chrome.exe; bare names rarely resolve on NTFS without an extension).
     let try_names: Vec<String> = if cfg!(windows) {
         let mut v: Vec<String> = CANDIDATES.iter().map(|s| format!("{s}.exe")).collect();
         v.extend(CANDIDATES.iter().map(|s| s.to_string()));

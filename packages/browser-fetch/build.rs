@@ -15,6 +15,10 @@ fn main() {
     println!("cargo:rerun-if-env-changed=TAIRITSU_CHROME_MIRROR");
     println!("cargo:rerun-if-env-changed=TAIRITSU_SKIP_BROWSER_FETCH");
     println!("cargo:rerun-if-env-changed=CHROME_PATH");
+    // Cache-location vars (cache_dir() reads these); a change must re-bake.
+    println!("cargo:rerun-if-env-changed=HOME");
+    println!("cargo:rerun-if-env-changed=XDG_CACHE_HOME");
+    println!("cargo:rerun-if-env-changed=LOCALAPPDATA");
 
     if std::env::var_os("CARGO_FEATURE_AUTO_FETCH").is_none() {
         return;
@@ -58,11 +62,12 @@ fn main() {
         }
     };
 
+    // Propagate the resolved version unconditionally so lib.rs `version()`
+    // (option_env!) and the build-time download stay in lock-step even if the
+    // cache path itself isn't valid UTF-8.
+    println!("cargo:rustc-env=TAIRITSU_CHROME_VERSION={ver}");
     if let Some(s) = final_path.to_str() {
         println!("cargo:rustc-env=TAIRITSU_BROWSER_PATH={s}");
-        // Propagate the resolved version so lib.rs `version()` (option_env!) and
-        // the build-time download stay in lock-step.
-        println!("cargo:rustc-env=TAIRITSU_CHROME_VERSION={ver}");
     } else {
         eprintln!(
             "[tairitsu-browser-fetch] cache path is not valid UTF-8; \
@@ -165,38 +170,49 @@ fn download(flavor: &str, ver: &str, id: &str) -> anyhow::Result<PathBuf> {
     let url = archive_url(flavor, ver, id);
     let target = installed_executable(flavor, ver, id);
     let dest = version_dir(flavor, ver, id);
-    // Extract into a sibling temp dir, then rename atomically into place, so a
-    // partial/interrupted extraction never poisons the cache.
+    // Extract into a sibling temp dir, then swap into place, so a
+    // partial/interrupted extraction never poisons the cache. The nonce makes
+    // the temp path unique per call within a process.
     let parent = dest.parent().unwrap_or(Path::new("."));
-    let tmp = parent.join(format!(".{id}-{}.tmp", std::process::id()));
+    let nonce = TMP_NONCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let tmp = parent.join(format!(".{id}-{}-{nonce}.tmp", std::process::id()));
     let _ = std::fs::remove_dir_all(&tmp);
-    std::fs::create_dir_all(&tmp)?;
 
+    let result = download_inner(&url, &tmp, &dest);
+    if result.is_err() {
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+    result.map(|()| target)
+}
+
+fn download_inner(url: &str, tmp: &Path, dest: &Path) -> anyhow::Result<()> {
+    std::fs::create_dir_all(tmp)?;
     eprintln!("[tairitsu-browser-fetch] downloading {url} (once, then cached)");
     install_ring_provider();
     let bytes = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(600))
         .build()?
-        .get(&url)
+        .get(url)
         .header("User-Agent", "tairitsu-browser-fetch")
         .send()?
         .error_for_status()?
         .bytes()?;
 
-    let extract_result = extract_zip(&bytes[..], &tmp);
-    if let Err(e) = extract_result {
-        let _ = std::fs::remove_dir_all(&tmp);
-        return Err(e);
-    }
-    let _ = std::fs::remove_dir_all(&dest);
-    if let Err(e) = std::fs::rename(&tmp, &dest) {
-        let _ = std::fs::remove_dir_all(&tmp);
-        anyhow::bail!("failed to finalize browser cache (rename): {e}");
-    }
+    extract_zip(&bytes[..], tmp)?;
 
+    // Swap into place. On unix `rename` atomically replaces an existing dest;
+    // on Windows rename fails if dest exists, so remove-then-rename there.
+    if std::fs::rename(tmp, dest).is_err() {
+        let _ = std::fs::remove_dir_all(dest);
+        std::fs::rename(tmp, dest)
+            .map_err(|e| anyhow::anyhow!("failed to finalize browser cache (rename): {e}"))?;
+    }
     eprintln!("[tairitsu-browser-fetch] installed to {}", dest.display());
-    Ok(target)
+    Ok(())
 }
+
+/// Per-call nonce making each download's temp dir unique.
+static TMP_NONCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 fn extract_zip(bytes: &[u8], dest: &Path) -> anyhow::Result<()> {
     let cursor = std::io::Cursor::new(bytes);
@@ -204,6 +220,8 @@ fn extract_zip(bytes: &[u8], dest: &Path) -> anyhow::Result<()> {
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i)?;
         let name = entry.name().to_string();
+        // Capture unix mode before the mutable borrow in io::copy; unused off-unix.
+        #[cfg(unix)]
         let unix_mode = entry.unix_mode();
         // Strip traversal / absolute components from archive entry names.
         let mut safe = PathBuf::new();
