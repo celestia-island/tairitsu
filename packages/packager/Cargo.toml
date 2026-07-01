@@ -14,6 +14,7 @@ path = "src/main.rs"
 [dependencies]
 tairitsu-browser-wit-resolver = { workspace = true }
 tairitsu-browser-worlds = { workspace = true }
+tairitsu-browser-fetch = { workspace = true, optional = true }
 tairitsu-ssr = { workspace = true, optional = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
@@ -67,12 +68,17 @@ dev-server = [
   "tokio",
   "tokio-stream",
 ]
-debug-browser = ["dev-server", "reqwest", "tokio-tungstenite", "base64"]
+debug-browser = ["dev-server", "reqwest", "tokio-tungstenite", "base64", "tairitsu-browser-fetch"]
 debug-api = ["dev-server"]
 ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]
 icon-fetch = ["reqwest", "zip"]
 visual-diff = ["image", "base64"]
+# Browser-binary selection (mutually exclusive; forwarded to tairitsu-browser-fetch).
+# `browser-shell` is the default small headless runtime; `browser-full` pulls
+# full Chrome for Testing. Both imply `debug-browser`.
+browser-shell = ["debug-browser", "tairitsu-browser-fetch/shell"]
+browser-full = ["debug-browser", "tairitsu-browser-fetch/full"]
 test-runner = ["reqwest", "image", "base64"]
 vtty = ["vte", "portable-pty"]
 

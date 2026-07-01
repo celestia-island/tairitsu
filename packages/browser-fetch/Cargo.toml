@@ -1,0 +1,50 @@
+[package]
+name = "tairitsu-browser-fetch"
+version.workspace = true
+edition.workspace = true
+description = "Zero-config Chromium resolver for Tairitsu — ort-style build-time auto-download of Chrome for Testing (headless-shell or full), with a runtime fallback"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "tairitsu_browser_fetch"
+path = "src/lib.rs"
+
+# `reqwest` is pulled in for both the build script (auto-fetch) and the runtime
+# fallback (runtime-fetch). The workspace entry sets default-features=false and
+# omits a TLS backend, so we add `rustls-tls` here so https downloads work.
+# `rustls-no-provider` keeps reqwest free of a compiled-in TLS provider; we
+# install the `ring` provider at runtime (in build.rs and lib.rs). ring needs
+# only a C compiler — no cmake — so this stays zero-system-dep and fast.
+[dependencies]
+anyhow = { workspace = true }
+reqwest = { workspace = true, features = ["blocking", "rustls-no-provider"], optional = true }
+rustls = { version = "^0.23", default-features = false, features = ["ring", "std", "tls12", "logging"], optional = true }
+zip = { workspace = true, optional = true }
+
+# Build-script deps are non-optional: a build script can't see package features
+# at compile time (only via `CARGO_FEATURE_*` env at runtime), so the download
+# crates are always available and behavior is gated in build.rs. These are only
+# compiled for the build script target, not linked into the final library.
+[build-dependencies]
+anyhow = { workspace = true }
+reqwest = { workspace = true, features = ["blocking", "rustls-no-provider"] }
+rustls = { version = "^0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+zip = { workspace = true }
+
+[features]
+default = ["shell", "auto-fetch", "runtime-fetch"]
+
+# ── Binary flavor (mutually exclusive — enforced by compile_error! in lib.rs) ──
+# chrome-headless-shell (~90 MB) — Playwright's headless choice; enough for scraping.
+shell = []
+# Full Chrome for Testing (~300 MB) — when full-page rendering / extensions are needed.
+full = []
+
+# ── Acquisition strategy ──
+# Build-time download (mirrors ort's `download-binaries`): build.rs fetches the
+# pinned Chrome for Testing into a shared cache and bakes the path in.
+auto-fetch = []
+# Runtime fallback: lazily download on first resolve if nothing is present.
+runtime-fetch = ["dep:reqwest", "dep:rustls", "dep:zip"]

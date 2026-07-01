@@ -12,6 +12,7 @@ members = [
     "packages/browser-wit-resolver",
     "packages/browser-worlds",
     "packages/browser-test",
+    "packages/browser-fetch",
     "packages/ssr",
 
     "examples/wit-compile-time",
@@ -36,6 +37,7 @@ tairitsu-ssr = { path = "packages/ssr" }
 tairitsu-web = { path = "packages/web" }
 tairitsu-browser-worlds = { path = "packages/browser-worlds" }
 tairitsu-browser-wit-resolver = { path = "packages/browser-wit-resolver" }
+tairitsu-browser-fetch = { path = "packages/browser-fetch" }
 tairitsu-packager = { path = "packages/packager" }
 tairitsu-mcp = { path = "packages/mcp" }
 
@@ -87,6 +89,7 @@ tairitsu-ssr = { version = "^0.5.13", path = "packages/ssr" }
 tairitsu-web = { version = "^0.5.13", path = "packages/web" }
 tairitsu-browser-worlds = { version = "^0.5.13", path = "packages/browser-worlds" }
 tairitsu-browser-wit-resolver = { version = "^0.5.13", path = "packages/browser-wit-resolver" }
+tairitsu-browser-fetch = { version = "^0.5.13", path = "packages/browser-fetch" }
 tairitsu-packager = { version = "^0.5.13", path = "packages/packager" }
 tairitsu-mcp = { version = "^0.5.13", path = "packages/mcp" }
 bytes = "^1"

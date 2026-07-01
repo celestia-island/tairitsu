@@ -692,6 +692,8 @@ mod engine {
                 "--disable-extensions".to_string(),
                 "--disable-background-networking".to_string(),
                 "--no-first-run".to_string(),
+                // Container/sandbox compatibility
+                "--no-zygote".to_string(),
                 // Anti-detection: prevent sites from detecting automation
                 "--disable-blink-features=AutomationControlled".to_string(),
                 "--disable-features=IsolateOrigins,site-per-process".to_string(),
@@ -1082,36 +1084,11 @@ mod engine {
     }
 
     fn resolve_executable() -> Result<String, String> {
-        if let Ok(exe) = std::env::var("CHROME_PATH") {
-            if !exe.is_empty() {
-                return Ok(exe);
-            }
-        }
-        if let Ok(exe) = which_chromium() {
-            return Ok(exe);
-        }
-        Err("no chrome/chromium found. Set CHROME_PATH or install chromium on PATH.".to_string())
-    }
-
-    fn which_chromium() -> Result<String, ()> {
-        let candidates = [
-            "chromium-browser",
-            "chromium",
-            "google-chrome",
-            "google-chrome-stable",
-            "chrome",
-        ];
-        for name in &candidates {
-            if let Ok(output) = std::process::Command::new("which").arg(name).output() {
-                if output.status.success() {
-                    let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                    if !path.is_empty() {
-                        return Ok(path);
-                    }
-                }
-            }
-        }
-        Err(())
+        // Delegates to tairitsu-browser-fetch: $CHROME_PATH → build-time baked
+        // path (auto-fetch) → system Chrome on PATH → runtime fetch. Zero-config.
+        tairitsu_browser_fetch::resolve()
+            .map(|p| p.to_string_lossy().into_owned())
+            .map_err(|e| format!("no chrome/chromium could be resolved: {e}"))
     }
 
     // ── command dispatch ─────────────────────────────────────────────────────
