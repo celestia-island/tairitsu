@@ -1066,8 +1066,7 @@ mod tests {
 
     #[test]
     fn test_diff_keyed_with_same_keys_different_order() {
-        let old = VNode::Element(Box::new(
-            VElement::new("ul").children(vec![
+        let old = VNode::Element(Box::new(VElement::new("ul").children(vec![
                 VNode::Element(Box::new(
                     VElement::new("li")
                         .key("a")
@@ -1083,10 +1082,8 @@ mod tests {
                         .key("c")
                         .child(VNode::Text(VText::new("C"))),
                 )),
-            ]),
-        ));
-        let new = VNode::Element(Box::new(
-            VElement::new("ul").children(vec![
+            ])));
+        let new = VNode::Element(Box::new(VElement::new("ul").children(vec![
                 VNode::Element(Box::new(
                     VElement::new("li")
                         .key("c")
@@ -1102,8 +1099,7 @@ mod tests {
                         .key("b")
                         .child(VNode::Text(VText::new("B"))),
                 )),
-            ]),
-        ));
+            ])));
 
         let patches = diff(Some(&old), &new);
         assert!(!patches.is_empty(), "Keyed reorder should produce patches");

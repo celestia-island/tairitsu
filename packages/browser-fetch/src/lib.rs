@@ -295,21 +295,37 @@ pub fn ensure() -> anyhow::Result<PathBuf> {
 #[cfg(feature = "runtime-fetch")]
 fn download_to_cache(flavor: Flavor, ver: &str, plat: Platform) -> anyhow::Result<()> {
     let url = archive_url(flavor, ver, plat);
-    // The archive carries its own top dir (`<archive_stem>/`); extract into the
-    // version dir so the binary lands exactly at `installed_path`. Extract to a
-    // sibling temp dir first, then rename atomically, so a partial/interrupted
-    // extraction never poisons the cache.
+    // Extract to a sibling temp dir first, then swap into the version dir, so a
+    // partial/interrupted extraction never poisons the cache.
     let dest = version_dir(flavor, ver, plat);
     let parent = dest.parent().unwrap_or(Path::new("."));
+    // Unique per (platform, process, call): the PID + a process-local counter,
+    // so two concurrent ensure() calls in the SAME process can't collide.
+    let nonce = TMP_NONCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let tmp = parent.join(format!(
-        ".{}-{}.tmp",
+        ".{}-{}-{}.tmp",
         plat.download_id(),
-        std::process::id()
+        std::process::id(),
+        nonce
     ));
-    // Clean any stale temp dir from a previous interrupted run.
+    // Best-effort: reap stale temp dirs left by a crashed previous run.
     let _ = std::fs::remove_dir_all(&tmp);
-    std::fs::create_dir_all(&tmp)?;
 
+    let result = download_to_cache_inner(&url, &tmp, &dest, flavor);
+    if result.is_err() {
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+    result
+}
+
+#[cfg(feature = "runtime-fetch")]
+fn download_to_cache_inner(
+    url: &str,
+    tmp: &Path,
+    dest: &Path,
+    flavor: Flavor,
+) -> anyhow::Result<()> {
+    std::fs::create_dir_all(tmp)?;
     log(&format!(
         "downloading {} (this happens once, then is cached)",
         url
@@ -318,23 +334,21 @@ fn download_to_cache(flavor: Flavor, ver: &str, plat: Platform) -> anyhow::Resul
     let bytes = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(600))
         .build()?
-        .get(&url)
+        .get(url)
         .header("User-Agent", "tairitsu-browser-fetch")
         .send()?
         .error_for_status()?
         .bytes()?;
 
-    let extract_result = extract_zip(&bytes[..], &tmp);
-    if let Err(e) = extract_result {
-        let _ = std::fs::remove_dir_all(&tmp);
-        return Err(e);
-    }
-    // Swap the completed extraction into place.
-    let _ = std::fs::remove_dir_all(&dest);
-    if let Err(e) = std::fs::rename(&tmp, &dest) {
-        // rename can fail across filesystems; fall back to copy+remove.
-        let _ = std::fs::remove_dir_all(&tmp);
-        anyhow::bail!("failed to finalize browser cache (rename): {e}");
+    extract_zip(&bytes[..], tmp)?;
+
+    // Swap into place. On unix `rename` atomically replaces an existing dest;
+    // on Windows rename fails if dest exists, so remove-then-rename there.
+    if std::fs::rename(tmp, dest).is_err() {
+        let _ = std::fs::remove_dir_all(dest);
+        std::fs::rename(tmp, dest).map_err(|e| {
+            anyhow::anyhow!("failed to finalize browser cache (rename): {e}")
+        })?;
     }
     log(&format!(
         "installed {} to {}",
@@ -351,7 +365,9 @@ fn extract_zip(bytes: &[u8], dest: &Path) -> anyhow::Result<()> {
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i)?;
         let name = entry.name().to_string();
-        // Capture the entry's unix mode (if any) before moving `entry`.
+        // Capture the entry's unix mode (if any) before the entry is mutably
+        // borrowed by io::copy below. Gated to unix — the value is unused off-unix.
+        #[cfg(unix)]
         let unix_mode = entry.unix_mode();
         // Guard against path traversal in archive entries.
         let path = dest.join(sanitize_extract_name(&name));
@@ -443,6 +459,11 @@ fn log(msg: &str) {
 fn install_ring_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }
+
+/// Per-process counter making each download's temp dir unique, so concurrent
+/// `ensure()` calls (same PID) can't collide on the temp path.
+#[cfg(feature = "runtime-fetch")]
+static TMP_NONCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 #[cfg(test)]
 mod tests {
