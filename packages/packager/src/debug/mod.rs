@@ -2150,7 +2150,7 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
     let (browser, browser_engine) = {
         crate::log_info!("Debug browser engine: chromium (headless CDP)");
         match tokio::time::timeout(
-            Duration::from_secs(15),
+            Duration::from_secs(45),
             engine::spawn_browser(
                 base_url.clone(),
                 None,
