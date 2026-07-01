@@ -691,19 +691,13 @@ mod engine {
                 "--no-sandbox".to_string(),
                 "--disable-dev-shm-usage".to_string(),
                 "--disable-gpu".to_string(),
-                "--disable-gpu-sandbox".to_string(),
                 "--disable-extensions".to_string(),
                 "--disable-background-networking".to_string(),
                 "--no-first-run".to_string(),
-                // Container/sandbox compatibility — needed for restricted environments
-                // where zygote fork is blocked. Without these, Chrome won't start
-                // in Docker/seccomp/namespaced sandboxes.
+                // Container compatibility — needed where zygote fork is blocked.
                 "--no-zygote".to_string(),
                 "--single-process".to_string(),
-                "--disable-setuid-sandbox".to_string(),
-                "--disable-seccomp-filter-sandbox".to_string(),
-                "--disable-software-rasterizer".to_string(),
-                // Anti-detection: prevent sites from detecting automation
+                // Anti-detection
                 "--disable-blink-features=AutomationControlled".to_string(),
                 "--disable-features=IsolateOrigins,site-per-process".to_string(),
                 "--disable-infobars".to_string(),

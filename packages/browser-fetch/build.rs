@@ -204,17 +204,9 @@ fn download(flavor: &str, ver: &str, id: &str) -> anyhow::Result<PathBuf> {
 fn download_inner(url: &str, tmp: &Path, dest: &Path) -> anyhow::Result<()> {
     std::fs::create_dir_all(tmp)?;
     eprintln!("[tairitsu-browser-fetch] downloading {url} (once, then cached)");
-    install_ring_provider();
-    let bytes = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(600))
-        .build()?
-        .get(url)
-        .header("User-Agent", "tairitsu-browser-fetch")
-        .send()?
-        .error_for_status()?
-        .bytes()?;
+    let bytes = fetch_with_retry(url)?;
 
-    extract_zip(&bytes[..], tmp)?;
+    extract_zip(&bytes, tmp)?;
 
     // Swap into place. On unix `rename` atomically replaces an existing dest;
     // on Windows rename fails if dest exists, so remove-then-rename there.
@@ -224,6 +216,67 @@ fn download_inner(url: &str, tmp: &Path, dest: &Path) -> anyhow::Result<()> {
             .map_err(|e| anyhow::anyhow!("failed to finalize browser cache (rename): {e}"))?;
     }
     eprintln!("[tairitsu-browser-fetch] installed to {}", dest.display());
+    Ok(())
+}
+
+/// Fetch `url` with up to 3 attempts (exponential backoff), then optionally
+/// verify the SHA-256 when `TAIRITSU_CHROME_SHA256` (hex) is set.
+fn fetch_with_retry(url: &str) -> anyhow::Result<Vec<u8>> {
+    install_ring_provider();
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(600))
+        .build()?;
+    let mut last_err: Option<anyhow::Error> = None;
+    for attempt in 1..=3 {
+        let outcome = client
+            .get(url)
+            .header("User-Agent", "tairitsu-browser-fetch")
+            .send()
+            .and_then(|r| r.error_for_status())
+            .and_then(|r| r.bytes());
+        match outcome {
+            Ok(b) => {
+                let bytes = b.to_vec();
+                match verify_checksum(&bytes) {
+                    Ok(()) => return Ok(bytes),
+                    Err(e) => {
+                        eprintln!(
+                            "[tairitsu-browser-fetch] attempt {attempt}: checksum failed: {e}"
+                        );
+                        last_err = Some(e);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("[tairitsu-browser-fetch] attempt {attempt}: {e}");
+                last_err = Some(e.into());
+            }
+        }
+        if attempt < 3 {
+            std::thread::sleep(std::time::Duration::from_secs(1u64 << attempt));
+        }
+    }
+    Err(last_err.unwrap_or_else(|| anyhow::anyhow!("download failed after 3 attempts")))
+}
+
+/// If `TAIRITSU_CHROME_SHA256` (lowercase hex) is set, verify the body against
+/// it; otherwise no-op.
+fn verify_checksum(bytes: &[u8]) -> anyhow::Result<()> {
+    let Some(expected) = std::env::var("TAIRITSU_CHROME_SHA256")
+        .ok()
+        .filter(|s| !s.is_empty())
+    else {
+        return Ok(());
+    };
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    let digest = hasher.finalize();
+    let actual: String = digest.iter().map(|b| format!("{b:02x}")).collect();
+    if actual != expected.trim().to_lowercase() {
+        anyhow::bail!("checksum mismatch: expected {expected}, got {actual}");
+    }
+    eprintln!("[tairitsu-browser-fetch] checksum verified");
     Ok(())
 }
 

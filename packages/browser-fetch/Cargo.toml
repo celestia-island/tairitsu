@@ -21,6 +21,7 @@ path = "src/lib.rs"
 anyhow = { workspace = true }
 reqwest = { workspace = true, features = ["blocking", "rustls-no-provider"], optional = true }
 rustls = { version = "^0.23", default-features = false, features = ["ring", "std", "tls12", "logging"], optional = true }
+sha2 = { workspace = true, optional = true }
 zip = { workspace = true, optional = true }
 
 # Build-script deps are non-optional: a build script can't see package features
@@ -31,6 +32,7 @@ zip = { workspace = true, optional = true }
 anyhow = { workspace = true }
 reqwest = { workspace = true, features = ["blocking", "rustls-no-provider"] }
 rustls = { version = "^0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+sha2 = { workspace = true }
 zip = { workspace = true }
 
 [features]
@@ -52,4 +54,4 @@ full = []
 # pinned Chrome for Testing into a shared cache and bakes the path in.
 auto-fetch = []
 # Runtime fallback: lazily download on first resolve if nothing is present.
-runtime-fetch = ["dep:reqwest", "dep:rustls", "dep:zip"]
+runtime-fetch = ["dep:reqwest", "dep:rustls", "dep:sha2", "dep:zip"]

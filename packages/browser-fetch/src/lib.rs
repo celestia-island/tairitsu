@@ -22,6 +22,7 @@
 //! one flavor.
 //!
 //! Knobs: `TAIRITSU_CHROME_VERSION`, `TAIRITSU_CHROME_MIRROR`,
+//! `TAIRITSU_CHROME_SHA256` (optional integrity check, hex),
 //! `TAIRITSU_SKIP_BROWSER_FETCH` (skips both build-time and runtime download),
 //! `CHROME_PATH` (explicit executable override).
 
@@ -113,23 +114,6 @@ impl Platform {
 
     pub fn is_windows(&self) -> bool {
         matches!(self, Platform::WindowsX64)
-    }
-
-    /// Executable path inside the *full-chrome* archive (unused for shell;
-    /// kept for reference / parity with browser-test).
-    #[allow(dead_code)]
-    fn chrome_exec_relative(&self) -> PathBuf {
-        match self {
-            Platform::LinuxX64 => PathBuf::from("chrome-linux64/chrome"),
-            // Chrome for Testing ships per-arch mac dirs (chrome-mac-arm64 / chrome-mac-x64).
-            Platform::MacosArm64 => PathBuf::from(
-                "chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
-            ),
-            Platform::MacosX64 => PathBuf::from(
-                "chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
-            ),
-            Platform::WindowsX64 => PathBuf::from("chrome-win64/chrome.exe"),
-        }
     }
 
     /// Detect the current runtime platform. Returns `None` for unsupported
@@ -226,10 +210,15 @@ pub fn archive_url(flavor: Flavor, ver: &str, plat: Platform) -> String {
 /// active runtime. Wrap it in `tokio::task::spawn_blocking` from async code
 /// (the packager debug server already does this).
 pub fn resolve() -> anyhow::Result<PathBuf> {
-    // 1. Explicit override.
+    // 1. Explicit override. If set, it's authoritative — a missing/typo'd path
+    //    is an explicit error rather than a silent fall-through.
     if let Ok(p) = std::env::var("CHROME_PATH") {
         if !p.is_empty() {
-            return Ok(PathBuf::from(p));
+            let path = PathBuf::from(&p);
+            if path.exists() {
+                return Ok(path);
+            }
+            anyhow::bail!("CHROME_PATH is set to {:?} but it does not exist", path);
         }
     }
 
@@ -342,17 +331,9 @@ fn download_to_cache_inner(
         "downloading {} (this happens once, then is cached)",
         url
     ));
-    install_ring_provider();
-    let bytes = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(600))
-        .build()?
-        .get(url)
-        .header("User-Agent", "tairitsu-browser-fetch")
-        .send()?
-        .error_for_status()?
-        .bytes()?;
+    let bytes = fetch_with_retry(url)?;
 
-    extract_zip(&bytes[..], tmp)?;
+    extract_zip(&bytes, tmp)?;
 
     // Swap into place. On unix `rename` atomically replaces an existing dest;
     // on Windows rename fails if dest exists, so remove-then-rename there.
@@ -366,6 +347,67 @@ fn download_to_cache_inner(
         flavor_name(flavor),
         dest.display()
     ));
+    Ok(())
+}
+
+/// Fetch `url` with up to 3 attempts (exponential backoff), then optionally
+/// verify the SHA-256 when `TAIRITSU_CHROME_SHA256` (hex) is set.
+#[cfg(feature = "runtime-fetch")]
+fn fetch_with_retry(url: &str) -> anyhow::Result<Vec<u8>> {
+    install_ring_provider();
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(600))
+        .build()?;
+    let mut last_err: Option<anyhow::Error> = None;
+    for attempt in 1..=3 {
+        let outcome = client
+            .get(url)
+            .header("User-Agent", "tairitsu-browser-fetch")
+            .send()
+            .and_then(|r| r.error_for_status())
+            .and_then(|r| r.bytes());
+        match outcome {
+            Ok(b) => {
+                let bytes = b.to_vec();
+                if let Err(e) = verify_checksum(&bytes) {
+                    log(&format!("attempt {attempt}: checksum failed: {e}"));
+                    last_err = Some(e);
+                } else {
+                    return Ok(bytes);
+                }
+            }
+            Err(e) => {
+                log(&format!("attempt {attempt}: {e}"));
+                last_err = Some(e.into());
+            }
+        }
+        if attempt < 3 {
+            std::thread::sleep(std::time::Duration::from_secs(1u64 << attempt));
+        }
+    }
+    Err(last_err.unwrap_or_else(|| anyhow::anyhow!("download failed after 3 attempts")))
+}
+
+/// If `TAIRITSU_CHROME_SHA256` (lowercase hex) is set, verify the body against
+/// it; otherwise no-op (the zip central-directory check + post-extract
+/// existence check still catch most corruption).
+#[cfg(feature = "runtime-fetch")]
+fn verify_checksum(bytes: &[u8]) -> anyhow::Result<()> {
+    let Some(expected) = std::env::var("TAIRITSU_CHROME_SHA256")
+        .ok()
+        .filter(|s| !s.is_empty())
+    else {
+        return Ok(());
+    };
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    let digest = hasher.finalize();
+    let actual: String = digest.iter().map(|b| format!("{b:02x}")).collect();
+    if actual != expected.trim().to_lowercase() {
+        anyhow::bail!("checksum mismatch: expected {expected}, got {actual}");
+    }
+    log("checksum verified");
     Ok(())
 }
 
@@ -438,7 +480,9 @@ fn sanitize_extract_name(name: &str) -> PathBuf {
     out
 }
 
-/// Locate a system Chrome on `$PATH` (best-effort, no deps).
+/// Locate a system Chrome. Searches `$PATH` first, then a few well-known
+/// install locations (so a Chrome in `/Applications` or `Program Files` that
+/// isn't on `$PATH` is still found). Best-effort, no deps.
 fn which_system_chrome() -> Option<PathBuf> {
     const CANDIDATES: &[&str] = &[
         "chromium-browser",
@@ -460,14 +504,40 @@ fn which_system_chrome() -> Option<PathBuf> {
     for dir in std::env::split_paths(&path_var) {
         for name in &try_names {
             let candidate = dir.join(name);
-            if let Ok(meta) = std::fs::metadata(&candidate) {
-                if meta.is_file() {
-                    return Some(candidate);
-                }
+            if is_executable_file(&candidate) {
+                return Some(candidate);
             }
         }
     }
+
+    // Well-known install locations not necessarily on $PATH.
+    const COMMON: &[&str] = &[
+        // macOS
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        // Linux
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+        "/snap/bin/chromium",
+        // Windows
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    ];
+    for p in COMMON {
+        let candidate = PathBuf::from(p);
+        if is_executable_file(&candidate) {
+            return Some(candidate);
+        }
+    }
     None
+}
+
+fn is_executable_file(path: &Path) -> bool {
+    std::fs::metadata(path)
+        .map(|m| m.is_file())
+        .unwrap_or(false)
 }
 
 #[cfg(feature = "runtime-fetch")]
@@ -559,5 +629,29 @@ mod tests {
     fn sanitize_strips_traversal() {
         let p = sanitize_extract_name("../../etc/passwd");
         assert_eq!(p, PathBuf::from("etc/passwd"));
+    }
+
+    #[cfg(feature = "runtime-fetch")]
+    #[test]
+    fn checksum_passes_when_matching() {
+        use sha2::{Digest, Sha256};
+        let data = b"hello";
+        let mut h = Sha256::new();
+        h.update(data);
+        let hex: String = h.finalize().iter().map(|b| format!("{b:02x}")).collect();
+        std::env::set_var("TAIRITSU_CHROME_SHA256", &hex);
+        assert!(verify_checksum(data).is_ok());
+        std::env::set_var("TAIRITSU_CHROME_SHA256", "deadbeef");
+        assert!(verify_checksum(data).is_err());
+        std::env::remove_var("TAIRITSU_CHROME_SHA256");
+        assert!(verify_checksum(data).is_ok());
+    }
+
+    #[test]
+    fn resolve_errors_on_missing_chrome_path() {
+        std::env::set_var("CHROME_PATH", "/nonexistent/chrome/that/does/not/exist");
+        let r = resolve();
+        assert!(r.is_err());
+        std::env::remove_var("CHROME_PATH");
     }
 }
