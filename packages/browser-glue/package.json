@@ -110,7 +110,7 @@
     "@swc/cli": "^0.3.0",
     "@swc/core": "^1.7.0",
     "esbuild": "^0.25.0",
-    "eslint": "^9.18.0",
+    "eslint": "^10.6.0",
     "prettier": "^3.4.0",
     "rimraf": "^5.0.0",
     "typescript": "^5.5.0",
