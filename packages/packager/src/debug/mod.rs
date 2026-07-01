@@ -530,8 +530,10 @@ mod engine {
     use super::*;
 
     const DEVTOOLS_POLL: Duration = Duration::from_millis(200);
-    const DEVTOOLS_TIMEOUT: Duration = Duration::from_secs(60);
-    const CMD_TIMEOUT: Duration = Duration::from_secs(60);
+    // Short timeout for devtools to come up — Chrome starts fast or not at all.
+    const DEVTOOLS_TIMEOUT: Duration = Duration::from_secs(10);
+    // Individual CDP command timeout. Most respond in <100ms.
+    const CMD_TIMEOUT: Duration = Duration::from_secs(10);
 
     // ── CDP client core ──────────────────────────────────────────────────────
 
@@ -689,12 +691,18 @@ mod engine {
                 "--no-sandbox".to_string(),
                 "--disable-dev-shm-usage".to_string(),
                 "--disable-gpu".to_string(),
+                "--disable-gpu-sandbox".to_string(),
                 "--disable-extensions".to_string(),
                 "--disable-background-networking".to_string(),
                 "--no-first-run".to_string(),
-                // Container/sandbox compatibility
+                // Container/sandbox compatibility — needed for restricted environments
+                // where zygote fork is blocked. Without these, Chrome won't start
+                // in Docker/seccomp/namespaced sandboxes.
                 "--no-zygote".to_string(),
                 "--single-process".to_string(),
+                "--disable-setuid-sandbox".to_string(),
+                "--disable-seccomp-filter-sandbox".to_string(),
+                "--disable-software-rasterizer".to_string(),
                 // Anti-detection: prevent sites from detecting automation
                 "--disable-blink-features=AutomationControlled".to_string(),
                 "--disable-features=IsolateOrigins,site-per-process".to_string(),
@@ -1001,12 +1009,37 @@ mod engine {
                 }
             }
             *conn_reader.write().await = false;
+            // Chrome's WebSocket closed — it crashed or was killed.
+            // The dispatch loop holds the Child; when cmd_rx drops (all
+            // BrowserHandles gone), kill_on_drop will reap it. But if
+            // handles are still alive, we need to signal shutdown.
+            crate::log_warn!("Chrome WebSocket disconnected — browser lost");
         });
 
-        // Enable the domains we use.
-        let _ = client.command("Page.enable", json!({})).await;
-        let _ = client.command("Runtime.enable", json!({})).await;
-        let _ = client.command("Network.enable", json!({})).await;
+        // Enable the domains we use — with short timeout so we don't block
+        // for 60s if Chrome is unresponsive in a constrained environment.
+        let init_timeout = Duration::from_secs(5);
+        let page_ok =
+            tokio::time::timeout(init_timeout, client.command("Page.enable", json!({}))).await;
+        if page_ok.is_err() {
+            crate::log_warn!("Page.enable timed out — Chrome may be unstable in this environment");
+        }
+        let _ =
+            tokio::time::timeout(init_timeout, client.command("Runtime.enable", json!({}))).await;
+        let _ =
+            tokio::time::timeout(init_timeout, client.command("Network.enable", json!({}))).await;
+
+        // Verify Chrome is actually responsive with a simple evaluate.
+        let ping = tokio::time::timeout(Duration::from_secs(3), client.evaluate("1+1")).await;
+        match ping {
+            Ok(Ok(val)) if val.as_u64() == Some(2) => {
+                crate::log_ok!("Chrome CDP verified responsive");
+            }
+            _ => {
+                crate::log_warn!("Chrome CDP not responsive — browser operations may fail");
+                // Don't return error — let the server start; user can retry.
+            }
+        }
 
         // Anti-detection: inject stealth script before any page script runs.
         // This patches navigator.webdriver, window.chrome, permissions API,
@@ -2132,7 +2165,7 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
     let (browser, browser_engine) = {
         crate::log_info!("Debug browser engine: chromium (headless CDP)");
         match tokio::time::timeout(
-            Duration::from_secs(60),
+            Duration::from_secs(15),
             engine::spawn_browser(
                 base_url.clone(),
                 None,

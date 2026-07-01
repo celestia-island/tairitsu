@@ -176,6 +176,10 @@ fn cache_dir() -> Option<PathBuf> {
             .map(PathBuf::from)
             .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".cache")))
     }
+    #[cfg(not(any(target_os = "windows", target_os = "macos", unix)))]
+    {
+        None
+    }
 }
 
 /// Version-scoped dir: `<cache>/tairitsu/browsers/chromium/<flavor>/<ver>/<plat>`.
@@ -215,6 +219,12 @@ pub fn archive_url(flavor: Flavor, ver: &str, plat: Platform) -> String {
 ///
 /// Returns the path to an existing executable. See the crate docs for the
 /// resolution order.
+///
+/// **Blocking:** this may perform a multi-second HTTP download + zip
+/// extraction (the `runtime-fetch` fallback). It must NOT be called directly
+/// on a tokio/async worker thread — `reqwest::blocking` panics inside an
+/// active runtime. Wrap it in `tokio::task::spawn_blocking` from async code
+/// (the packager debug server already does this).
 pub fn resolve() -> anyhow::Result<PathBuf> {
     // 1. Explicit override.
     if let Ok(p) = std::env::var("CHROME_PATH") {
@@ -299,6 +309,8 @@ fn download_to_cache(flavor: Flavor, ver: &str, plat: Platform) -> anyhow::Resul
     // partial/interrupted extraction never poisons the cache.
     let dest = version_dir(flavor, ver, plat);
     let parent = dest.parent().unwrap_or(Path::new("."));
+    // Best-effort: reap stale temp dirs left by a previous crashed run (>1h old).
+    sweep_stale_temps(parent, std::time::Duration::from_secs(3600));
     // Unique per (platform, process, call): the PID + a process-local counter,
     // so two concurrent ensure() calls in the SAME process can't collide.
     let nonce = TMP_NONCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -372,10 +384,30 @@ fn extract_zip(bytes: &[u8], dest: &Path) -> anyhow::Result<()> {
         let path = dest.join(sanitize_extract_name(&name));
         if name.ends_with('/') {
             std::fs::create_dir_all(&path)?;
-        } else {
-            if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent)?;
+            continue;
+        }
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        // macOS .app bundles ship internal symlinks (Frameworks → versioned
+        // dirs); recreate them instead of flattening to text files.
+        #[cfg(unix)]
+        let is_symlink = unix_mode.is_some_and(|m| (m & 0o170000) == 0o120000);
+        #[cfg(not(unix))]
+        let is_symlink = false;
+        if is_symlink {
+            #[cfg(unix)]
+            {
+                use std::io::Read;
+                let mut target = String::new();
+                let _ = entry.read_to_string(&mut target);
+                let target = target.trim();
+                // Defense in depth: only relative, in-bundle targets.
+                if !target.is_empty() && !target.starts_with('/') && !target.contains("..") {
+                    let _ = std::os::unix::fs::symlink(target, &path);
+                }
             }
+        } else {
             let mut out = std::fs::File::create(&path)?;
             std::io::copy(&mut entry, &mut out)?;
             drop(out);
@@ -463,6 +495,34 @@ fn install_ring_provider() {
 /// `ensure()` calls (same PID) can't collide on the temp path.
 #[cfg(feature = "runtime-fetch")]
 static TMP_NONCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Best-effort sweep of stale temp dirs (from crashed runs) under `parent`,
+/// older than `max_age`. Live downloads have fresh mtimes and are left alone.
+#[cfg(feature = "runtime-fetch")]
+fn sweep_stale_temps(parent: &Path, max_age: std::time::Duration) {
+    let Ok(entries) = std::fs::read_dir(parent) else {
+        return;
+    };
+    let cutoff = std::time::SystemTime::now() - max_age;
+    for entry in entries.flatten() {
+        let fname = entry.file_name();
+        let Some(name) = fname.to_str() else {
+            continue;
+        };
+        if !name.starts_with('.') || !name.ends_with(".tmp") {
+            continue;
+        }
+        if let Ok(meta) = entry.metadata() {
+            if meta.is_dir() {
+                if let Ok(mtime) = meta.modified() {
+                    if mtime < cutoff {
+                        let _ = std::fs::remove_dir_all(entry.path());
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

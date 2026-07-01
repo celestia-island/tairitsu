@@ -120,6 +120,10 @@ fn cache_dir() -> Option<PathBuf> {
             .map(PathBuf::from)
             .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".cache")))
     }
+    #[cfg(not(any(target_os = "windows", target_os = "macos", unix)))]
+    {
+        None
+    }
 }
 
 fn installed_executable(flavor: &str, ver: &str, id: &str) -> PathBuf {
@@ -174,6 +178,8 @@ fn download(flavor: &str, ver: &str, id: &str) -> anyhow::Result<PathBuf> {
     // partial/interrupted extraction never poisons the cache. The nonce makes
     // the temp path unique per call within a process.
     let parent = dest.parent().unwrap_or(Path::new("."));
+    // Best-effort: reap stale temp dirs left by a previous crashed run (>1h old).
+    sweep_stale_temps(parent, std::time::Duration::from_secs(3600));
     let nonce = TMP_NONCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let tmp = parent.join(format!(".{id}-{}-{nonce}.tmp", std::process::id()));
     let _ = std::fs::remove_dir_all(&tmp);
@@ -181,8 +187,18 @@ fn download(flavor: &str, ver: &str, id: &str) -> anyhow::Result<PathBuf> {
     let result = download_inner(&url, &tmp, &dest);
     if result.is_err() {
         let _ = std::fs::remove_dir_all(&tmp);
+        return result.map(|()| target);
     }
-    result.map(|()| target)
+    // Post-extract integrity: the expected binary must actually exist, else the
+    // archive was truncated/malformed and we must not bake a dangling path.
+    if !target.exists() {
+        let _ = std::fs::remove_dir_all(&dest);
+        anyhow::bail!(
+            "extraction completed but the expected binary {} is missing",
+            target.display()
+        );
+    }
+    Ok(target)
 }
 
 fn download_inner(url: &str, tmp: &Path, dest: &Path) -> anyhow::Result<()> {
@@ -211,6 +227,32 @@ fn download_inner(url: &str, tmp: &Path, dest: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Best-effort sweep of stale temp dirs (from crashed runs) under `parent`,
+/// older than `max_age`. Ignores errors. Live downloads have fresh mtimes.
+#[allow(dead_code)]
+fn sweep_stale_temps(parent: &Path, max_age: std::time::Duration) {
+    let Ok(entries) = std::fs::read_dir(parent) else {
+        return;
+    };
+    let cutoff = std::time::SystemTime::now() - max_age;
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let Some(name) = name.to_str() else { continue };
+        if !name.starts_with('.') || !name.ends_with(".tmp") {
+            continue;
+        }
+        if let Ok(meta) = entry.metadata() {
+            if meta.is_dir() {
+                if let Ok(mtime) = meta.modified() {
+                    if mtime < cutoff {
+                        let _ = std::fs::remove_dir_all(entry.path());
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// Per-call nonce making each download's temp dir unique.
 static TMP_NONCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -234,10 +276,28 @@ fn extract_zip(bytes: &[u8], dest: &Path) -> anyhow::Result<()> {
         let path = dest.join(safe);
         if name.ends_with('/') {
             std::fs::create_dir_all(&path)?;
-        } else {
-            if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent)?;
+            continue;
+        }
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        // Recreate symlinks (macOS .app bundles ship internal symlinks).
+        #[cfg(unix)]
+        let is_symlink = unix_mode.is_some_and(|m| (m & 0o170000) == 0o120000);
+        #[cfg(not(unix))]
+        let is_symlink = false;
+        if is_symlink {
+            #[cfg(unix)]
+            {
+                use std::io::Read;
+                let mut target = String::new();
+                let _ = entry.read_to_string(&mut target);
+                let target = target.trim();
+                if !target.is_empty() && !target.starts_with('/') && !target.contains("..") {
+                    let _ = std::os::unix::fs::symlink(target, &path);
+                }
             }
+        } else {
             let mut out = std::fs::File::create(&path)?;
             std::io::copy(&mut entry, &mut out)?;
             drop(out);
