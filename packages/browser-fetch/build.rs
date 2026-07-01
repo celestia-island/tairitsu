@@ -241,9 +241,7 @@ fn fetch_with_retry(url: &str) -> anyhow::Result<Vec<u8>> {
                 // Checksum mismatch is deterministic — fail fast, don't retry.
                 return verify_checksum(&bytes)
                     .map_err(|e| {
-                        eprintln!(
-                            "[tairitsu-browser-fetch] checksum failed (not retrying): {e}"
-                        );
+                        eprintln!("[tairitsu-browser-fetch] checksum failed (not retrying): {e}");
                         e
                     })
                     .map(|()| bytes);
