@@ -530,9 +530,9 @@ mod engine {
     use super::*;
 
     const DEVTOOLS_POLL: Duration = Duration::from_millis(200);
-    // Chrome in --single-process mode can take 8-10s to start devtools.
+    // Chrome in --single-process needs 8-10s for devtools, 30s for operations.
     const DEVTOOLS_TIMEOUT: Duration = Duration::from_secs(20);
-    const CMD_TIMEOUT: Duration = Duration::from_secs(10);
+    const CMD_TIMEOUT: Duration = Duration::from_secs(30);
 
     // ── CDP client core ──────────────────────────────────────────────────────
 
