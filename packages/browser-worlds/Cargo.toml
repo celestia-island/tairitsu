@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "WIT world definitions for browser/W3C APIs (DOM, Events, Fetch, Canvas)"
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 links = "tairitsu-browser-worlds"
 

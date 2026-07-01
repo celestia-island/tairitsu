@@ -3,7 +3,7 @@ name = "tairitsu-ssr"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 description = "Server-Side Rendering engine for Tairitsu WASM components"
 

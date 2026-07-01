@@ -3,7 +3,7 @@ name = "tairitsu-style"
 version.workspace = true
 edition.workspace = true
 description = "Type-safe CSS property builders for Tairitsu framework"
-license.workspace = true
+license-file.workspace = true
 authors.workspace = true
 repository.workspace = true
 

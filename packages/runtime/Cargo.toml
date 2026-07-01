@@ -5,7 +5,7 @@ edition.workspace = true
 publish = true
 authors.workspace = true
 description = "Core WASM Component Model runtime — Container, Registry, WIT binding, RON/Binary interop"
-license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 
 [features]

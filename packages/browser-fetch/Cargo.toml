@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "Zero-config Chromium resolver for Tairitsu — ort-style build-time auto-download of Chrome for Testing (headless-shell or full), with a runtime fallback"
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 
 [lib]

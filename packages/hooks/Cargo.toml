@@ -3,7 +3,7 @@ name = "tairitsu-hooks"
 version.workspace = true
 description = "Hooks system for Tairitsu"
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 edition.workspace = true
 repository.workspace = true
 

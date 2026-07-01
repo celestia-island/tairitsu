@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "Build and packaging tool for Tairitsu applications"
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 
 [[bin]]
