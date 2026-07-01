@@ -20,14 +20,12 @@ fn main() {
         return;
     }
 
-    // Flavor is mutually exclusive (lib.rs enforces it via compile_error!);
-    // default is shell.
-    let full = std::env::var_os("CARGO_FEATURE_FULL").is_some();
-    let shell = std::env::var_os("CARGO_FEATURE_SHELL").is_some();
-    if full && shell {
-        panic!("tairitsu-browser-fetch: features `shell` and `full` are mutually exclusive");
-    }
-    let flavor = if full { "full" } else { "shell" };
+    // Flavor: shell is the implicit default; `full` opts into full Chrome.
+    let flavor = if std::env::var_os("CARGO_FEATURE_FULL").is_some() {
+        "full"
+    } else {
+        "shell"
+    };
 
     if std::env::var_os("TAIRITSU_SKIP_BROWSER_FETCH").is_some() {
         eprintln!(
@@ -39,9 +37,7 @@ fn main() {
     let ver =
         std::env::var("TAIRITSU_CHROME_VERSION").unwrap_or_else(|_| CHROME_VERSION.to_string());
     let Some(id) = target_download_id() else {
-        eprintln!(
-            "[tairitsu-browser-fetch] unsupported target; skipping build-time fetch"
-        );
+        eprintln!("[tairitsu-browser-fetch] unsupported target; skipping build-time fetch");
         return;
     };
 
@@ -64,8 +60,15 @@ fn main() {
 
     if let Some(s) = final_path.to_str() {
         println!("cargo:rustc-env=TAIRITSU_BROWSER_PATH={s}");
+        // Propagate the resolved version so lib.rs `version()` (option_env!) and
+        // the build-time download stay in lock-step.
+        println!("cargo:rustc-env=TAIRITSU_CHROME_VERSION={ver}");
+    } else {
+        eprintln!(
+            "[tairitsu-browser-fetch] cache path is not valid UTF-8; \
+             TAIRITSU_BROWSER_PATH not emitted"
+        );
     }
-    println!("cargo:rustc-env=TAIRITSU_BROWSER_VERSION={ver}");
 }
 
 /// Chrome-for-Testing download id for the *target* triple (not the host).
@@ -76,7 +79,8 @@ fn target_download_id() -> Option<&'static str> {
         ("linux", "x86_64") => Some("linux64"),
         ("macos", "aarch64") => Some("mac-arm64"),
         ("macos", "x86_64") => Some("mac-x64"),
-        ("windows", "x86_64" | "x86") => Some("win64"),
+        // Chrome for Testing only ships a win64 build; 32-bit Windows has no match.
+        ("windows", "x86_64") => Some("win64"),
         _ => None,
     }
 }
@@ -141,8 +145,9 @@ fn installed_executable(flavor: &str, ver: &str, id: &str) -> PathBuf {
 }
 
 fn archive_url(flavor: &str, ver: &str, id: &str) -> String {
-    let base =
+    let raw =
         std::env::var("TAIRITSU_CHROME_MIRROR").unwrap_or_else(|_| DEFAULT_MIRROR.to_string());
+    let base = raw.trim_end_matches('/'); // avoid `//` if the mirror ends with `/`
     let stem = match flavor {
         "shell" => format!("chrome-headless-shell-{id}"),
         _ => format!("chrome-{id}"),
@@ -159,10 +164,13 @@ fn install_ring_provider() {
 fn download(flavor: &str, ver: &str, id: &str) -> anyhow::Result<PathBuf> {
     let url = archive_url(flavor, ver, id);
     let target = installed_executable(flavor, ver, id);
-    // Extract *into* the version dir; the archive carries its own top dir
-    // (`<archive_stem>/`), so the binary lands exactly at `target`.
     let dest = version_dir(flavor, ver, id);
-    std::fs::create_dir_all(&dest)?;
+    // Extract into a sibling temp dir, then rename atomically into place, so a
+    // partial/interrupted extraction never poisons the cache.
+    let parent = dest.parent().unwrap_or(Path::new("."));
+    let tmp = parent.join(format!(".{id}-{}.tmp", std::process::id()));
+    let _ = std::fs::remove_dir_all(&tmp);
+    std::fs::create_dir_all(&tmp)?;
 
     eprintln!("[tairitsu-browser-fetch] downloading {url} (once, then cached)");
     install_ring_provider();
@@ -175,16 +183,15 @@ fn download(flavor: &str, ver: &str, id: &str) -> anyhow::Result<PathBuf> {
         .error_for_status()?
         .bytes()?;
 
-    extract_zip(&bytes[..], &dest)?;
-
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        if let Ok(meta) = std::fs::metadata(&target) {
-            let mut perms = meta.permissions();
-            perms.set_mode(0o755);
-            std::fs::set_permissions(&target, perms)?;
-        }
+    let extract_result = extract_zip(&bytes[..], &tmp);
+    if let Err(e) = extract_result {
+        let _ = std::fs::remove_dir_all(&tmp);
+        return Err(e);
+    }
+    let _ = std::fs::remove_dir_all(&dest);
+    if let Err(e) = std::fs::rename(&tmp, &dest) {
+        let _ = std::fs::remove_dir_all(&tmp);
+        anyhow::bail!("failed to finalize browser cache (rename): {e}");
     }
 
     eprintln!("[tairitsu-browser-fetch] installed to {}", dest.display());
@@ -197,6 +204,7 @@ fn extract_zip(bytes: &[u8], dest: &Path) -> anyhow::Result<()> {
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i)?;
         let name = entry.name().to_string();
+        let unix_mode = entry.unix_mode();
         // Strip traversal / absolute components from archive entry names.
         let mut safe = PathBuf::new();
         for comp in Path::new(&name).components() {
@@ -214,6 +222,13 @@ fn extract_zip(bytes: &[u8], dest: &Path) -> anyhow::Result<()> {
             }
             let mut out = std::fs::File::create(&path)?;
             std::io::copy(&mut entry, &mut out)?;
+            drop(out);
+            // Restore unix permission bits so executables keep their exec bit.
+            #[cfg(unix)]
+            if let Some(mode) = unix_mode {
+                use std::os::unix::fs::PermissionsExt;
+                let _ = std::fs::set_permissions(&path, std::fs::Permissions::from_mode(mode));
+            }
         }
     }
     Ok(())

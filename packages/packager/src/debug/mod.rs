@@ -530,8 +530,8 @@ mod engine {
     use super::*;
 
     const DEVTOOLS_POLL: Duration = Duration::from_millis(200);
-    const DEVTOOLS_TIMEOUT: Duration = Duration::from_secs(30);
-    const CMD_TIMEOUT: Duration = Duration::from_secs(30);
+    const DEVTOOLS_TIMEOUT: Duration = Duration::from_secs(60);
+    const CMD_TIMEOUT: Duration = Duration::from_secs(60);
 
     // ── CDP client core ──────────────────────────────────────────────────────
 
@@ -680,7 +680,7 @@ mod engine {
         let (cmd_tx, mut cmd_rx) = mpsc::channel::<BrowserCommand>(64);
         let connected = Arc::new(RwLock::new(false));
 
-        let exe = resolve_executable()?;
+        let exe = resolve_executable_blocking().await?;
         let port = pick_free_port().ok_or_else(|| "no free port for devtools".to_string())?;
 
         let child: Child = {
@@ -694,6 +694,7 @@ mod engine {
                 "--no-first-run".to_string(),
                 // Container/sandbox compatibility
                 "--no-zygote".to_string(),
+                "--single-process".to_string(),
                 // Anti-detection: prevent sites from detecting automation
                 "--disable-blink-features=AutomationControlled".to_string(),
                 "--disable-features=IsolateOrigins,site-per-process".to_string(),
@@ -1089,6 +1090,16 @@ mod engine {
         tairitsu_browser_fetch::resolve()
             .map(|p| p.to_string_lossy().into_owned())
             .map_err(|e| format!("no chrome/chromium could be resolved: {e}"))
+    }
+
+    /// Async wrapper: resolve() may perform a blocking HTTP download + zip
+    /// extraction (runtime-fetch fallback), so it must NOT run on a tokio
+    /// worker thread. Offload it to spawn_blocking.
+    async fn resolve_executable_blocking() -> Result<String, String> {
+        match tokio::task::spawn_blocking(resolve_executable).await {
+            Ok(res) => res,
+            Err(join_err) => Err(format!("browser resolver task failed: {join_err}")),
+        }
     }
 
     // ── command dispatch ─────────────────────────────────────────────────────
@@ -2121,7 +2132,7 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
     let (browser, browser_engine) = {
         crate::log_info!("Debug browser engine: chromium (headless CDP)");
         match tokio::time::timeout(
-            Duration::from_secs(30),
+            Duration::from_secs(60),
             engine::spawn_browser(
                 base_url.clone(),
                 None,

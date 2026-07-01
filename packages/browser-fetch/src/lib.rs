@@ -16,23 +16,14 @@
 //! 5. Error.
 //!
 //! # Binary flavor
-//! Pick **one** via cargo features (mutually exclusive):
-//! - `shell` (default) — `chrome-headless-shell`, ~90 MB. Enough for headless
-//!   scraping (seia's use case).
-//! - `full` — full Chrome for Testing, ~300 MB. When you need full rendering.
+//! Default = `chrome-headless-shell` (~90 MB; enough for headless scraping).
+//! Enable the `full` cargo feature for full Chrome for Testing (~300 MB, when
+//! you need full rendering). This is a single toggle, so you always get exactly
+//! one flavor.
 //!
 //! Knobs: `TAIRITSU_CHROME_VERSION`, `TAIRITSU_CHROME_MIRROR`,
-//! `TAIRITSU_SKIP_BROWSER_FETCH`.
-
-// ── mutually-exclusive flavor ───────────────────────────────────────────────
-#[cfg(all(feature = "shell", feature = "full"))]
-compile_error!(
-    "tairitsu-browser-fetch: features `shell` and `full` are mutually exclusive; enable only one"
-);
-#[cfg(not(any(feature = "shell", feature = "full")))]
-compile_error!(
-    "tairitsu-browser-fetch: enable exactly one of `shell` or `full`"
-);
+//! `TAIRITSU_SKIP_BROWSER_FETCH` (skips both build-time and runtime download),
+//! `CHROME_PATH` (explicit executable override).
 
 use std::path::{Path, PathBuf};
 
@@ -53,7 +44,7 @@ pub enum Flavor {
 }
 
 impl Flavor {
-    /// Selected via cargo features (`shell` default, `full` alternative).
+    /// Shell by default; `Full` when the `full` cargo feature is enabled.
     pub fn selected() -> Self {
         #[cfg(feature = "full")]
         {
@@ -130,20 +121,26 @@ impl Platform {
     fn chrome_exec_relative(&self) -> PathBuf {
         match self {
             Platform::LinuxX64 => PathBuf::from("chrome-linux64/chrome"),
-            Platform::MacosArm64 | Platform::MacosX64 => PathBuf::from(
+            // Chrome for Testing ships per-arch mac dirs (chrome-mac-arm64 / chrome-mac-x64).
+            Platform::MacosArm64 => PathBuf::from(
                 "chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            ),
+            Platform::MacosX64 => PathBuf::from(
+                "chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
             ),
             Platform::WindowsX64 => PathBuf::from("chrome-win64/chrome.exe"),
         }
     }
 
-    pub fn detect() -> Self {
+    /// Detect the current runtime platform. Returns `None` for unsupported
+    /// triples (e.g. linux aarch64, 32-bit) instead of panicking.
+    pub fn detect() -> Option<Self> {
         match (std::env::consts::OS, std::env::consts::ARCH) {
-            ("linux", "x86_64") => Platform::LinuxX64,
-            ("macos", "aarch64") => Platform::MacosArm64,
-            ("macos", "x86_64") => Platform::MacosX64,
-            ("windows", "x86_64" | "x86") => Platform::WindowsX64,
-            other => panic!("tairitsu-browser-fetch: unsupported platform {other:?}"),
+            ("linux", "x86_64") => Some(Platform::LinuxX64),
+            ("macos", "aarch64") => Some(Platform::MacosArm64),
+            ("macos", "x86_64") => Some(Platform::MacosX64),
+            ("windows", "x86_64") => Some(Platform::WindowsX64),
+            _ => None,
         }
     }
 }
@@ -185,7 +182,11 @@ fn cache_dir() -> Option<PathBuf> {
 /// The archive extracts *into* this dir, producing `<archive_stem>/<binary>`.
 pub fn version_dir(flavor: Flavor, ver: &str, plat: Platform) -> PathBuf {
     cache_root()
-        .join(if flavor == Flavor::Shell { "shell" } else { "full" })
+        .join(if flavor == Flavor::Shell {
+            "shell"
+        } else {
+            "full"
+        })
         .join(ver)
         .join(plat.download_id())
 }
@@ -197,7 +198,10 @@ pub fn installed_path(flavor: Flavor, ver: &str, plat: Platform) -> PathBuf {
 
 /// Download URL for the archive.
 pub fn archive_url(flavor: Flavor, ver: &str, plat: Platform) -> String {
-    let base = std::env::var("TAIRITSU_CHROME_MIRROR").unwrap_or_else(|_| DEFAULT_MIRROR.to_string());
+    let raw =
+        std::env::var("TAIRITSU_CHROME_MIRROR").unwrap_or_else(|_| DEFAULT_MIRROR.to_string());
+    // Trim a trailing slash so a user-supplied mirror doesn't yield `//`.
+    let base = raw.trim_end_matches('/');
     format!(
         "{}/{}/{}/{}.zip",
         base,
@@ -232,46 +236,84 @@ pub fn resolve() -> anyhow::Result<PathBuf> {
     }
 
     // 4. Runtime fallback fetch.
-    #[cfg(feature = "runtime-fetch")]
-    {
-        log("system chrome not found; fetching via runtime-fetch");
-        return ensure();
-    }
+    runtime_fallback()
+}
 
-    #[cfg(not(feature = "runtime-fetch"))]
-    {
+#[cfg(feature = "runtime-fetch")]
+fn runtime_fallback() -> anyhow::Result<PathBuf> {
+    if std::env::var_os("TAIRITSU_SKIP_BROWSER_FETCH").is_some() {
         anyhow::bail!(
-            "no chrome/chromium found. Set CHROME_PATH, install chromium on PATH, \
-             or enable the `runtime-fetch` feature of tairitsu-browser-fetch."
-        )
+            "no chrome/chromium found and TAIRITSU_SKIP_BROWSER_FETCH is set; \
+             unset it or provide CHROME_PATH"
+        );
     }
+    log("system chrome not found; fetching via runtime-fetch");
+    ensure()
+}
+
+#[cfg(not(feature = "runtime-fetch"))]
+fn runtime_fallback() -> anyhow::Result<PathBuf> {
+    anyhow::bail!(
+        "no chrome/chromium found. Set CHROME_PATH, install chromium on PATH, \
+         or enable the `runtime-fetch` feature of tairitsu-browser-fetch."
+    )
 }
 
 /// Guarantee the pinned build is in the cache, downloading it if missing.
 /// Returns its path. (Requires the `runtime-fetch` feature.)
+///
+/// Note: this performs blocking I/O (HTTP download + extraction). When called
+/// from an async runtime, wrap it in `tokio::task::spawn_blocking`.
 #[cfg(feature = "runtime-fetch")]
 pub fn ensure() -> anyhow::Result<PathBuf> {
     let flavor = Flavor::selected();
-    let plat = Platform::detect();
+    let plat = Platform::detect().ok_or_else(|| {
+        anyhow::anyhow!(
+            "unsupported runtime platform ({}-{}); Chrome for Testing only ships for \
+             linux-x86_64, macos-{{aarch64,x86_64}}, windows-x86_64",
+            std::env::consts::OS,
+            std::env::consts::ARCH
+        )
+    })?;
     let ver = version();
     let target = installed_path(flavor, ver, plat);
     if target.exists() {
         return Ok(target);
     }
     download_to_cache(flavor, ver, plat)?;
-    make_executable(&target)?;
+    // Final integrity check: the expected binary must exist after extraction.
+    if !target.exists() {
+        anyhow::bail!(
+            "extraction completed but {} not found at {}",
+            flavor_name(flavor),
+            target.display()
+        );
+    }
     Ok(target)
 }
 
 #[cfg(feature = "runtime-fetch")]
 fn download_to_cache(flavor: Flavor, ver: &str, plat: Platform) -> anyhow::Result<()> {
     let url = archive_url(flavor, ver, plat);
-    // Extract *into* the version dir; the archive carries its own top dir
-    // (`<archive_stem>/`), so the binary lands exactly at `installed_path`.
+    // The archive carries its own top dir (`<archive_stem>/`); extract into the
+    // version dir so the binary lands exactly at `installed_path`. Extract to a
+    // sibling temp dir first, then rename atomically, so a partial/interrupted
+    // extraction never poisons the cache.
     let dest = version_dir(flavor, ver, plat);
-    std::fs::create_dir_all(&dest)?;
+    let parent = dest.parent().unwrap_or(Path::new("."));
+    let tmp = parent.join(format!(
+        ".{}-{}.tmp",
+        plat.download_id(),
+        std::process::id()
+    ));
+    // Clean any stale temp dir from a previous interrupted run.
+    let _ = std::fs::remove_dir_all(&tmp);
+    std::fs::create_dir_all(&tmp)?;
 
-    log(&format!("downloading {} (this happens once, then is cached)", url));
+    log(&format!(
+        "downloading {} (this happens once, then is cached)",
+        url
+    ));
     install_ring_provider();
     let bytes = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(600))
@@ -282,8 +324,23 @@ fn download_to_cache(flavor: Flavor, ver: &str, plat: Platform) -> anyhow::Resul
         .error_for_status()?
         .bytes()?;
 
-    extract_zip(&bytes[..], &dest)?;
-    log(&format!("installed {} to {}", flavor_name(flavor), dest.display()));
+    let extract_result = extract_zip(&bytes[..], &tmp);
+    if let Err(e) = extract_result {
+        let _ = std::fs::remove_dir_all(&tmp);
+        return Err(e);
+    }
+    // Swap the completed extraction into place.
+    let _ = std::fs::remove_dir_all(&dest);
+    if let Err(e) = std::fs::rename(&tmp, &dest) {
+        // rename can fail across filesystems; fall back to copy+remove.
+        let _ = std::fs::remove_dir_all(&tmp);
+        anyhow::bail!("failed to finalize browser cache (rename): {e}");
+    }
+    log(&format!(
+        "installed {} to {}",
+        flavor_name(flavor),
+        dest.display()
+    ));
     Ok(())
 }
 
@@ -294,6 +351,8 @@ fn extract_zip(bytes: &[u8], dest: &Path) -> anyhow::Result<()> {
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i)?;
         let name = entry.name().to_string();
+        // Capture the entry's unix mode (if any) before moving `entry`.
+        let unix_mode = entry.unix_mode();
         // Guard against path traversal in archive entries.
         let path = dest.join(sanitize_extract_name(&name));
         if name.ends_with('/') {
@@ -304,6 +363,14 @@ fn extract_zip(bytes: &[u8], dest: &Path) -> anyhow::Result<()> {
             }
             let mut out = std::fs::File::create(&path)?;
             std::io::copy(&mut entry, &mut out)?;
+            drop(out);
+            // Restore unix permission bits from the archive so executables
+            // (chrome, crashpad_handler, …) keep their exec bit.
+            #[cfg(unix)]
+            if let Some(mode) = unix_mode {
+                use std::os::unix::fs::PermissionsExt;
+                let _ = std::fs::set_permissions(&path, std::fs::Permissions::from_mode(mode));
+            }
         }
     }
     Ok(())
@@ -324,21 +391,6 @@ fn sanitize_extract_name(name: &str) -> PathBuf {
     out
 }
 
-#[cfg(all(unix, feature = "runtime-fetch"))]
-fn make_executable(path: &Path) -> anyhow::Result<()> {
-    use std::os::unix::fs::PermissionsExt;
-    if let Ok(meta) = std::fs::metadata(path) {
-        let mut perms = meta.permissions();
-        perms.set_mode(0o755);
-        std::fs::set_permissions(path, perms)?;
-    }
-    Ok(())
-}
-#[cfg(all(not(unix), feature = "runtime-fetch"))]
-fn make_executable(_path: &Path) -> anyhow::Result<()> {
-    Ok(())
-}
-
 /// Locate a system Chrome on `$PATH` (best-effort, no deps).
 fn which_system_chrome() -> Option<PathBuf> {
     const CANDIDATES: &[&str] = &[
@@ -349,8 +401,17 @@ fn which_system_chrome() -> Option<PathBuf> {
         "chrome",
     ];
     let path_var = std::env::var_os("PATH")?;
+    // On Windows, also try each candidate with a `.exe` suffix and honor
+    // `$PATHEXT` extensions.
+    let try_names: Vec<String> = if cfg!(windows) {
+        let mut v: Vec<String> = CANDIDATES.iter().map(|s| format!("{s}.exe")).collect();
+        v.extend(CANDIDATES.iter().map(|s| s.to_string()));
+        v
+    } else {
+        CANDIDATES.iter().map(|s| s.to_string()).collect()
+    };
     for dir in std::env::split_paths(&path_var) {
-        for name in CANDIDATES {
+        for name in &try_names {
             let candidate = dir.join(name);
             if let Ok(meta) = std::fs::metadata(&candidate) {
                 if meta.is_file() {

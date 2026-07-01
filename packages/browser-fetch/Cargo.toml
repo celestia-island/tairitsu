@@ -34,12 +34,17 @@ rustls = { version = "^0.23", default-features = false, features = ["ring", "std
 zip = { workspace = true }
 
 [features]
-default = ["shell", "auto-fetch", "runtime-fetch"]
+default = ["auto-fetch", "runtime-fetch"]
 
-# ── Binary flavor (mutually exclusive — enforced by compile_error! in lib.rs) ──
-# chrome-headless-shell (~90 MB) — Playwright's headless choice; enough for scraping.
-shell = []
-# Full Chrome for Testing (~300 MB) — when full-page rendering / extensions are needed.
+# ── Binary flavor ──
+# Default (off) = chrome-headless-shell (~90 MB), Playwright's headless choice;
+# enough for scraping. Enable `full` for full Chrome for Testing (~300 MB),
+# when full-page rendering / extensions are needed.
+#
+# Implemented as a single additive toggle (NOT mutually-exclusive features):
+# cargo features are additive, so two features that "pick a flavor" would unify
+# into both and be unbuildable. Instead `full` is the only switch and shell is
+# the implicit default — you always get exactly one flavor.
 full = []
 
 # ── Acquisition strategy ──
