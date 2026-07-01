@@ -530,9 +530,8 @@ mod engine {
     use super::*;
 
     const DEVTOOLS_POLL: Duration = Duration::from_millis(200);
-    // Short timeout for devtools to come up — Chrome starts fast or not at all.
-    const DEVTOOLS_TIMEOUT: Duration = Duration::from_secs(10);
-    // Individual CDP command timeout. Most respond in <100ms.
+    // Chrome in --single-process mode can take 8-10s to start devtools.
+    const DEVTOOLS_TIMEOUT: Duration = Duration::from_secs(20);
     const CMD_TIMEOUT: Duration = Duration::from_secs(10);
 
     // ── CDP client core ──────────────────────────────────────────────────────
