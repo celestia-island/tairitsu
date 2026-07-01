@@ -133,6 +133,10 @@ enum Commands {
         /// `navigate` tool can still go anywhere afterwards.
         #[arg(short, long, default_value = "about:blank")]
         url: String,
+
+        /// Proxy server for Chrome (e.g. http://localhost:7890)
+        #[arg(long)]
+        proxy: Option<String>,
     },
 
     /// Build for production
@@ -793,7 +797,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             }
         }
         #[allow(unused_variables)]
-        Some(Commands::Debug { port, url }) => {
+        Some(Commands::Debug { port, url, proxy }) => {
             #[cfg(feature = "dev-server")]
             {
                 crate::log_info!("Starting standalone debug browser (no app project)...");
@@ -802,6 +806,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     dev_port: 0,
                     dist_dir: "(standalone)".to_string(),
                     package_name: "(browser-only)".to_string(),
+                    proxy,
                 };
                 // Advertise readiness so a co-located `tairitsu mcp` (or the
                 // standalone tairitsu-mcp bin) auto-discovers this debug API.

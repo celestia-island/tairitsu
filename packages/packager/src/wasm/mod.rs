@@ -1907,6 +1907,7 @@ pub async fn dev_server(
             dev_port: actual_port,
             dist_dir: config.build.output_dir.display().to_string(),
             package_name: config.package.name.clone(),
+            proxy: None,
         };
         tokio::spawn(async move {
             if let Err(e) = crate::debug::start_debug_server(debug_cfg, effective_debug_port).await

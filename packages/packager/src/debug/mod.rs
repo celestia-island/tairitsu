@@ -485,6 +485,35 @@ impl BrowserHandle {
 // event variant (the failure that killed chromiumoxide on Chrome ≥147) — this
 // stays compatible across Chrome versions by construction: unknown events are
 // dropped, never deserialized into a closed enum.
+/// Anti-detection JS injected into every page before any site script runs.
+/// Patches the most common headless-detection vectors.
+#[cfg(feature = "debug-browser")]
+const STEALTH_JS: &str = r#"
+// Patch navigator.webdriver
+Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+
+// Restore window.chrome (headless removes it)
+if (!window.chrome) {
+    window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){} };
+}
+
+// Override permissions query for 'notifications' (headless returns 'denied')
+const origQuery = window.navigator.permissions.query;
+window.navigator.permissions.query = (parameters) =>
+    parameters.name === 'notifications'
+        ? Promise.resolve({ state: Notification.permission })
+        : origQuery(parameters);
+
+// Fake plugins array (headless has empty plugins)
+Object.defineProperty(navigator, 'plugins', {
+    get: () => [1, 2, 3, 4, 5],
+});
+
+// Fake languages (headless sometimes has empty languages)
+Object.defineProperty(navigator, 'languages', {
+    get: () => ['en-US', 'en'],
+});
+"#;
 
 #[cfg(feature = "debug-browser")]
 mod engine {
@@ -646,6 +675,7 @@ mod engine {
         errors: Arc<RwLock<Vec<ErrorEntry>>>,
         network: Arc<RwLock<HashMap<String, NetworkResource>>>,
         websockets: Arc<RwLock<HashMap<String, WebSocketConn>>>,
+        proxy: Option<String>,
     ) -> Result<BrowserHandle, String> {
         let (cmd_tx, mut cmd_rx) = mpsc::channel::<BrowserCommand>(64);
         let connected = Arc::new(RwLock::new(false));
@@ -653,27 +683,35 @@ mod engine {
         let exe = resolve_executable()?;
         let port = pick_free_port().ok_or_else(|| "no free port for devtools".to_string())?;
 
-        let child: Child = Command::new(&exe)
-            .args([
-                "--headless=new",
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-                "--disable-extensions",
-                "--disable-background-networking",
-                "--no-first-run",
-                &format!("--remote-debugging-port={port}"),
-                &format!("--window-size={DEFAULT_VIEWPORT_W},{DEFAULT_VIEWPORT_H}"),
-                &base_url,
-            ])
-            // Keep chrome's stdio off our pipes (it would otherwise wedge the
-            // owning shell once orphaned).
-            .stdin(std::process::Stdio::null())
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .kill_on_drop(true)
-            .spawn()
-            .map_err(|e| format!("failed to launch chrome ({exe}): {e}"))?;
+        let child: Child = {
+            let mut args = vec![
+                "--headless=new".to_string(),
+                "--no-sandbox".to_string(),
+                "--disable-dev-shm-usage".to_string(),
+                "--disable-gpu".to_string(),
+                "--disable-extensions".to_string(),
+                "--disable-background-networking".to_string(),
+                "--no-first-run".to_string(),
+                // Anti-detection: prevent sites from detecting automation
+                "--disable-blink-features=AutomationControlled".to_string(),
+                "--disable-features=IsolateOrigins,site-per-process".to_string(),
+                "--disable-infobars".to_string(),
+                format!("--remote-debugging-port={port}"),
+                format!("--window-size={DEFAULT_VIEWPORT_W},{DEFAULT_VIEWPORT_H}"),
+            ];
+            if let Some(ref p) = proxy {
+                args.push(format!("--proxy-server={p}"));
+            }
+            args.push(base_url.clone());
+            Command::new(&exe)
+                .args(&args)
+                .stdin(std::process::Stdio::null())
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .kill_on_drop(true)
+                .spawn()
+                .map_err(|e| format!("failed to launch chrome ({exe}): {e}"))?
+        };
 
         // Wait for the devtools HTTP endpoint, then read the browser ws URL.
         let ws_url = wait_for_devtools(port).await?;
@@ -966,6 +1004,18 @@ mod engine {
         let _ = client.command("Page.enable", json!({})).await;
         let _ = client.command("Runtime.enable", json!({})).await;
         let _ = client.command("Network.enable", json!({})).await;
+
+        // Anti-detection: inject stealth script before any page script runs.
+        // This patches navigator.webdriver, window.chrome, permissions API,
+        // plugins, and other telltale signs of headless automation.
+        let _ = client
+            .command(
+                "Page.addScriptToEvaluateOnNewDocument",
+                json!({
+                    "source": STEALTH_JS
+                }),
+            )
+            .await;
 
         *connected.write().await = true;
 
@@ -2078,6 +2128,8 @@ pub struct DebugServerConfig {
     pub dist_dir: String,
     /// Informational only (surfaced via `/info`): the package name label.
     pub package_name: String,
+    /// Optional proxy server for Chrome (e.g. "http://localhost:7890").
+    pub proxy: Option<String>,
 }
 
 pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crate::Result<()> {
@@ -2100,6 +2152,7 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
                 errors.clone(),
                 network.clone(),
                 websockets.clone(),
+                cfg.proxy.clone(),
             ),
         )
         .await
@@ -2154,6 +2207,7 @@ pub async fn start_debug_server(cfg: DebugServerConfig, debug_port: u16) -> crat
         .route("/press", post(press_handler))
         .route("/scroll", post(scroll_handler))
         .route("/evaluate", post(evaluate_handler))
+        .route("/wait-for-selector", post(wait_for_selector_handler))
         .route("/console", get(console_handler))
         .route("/console", delete(console_clear_handler))
         .route("/dom", get(dom_query_handler))
@@ -2445,6 +2499,89 @@ async fn evaluate_handler(
         return chan_closed::<EvaluateResponse>();
     }
     await_op(rx).await
+}
+
+/// Wait for a CSS selector to appear in the DOM. Polls every 200ms up to a
+/// configurable timeout. Returns the element count found.
+#[derive(serde::Deserialize)]
+struct WaitForSelectorRequest {
+    selector: String,
+    #[serde(default = "default_wait_timeout")]
+    timeout_ms: u64,
+}
+
+fn default_wait_timeout() -> u64 {
+    10_000
+}
+
+#[derive(serde::Serialize)]
+struct WaitForSelectorResponse {
+    selector: String,
+    found: bool,
+    count: usize,
+    elapsed_ms: u64,
+}
+
+async fn wait_for_selector_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<WaitForSelectorRequest>,
+) -> impl IntoResponse {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<WaitForSelectorResponse>(),
+    };
+
+    let start = std::time::Instant::now();
+    let deadline = start + Duration::from_millis(req.timeout_ms);
+    let check_js = format!(
+        "document.querySelectorAll({}).length",
+        serde_json::to_string(&req.selector).unwrap_or_else(|_| "''".into())
+    );
+
+    let result: Result<WaitForSelectorResponse, String> = loop {
+        let (tx, rx) = oneshot::channel();
+        if br
+            .send(BrowserCommand::Evaluate {
+                expression: check_js.clone(),
+                await_promise: false,
+                resp: tx,
+            })
+            .await
+            .is_err()
+        {
+            return chan_closed::<WaitForSelectorResponse>();
+        }
+
+        let (status, json) = await_op::<EvaluateResponse>(rx).await;
+        if status.is_success() {
+            if let Some(ref data) = json.0.data {
+                let count = data.result.as_u64().unwrap_or(0) as usize;
+                if count > 0 {
+                    break Ok(WaitForSelectorResponse {
+                        selector: req.selector.clone(),
+                        found: true,
+                        count,
+                        elapsed_ms: start.elapsed().as_millis() as u64,
+                    });
+                }
+            }
+        }
+
+        if std::time::Instant::now() >= deadline {
+            break Ok(WaitForSelectorResponse {
+                selector: req.selector.clone(),
+                found: false,
+                count: 0,
+                elapsed_ms: start.elapsed().as_millis() as u64,
+            });
+        }
+        tokio::time::sleep(Duration::from_millis(200)).await;
+    };
+
+    match result {
+        Ok(data) => (StatusCode::OK, ResponseJson(ApiResponse::ok(data))),
+        Err(e) => (StatusCode::BAD_REQUEST, ResponseJson(ApiResponse::err(e))),
+    }
 }
 
 async fn console_handler(
