@@ -689,18 +689,10 @@ mod engine {
             let mut args = vec![
                 "--headless=new".to_string(),
                 "--no-sandbox".to_string(),
-                "--disable-dev-shm-usage".to_string(),
                 "--disable-gpu".to_string(),
-                "--disable-extensions".to_string(),
-                "--disable-background-networking".to_string(),
-                "--no-first-run".to_string(),
-                // Container compatibility — needed where zygote fork is blocked.
                 "--no-zygote".to_string(),
                 "--single-process".to_string(),
-                // Anti-detection
-                "--disable-blink-features=AutomationControlled".to_string(),
-                "--disable-features=IsolateOrigins,site-per-process".to_string(),
-                "--disable-infobars".to_string(),
+                "--no-first-run".to_string(),
                 format!("--remote-debugging-port={port}"),
                 format!("--window-size={DEFAULT_VIEWPORT_W},{DEFAULT_VIEWPORT_H}"),
             ];
