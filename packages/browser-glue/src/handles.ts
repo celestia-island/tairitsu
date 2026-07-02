@@ -172,7 +172,7 @@ function isInstanceOfType(obj: unknown, typeName: string): boolean {
   const objType = constructor.name;
   if (objType === typeName) return true;
 
-  if (!constructor.__tairitsu_typeName) {
+  if (!(constructor as any).__tairitsu_typeName) {
     Object.defineProperty(constructor, '__tairitsu_typeName', {
       value: objType,
       writable: false,
@@ -180,7 +180,7 @@ function isInstanceOfType(obj: unknown, typeName: string): boolean {
       configurable: false,
     });
   }
-  return constructor.__tairitsu_typeName === typeName;
+  return (constructor as any).__tairitsu_typeName === typeName;
 }
 
 /**

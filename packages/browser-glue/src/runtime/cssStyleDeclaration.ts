@@ -15,7 +15,7 @@ export const cssStyleDeclaration_exports = {
   item(self: bigint, index: number) {
     const obj = globalThis.__lookupCssStyleDeclaration(self);
     const result = obj.item(index);
-    return globalThis.__storeText(result);
+    return globalThis.__storeText(result as any);
   },
   getPropertyValue(self: bigint, property: string) {
     const obj = globalThis.__lookupCssStyleDeclaration(self);
@@ -32,7 +32,7 @@ export const cssStyleDeclaration_exports = {
   removeProperty(self: bigint, property: string) {
     const obj = globalThis.__lookupCssStyleDeclaration(self);
     const result = obj.removeProperty(property);
-    return globalThis.__storeText(result);
+    return globalThis.__storeText(result as any);
   },
   getParentRule(self: bigint) {
     const obj = globalThis.__lookupCssStyleDeclaration(self);

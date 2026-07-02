@@ -1,20 +1,21 @@
 
 function reverseLookupElement(target: EventTarget | null): bigint | undefined {
   if (!target) return undefined;
-  if (!globalThis.__elementReverseMap) {
-    globalThis.__elementReverseMap = new Map();
-    const orig = globalThis.__storeElement;
+  const g = globalThis as any;
+  if (!g.__elementReverseMap) {
+    g.__elementReverseMap = new Map();
+    const orig = g.__storeElement;
     if (orig) {
-      globalThis.__storeElement = function (el: any) {
+      g.__storeElement = function (el: any) {
         const handle = orig(el);
         if (handle !== undefined) {
-          globalThis.__elementReverseMap.set(el, handle);
+          g.__elementReverseMap.set(el, handle);
         }
         return handle;
       };
     }
   }
-  return globalThis.__elementReverseMap.get(target);
+  return g.__elementReverseMap.get(target);
 }
 
 export const event_exports = {

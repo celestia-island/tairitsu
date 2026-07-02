@@ -81,9 +81,9 @@ export const platformHelpers_exports = {
     return id;
   },
   cancelAnimationFrame(id: number) {
-    const s = globalThis.__tairitsuAnimState;
+    const s = (globalThis as any).__tairitsuAnimState;
     if (s.animationCallbacks.has(id)) {
-      window.cancelAnimationFrame(s.animationCallbacks.get(id));
+      window.cancelAnimationFrame(s.animationCallbacks.get(id) as number);
       s.animationCallbacks.delete(id);
     }
   },
@@ -187,7 +187,7 @@ export const platformHelpers_exports = {
   },
 
   scrollTo(top: number, behavior: string) {
-    window.scrollTo({ top, behavior: behavior || "auto" });
+    window.scrollTo({ top, behavior: (behavior || "auto") as ScrollBehavior });
   },
 
   clipboardWriteTextPromise(text: string) {
@@ -303,7 +303,7 @@ export const platformHelpers_exports = {
   },
 
   readClipboard() {
-    if (navigator.clipboard?.readText) {
+    if (navigator.clipboard) {
       try {
         return (navigator.clipboard as any).readTextSync?.() ?? undefined;
       } catch {}
@@ -323,15 +323,16 @@ export const platformHelpers_exports = {
   },
 
   onScroll(callbackId: bigint) {
-    if (!globalThis.__tairitsuScrollListeners) {
-      globalThis.__tairitsuScrollListeners = new Map();
+    const g = globalThis as any;
+    if (!g.__tairitsuScrollListeners) {
+      g.__tairitsuScrollListeners = new Map();
     }
     const handler = () => {
-      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/scroll-callbacks@0.2.0"]) {
+      if (g.__wasmExports && g.__wasmExports["tairitsu-browser:full/scroll-callbacks@0.2.0"]) {
         const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
         const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
         const clientHeight = document.documentElement.clientHeight || document.body.clientHeight;
-        globalThis.__wasmExports["tairitsu-browser:full/scroll-callbacks@0.2.0"]?.on_scroll?.(
+        g.__wasmExports["tairitsu-browser:full/scroll-callbacks@0.2.0"]?.on_scroll?.(
           callbackId,
           scrollTop,
           scrollHeight,
@@ -340,23 +341,24 @@ export const platformHelpers_exports = {
       }
     };
     window.addEventListener("scroll", handler, { passive: true });
-    const handle = globalThis.__nextHandle ? globalThis.__nextHandle++ : (globalThis.__nextHandle = 1n, 1n);
-    globalThis.__tairitsuScrollListeners.set(handle, handler);
+    const handle = g.__nextHandle ? g.__nextHandle++ : (g.__nextHandle = 1n, 1n);
+    g.__tairitsuScrollListeners.set(handle, handler);
     return handle;
   },
 
   onResizeCallback(callbackId: bigint) {
-    if (!globalThis.__tairitsuResizeListeners) {
-      globalThis.__tairitsuResizeListeners = new Map();
+    const g = globalThis as any;
+    if (!g.__tairitsuResizeListeners) {
+      g.__tairitsuResizeListeners = new Map();
     }
     const handler = () => {
-      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]) {
-        globalThis.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]?.on_resize?.(callbackId);
+      if (g.__wasmExports && g.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]) {
+        g.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]?.on_resize?.(callbackId);
       }
     };
     window.addEventListener("resize", handler);
-    const handle = globalThis.__nextHandle ? globalThis.__nextHandle++ : (globalThis.__nextHandle = 1n, 1n);
-    globalThis.__tairitsuResizeListeners.set(handle, handler);
+    const handle = g.__nextHandle ? g.__nextHandle++ : (g.__nextHandle = 1n, 1n);
+    g.__tairitsuResizeListeners.set(handle, handler);
     return handle;
   },
 
@@ -514,7 +516,7 @@ export const platformHelpers_exports = {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/file-reader-callbacks@0.2.0"]?.on_file_reader_result?.(
           callbackId,
-          reader.result ? Array.from(new Uint8Array(reader.result)) : [],
+          reader.result ? Array.from(new Uint8Array(reader.result as ArrayBuffer)) : [],
         );
       }
     };
@@ -680,10 +682,11 @@ export const platformHelpers_exports = {
     const closeCbId = s.nextCallbackId++;
     const errCbId = s.nextCallbackId++;
 
-    if (!globalThis.__tairitsuWsCallbacks) {
-      globalThis.__tairitsuWsCallbacks = new Map();
+    const g = globalThis as any;
+    if (!g.__tairitsuWsCallbacks) {
+      g.__tairitsuWsCallbacks = new Map();
     }
-    globalThis.__tairitsuWsCallbacks.set(handle, { openCbId, msgCbId, closeCbId, errCbId });
+    g.__tairitsuWsCallbacks.set(handle, { openCbId, msgCbId, closeCbId, errCbId });
 
     ws.onopen = () => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]) {
@@ -700,8 +703,8 @@ export const platformHelpers_exports = {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"]?.on_web_socket_close?.(closeCbId, ev.code, ev.reason || "");
       }
-      if (globalThis.__tairitsuWsCallbacks) {
-        globalThis.__tairitsuWsCallbacks.delete(handle);
+      if (g.__tairitsuWsCallbacks) {
+        g.__tairitsuWsCallbacks.delete(handle);
       }
     };
     ws.onerror = () => {

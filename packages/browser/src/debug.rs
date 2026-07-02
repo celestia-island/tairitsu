@@ -1109,7 +1109,6 @@ mod engine {
 
     fn resolve_executable() -> Result<String, String> {
         crate::browser_fetch::resolve_executable()
-            .map(|p| p.to_string_lossy().into_owned())
             .map_err(|e| format!("no chrome/chromium could be resolved: {e}"))
     }
 

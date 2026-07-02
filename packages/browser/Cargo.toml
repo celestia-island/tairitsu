@@ -12,6 +12,9 @@ repository = "https://github.com/celestia-island/tairitsu"
 name = "tairitsu_browser"
 path = "src/lib.rs"
 
+[features]
+debug-browser = []
+
 [dependencies]
 tokio = { version = "^1", features = ["rt-multi-thread", "net", "process", "macros", "time", "sync"] }
 tokio-tungstenite = { version = "^0.27", features = ["rustls-tls-webpki-roots"] }
