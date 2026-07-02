@@ -38,7 +38,10 @@ pub fn hook_slot<T: Clone + 'static>(
         let entry = slots
             .entry((component_id, key.to_string()))
             .or_insert_with(|| Box::new(init_fn()));
-        entry.downcast_ref::<T>().cloned().unwrap()
+        entry
+            .downcast_ref::<T>()
+            .cloned()
+            .expect("hook_slot: type mismatch — the same (component_id, key) was reused with a different type")
     })
 }
 
