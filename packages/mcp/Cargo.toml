@@ -23,6 +23,10 @@ schemars = "^1"
 rmcp = { version = "^1", features = ["server", "transport-io", "macros", "schemars"] }
 # VTty engine — the PTY / VT100 / render stack now lives in the dedicated `kou`
 # crate. This package is just the MCP wiring (tool definitions + delegation).
+# Kou's `font-fetch` is disabled at the workspace level (it is a *blocking*
+# reqwest downloader that cannot run inside this server's async tokio runtime).
+# Supply glyphs via KOU_FONT_PATH / KOU_FONT_CJK_PATH or the kou cache; kou
+# degrades to block glyphs when no face is available.
 kou = { workspace = true }
 # Visual VTty screenshots: base64-encode the PNG `kou` rasterises.
 base64 = { workspace = true }
