@@ -1,4 +1,3 @@
-
 export const cssStyleDeclaration_exports = {
   getCssText(self: bigint) {
     const obj = globalThis.__lookupCssStyleDeclaration(self);

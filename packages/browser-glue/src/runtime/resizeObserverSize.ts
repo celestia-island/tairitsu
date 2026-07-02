@@ -1,4 +1,3 @@
-
 export const resizeObserverSize_exports = {
   getInlineSize(self: bigint) {
     if (!globalThis.__resizeObserverSizeHandles) return 0;

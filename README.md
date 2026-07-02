@@ -10,7 +10,8 @@
   <a href="https://github.com/celestia-island/tairitsu/actions">
     <img src="https://img.shields.io/github/actions/workflow/status/celestia-island/tairitsu/clippy.yml?branch=master" alt="CI" />
   </a>
-  [[![License: SySL](https://img.shields.io/badge/license-SySL%201.0-blue)](./LICENSE.txt)](./LICENSE.txt)<a href="https://github.com/casey/just">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-SySL%201.0-blue" alt="License: SySL" /></a>
+  <a href="https://github.com/casey/just">
     <img src="https://img.shields.io/badge/built%20with-just-blue" alt="Built with just" />
   </a>
 </div>

@@ -7,16 +7,23 @@ export const history_exports = {
   getScrollRestoration() {
     const value = window.history.scrollRestoration;
     switch (value) {
-      case 'auto': return 0n;
-      case 'manual': return 1n;
-      default: return 0n;
+      case "auto":
+        return 0n;
+      case "manual":
+        return 1n;
+      default:
+        return 0n;
     }
   },
   setScrollRestoration(value: bigint) {
     let enumValue: ScrollRestoration;
-    if (value === 0n) { enumValue = 'auto'; }
-    else if (value === 1n) { enumValue = 'manual'; }
-    else { enumValue = 'auto'; }
+    if (value === 0n) {
+      enumValue = "auto";
+    } else if (value === 1n) {
+      enumValue = "manual";
+    } else {
+      enumValue = "auto";
+    }
     window.history.scrollRestoration = enumValue;
   },
   getState() {

@@ -1,4 +1,3 @@
-
 export const document_exports = {
   createElement(localName: string) {
     const el = document.createElement(localName);

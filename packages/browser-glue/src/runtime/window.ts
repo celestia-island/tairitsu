@@ -1,4 +1,3 @@
-
 export const window_exports = {
   getInnerWidth() {
     return window.innerWidth;

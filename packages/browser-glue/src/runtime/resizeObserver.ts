@@ -1,4 +1,3 @@
-
 export const resizeObserver_exports = {
   observe(self: bigint, target: bigint, options: any) {
     const observer = globalThis.__lookupElement(self);

@@ -45,7 +45,9 @@ function reportHandleError(error: HandleDiagnosticError): void {
   if (_diagnosticCallbacks.onHandleError) {
     _diagnosticCallbacks.onHandleError(error);
   }
-  console.error(`[browser-glue handle-table] ${error.kind}: handle ${error.handle} - ${error.expectedType}`);
+  console.error(
+    `[browser-glue handle-table] ${error.kind}: handle ${error.handle} - ${error.expectedType}`,
+  );
 }
 
 function invokeGCHandleHook(typeName: string, handle: bigint, obj: unknown): void {
@@ -127,7 +129,9 @@ export function getCanvasElement(handle: bigint): HTMLCanvasElement {
       expectedType: "HTMLCanvasElement",
       actualType: node.constructor.name,
     });
-    throw new Error(`Node handle ${handle} is not an HTMLCanvasElement (got ${node.constructor.name})`);
+    throw new Error(
+      `Node handle ${handle} is not an HTMLCanvasElement (got ${node.constructor.name})`,
+    );
   }
   return node;
 }
@@ -173,7 +177,7 @@ function isInstanceOfType(obj: unknown, typeName: string): boolean {
   if (objType === typeName) return true;
 
   if (!(constructor as any).__tairitsu_typeName) {
-    Object.defineProperty(constructor, '__tairitsu_typeName', {
+    Object.defineProperty(constructor, "__tairitsu_typeName", {
       value: objType,
       writable: false,
       enumerable: false,
@@ -193,7 +197,11 @@ function isInstanceOfType(obj: unknown, typeName: string): boolean {
  * @returns The assigned bigint handle
  * @throws Error if type check fails when strictTypeCheck is true
  */
-export function registerTypedHandle<T>(typeName: string, obj: T, strictTypeCheck: boolean = false): bigint {
+export function registerTypedHandle<T>(
+  typeName: string,
+  obj: T,
+  strictTypeCheck: boolean = false,
+): bigint {
   if (strictTypeCheck && !isInstanceOfType(obj, typeName)) {
     const actualType = (obj as object).constructor?.name ?? "unknown";
     reportHandleError({
@@ -204,7 +212,7 @@ export function registerTypedHandle<T>(typeName: string, obj: T, strictTypeCheck
     });
     throw new Error(`Type assertion failed: expected ${typeName}, got ${actualType}`);
   }
-  
+
   const registry = getOrCreateRegistry<T>(typeName);
   const handle = registry.nextHandle++;
   registry.handles.set(handle, obj);
@@ -286,10 +294,14 @@ export function clearAllTypedHandles(): void {
  * @param strictTypeCheck - If true, performs strict type guard check (default: false)
  * @returns Array of assigned bigint handles
  */
-export function registerTypedHandleBatch<T>(typeName: string, objs: T[], strictTypeCheck: boolean = false): bigint[] {
+export function registerTypedHandleBatch<T>(
+  typeName: string,
+  objs: T[],
+  strictTypeCheck: boolean = false,
+): bigint[] {
   const registry = getOrCreateRegistry<T>(typeName);
   const handles: bigint[] = [];
-  
+
   for (const obj of objs) {
     if (strictTypeCheck && !isInstanceOfType(obj, typeName)) {
       const actualType = (obj as object).constructor?.name ?? "unknown";
@@ -305,7 +317,7 @@ export function registerTypedHandleBatch<T>(typeName: string, objs: T[], strictT
     registry.handles.set(handle, obj);
     handles.push(handle);
   }
-  
+
   return handles;
 }
 
@@ -323,7 +335,7 @@ export function getTypedHandleBatch<T>(typeName: string, handles: bigint[]): T[]
   if (!registry) {
     throw new Error(`No handle registry found for type "${typeName}"`);
   }
-  
+
   const result: T[] = [];
   for (const handle of handles) {
     const obj = registry.handles.get(handle);
@@ -337,7 +349,7 @@ export function getTypedHandleBatch<T>(typeName: string, handles: bigint[]): T[]
     }
     result.push(obj as T);
   }
-  
+
   return result;
 }
 

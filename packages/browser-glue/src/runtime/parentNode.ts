@@ -1,4 +1,3 @@
-
 export const parentNode_exports = {
   querySelector(self: bigint, selectors: string) {
     const el = globalThis.__lookupElement(self);

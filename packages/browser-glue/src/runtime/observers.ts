@@ -1,4 +1,3 @@
-
 export const observers_exports = {
   getBoundingClientRect(element: bigint) {
     const el = globalThis.__elementHandles.get(element);

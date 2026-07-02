@@ -231,7 +231,6 @@ fmt-check:
 
 # Format all code
 fmt:
-    cargo clippy --all-targets --all-features -- -D warnings
     cargo fmt --all
     python3 scripts/utils/enforce_use_groups.py
 

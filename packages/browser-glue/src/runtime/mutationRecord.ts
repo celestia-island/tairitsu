@@ -1,9 +1,8 @@
-
 export const mutationRecord_exports = {
   getType(self: bigint) {
-    if (!globalThis.__mutationRecordHandles) return '';
+    if (!globalThis.__mutationRecordHandles) return "";
     const rec = globalThis.__mutationRecordHandles.get(self);
-    return rec ? rec.type : '';
+    return rec ? rec.type : "";
   },
   getTarget(self: bigint) {
     if (!globalThis.__mutationRecordHandles) return 0n;

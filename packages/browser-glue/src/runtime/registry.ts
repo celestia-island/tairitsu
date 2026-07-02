@@ -104,10 +104,10 @@ if (!globalThis.__tairitsuAnimState) {
   for (const [name, fn] of Object.entries(exports)) {
     let fnStr = fn.toString();
     // Ensure function syntax is complete (shorthand methods don't have 'function' keyword)
-    if (!fnStr.startsWith('function')) {
-      fnStr = 'function ' + fnStr;
+    if (!fnStr.startsWith("function")) {
+      fnStr = "function " + fnStr;
     }
-    lines.push('export const ' + name + ' = ' + fnStr + ';');
+    lines.push("export const " + name + " = " + fnStr + ";");
   }
 
   return lines.join("\n");

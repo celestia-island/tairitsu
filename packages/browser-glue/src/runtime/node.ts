@@ -1,4 +1,3 @@
-
 export const node_exports = {
   appendChild(self: bigint, child: bigint) {
     const parent = globalThis.__lookupNode(self);

@@ -1,4 +1,3 @@
-
 function reverseLookupElement(target: EventTarget | null): bigint | undefined {
   if (!target) return undefined;
   const g = globalThis as any;
@@ -95,7 +94,8 @@ export const event_exports = {
   composedPath(eventHandle: bigint): bigint[] {
     const ev = globalThis.__eventHandles?.get(eventHandle);
     if (!ev) return [];
-    return ev.composedPath()
+    return ev
+      .composedPath()
       .map((t: EventTarget) => reverseLookupElement(t))
       .filter((h: bigint | undefined): h is bigint => h !== undefined);
   },

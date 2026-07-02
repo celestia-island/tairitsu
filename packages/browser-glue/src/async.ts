@@ -75,11 +75,7 @@ export function registerPromise<T>(promise: Promise<T>): bigint {
     .catch((error) => {
       state.settled = true;
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : typeof error === "string"
-            ? error
-            : String(error);
+        error instanceof Error ? error.message : typeof error === "string" ? error : String(error);
       state.result = { ok: false, error: errorMessage };
     });
 

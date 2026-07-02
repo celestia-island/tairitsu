@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/celestia-org/tairitsu.git",
+    "url": "https://github.com/celestia-island/tairitsu.git",
     "directory": "packages/browser-glue"
   },
   "publishConfig": {

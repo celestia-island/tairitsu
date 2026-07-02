@@ -1,4 +1,3 @@
-
 export const domTokenList_exports = {
   add(self: bigint, tokens: string[]) {
     const el = globalThis.__lookupElement(self);

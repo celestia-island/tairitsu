@@ -1,4 +1,3 @@
-
 // Initialize global handle tables for event listeners
 globalThis.__listenerHandles = globalThis.__listenerHandles || new Map();
 globalThis.__nextListenerHandle = globalThis.__nextListenerHandle || 1n;
@@ -52,10 +51,19 @@ export const eventTarget_exports = {
               if (listenerId !== 0n) {
                 const evtType = event.type;
                 try {
-                  if (evtType === "mouseenter" || evtType === "mouseleave" || evtType === "mousemove" ||
-                      evtType === "mousedown" || evtType === "mouseup" || evtType === "click" ||
-                      evtType === "dblclick" || evtType === "mouseover" || evtType === "mouseout" ||
-                      evtType === "contextmenu" || evtType === "wheel") {
+                  if (
+                    evtType === "mouseenter" ||
+                    evtType === "mouseleave" ||
+                    evtType === "mousemove" ||
+                    evtType === "mousedown" ||
+                    evtType === "mouseup" ||
+                    evtType === "click" ||
+                    evtType === "dblclick" ||
+                    evtType === "mouseover" ||
+                    evtType === "mouseout" ||
+                    evtType === "contextmenu" ||
+                    evtType === "wheel"
+                  ) {
                     const me = event as MouseEvent;
                     callbacks.onMouseEvent(listenerId, eventHandle, {
                       clientX: me.clientX,
@@ -69,7 +77,11 @@ export const eventTarget_exports = {
                       altKey: me.altKey || false,
                       metaKey: me.metaKey || false,
                     });
-                  } else if (evtType === "keydown" || evtType === "keyup" || evtType === "keypress") {
+                  } else if (
+                    evtType === "keydown" ||
+                    evtType === "keyup" ||
+                    evtType === "keypress"
+                  ) {
                     const ke = event as KeyboardEvent;
                     callbacks.onKeyboardEvent(listenerId, eventHandle, {
                       key: ke.key || "",
@@ -81,7 +93,12 @@ export const eventTarget_exports = {
                       metaKey: ke.metaKey || false,
                       repeat: ke.repeat || false,
                     });
-                  } else if (evtType === "focus" || evtType === "blur" || evtType === "focusin" || evtType === "focusout") {
+                  } else if (
+                    evtType === "focus" ||
+                    evtType === "blur" ||
+                    evtType === "focusin" ||
+                    evtType === "focusout"
+                  ) {
                     callbacks.onFocusEvent(listenerId, eventHandle, {
                       relatedTarget: undefined,
                     });
@@ -94,7 +111,9 @@ export const eventTarget_exports = {
                   } else {
                     callbacks.onGenericEvent(listenerId, eventHandle, evtType);
                   }
-                } catch(e) { console.error("[tairitsu-glue] event dispatch error:", e); }
+                } catch (e) {
+                  console.error("[tairitsu-glue] event dispatch error:", e);
+                }
               }
             } finally {
               globalThis.__dispatchingEvents.delete(dispatchKey);

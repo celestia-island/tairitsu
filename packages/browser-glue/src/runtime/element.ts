@@ -1,15 +1,16 @@
-
 export const element_exports = {
   setAttribute(self: bigint, qualifiedName: string, value: string) {
-    const name = typeof qualifiedName === 'string' && qualifiedName.startsWith('r#')
-      ? qualifiedName.slice(2)
-      : qualifiedName;
+    const name =
+      typeof qualifiedName === "string" && qualifiedName.startsWith("r#")
+        ? qualifiedName.slice(2)
+        : qualifiedName;
     globalThis.__lookupElement(self).setAttribute(name, value);
   },
   removeAttribute(self: bigint, qualifiedName: string) {
-    const name = typeof qualifiedName === 'string' && qualifiedName.startsWith('r#')
-      ? qualifiedName.slice(2)
-      : qualifiedName;
+    const name =
+      typeof qualifiedName === "string" && qualifiedName.startsWith("r#")
+        ? qualifiedName.slice(2)
+        : qualifiedName;
     globalThis.__lookupElement(self).removeAttribute(name);
   },
   getBoundingClientRect(element: bigint) {
@@ -22,17 +23,17 @@ export const element_exports = {
   },
   setInnerHtml(self: bigint, html: string) {
     const el = globalThis.__lookupElement(self);
-    const sanitizer = document.createElement('div');
+    const sanitizer = document.createElement("div");
     sanitizer.innerHTML = html;
-    const scripts = sanitizer.querySelectorAll('script');
-    scripts.forEach(s => s.remove());
+    const scripts = sanitizer.querySelectorAll("script");
+    scripts.forEach((s) => s.remove());
     el.innerHTML = sanitizer.innerHTML;
   },
   getAttribute(self: bigint, name: string) {
     return globalThis.__lookupElement(self).getAttribute(name);
   },
   getTagName(self: bigint) {
-    return globalThis.__lookupElement(self).tagName || '';
+    return globalThis.__lookupElement(self).tagName || "";
   },
   getClassList(self: bigint) {
     const el = globalThis.__lookupElement(self);
