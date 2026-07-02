@@ -103,7 +103,7 @@ toml = "^0.9"
 grass = "^0.13"
 wit-parser = "^0.245"
 wit-component = "^0.245"
-wit-bindgen = { version = "0.57", features = ["macros"] }
+wit-bindgen = { version = "^0.57", features = ["macros"] }
 tempfile = "^3"
 vte = "^0.15"
 portable-pty = "^0.8"
@@ -122,6 +122,6 @@ dirs = "^6"
 which = "^8"
 uuid = { version = "^1.11", features = ["v4"] }
 rand = "^0.8"
-windows-sys = { version = "0.59", default-features = false }
+windows-sys = { version = "^0.59", default-features = false }
 env_logger = "^0.11"
 log = "^0.4"
