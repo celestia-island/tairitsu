@@ -383,6 +383,7 @@ struct StackFrame {
 
 // ── Browser command channel ───────────────────────────────────────────────
 
+#[allow(dead_code)]
 enum BrowserCommand {
     Navigate {
         url: String,
