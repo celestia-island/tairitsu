@@ -2,11 +2,10 @@
 name = "tairitsu-mcp"
 version.workspace = true
 edition.workspace = true
-description = "Tairitsu MCP server — browser automation + VTty for AI coding assistants"
+description = "Tairitsu MCP server — thin wrapper over shirabe (browser) + kou (VTty) for AI coding assistants"
 authors.workspace = true
 license-file.workspace = true
 repository.workspace = true
-exclude = ["src/vtty/fonts/"]
 
 [[bin]]
 name = "tairitsu-mcp"
@@ -20,22 +19,12 @@ tokio = { workspace = true, features = ["rt-multi-thread", "io-std"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 reqwest = { workspace = true, features = ["query"] }
-vte = { workspace = true, optional = true }
-portable-pty = { workspace = true, optional = true }
 schemars = "^1"
 rmcp = { version = "^1", features = ["server", "transport-io", "macros", "schemars"] }
-ab_glyph = { version = "^0.2", optional = true }
-image = { workspace = true, optional = true }
-base64 = { workspace = true, optional = true }
-unicode-width = { version = "^0.2", optional = true }
-
-[target.'cfg(unix)'.dependencies]
-libc = { workspace = true }
-
-[features]
-default = ["vtty", "vtty-visual"]
-vtty = ["vte", "portable-pty", "dep:unicode-width"]
-vtty-visual = ["vtty", "dep:ab_glyph", "dep:image", "dep:base64"]
+# VTty engine — the PTY / VT100 / render stack now lives in the dedicated `kou`
+# crate. This package is just the MCP wiring (tool definitions + delegation).
+kou = { workspace = true }
+# Visual VTty screenshots: base64-encode the PNG `kou` rasterises.
+base64 = { workspace = true }
 
 [dev-dependencies]
-crossterm = { workspace = true }

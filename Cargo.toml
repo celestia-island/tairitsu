@@ -93,6 +93,9 @@ tairitsu-browser-wit-resolver = { version = "^0.5.13", path = "packages/browser-
 tairitsu-browser-fetch = { version = "^0.5.13", path = "packages/browser-fetch" }
 tairitsu-packager = { version = "^0.5.13", path = "packages/packager" }
 tairitsu-mcp = { version = "^0.5.13", path = "packages/mcp" }
+# External dedicated engines the MCP server thinly wraps. Path deps so the
+# unpublished repos resolve locally until they ship to crates.io.
+kou = { path = "../kou" }
 bytes = "^1"
 sha2 = "^0.10"
 hex = "^0.4"
