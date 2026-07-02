@@ -991,8 +991,10 @@ impl VNode {
                 buf.push('<');
                 buf.push_str(&el.tag);
 
-                // id and other attributes
-                for (name, value) in &el.attributes {
+                // id and other attributes (sorted for deterministic output)
+                let mut attrs: Vec<_> = el.attributes.iter().collect();
+                attrs.sort_by(|a, b| a.0.cmp(b.0));
+                for (name, value) in attrs {
                     buf.push(' ');
                     buf.push_str(name);
                     buf.push_str("=\"");
