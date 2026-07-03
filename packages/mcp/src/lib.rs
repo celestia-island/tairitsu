@@ -1115,6 +1115,10 @@ pub struct McpConfig {
 }
 
 pub async fn run(config: McpConfig) -> Result<()> {
+    // Install the rustls crypto provider once, before any reqwest::Client is
+    // built (font-fetch + browser HTTP proxy both use rustls-no-provider).
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     let base_url = Arc::new(RwLock::new(String::new()));
 
     if !config.base_url.is_empty() {
@@ -1134,21 +1138,22 @@ pub async fn run(config: McpConfig) -> Result<()> {
         });
     }
 
-    // Load VTty fonts once at supersampled resolution (the renderer expects
-    // fonts loaded at `font_px * supersample`). Three-tier fallback.
-    let font_set = kou::FontSet::from_env();
+    // Load VTty fonts once. Strategy: system fonts first (fast, zero-network,
+    // includes CJK if NotoSansCJK is installed), then async fetch as fallback.
+    // Fonts loaded at supersampled resolution (font_px × supersample).
+    let font_px = FONT_PX * RENDER_SUPER as f32;
     let fonts = {
-        let remote =
-            kou::FontCache::load_async(&font_set, FONT_PX * RENDER_SUPER as f32).await;
-        if remote.is_empty() {
-            let sys = kou::FontCache::from_system_fonts(FONT_PX * RENDER_SUPER as f32);
-            if !sys.is_empty() {
-                sys
-            } else {
-                kou::FontCache::empty()
-            }
+        let sys = kou::FontCache::from_system_fonts(font_px);
+        if !sys.is_empty() {
+            sys
         } else {
-            remote
+            let font_set = kou::FontSet::from_env();
+            let remote = kou::FontCache::load_async(&font_set, font_px).await;
+            if remote.is_empty() {
+                kou::FontCache::empty()
+            } else {
+                remote
+            }
         }
     };
 

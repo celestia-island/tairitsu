@@ -26,5 +26,8 @@ rmcp = { version = "^1", features = ["server", "transport-io", "macros", "schema
 kou = { workspace = true }
 # Visual VTty screenshots: base64-encode the PNG `kou` rasterises.
 base64 = { workspace = true }
+# rustls crypto provider — must be installed before any reqwest::Client is built
+# (font-fetch + browser proxy both use rustls-no-provider).
+rustls = { version = "^0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 
 [dev-dependencies]
