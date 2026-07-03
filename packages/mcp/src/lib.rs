@@ -153,9 +153,9 @@ impl Server {
     }
 
     /// Rasterise a VTty screen to a base64-encoded PNG (for `image` / `both`
-    /// screenshot modes).
-    fn render_png(&self, screen: &kou::Screen) -> Result<String, McpError> {
-        let png = kou::render::render_png_supersampled(screen, &self.fonts, FONT_PX, RENDER_SUPER)
+    /// screenshot modes), painted through `theme`.
+    fn render_png(&self, screen: &kou::Screen, theme: &kou::Theme) -> Result<String, McpError> {
+        let png = kou::render::render_png_supersampled(screen, &self.fonts, FONT_PX, RENDER_SUPER, theme)
             .map_err(|e| McpError::internal_error(format!("VTty render failed: {e}"), None))?;
         Ok(base64::engine::general_purpose::STANDARD.encode(&png))
     }
@@ -630,7 +630,8 @@ impl Server {
 
     #[tool(
         description = "Capture current terminal screen content as text (text-only models) and/or as a rendered PNG image (vision-capable models). \
-        The 'format' parameter controls output: 'text' (default) returns plain text, 'image' returns a rendered PNG, 'both' returns both."
+        The 'format' parameter controls output: 'text' (default) returns plain text, 'image' returns a rendered PNG, 'both' returns both. \
+        The 'theme' parameter selects the PNG colour scheme (Windows Terminal schemes): campbell (default), campbell-powershell, vintage, one-half-dark, one-half-light, solarized-dark, solarized-light, tango-dark, tango-light, dimidium, ottosson, dark+, cga, ibm-5153, xterm. Unknown names fall back to campbell."
     )]
     async fn vtty_screenshot(
         &self,
@@ -638,9 +639,7 @@ impl Server {
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let fmt = args.format.as_deref().unwrap_or("text");
-        // `theme` is accepted for API compatibility; kou renders with its
-        // built-in xterm-style palette (per-theme palettes are a follow-up).
-        let _theme = args.theme.as_deref().unwrap_or("solarized-dark");
+        let theme = kou::theme_by_name(args.theme.as_deref().unwrap_or("campbell"));
 
         let screen = self
             .vtty
@@ -657,14 +656,14 @@ impl Server {
 
         match fmt {
             "image" => {
-                let b64 = self.render_png(&screen)?;
+                let b64 = self.render_png(&screen, theme)?;
                 Ok(CallToolResult::success(vec![Content::image(
                     b64,
                     "image/png",
                 )]))
             }
             "both" => {
-                let b64 = self.render_png(&screen)?;
+                let b64 = self.render_png(&screen, theme)?;
                 Ok(CallToolResult::success(vec![
                     Content::text(self.screen_text_json(&args.session_id, alive, &screen, &text)),
                     Content::image(b64, "image/png"),
