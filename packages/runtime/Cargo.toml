@@ -7,6 +7,8 @@ authors.workspace = true
 description = "Core WASM Component Model runtime — Container, Registry, WIT binding, RON/Binary interop"
 license-file.workspace = true
 repository.workspace = true
+keywords = ["wasm", "wit", "component-model", "runtime", "webassembly"]
+categories = ["wasm", "api-bindings"]
 
 [features]
 default = []
@@ -26,3 +28,13 @@ wit-parser = { workspace = true }
 
 [build-dependencies]
 wit-parser = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+]

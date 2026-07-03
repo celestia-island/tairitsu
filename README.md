@@ -11,6 +11,9 @@
     <img src="https://img.shields.io/github/actions/workflow/status/celestia-island/tairitsu/clippy.yml?branch=master" alt="CI" />
   </a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-SySL%201.0-blue" alt="License: SySL" /></a>
+  <a href="https://docs.rs/tairitsu">
+    <img src="https://docs.rs/tairitsu/badge.svg" alt="docs.rs" />
+  </a>
   <a href="https://github.com/casey/just">
     <img src="https://img.shields.io/badge/built%20with-just-blue" alt="Built with just" />
   </a>
