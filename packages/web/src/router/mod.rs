@@ -23,10 +23,10 @@
 pub mod segment;
 
 use std::{collections::HashMap, sync::Arc};
-use thiserror::Error;
 
 pub use segment::{RouteSegment, SegmentType};
 use tairitsu_vdom::VNode;
+use thiserror::Error;
 
 /// A route in the router
 #[derive(Clone)]

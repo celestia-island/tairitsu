@@ -225,14 +225,18 @@ clippy:
     cargo clippy --workspace --all-targets -- -D warnings
 
 # Run formatting check
+# NOTE: no `--all` — in a virtual workspace `cargo fmt` formats every member,
+# but `--all` would additionally walk path dependencies (e.g. the local
+# `../kou` dev override) and rewrite / fail on sibling repos outside this tree.
 fmt-check:
     @echo "Checking code formatting..."
-    cargo fmt --all -- --check
+    cargo fmt -- --check
 
 # Format all code
+# (no `--all`: see fmt-check — avoids traversing path deps like ../kou)
 fmt:
-    cargo fmt --all
-    python3 scripts/utils/enforce_use_groups.py
+    cargo fmt
+    python3 scripts/enforce_use_groups.py
 
 # CI checks (format check + clippy + test)
 ci: fmt-check clippy test

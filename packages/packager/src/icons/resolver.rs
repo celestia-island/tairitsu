@@ -5,8 +5,10 @@ use std::{collections::HashMap, path::Path};
 
 #[cfg(feature = "icon-fetch")]
 use super::cache::CacheManifest;
-use super::cache::{IconCache, IconData};
-use super::sources::{self, IconOrigin, IconSourceDef};
+use super::{
+    cache::{IconCache, IconData},
+    sources::{self, IconOrigin, IconSourceDef},
+};
 
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct HikariIconsMetadata {

@@ -35,12 +35,11 @@
 //! }
 //! ```
 
+use anyhow::Result;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
 };
-
-use anyhow::Result;
 
 /// A single WIT file registered as a plugin extension.
 #[derive(Debug, Clone)]

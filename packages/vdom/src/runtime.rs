@@ -7,7 +7,11 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use tracing::trace;
 
-use crate::{patch::Patch, reactive::EffectHandle, reactive::SignalId, VNode};
+use crate::{
+    patch::Patch,
+    reactive::{EffectHandle, SignalId},
+    VNode,
+};
 
 /// Component ID - unique identifier for each component instance
 pub type ComponentId = usize;

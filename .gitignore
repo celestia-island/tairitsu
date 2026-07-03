@@ -65,3 +65,4 @@ HIKARI_BROWSER_ISSUE.md
 # Package manager lock files (not tracked per project convention)
 Cargo.lock
 package-lock.json
+pnpm-lock.yaml

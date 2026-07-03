@@ -1,7 +1,7 @@
 use anyhow::Result;
+use bytes::Bytes;
 use std::path::PathBuf;
 
-use bytes::Bytes;
 use tairitsu::{Container, ContainerState, GuestInstance, Image};
 
 fn main() -> Result<()> {

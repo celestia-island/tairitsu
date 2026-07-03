@@ -11,13 +11,20 @@
 use anyhow::{Context, Result};
 use futures::{SinkExt, StreamExt};
 use serde_json::{json, Value};
-use std::collections::HashMap;
-use std::path::Path;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::process::{Child, Command};
-use tokio::sync::{mpsc, oneshot, Mutex};
+use std::{
+    collections::HashMap,
+    path::Path,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
+use tokio::{
+    process::{Child, Command},
+    sync::{mpsc, oneshot, Mutex},
+};
+
 use tokio_tungstenite::tungstenite::Message;
 
 const CMD_TIMEOUT: Duration = Duration::from_secs(30);

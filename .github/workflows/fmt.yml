@@ -23,4 +23,6 @@ jobs:
           components: rustfmt
 
       - name: Run fmt
-        run: cargo fmt --all -- --check
+        # no `--all`: a virtual workspace `cargo fmt` formats all members and
+        # avoids traversing path deps (e.g. the local `../kou` dev override)
+        run: cargo fmt -- --check

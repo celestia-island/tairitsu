@@ -3,11 +3,11 @@
 use anyhow::{Context, Result};
 use serde_json::Value;
 use std::{path::PathBuf, time::Duration};
+
 use tracing::{info, warn};
 
-use crate::browser::CdpClient;
-
 use super::reporter::{TestReport, TestResult};
+use crate::browser::CdpClient;
 
 /// Helper to extract boolean from an evaluate result.
 fn eval_as_bool(v: Value) -> bool {

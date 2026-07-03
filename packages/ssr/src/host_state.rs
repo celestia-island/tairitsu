@@ -3,6 +3,7 @@
 //! This module provides the host state implementation used by the SSR container.
 
 use anyhow::Result;
+
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 use crate::{

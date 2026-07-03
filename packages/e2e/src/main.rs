@@ -1,4 +1,5 @@
 use anyhow::Result;
+
 use clap::Parser;
 use tairitsu_e2e::run_all_tests;
 use thirtyfour::{DesiredCapabilities, WebDriver};

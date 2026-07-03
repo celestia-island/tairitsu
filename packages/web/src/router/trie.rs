@@ -1,10 +1,6 @@
 //! Trie-based route matching structure.
 
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    sync::Arc,
-};
+use std::{cell::RefCell, collections::HashMap, sync::Arc};
 
 use tairitsu_vdom::VNode;
 

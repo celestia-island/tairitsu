@@ -2,6 +2,7 @@
 
 #[cfg(target_family = "wasm")]
 mod bindings {
+
     use super::Plugin;
 
     wit_bindgen::generate!({

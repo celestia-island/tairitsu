@@ -1,6 +1,7 @@
 //! CLI entry point for tairitsu-browser-test
 
 use anyhow::Result;
+
 use clap::Parser;
 use tairitsu_browser_test::cli::Cli;
 
