@@ -32,10 +32,13 @@ use rmcp::{
 use schemars::JsonSchema;
 
 /// Font size used when rasterising VTty screenshots to PNG.
-const FONT_PX: f32 = 16.0;
+///
+/// The renderer expects fonts loaded at `font_px * supersample`.  We target
+/// a desktop-scale output (~1920 px wide for a 120-col terminal).
+const FONT_PX: f32 = 32.0;
 /// Supersample factor — render at this multiple then downscale with Lanczos3
 /// for crisp, anti-aliased terminal glyphs.
-const RENDER_SUPER: u32 = 2;
+const RENDER_SUPER: u32 = 3;
 
 struct Server {
     base_url: Arc<RwLock<String>>,
@@ -1131,15 +1134,14 @@ pub async fn run(config: McpConfig) -> Result<()> {
         });
     }
 
-    // Load VTty fonts once. Three-tier fallback:
-    // 1. Explicit env paths / kou cache / async HTTP download (best quality)
-    // 2. OS-installed system fonts (zero-config, zero-network)
-    // 3. Block-glyph rendering (never fails, always readable)
+    // Load VTty fonts once at supersampled resolution (the renderer expects
+    // fonts loaded at `font_px * supersample`). Three-tier fallback.
     let font_set = kou::FontSet::from_env();
     let fonts = {
-        let remote = kou::FontCache::load_async(&font_set, FONT_PX).await;
+        let remote =
+            kou::FontCache::load_async(&font_set, FONT_PX * RENDER_SUPER as f32).await;
         if remote.is_empty() {
-            let sys = kou::FontCache::from_system_fonts(FONT_PX);
+            let sys = kou::FontCache::from_system_fonts(FONT_PX * RENDER_SUPER as f32);
             if !sys.is_empty() {
                 sys
             } else {
