@@ -94,10 +94,12 @@ tairitsu-browser-fetch = { version = "^0.5.13", path = "packages/browser-fetch" 
 tairitsu-packager = { version = "^0.5.13", path = "packages/packager" }
 tairitsu-mcp = { version = "^0.5.13", path = "packages/mcp" }
 # External dedicated engines the MCP server thinly wraps. Path deps so the
-# unpublished repos resolve locally until they ship to crates.io. Kou's
-# `font-fetch` (a blocking reqwest downloader) is OFF — it can't run inside the
-# MCP server's async runtime; supply glyphs via KOU_FONT_PATH / the kou cache.
-kou = { path = "../kou", default-features = false }
+# unpublished repos resolve locally until they ship to crates.io.
+# Kou's `font-fetch` downloads monospace/CJK faces once (cached on disk) —
+# the MCP uses the *async* load path so the blocking reqwest client is never
+# constructed inside the tokio runtime. System fonts serve as a zero-network
+# fallback when the download is unavailable or skipped.
+kou = { path = "../kou", default-features = false, features = ["font-fetch"] }
 bytes = "^1"
 sha2 = "^0.10"
 hex = "^0.4"

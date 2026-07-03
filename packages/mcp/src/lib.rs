@@ -1131,9 +1131,24 @@ pub async fn run(config: McpConfig) -> Result<()> {
         });
     }
 
-    // Load VTty fonts once (best-effort — kou degrades to block glyphs when no
-    // font is available, so a failed/absent fetch never breaks the server).
-    let fonts = kou::FontCache::load(&kou::FontSet::from_env(), FONT_PX);
+    // Load VTty fonts once. Three-tier fallback:
+    // 1. Explicit env paths / kou cache / async HTTP download (best quality)
+    // 2. OS-installed system fonts (zero-config, zero-network)
+    // 3. Block-glyph rendering (never fails, always readable)
+    let font_set = kou::FontSet::from_env();
+    let fonts = {
+        let remote = kou::FontCache::load_async(&font_set, FONT_PX).await;
+        if remote.is_empty() {
+            let sys = kou::FontCache::from_system_fonts(FONT_PX);
+            if !sys.is_empty() {
+                sys
+            } else {
+                kou::FontCache::empty()
+            }
+        } else {
+            remote
+        }
+    };
 
     let server = Server {
         base_url: base_url.clone(),
