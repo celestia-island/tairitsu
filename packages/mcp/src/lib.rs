@@ -155,8 +155,9 @@ impl Server {
     /// Rasterise a VTty screen to a base64-encoded PNG (for `image` / `both`
     /// screenshot modes), painted through `theme`.
     fn render_png(&self, screen: &kou::Screen, theme: &kou::Theme) -> Result<String, McpError> {
-        let png = kou::render::render_png_supersampled(screen, &self.fonts, FONT_PX, RENDER_SUPER, theme)
-            .map_err(|e| McpError::internal_error(format!("VTty render failed: {e}"), None))?;
+        let png =
+            kou::render::render_png_supersampled(screen, &self.fonts, FONT_PX, RENDER_SUPER, theme)
+                .map_err(|e| McpError::internal_error(format!("VTty render failed: {e}"), None))?;
         Ok(base64::engine::general_purpose::STANDARD.encode(&png))
     }
 
