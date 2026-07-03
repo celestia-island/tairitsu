@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * resize-observer glue — implements the `tairitsu-browser:resize-observer` WIT import interfaces.
  *

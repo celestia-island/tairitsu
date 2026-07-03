@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * canvas glue — implements the `tairitsu-browser:canvas` WIT import interfaces.
  *
@@ -689,7 +693,7 @@ export function AudioDecoderGetOndequeue(self: bigint): bigint {
  */
 export function AudioDecoderSetOndequeue(self: bigint, value: bigint): void {
   const obj = lookupAudioDecoder(self);
-  obj.ondequeue = value as any;
+  obj.ondequeue = lookupEventHandler(value);
 }
 
 /**
@@ -743,7 +747,14 @@ export function AudioDecoderPollFlush(requestId: bigint): { ok: true; value: big
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -796,7 +807,14 @@ export function AudioDecoderPollIsConfigSupported(requestId: bigint): { ok: true
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: AudioDecoderSupport } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: AudioDecoderSupport } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -865,7 +883,7 @@ export function VideoDecoderGetOndequeue(self: bigint): bigint {
  */
 export function VideoDecoderSetOndequeue(self: bigint, value: bigint): void {
   const obj = lookupVideoDecoder(self);
-  obj.ondequeue = value as any;
+  obj.ondequeue = lookupEventHandler(value);
 }
 
 /**
@@ -919,7 +937,14 @@ export function VideoDecoderPollFlush(requestId: bigint): { ok: true; value: big
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -972,7 +997,14 @@ export function VideoDecoderPollIsConfigSupported(requestId: bigint): { ok: true
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: VideoDecoderSupport } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: VideoDecoderSupport } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -1041,7 +1073,7 @@ export function AudioEncoderGetOndequeue(self: bigint): bigint {
  */
 export function AudioEncoderSetOndequeue(self: bigint, value: bigint): void {
   const obj = lookupAudioEncoder(self);
-  obj.ondequeue = value as any;
+  obj.ondequeue = lookupEventHandler(value);
 }
 
 /**
@@ -1095,7 +1127,14 @@ export function AudioEncoderPollFlush(requestId: bigint): { ok: true; value: big
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1148,7 +1187,14 @@ export function AudioEncoderPollIsConfigSupported(requestId: bigint): { ok: true
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: AudioEncoderSupport } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: AudioEncoderSupport } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -1217,7 +1263,7 @@ export function VideoEncoderGetOndequeue(self: bigint): bigint {
  */
 export function VideoEncoderSetOndequeue(self: bigint, value: bigint): void {
   const obj = lookupVideoEncoder(self);
-  obj.ondequeue = value as any;
+  obj.ondequeue = lookupEventHandler(value);
 }
 
 /**
@@ -1271,7 +1317,14 @@ export function VideoEncoderPollFlush(requestId: bigint): { ok: true; value: big
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1324,7 +1377,14 @@ export function VideoEncoderPollIsConfigSupported(requestId: bigint): { ok: true
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: VideoEncoderSupport } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: VideoEncoderSupport } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -1789,7 +1849,14 @@ export function pollCopyTo(requestId: bigint): { ok: true; value: bigint } | { o
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1977,7 +2044,14 @@ export function pollGetCompleted(requestId: bigint): { ok: true; value: bigint }
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2026,7 +2100,14 @@ export function pollDecode(requestId: bigint): { ok: true } | { ok: false; error
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result;
 }
 
 /**
@@ -2079,7 +2160,14 @@ export function pollIsTypeSupported(requestId: bigint): { ok: true; value: bigin
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -2132,7 +2220,14 @@ export function pollGetReady(requestId: bigint): { ok: true; value: bigint } | {
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**

@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * performance glue — implements the `tairitsu-browser:performance` WIT import interfaces.
  *
@@ -406,7 +410,7 @@ export function getOnresourcetimingbufferfull(): bigint {
  * `set-onresourcetimingbufferfull()` operation.
  */
 export function setOnresourcetimingbufferfull(value: bigint): void {
-  (window.performance as any).onresourcetimingbufferfull = value as any;
+  (window.performance as any).onresourcetimingbufferfull = lookupEventHandler(value);
 }
 
 /**

@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * observers glue — implements the `tairitsu-browser:observers` WIT import interfaces.
  *

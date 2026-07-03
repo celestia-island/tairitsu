@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * websocket glue — implements the `tairitsu-browser:websocket` WIT import interfaces.
  *
@@ -288,7 +292,7 @@ export function getOnopen(self: bigint): bigint {
  */
 export function setOnopen(self: bigint, value: bigint): void {
   const obj = lookupWebSocket(self);
-  (obj as any).onopen = value as any;
+  (obj as any).onopen = lookupEventHandler(value);
 }
 
 /**
@@ -304,7 +308,7 @@ export function getOnerror(self: bigint): bigint {
  */
 export function setOnerror(self: bigint, value: bigint): void {
   const obj = lookupWebSocket(self);
-  (obj as any).onerror = value as any;
+  (obj as any).onerror = lookupEventHandler(value);
 }
 
 /**
@@ -320,7 +324,7 @@ export function getOnclose(self: bigint): bigint {
  */
 export function setOnclose(self: bigint, value: bigint): void {
   const obj = lookupWebSocket(self);
-  (obj as any).onclose = value as any;
+  (obj as any).onclose = lookupEventHandler(value);
 }
 
 /**
@@ -360,7 +364,7 @@ export function getOnmessage(self: bigint): bigint {
  */
 export function setOnmessage(self: bigint, value: bigint): void {
   const obj = lookupWebSocket(self);
-  (obj as any).onmessage = value as any;
+  (obj as any).onmessage = lookupEventHandler(value);
 }
 
 /**

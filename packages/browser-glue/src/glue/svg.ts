@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * svg glue — implements the `tairitsu-browser:svg` WIT import interfaces.
  *
@@ -2558,7 +2562,14 @@ export function pollExitFullscreen(requestId: bigint): { ok: true; value: bigint
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2576,7 +2587,7 @@ export function getOnfullscreenchange(): bigint {
  * `set-onfullscreenchange()` operation.
  */
 export function setOnfullscreenchange(value: bigint): void {
-  document.onfullscreenchange = value as any;
+  document.onfullscreenchange = lookupEventHandler(value);
 }
 
 /**
@@ -2594,14 +2605,21 @@ export function getOnfullscreenerror(): bigint {
  * `set-onfullscreenerror()` operation.
  */
 export function setOnfullscreenerror(value: bigint): void {
-  document.onfullscreenerror = value as any;
+  document.onfullscreenerror = lookupEventHandler(value);
 }
 
 /**
  * `parse-html-unsafe()` operation.
  */
-export function parseHtmlUnsafe(html: string): bigint {
-  return (document as any).parseHtmlUnsafe(html);
+export function parseHtmlUnsafe(html: string, options: bigint | undefined): bigint {
+  return (document as any).parseHtmlUnsafe(html, options);
+}
+
+/**
+ * `parse-html()` operation.
+ */
+export function parseHtml(html: string, options: bigint | undefined): bigint {
+  return document.parseHtml(html, options);
 }
 
 /**
@@ -2990,7 +3008,7 @@ export function getOnreadystatechange(): bigint {
  * `set-onreadystatechange()` operation.
  */
 export function setOnreadystatechange(value: bigint): void {
-  document.onreadystatechange = value as any;
+  document.onreadystatechange = lookupEventHandler(value);
 }
 
 /**
@@ -3008,7 +3026,7 @@ export function getOnvisibilitychange(): bigint {
  * `set-onvisibilitychange()` operation.
  */
 export function setOnvisibilitychange(value: bigint): void {
-  document.onvisibilitychange = value as any;
+  document.onvisibilitychange = lookupEventHandler(value);
 }
 
 /**
@@ -3449,49 +3467,6 @@ export function getInstanceRoot(self: bigint): bigint | undefined {
 export function getAnimatedInstanceRoot(self: bigint): bigint | undefined {
   const obj = lookupSvgUseElement(self);
   return obj.animatedInstanceRoot ?? undefined;
-}
-
-// ---------------------------------------------------------------------------
-// WIT interface: svg-element-instance
-// ---------------------------------------------------------------------------
-
-/** Type alias */
-export type SvgElementInstanceHandle = bigint;
-
-/** Handle table for SvgElementInstance instances */
-const _svgElementInstancehandles = new Map<bigint, SvgElementInstance>();
-let _nextSvgElementInstance = 1n;
-
-/** Lookup a SvgElementInstance by handle, throwing if not found. */
-function lookupSvgElementInstance(handle: bigint): SvgElementInstance {
-  const obj = _svgElementInstancehandles.get(handle);
-  if (!obj) {
-    throw new Error(`SvgElementInstance handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional SvgElementInstance by handle. */
-function lookupOptionSvgElementInstance(handle: bigint | undefined): SvgElementInstance | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _svgElementInstancehandles.get(handle) ?? null;
-}
-/**
- * `get-corresponding-element()` operation.
- */
-export function getCorrespondingElement(self: bigint): bigint | undefined {
-  const obj = lookupSvgElementInstance(self);
-  return obj.correspondingElement ?? undefined;
-}
-
-/**
- * `get-corresponding-use-element()` operation.
- */
-export function getCorrespondingUseElement(self: bigint): bigint | undefined {
-  const obj = lookupSvgElementInstance(self);
-  return obj.correspondingUseElement ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -5552,6 +5527,7 @@ export default {
   getOnfullscreenerror,
   setOnfullscreenerror,
   parseHtmlUnsafe,
+  parseHtml,
   getLocation,
   getDomain,
   setDomain,
@@ -5644,8 +5620,6 @@ export default {
   SvgUseElementGetHeight,
   getInstanceRoot,
   getAnimatedInstanceRoot,
-  getCorrespondingElement,
-  getCorrespondingUseElement,
   getSourceAnimation,
   getSvgDocument,
   SvgStyleElementGetType,

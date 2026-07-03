@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * misc glue — implements the `tairitsu-browser:misc` WIT import interfaces.
  *

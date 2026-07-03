@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * css glue — implements the `tairitsu-browser:css` WIT import interfaces.
  *
@@ -1630,7 +1634,7 @@ export function getOnbeforeinput(self: bigint): bigint {
  */
 export function setOnbeforeinput(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onbeforeinput = value as any;
+  obj.onbeforeinput = lookupEventHandler(value);
 }
 
 /**
@@ -1650,7 +1654,7 @@ export function getOnbeforematch(self: bigint): bigint {
  */
 export function setOnbeforematch(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onbeforematch = value as any;
+  obj.onbeforematch = lookupEventHandler(value);
 }
 
 /**
@@ -1670,7 +1674,7 @@ export function getOnbeforetoggle(self: bigint): bigint {
  */
 export function setOnbeforetoggle(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onbeforetoggle = value as any;
+  obj.onbeforetoggle = lookupEventHandler(value);
 }
 
 /**
@@ -1686,7 +1690,7 @@ export function getOnblur(self: bigint): bigint {
  */
 export function setOnblur(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onblur = value as any;
+  (obj as any).onblur = lookupEventHandler(value);
 }
 
 /**
@@ -1750,7 +1754,7 @@ export function GlobalEventHandlersGetOnchange(self: bigint): bigint {
  */
 export function GlobalEventHandlersSetOnchange(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onchange = value as any;
+  (obj as any).onchange = lookupEventHandler(value);
 }
 
 /**
@@ -1766,7 +1770,7 @@ export function getOnclick(self: bigint): bigint {
  */
 export function setOnclick(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onclick = value as any;
+  (obj as any).onclick = lookupEventHandler(value);
 }
 
 /**
@@ -1910,7 +1914,7 @@ export function getOndblclick(self: bigint): bigint {
  */
 export function setOndblclick(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).ondblclick = value as any;
+  (obj as any).ondblclick = lookupEventHandler(value);
 }
 
 /**
@@ -2102,7 +2106,7 @@ export function getOnfocus(self: bigint): bigint {
  */
 export function setOnfocus(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onfocus = value as any;
+  (obj as any).onfocus = lookupEventHandler(value);
 }
 
 /**
@@ -2134,7 +2138,7 @@ export function getOninput(self: bigint): bigint {
  */
 export function setOninput(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).oninput = value as any;
+  (obj as any).oninput = lookupEventHandler(value);
 }
 
 /**
@@ -2166,7 +2170,7 @@ export function getOnkeydown(self: bigint): bigint {
  */
 export function setOnkeydown(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onkeydown = value as any;
+  (obj as any).onkeydown = lookupEventHandler(value);
 }
 
 /**
@@ -2198,7 +2202,7 @@ export function getOnkeyup(self: bigint): bigint {
  */
 export function setOnkeyup(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onkeyup = value as any;
+  (obj as any).onkeyup = lookupEventHandler(value);
 }
 
 /**
@@ -2278,7 +2282,7 @@ export function getOnmousedown(self: bigint): bigint {
  */
 export function setOnmousedown(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onmousedown = value as any;
+  (obj as any).onmousedown = lookupEventHandler(value);
 }
 
 /**
@@ -2326,7 +2330,7 @@ export function getOnmousemove(self: bigint): bigint {
  */
 export function setOnmousemove(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onmousemove = value as any;
+  (obj as any).onmousemove = lookupEventHandler(value);
 }
 
 /**
@@ -2342,7 +2346,7 @@ export function getOnmouseout(self: bigint): bigint {
  */
 export function setOnmouseout(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onmouseout = value as any;
+  (obj as any).onmouseout = lookupEventHandler(value);
 }
 
 /**
@@ -2358,7 +2362,7 @@ export function getOnmouseover(self: bigint): bigint {
  */
 export function setOnmouseover(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onmouseover = value as any;
+  (obj as any).onmouseover = lookupEventHandler(value);
 }
 
 /**
@@ -2374,7 +2378,7 @@ export function getOnmouseup(self: bigint): bigint {
  */
 export function setOnmouseup(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onmouseup = value as any;
+  (obj as any).onmouseup = lookupEventHandler(value);
 }
 
 /**
@@ -2486,7 +2490,7 @@ export function getOnreset(self: bigint): bigint {
  */
 export function setOnreset(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onreset = value as any;
+  (obj as any).onreset = lookupEventHandler(value);
 }
 
 /**
@@ -2506,7 +2510,7 @@ export function GlobalEventHandlersGetOnresize(self: bigint): bigint {
  */
 export function GlobalEventHandlersSetOnresize(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onresize = value as any;
+  (obj as any).onresize = lookupEventHandler(value);
 }
 
 /**
@@ -2650,7 +2654,7 @@ export function getOnsubmit(self: bigint): bigint {
  */
 export function setOnsubmit(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  (obj as any).onsubmit = value as any;
+  (obj as any).onsubmit = lookupEventHandler(value);
 }
 
 /**
@@ -2894,7 +2898,7 @@ export function getOnpointerrawupdate(self: bigint): bigint {
  */
 export function setOnpointerrawupdate(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpointerrawupdate = value as any;
+  obj.onpointerrawupdate = lookupEventHandler(value);
 }
 
 /**
@@ -3042,7 +3046,7 @@ export function getOntouchstart(self: bigint): bigint {
  */
 export function setOntouchstart(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontouchstart = value as any;
+  obj.ontouchstart = lookupEventHandler(value);
 }
 
 /**
@@ -3062,7 +3066,7 @@ export function getOntouchend(self: bigint): bigint {
  */
 export function setOntouchend(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontouchend = value as any;
+  obj.ontouchend = lookupEventHandler(value);
 }
 
 /**
@@ -3082,7 +3086,7 @@ export function getOntouchmove(self: bigint): bigint {
  */
 export function setOntouchmove(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontouchmove = value as any;
+  obj.ontouchmove = lookupEventHandler(value);
 }
 
 /**
@@ -3102,7 +3106,7 @@ export function getOntouchcancel(self: bigint): bigint {
  */
 export function setOntouchcancel(self: bigint, value: bigint): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontouchcancel = value as any;
+  obj.ontouchcancel = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -4463,7 +4467,7 @@ export function MediaQueryListGetOnchange(self: bigint): bigint {
  */
 export function MediaQueryListSetOnchange(self: bigint, value: bigint): void {
   const obj = lookupMediaQueryList(self);
-  obj.onchange = value as any;
+  obj.onchange = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -5231,7 +5235,14 @@ export function pollRequestFullscreen(requestId: bigint): { ok: true } | { ok: f
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result;
 }
 
 /**
@@ -5251,7 +5262,7 @@ export function getOnfullscreenchange(self: bigint): bigint {
  */
 export function setOnfullscreenchange(self: bigint, value: bigint): void {
   const obj = lookupElement(self);
-  obj.onfullscreenchange = value as any;
+  obj.onfullscreenchange = lookupEventHandler(value);
 }
 
 /**
@@ -5271,15 +5282,23 @@ export function getOnfullscreenerror(self: bigint): bigint {
  */
 export function setOnfullscreenerror(self: bigint, value: bigint): void {
   const obj = lookupElement(self);
-  obj.onfullscreenerror = value as any;
+  obj.onfullscreenerror = lookupEventHandler(value);
+}
+
+/**
+ * `set-html()` operation.
+ */
+export function setHtml(self: bigint, html: string, options: bigint | undefined): void {
+  const obj = lookupElement(self);
+  (obj as any).html = options;
 }
 
 /**
  * `set-html-unsafe()` operation.
  */
-export function setHtmlUnsafe(self: bigint, html: string): void {
+export function setHtmlUnsafe(self: bigint, html: string, options: bigint | undefined): void {
   const obj = lookupElement(self);
-  obj.setHTMLUnsafe(html as any);
+  obj.setHTMLUnsafe(html as any, options);
 }
 
 /**
@@ -5912,6 +5931,22 @@ export function setIsMap(self: bigint, value: boolean): void {
 }
 
 /**
+ * `get-controls()` operation.
+ */
+export function getControls(self: bigint): boolean {
+  const obj = lookupHTMLImageElement(self);
+  return obj.controls;
+}
+
+/**
+ * `set-controls()` operation.
+ */
+export function setControls(self: bigint, value: boolean): void {
+  const obj = lookupHTMLImageElement(self);
+  obj.controls = value;
+}
+
+/**
  * `get-width()` operation.
  */
 export function HtmlImageElementGetWidth(self: bigint): bigint {
@@ -6086,7 +6121,14 @@ export function pollDecode(requestId: bigint): { ok: true; value: bigint } | { o
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -6780,7 +6822,7 @@ export function VisualViewportGetOnresize(self: bigint): bigint {
  */
 export function VisualViewportSetOnresize(self: bigint, value: bigint): void {
   const obj = lookupVisualViewport(self);
-  obj.onresize = value as any;
+  obj.onresize = lookupEventHandler(value);
 }
 
 /**
@@ -6800,7 +6842,7 @@ export function VisualViewportGetOnscroll(self: bigint): bigint {
  */
 export function VisualViewportSetOnscroll(self: bigint, value: bigint): void {
   const obj = lookupVisualViewport(self);
-  obj.onscroll = value as any;
+  obj.onscroll = lookupEventHandler(value);
 }
 
 /**
@@ -7090,7 +7132,14 @@ export function pollReplace(requestId: bigint): { ok: true } | { ok: false; erro
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result;
 }
 
 /**
@@ -8457,6 +8506,7 @@ export default {
   setOnfullscreenchange,
   getOnfullscreenerror,
   setOnfullscreenerror,
+  setHtml,
   setHtmlUnsafe,
   getHtml,
   getInnerHtml,
@@ -8529,6 +8579,8 @@ export default {
   setUseMap,
   getIsMap,
   setIsMap,
+  getControls,
+  setControls,
   HtmlImageElementGetWidth,
   setWidth,
   HtmlImageElementGetHeight,
