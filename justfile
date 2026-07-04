@@ -22,27 +22,18 @@
 #   just gen-wit-all     - Alternative pipeline (simpler, fewer specs, idl-cache/)
 
 # Configure Windows to use PowerShell (UTF-8 encoding)
+set unstable
+set lists
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $PSDefaultParameterValues['*:Encoding'] = 'utf8';"]
 
 # Python interpreter — Windows ships as 'python', Unix as 'python3'
 python := if os_family() == "windows" { "python" } else { "python3" }
 
+import "./celestia-devtools.just"
+
 # Default: show help information
 default:
     @just --list
-
-_build always_pre dcmd rcmd *FLAGS='':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    profile=release
-    for a in {{FLAGS}}; do
-      case "$a" in
-        --dev)   profile=dev ;;
-        --clean) cargo clean ;;
-      esac
-    done
-    [ "X{{always_pre}}" != "X:" ] && {{always_pre}}
-    if [ "$profile" = dev ]; then {{dcmd}}; else {{rcmd}}; fi
 
 # ============================================================================
 # Tool installation and initialization
