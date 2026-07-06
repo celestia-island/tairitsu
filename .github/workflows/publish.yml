@@ -97,6 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: verify
+    if: false  # Disabled until @celestia-island/tairitsu-web-glue is registered on npm
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
