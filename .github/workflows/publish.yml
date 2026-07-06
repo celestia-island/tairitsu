@@ -54,8 +54,8 @@ jobs:
                   FAIL = 1
                   continue
               ver = d.get('package', {}).get('version', '')
-              if ver == root_ver:
-                  print(f'::notice::{pkg} uses workspace version ({root_ver})')
+              if isinstance(ver, dict) or (isinstance(ver, str) and 'workspace' in str(ver).lower()):
+                  print(f'::notice::{pkg} uses workspace version ({root_ver}) — OK')
               elif ver == TAG:
                   print(f'::notice::{pkg} version ({ver}) matches tag')
               else:
