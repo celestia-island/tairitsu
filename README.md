@@ -10,7 +10,7 @@
   <a href="https://github.com/celestia-island/tairitsu/actions">
     <img src="https://img.shields.io/github/actions/workflow/status/celestia-island/tairitsu/clippy.yml" alt="CI" />
   </a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-SySL%201.0-blue" alt="License: SySL" /></a>
+  <a href="https://sysl.celestia.world"><img src="https://img.shields.io/badge/license-SySL%201.0-blue" alt="License: SySL" /></a>
   <a href="https://docs.rs/tairitsu">
     <img src="https://docs.rs/tairitsu/badge.svg" alt="docs.rs" />
   </a>
