@@ -57,7 +57,7 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
-version = "0.5.13"
+version = "0.5.14"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 license-file = "LICENSE"
