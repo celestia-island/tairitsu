@@ -32,7 +32,6 @@ jobs:
               'tairitsu-ssr:packages/ssr',
               'tairitsu-packager:packages/packager',
               'tairitsu-web:packages/web',
-              'tairitsu-mcp:packages/mcp',
           ]
           FAIL = 0
           with open('Cargo.toml') as f:
