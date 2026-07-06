@@ -57,7 +57,10 @@ impl CssLength {
 }
 
 fn parse_length(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssLength> {
-    let inner = pair.into_inner().next().unwrap();
+    let inner = pair
+        .into_inner()
+        .next()
+        .expect("grammar invariant: length rule always has an inner pair");
 
     match inner.as_rule() {
         Rule::px
@@ -164,9 +167,9 @@ fn parse_length(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssLength> {
                 // Extract the number
                 let num_str = s
                     .strip_prefix("fit-content(")
-                    .unwrap()
+                    .expect("grammar invariant: matched fit-content prefix")
                     .strip_suffix(")")
-                    .unwrap()
+                    .expect("grammar invariant: matched closing paren")
                     .trim()
                     .trim_end_matches("px");
                 let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| {
@@ -363,7 +366,10 @@ fn parse_length_from_pair(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssL
         Rule::percent => parse_unit_value(pair, "%", CssLength::percent),
         Rule::simple_length => {
             // For simple_length, we need to check the inner rule
-            let inner_pair = pair.into_inner().next().unwrap();
+            let inner_pair = pair
+                .into_inner()
+                .next()
+                .expect("grammar invariant: simple_length always has an inner pair");
             parse_length_from_pair(inner_pair)
         }
         _ => Err(CssValueParseError::ParseError(format!(

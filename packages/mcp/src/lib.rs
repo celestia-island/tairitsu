@@ -1,24 +1,50 @@
-#[cfg(feature = "vtty")]
-mod vtty;
+//! MCP (Model Context Protocol) server for Tairitsu.
+//!
+//! A thin wrapper: the **browser** tools proxy HTTP to a [shirabe] debug
+//! server (the CDP engine extracted from the tairitsu packager), and the
+//! **VTty** tools delegate in-process to the [kou] virtual-terminal engine
+//! (PTY + VT100 + rendering). All the heavy lifting lives in those two
+//! dedicated crates — this package is just the MCP tool wiring.
+//!
+//! [shirabe]: https://github.com/celestia-island/shirabe
+//! [kou]: https://github.com/celestia-island/kou
+//!
+//! # Usage
+//!
+//! Point the browser tools at a running shirabe debug server (or the legacy
+//! tairitsu daemon) and start the MCP server on stdio:
+//!
+//! ```ignore
+//! SHIRABE_URL=http://localhost:3001 tairitsu-mcp
+//! ```
 
 use anyhow::Result;
+use base64::Engine;
 use serde::Deserialize;
 use serde_json::json;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use rmcp::{
-    ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
     handler::server::wrapper::Parameters, model::*, service::RequestContext, tool, tool_handler,
-    tool_router,
+    tool_router, ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
 };
 use schemars::JsonSchema;
+
+/// Font size used when rasterising VTty screenshots to PNG.
+///
+/// The renderer expects fonts loaded at `font_px * supersample`.  We target
+/// a desktop-scale output (~1920 px wide for a 120-col terminal).
+const FONT_PX: f32 = 32.0;
+/// Supersample factor — render at this multiple then downscale with Lanczos3
+/// for crisp, anti-aliased terminal glyphs.
+const RENDER_SUPER: u32 = 3;
 
 struct Server {
     base_url: Arc<RwLock<String>>,
     http: reqwest::Client,
-    #[cfg(feature = "vtty")]
-    vtty: Arc<vtty::VttyManager>,
+    vtty: kou::VttyManager,
+    fonts: Arc<kou::FontCache>,
 }
 
 impl Server {
@@ -28,21 +54,15 @@ impl Server {
     }
 
     async fn ensure_daemon(&self) -> Result<String, McpError> {
-        {
-            let url = self.base_url.read().await.clone();
-            if !url.is_empty() {
-                return Ok(url);
-            }
-        }
-        let resolved = resolve_daemon_url().await.unwrap_or_default();
-        if resolved.is_empty() {
+        let url = self.base_url.read().await.clone();
+        if url.is_empty() {
             return Err(McpError::internal_error(
-                "Browser tools require a running daemon. Start with: tairitsu dev --daemon --debug",
+                "Browser tools require a running shirabe debug server (or tairitsu daemon). \
+                 Set SHIRABE_URL / TAIRITSU_DAEMON_URL, or start: shirabe serve",
                 None,
             ));
         }
-        *self.base_url.write().await = resolved.clone();
-        Ok(resolved)
+        Ok(url)
     }
 
     fn tool_result(text: impl Into<String>) -> CallToolResult {
@@ -134,6 +154,33 @@ impl Server {
         }
         Ok(())
     }
+
+    /// Rasterise a VTty screen to a base64-encoded PNG (for `image` / `both`
+    /// screenshot modes), painted through `theme`.
+    fn render_png(&self, screen: &kou::Screen, theme: &kou::Theme) -> Result<String, McpError> {
+        let png =
+            kou::render::render_png_supersampled(screen, &self.fonts, FONT_PX, RENDER_SUPER, theme)
+                .map_err(|e| McpError::internal_error(format!("VTty render failed: {e}"), None))?;
+        Ok(base64::engine::general_purpose::STANDARD.encode(&png))
+    }
+
+    /// Build the JSON object the `text` / `both` screenshot modes emit.
+    fn screen_text_json(
+        &self,
+        session_id: &str,
+        alive: bool,
+        screen: &kou::Screen,
+        text: &str,
+    ) -> String {
+        json!({
+            "session_id": session_id,
+            "alive": alive,
+            "rows": screen.rows,
+            "cols": screen.cols,
+            "text": text,
+        })
+        .to_string()
+    }
 }
 
 // ── Tool argument structs ────────────────────────────
@@ -146,6 +193,20 @@ struct BrowserNavigateArgs {
 #[derive(Debug, Deserialize, JsonSchema)]
 struct SnapshotArgs {
     target: Option<String>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct DomQueryArgs {
+    /// CSS selector for the element(s) to describe.
+    selector: String,
+    /// If set, return only this single attribute's value instead of the full element.
+    attribute: Option<String>,
+    /// If true, also include a default set of computed styles (display/color/dimensions/...).
+    #[serde(rename = "computed")]
+    computed: Option<bool>,
+    /// If true, describe every match (not just the first) into `matches`.
+    #[serde(rename = "all")]
+    all: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -188,7 +249,6 @@ struct BrowserResizeArgs {
     height: u32,
 }
 
-#[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttyLaunchArgs {
     command: String,
@@ -199,13 +259,11 @@ struct VttyLaunchArgs {
     name: Option<String>,
 }
 
-#[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttySessionArgs {
     session_id: String,
 }
 
-#[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttyScreenshotArgs {
     session_id: String,
@@ -215,21 +273,18 @@ struct VttyScreenshotArgs {
     theme: Option<String>,
 }
 
-#[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttySendKeysArgs {
     session_id: String,
     keys: String,
 }
 
-#[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttySendTextArgs {
     session_id: String,
     text: String,
 }
 
-#[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttyWaitArgs {
     session_id: String,
@@ -237,14 +292,12 @@ struct VttyWaitArgs {
     pattern: Option<String>,
 }
 
-#[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttyReadyArgs {
     session_id: String,
     timeout_ms: Option<u64>,
 }
 
-#[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttyResizeArgs {
     session_id: String,
@@ -252,7 +305,7 @@ struct VttyResizeArgs {
     rows: u64,
 }
 
-// ── Browser tools ────────────────────────────────────
+// ── Browser tools (HTTP proxy to shirabe / tairitsu daemon) ────────────
 
 #[tool_router]
 impl Server {
@@ -262,7 +315,7 @@ impl Server {
         Parameters(args): Parameters<BrowserNavigateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget("navigate", json!({"url": args.url}))
             .await?;
         Ok(Self::tool_result(format!("Navigated to {}", args.url)))
@@ -273,9 +326,9 @@ impl Server {
         &self,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        Ok(Self::tool_result(
-            "(navigate-back: not yet supported via debug API)",
-        ))
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("back", json!({})).await?;
+        Ok(Self::tool_result("Navigated back"))
     }
 
     #[tool(description = "Go forward to the next page")]
@@ -283,9 +336,9 @@ impl Server {
         &self,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        Ok(Self::tool_result(
-            "(navigate-forward: not yet supported via debug API)",
-        ))
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("forward", json!({})).await?;
+        Ok(Self::tool_result("Navigated forward"))
     }
 
     #[tool(
@@ -296,7 +349,7 @@ impl Server {
         Parameters(args): Parameters<SnapshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         let query: Vec<(&str, &str)> = args
             .target
             .as_deref()
@@ -312,6 +365,35 @@ impl Server {
     }
 
     #[tool(
+        description = "Query a DOM element by CSS selector — returns its tag, text, html, attributes, visibility, bounding rect, and match count. Pass `attribute` to fetch just one attribute's value. Complements `browser_snapshot` (semantic a11y tree) with exact element details."
+    )]
+    async fn browser_dom(
+        &self,
+        Parameters(args): Parameters<DomQueryArgs>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        self.ensure_daemon().await?;
+        let mut query: Vec<(&str, &str)> = vec![("selector", args.selector.as_str())];
+        if let Some(attr) = args.attribute.as_deref() {
+            if !attr.is_empty() {
+                query.push(("attribute", attr));
+            }
+        }
+        if matches!(args.computed, Some(true)) {
+            query.push(("computed", "true"));
+        }
+        if matches!(args.all, Some(true)) {
+            query.push(("all", "true"));
+        }
+        let v = self.http_get("dom", &query).await?;
+        Ok(Self::tool_result(
+            v.get("data")
+                .map(|d| serde_json::to_string(d).unwrap_or_else(|_| "{}".into()))
+                .unwrap_or_else(|| "{}".into()),
+        ))
+    }
+
+    #[tool(
         description = "Take a screenshot of the current viewport as PNG (returns base64 data URL)"
     )]
     async fn browser_screenshot(
@@ -319,7 +401,7 @@ impl Server {
         Parameters(args): Parameters<ScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         let mut body = json!({});
         if let Some(el) = &args.element {
             body["selector"] = json!(el);
@@ -373,7 +455,7 @@ impl Server {
         Parameters(args): Parameters<ClickArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget("click", json!({"selector": args.target}))
             .await?;
         Ok(Self::tool_result(format!("Clicked: {}", args.target)))
@@ -385,7 +467,7 @@ impl Server {
         Parameters(args): Parameters<TypeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget(
             "type",
             json!({
@@ -405,7 +487,7 @@ impl Server {
         Parameters(args): Parameters<PressKeyArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget("press", json!({"key": args.key}))
             .await?;
         Ok(Self::tool_result(format!("Pressed: {}", args.key)))
@@ -417,7 +499,7 @@ impl Server {
         Parameters(args): Parameters<EvaluateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         let v = self
             .http_post("evaluate", json!({"expression": args.function}))
             .await?;
@@ -443,7 +525,7 @@ impl Server {
         Parameters(args): Parameters<ConsoleMessagesArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         let level = args.level.as_deref().unwrap_or("");
         let v = self.http_get("console", &[("level", level)]).await?;
         Ok(Self::tool_result(v.to_string()))
@@ -455,7 +537,7 @@ impl Server {
         Parameters(args): Parameters<BrowserResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let _ = self.ensure_daemon().await;
+        self.ensure_daemon().await?;
         self.http_post_fire_and_forget(
             "resize",
             json!({"width": args.width, "height": args.height}),
@@ -467,9 +549,8 @@ impl Server {
         )))
     }
 
-    // ── VTty tools ─────────────────────────────────────
+    // ── VTty tools (delegated to the `kou` engine) ─────
 
-    #[cfg(feature = "vtty")]
     #[tool(description = "Launch a command in a virtual terminal session")]
     async fn vtty_launch(
         &self,
@@ -480,39 +561,42 @@ impl Server {
             Some(c) => Some(c.to_string()),
             None => resolve_default_cwd(&context).await,
         };
+        let env_pairs = parse_env_string(args.env.as_deref().unwrap_or(""));
+        let env_refs: Vec<(&str, &str)> = env_pairs
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.as_str()))
+            .collect();
         let info = self
             .vtty
             .launch(
                 &args.command,
+                resolved_cwd.as_deref(),
+                &env_refs,
                 args.cols.unwrap_or(120) as u16,
                 args.rows.unwrap_or(40) as u16,
-                args.env.as_deref().unwrap_or(""),
-                resolved_cwd.as_deref(),
-                args.name.as_deref().unwrap_or(""),
+                args.name.as_deref(),
             )
-            .map_err(|e| McpError::internal_error(e, None))?;
+            .await
+            .map_err(|e| McpError::internal_error(format!("{e}"), None))?;
         Ok(Self::tool_result(
             serde_json::to_string_pretty(&info).unwrap_or_default(),
         ))
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(description = "Kill a virtual terminal session")]
     async fn vtty_kill(
         &self,
         Parameters(args): Parameters<VttySessionArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let info = self
-            .vtty
-            .kill(&args.session_id)
-            .map_err(|e| McpError::internal_error(e, None))?;
+        let info = self.vtty.kill(&args.session_id).await.ok_or_else(|| {
+            McpError::internal_error(format!("Session '{}' not found", args.session_id), None)
+        })?;
         Ok(Self::tool_result(
             serde_json::to_string_pretty(&info).unwrap_or_default(),
         ))
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(
         description = "Send key sequences to a virtual terminal. Supports Enter, Tab, Escape, Backspace, Delete, Arrow keys, Home/End, PageUp/PageDown, F1-F12, Ctrl+X, Alt+X"
     )]
@@ -521,159 +605,89 @@ impl Server {
         Parameters(args): Parameters<VttySendKeysArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self
-            .vtty
-            .get(&args.session_id)
-            .map_err(|e| McpError::internal_error(e, None))?;
-        {
-            let guard = session
-                .lock()
-                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-            guard
-                .send_keys(&args.keys)
-                .map_err(|e| McpError::internal_error(e, None))?;
-        }
+        self.vtty
+            .send_keys(&args.session_id, &args.keys)
+            .await
+            .map_err(|e| McpError::internal_error(format!("{e}"), None))?;
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        {
-            let guard = session
-                .lock()
-                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-            let _ = guard.read_and_update();
-        }
         Ok(Self::tool_result(
             json!({"session_id": args.session_id, "keys": args.keys, "sent": true}).to_string(),
         ))
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(description = "Send text string to a virtual terminal")]
     async fn vtty_send_text(
         &self,
         Parameters(args): Parameters<VttySendTextArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self
-            .vtty
-            .get(&args.session_id)
-            .map_err(|e| McpError::internal_error(e, None))?;
-        {
-            let guard = session
-                .lock()
-                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-            guard
-                .send_text(&args.text)
-                .map_err(|e| McpError::internal_error(e, None))?;
-        }
+        self.vtty
+            .send_text(&args.session_id, &args.text)
+            .await
+            .map_err(|e| McpError::internal_error(format!("{e}"), None))?;
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        {
-            let guard = session
-                .lock()
-                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-            let _ = guard.read_and_update();
-        }
         Ok(Self::tool_result(
             json!({"session_id": args.session_id, "length": args.text.len(), "sent": true})
                 .to_string(),
         ))
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(
         description = "Capture current terminal screen content as text (text-only models) and/or as a rendered PNG image (vision-capable models). \
         The 'format' parameter controls output: 'text' (default) returns plain text, 'image' returns a rendered PNG, 'both' returns both. \
-        The 'theme' parameter sets the color scheme: solarized-dark (default), solarized-light, one-half-dark, one-half-light, ibm-5153."
+        The 'theme' parameter selects the PNG colour scheme (Windows Terminal schemes): campbell (default), campbell-powershell, vintage, one-half-dark, one-half-light, solarized-dark, solarized-light, tango-dark, tango-light, dimidium, ottosson, dark+, cga, ibm-5153, xterm. Unknown names fall back to campbell."
     )]
     async fn vtty_screenshot(
         &self,
         Parameters(args): Parameters<VttyScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self
-            .vtty
-            .get(&args.session_id)
-            .map_err(|e| McpError::internal_error(e, None))?;
         let fmt = args.format.as_deref().unwrap_or("text");
-        let theme = args.theme.as_deref().unwrap_or("solarized-dark");
+        let theme = kou::theme_by_name(args.theme.as_deref().unwrap_or("campbell"));
 
-        let (text, alive, rows, cols) = {
-            let guard = session
-                .lock()
-                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-            (guard.screenshot(), guard.is_alive(), guard.rows, guard.cols)
-        };
+        let screen = self
+            .vtty
+            .screen(&args.session_id)
+            .await
+            .map_err(|e| McpError::internal_error(format!("{e}"), None))?;
+        let alive = self
+            .vtty
+            .ping(&args.session_id)
+            .await
+            .map(|i| i.alive)
+            .unwrap_or(false);
+        let text = screen.text();
 
         match fmt {
-            "text" => Ok(Self::tool_result(
-                json!({
-                    "session_id": args.session_id,
-                    "alive": alive,
-                    "rows": rows,
-                    "cols": cols,
-                    "text": text
-                })
-                .to_string(),
-            )),
-            #[cfg(feature = "vtty-visual")]
             "image" => {
-                let guard = session
-                    .lock()
-                    .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                let png_data = guard
-                    .visual_screenshot(theme)
-                    .map_err(|e| McpError::internal_error(e, None))?;
-                let b64 = vtty::render::encode_base64(&png_data);
+                let b64 = self.render_png(&screen, theme)?;
                 Ok(CallToolResult::success(vec![Content::image(
                     b64,
                     "image/png",
                 )]))
             }
-            #[cfg(feature = "vtty-visual")]
             "both" => {
-                let guard = session
-                    .lock()
-                    .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                let png_data = guard
-                    .visual_screenshot(theme)
-                    .map_err(|e| McpError::internal_error(e, None))?;
-                let b64 = vtty::render::encode_base64(&png_data);
+                let b64 = self.render_png(&screen, theme)?;
                 Ok(CallToolResult::success(vec![
-                    Content::text(
-                        json!({
-                            "session_id": args.session_id,
-                            "alive": alive,
-                            "rows": rows,
-                            "cols": cols,
-                            "text": text
-                        })
-                        .to_string(),
-                    ),
+                    Content::text(self.screen_text_json(&args.session_id, alive, &screen, &text)),
                     Content::image(b64, "image/png"),
                 ]))
             }
-            _ => Ok(Self::tool_result(
-                json!({
-                    "session_id": args.session_id,
-                    "alive": alive,
-                    "rows": rows,
-                    "cols": cols,
-                    "text": text
-                })
-                .to_string(),
-            )),
+            _ => Ok(Self::tool_result(self.screen_text_json(
+                &args.session_id,
+                alive,
+                &screen,
+                &text,
+            ))),
         }
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(description = "Wait for duration or until text appears on screen")]
     async fn vtty_wait(
         &self,
         Parameters(args): Parameters<VttyWaitArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self
-            .vtty
-            .get(&args.session_id)
-            .map_err(|e| McpError::internal_error(e, None))?;
         let secs = args.seconds.unwrap_or(5.0);
         let pattern = args.pattern.unwrap_or_default();
         if !pattern.is_empty() {
@@ -681,54 +695,50 @@ impl Server {
                 std::time::Instant::now() + std::time::Duration::from_secs_f64(secs.min(1800.0));
             let mut found = false;
             while std::time::Instant::now() < deadline {
-                let alive = {
-                    let guard = session
-                        .lock()
-                        .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                    if !guard.is_alive() {
-                        false
-                    } else {
-                        let _ = guard.read_and_update();
-                        let f = !guard.find_text(&pattern).is_empty();
-                        if f {
-                            found = true;
-                        }
-                        guard.is_alive()
-                    }
-                };
-                if found || !alive {
+                let alive = self
+                    .vtty
+                    .ping(&args.session_id)
+                    .await
+                    .map(|i| i.alive)
+                    .unwrap_or(false);
+                if !alive {
+                    break;
+                }
+                let hits = self
+                    .vtty
+                    .find_text(&args.session_id, &pattern)
+                    .await
+                    .map_err(|e| McpError::internal_error(format!("{e}"), None))?;
+                if !hits.is_empty() {
+                    found = true;
                     break;
                 }
                 tokio::time::sleep(std::time::Duration::from_millis(300)).await;
             }
-            let alive = session.lock().map(|g| g.is_alive()).unwrap_or(false);
-            Ok(Self::tool_result(json!({"session_id": args.session_id, "pattern": pattern, "found": found, "alive": alive}).to_string()))
+            let alive = self
+                .vtty
+                .ping(&args.session_id)
+                .await
+                .map(|i| i.alive)
+                .unwrap_or(false);
+            Ok(Self::tool_result(
+                json!({"session_id": args.session_id, "pattern": pattern, "found": found, "alive": alive})
+                    .to_string(),
+            ))
         } else {
             let wait_secs = secs.min(1800.0) as u64;
             let mut alive = true;
             for _ in 0..(wait_secs * 20) {
-                alive = {
-                    let guard = session
-                        .lock()
-                        .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                    if !guard.is_alive() {
-                        false
-                    } else {
-                        let _ = guard.read_and_update();
-                        guard.is_alive()
-                    }
-                };
+                alive = self
+                    .vtty
+                    .ping(&args.session_id)
+                    .await
+                    .map(|i| i.alive)
+                    .unwrap_or(false);
                 if !alive {
                     break;
                 }
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            }
-            if alive {
-                let guard = session
-                    .lock()
-                    .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                let _ = guard.read_and_update();
-                alive = guard.is_alive();
             }
             Ok(Self::tool_result(
                 json!({"session_id": args.session_id, "seconds_waited": secs, "alive": alive})
@@ -737,7 +747,6 @@ impl Server {
         }
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(
         description = "Wait until a VTty session has screen output (useful after vtty_launch for slow-starting commands). Returns immediately if output is already present."
     )]
@@ -747,21 +756,17 @@ impl Server {
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let timeout_ms = args.timeout_ms.unwrap_or(30000);
-        let session = self
-            .vtty
-            .get(&args.session_id)
-            .map_err(|e| McpError::internal_error(e, None))?;
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(timeout_ms);
         let mut ready = false;
         while std::time::Instant::now() < deadline {
-            {
-                let guard = session
-                    .lock()
-                    .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                if guard.has_output() {
-                    ready = true;
-                    break;
-                }
+            let has = self
+                .vtty
+                .has_output(&args.session_id)
+                .await
+                .map_err(|e| McpError::internal_error(format!("{e}"), None))?;
+            if has {
+                ready = true;
+                break;
             }
             tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         }
@@ -770,7 +775,6 @@ impl Server {
         ))
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(
         description = "Get the scrollback buffer (history) of a virtual terminal session, including current screen content"
     )]
@@ -779,53 +783,48 @@ impl Server {
         Parameters(args): Parameters<VttySessionArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self
+        let text = self
             .vtty
-            .get(&args.session_id)
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let guard = session
-            .lock()
-            .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-        let text = guard.scrollback();
+            .scrollback(&args.session_id)
+            .await
+            .map_err(|e| McpError::internal_error(format!("{e}"), None))?;
         Ok(Self::tool_result(
             json!({"session_id": args.session_id, "text": text}).to_string(),
         ))
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(description = "Resize a virtual terminal")]
     async fn vtty_resize(
         &self,
         Parameters(args): Parameters<VttyResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self
+        let old = self
             .vtty
-            .get(&args.session_id)
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let guard = session
-            .lock()
-            .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-        let old = (guard.cols, guard.rows);
-        guard
-            .resize(args.cols as u16, args.rows as u16)
-            .map_err(|e| McpError::internal_error(e, None))?;
-        Ok(Self::tool_result(json!({"session_id": args.session_id, "old": {"cols": old.0, "rows": old.1}, "new": {"cols": args.cols, "rows": args.rows}}).to_string()))
+            .ping(&args.session_id)
+            .await
+            .map(|i| (i.cols, i.rows));
+        self.vtty
+            .resize(&args.session_id, args.cols as u16, args.rows as u16)
+            .await
+            .map_err(|e| McpError::internal_error(format!("{e}"), None))?;
+        Ok(Self::tool_result(
+            json!({"session_id": args.session_id, "old": old.map(|(c,r)| json!({"cols": c, "rows": r})), "new": {"cols": args.cols, "rows": args.rows}})
+                .to_string(),
+        ))
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(description = "List all active virtual terminal sessions")]
     async fn vtty_list(
         &self,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let sessions = self.vtty.list();
+        let sessions = self.vtty.list().await;
         Ok(Self::tool_result(
             serde_json::to_string_pretty(&sessions).unwrap_or_else(|_| "[]".to_string()),
         ))
     }
 
-    #[cfg(feature = "vtty")]
     #[tool(
         description = "Check if a VTty session's child process is still alive and refresh screen state"
     )]
@@ -834,10 +833,9 @@ impl Server {
         Parameters(args): Parameters<VttySessionArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let info = self
-            .vtty
-            .ping(&args.session_id)
-            .map_err(|e| McpError::internal_error(e, None))?;
+        let info = self.vtty.ping(&args.session_id).await.ok_or_else(|| {
+            McpError::internal_error(format!("Session '{}' not found", args.session_id), None)
+        })?;
         Ok(Self::tool_result(
             serde_json::to_string_pretty(&info).unwrap_or_default(),
         ))
@@ -849,31 +847,47 @@ impl Server {
 #[tool_handler(router = Server::tool_router())]
 impl ServerHandler for Server {}
 
-// ── default CWD resolution ──────────────────────────
+// ── helpers ──────────────────────────────────────────
 
-#[cfg(feature = "vtty")]
+/// Parse an env-string of the form `"K=V\nK2=V2"` (newlines or commas) into
+/// owned pairs. Malformed entries are dropped.
+fn parse_env_string(raw: &str) -> Vec<(String, String)> {
+    raw.split([',', '\n'])
+        .filter_map(|pair| {
+            let pair = pair.trim();
+            if pair.is_empty() {
+                return None;
+            }
+            let (k, v) = pair.split_once('=')?;
+            Some((k.trim().to_string(), v.to_string()))
+        })
+        .collect()
+}
+
 async fn resolve_default_cwd(context: &RequestContext<RoleServer>) -> Option<String> {
-    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT")
-        && !root.is_empty()
-    {
-        return Some(root);
+    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
+        if !root.is_empty() {
+            return Some(root);
+        }
     }
 
-    if let Some(info) = context.peer.peer_info()
-        && info.capabilities.roots.is_some()
-        && let Ok(result) = context.peer.list_roots().await
-        && let Some(root) = result.roots.first()
-    {
-        let uri = &root.uri;
-        let path = if let Some(p) = uri.strip_prefix("file://") {
-            p.to_string()
-        } else if let Some(p) = uri.strip_prefix("file:") {
-            p.to_string()
-        } else {
-            uri.clone()
-        };
-        if !path.is_empty() {
-            return Some(path);
+    if let Some(info) = context.peer.peer_info() {
+        if info.capabilities.roots.is_some() {
+            if let Ok(result) = context.peer.list_roots().await {
+                if let Some(root) = result.roots.first() {
+                    let uri = &root.uri;
+                    let path = if let Some(p) = uri.strip_prefix("file://") {
+                        p.to_string()
+                    } else if let Some(p) = uri.strip_prefix("file:") {
+                        p.to_string()
+                    } else {
+                        uri.clone()
+                    };
+                    if !path.is_empty() {
+                        return Some(path);
+                    }
+                }
+            }
         }
     }
 
@@ -884,17 +898,23 @@ async fn resolve_default_cwd(context: &RequestContext<RoleServer>) -> Option<Str
     None
 }
 
-// ── daemon resolution ───────────────────────────────
+// ── browser-server (shirabe / tairitsu daemon) resolution ─────────────
 
 mod daemon {
-    use anyhow::anyhow;
     use std::path::PathBuf;
 
-    pub(super) async fn resolve_daemon_url() -> anyhow::Result<String> {
-        if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL")
-            && !url.is_empty()
-        {
-            return Ok(url);
+    use anyhow::{anyhow, Result};
+
+    pub(super) async fn resolve_daemon_url() -> Result<String> {
+        // An explicit shirabe debug-server URL wins (the browser backend was
+        // extracted into the dedicated `shirabe` repo). Fall back to the
+        // legacy tairitsu-daemon variable.
+        for var in ["SHIRABE_URL", "TAIRITSU_DAEMON_URL"] {
+            if let Ok(url) = std::env::var(var) {
+                if !url.is_empty() {
+                    return Ok(url);
+                }
+            }
         }
 
         let priority_dirs: Vec<PathBuf> = {
@@ -919,23 +939,46 @@ mod daemon {
         };
         if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&priority_dirs) {
             if let Some(dp) = debug_port {
-                return Ok(format!("http://localhost:{dp}"));
+                let url = format!("http://localhost:{dp}");
+                if check_daemon_health(&url).await {
+                    return Ok(url);
+                }
             }
             return Err(anyhow!(
-                "Daemon found but debug API not enabled. Start with: tairitsu dev --daemon --debug"
+                "Daemon found but debug API not responding. Start a shirabe debug server \
+                 (shirabe serve) and point SHIRABE_URL at it."
             ));
         }
 
         let searched = search_project_roots_fallback();
         if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&searched) {
             if let Some(dp) = debug_port {
-                return Ok(format!("http://localhost:{dp}"));
+                let url = format!("http://localhost:{dp}");
+                if check_daemon_health(&url).await {
+                    return Ok(url);
+                }
             }
             return Err(anyhow!(
-                "Daemon found but debug API not enabled. Start with: tairitsu dev --daemon --debug"
+                "Daemon found but debug API not responding. Start a shirabe debug server \
+                 (shirabe serve) and point SHIRABE_URL at it."
             ));
         }
-        Err(anyhow!("No running tairitsu daemon found"))
+        Err(anyhow!(
+            "No running browser debug server found. Start one with `shirabe serve` \
+             (or set SHIRABE_URL / TAIRITSU_DAEMON_URL)."
+        ))
+    }
+
+    async fn check_daemon_health(url: &str) -> bool {
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(2))
+            .build()
+            .unwrap_or_default();
+        client
+            .get(format!("{url}/health"))
+            .send()
+            .await
+            .is_ok_and(|resp| resp.status().is_success())
     }
 
     fn search_project_roots_fallback() -> Vec<PathBuf> {
@@ -947,11 +990,15 @@ mod daemon {
             let root_path = PathBuf::from(&root);
             add_target_tree(&mut candidates, &root_path, 2);
         }
-        for scan_dir in std::env::var("HOME")
+        let mut scan_dirs: Vec<PathBuf> = std::env::var("HOME")
             .ok()
-            .map(|h| vec![PathBuf::from("/mnt/sdb1"), PathBuf::from(h)])
-            .unwrap_or_default()
-        {
+            .map(PathBuf::from)
+            .into_iter()
+            .collect();
+        if let Ok(dirs) = std::env::var("TAIRITSU_SCAN_DIRS") {
+            scan_dirs.extend(dirs.split(':').map(PathBuf::from));
+        }
+        for scan_dir in scan_dirs {
             if let Ok(entries) = std::fs::read_dir(&scan_dir) {
                 for entry in entries.flatten() {
                     let p = entry.path();
@@ -961,10 +1008,10 @@ mod daemon {
                 }
             }
         }
-        if let Ok(exe) = std::env::current_exe()
-            && let Some(parent) = exe.parent().and_then(|p| p.parent())
-        {
-            candidates.push(parent.join("target"));
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
+                candidates.push(parent.join("target"));
+            }
         }
         candidates.dedup();
         candidates
@@ -992,13 +1039,40 @@ mod daemon {
             let ready_path = dir.join("tairitsu-packager.ready");
             if let Ok(content) = std::fs::read_to_string(&ready_path) {
                 let trimmed = content.trim();
+                if trimmed.is_empty() || trimmed.starts_with("error:") {
+                    let _ = std::fs::remove_file(&ready_path);
+                    continue;
+                }
+
+                if let Ok(metadata) = std::fs::metadata(&ready_path) {
+                    if let Ok(modified) = metadata.modified() {
+                        if modified.elapsed().unwrap_or_default()
+                            > std::time::Duration::from_secs(86400)
+                        {
+                            let pid_path = dir.join("tairitsu-packager.pid");
+                            if let Ok(pid_str) = std::fs::read_to_string(&pid_path) {
+                                if let Ok(pid) = pid_str.trim().parse::<u32>() {
+                                    if !is_process_running(pid) {
+                                        let _ = std::fs::remove_file(&ready_path);
+                                        let _ = std::fs::remove_file(&pid_path);
+                                        continue;
+                                    }
+                                }
+                            } else {
+                                let _ = std::fs::remove_file(&ready_path);
+                                continue;
+                            }
+                        }
+                    }
+                }
+
                 if let Some(rest) = trimmed.strip_prefix("ready:") {
                     let mut parts = rest.splitn(2, ':');
-                    if let Some(port_str) = parts.next()
-                        && let Ok(port) = port_str.parse::<u16>()
-                    {
-                        let debug_port = parts.next().and_then(|s| s.parse().ok());
-                        return Some((port, debug_port, ready_path));
+                    if let Some(port_str) = parts.next() {
+                        if let Ok(port) = port_str.parse::<u16>() {
+                            let debug_port = parts.next().and_then(|s| s.parse().ok());
+                            return Some((port, debug_port, ready_path));
+                        }
                     }
                 } else if trimmed == "ready" {
                     return Some((3000, None, ready_path));
@@ -1006,6 +1080,28 @@ mod daemon {
             }
         }
         None
+    }
+
+    #[cfg(unix)]
+    fn is_process_running(pid: u32) -> bool {
+        std::process::Command::new("kill")
+            .arg("-0")
+            .arg(pid.to_string())
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+    }
+
+    #[cfg(not(unix))]
+    fn is_process_running(pid: u32) -> bool {
+        std::process::Command::new("tasklist")
+            .args(&["/FI", &format!("PID eq {}", pid)])
+            .output()
+            .map(|o| {
+                let s = String::from_utf8_lossy(&o.stdout);
+                s.contains(&pid.to_string())
+            })
+            .unwrap_or(false)
     }
 }
 
@@ -1019,18 +1115,47 @@ pub struct McpConfig {
 }
 
 pub async fn run(config: McpConfig) -> Result<()> {
+    // Install the rustls crypto provider once, before any reqwest::Client is
+    // built (font-fetch + browser HTTP proxy both use rustls-no-provider).
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     let base_url = Arc::new(RwLock::new(String::new()));
 
-    let base_url_clone = base_url.clone();
-    let url_from_config = config.base_url.clone();
-    tokio::spawn(async move {
-        let url = if !url_from_config.is_empty() {
-            url_from_config
+    if !config.base_url.is_empty() {
+        *base_url.write().await = config.base_url.clone();
+    } else {
+        let base_url_clone = base_url.clone();
+        tokio::spawn(async move {
+            loop {
+                if let Ok(url) = resolve_daemon_url().await {
+                    if !url.is_empty() {
+                        *base_url_clone.write().await = url;
+                        return;
+                    }
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            }
+        });
+    }
+
+    // Load VTty fonts once. Strategy: system fonts first (fast, zero-network,
+    // includes CJK if NotoSansCJK is installed), then async fetch as fallback.
+    // Fonts loaded at supersampled resolution (font_px × supersample).
+    let font_px = FONT_PX * RENDER_SUPER as f32;
+    let fonts = {
+        let sys = kou::FontCache::from_system_fonts(font_px);
+        if !sys.is_empty() {
+            sys
         } else {
-            resolve_daemon_url().await.unwrap_or_default()
-        };
-        *base_url_clone.write().await = url;
-    });
+            let font_set = kou::FontSet::from_env();
+            let remote = kou::FontCache::load_async(&font_set, font_px).await;
+            if remote.is_empty() {
+                kou::FontCache::empty()
+            } else {
+                remote
+            }
+        }
+    };
 
     let server = Server {
         base_url: base_url.clone(),
@@ -1039,8 +1164,8 @@ pub async fn run(config: McpConfig) -> Result<()> {
             .connect_timeout(std::time::Duration::from_secs(5))
             .build()
             .unwrap_or_default(),
-        #[cfg(feature = "vtty")]
-        vtty: Arc::new(vtty::VttyManager::new()),
+        vtty: kou::VttyManager::new(),
+        fonts: Arc::new(fonts),
     };
 
     let transport = rmcp::transport::stdio();

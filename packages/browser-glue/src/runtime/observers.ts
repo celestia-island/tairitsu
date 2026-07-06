@@ -1,7 +1,5 @@
-// @ts-nocheck
-
 export const observers_exports = {
-  getBoundingClientRect(element) {
+  getBoundingClientRect(element: bigint) {
     const el = globalThis.__elementHandles.get(element);
     if (!el) {
       return { x: 0, y: 0, width: 0, height: 0 };
@@ -9,7 +7,7 @@ export const observers_exports = {
     const rect = el.getBoundingClientRect();
     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
   },
-  observe(self, target, options) {
+  observe(self: bigint, target: bigint, options: any) {
     const observer = globalThis.__lookupElement(self);
     const el = globalThis.__lookupElement(target);
     if (observer && el) {

@@ -2,6 +2,8 @@
 //!
 //! This module provides the host state implementation used by the SSR container.
 
+use anyhow::Result;
+
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 use crate::{
@@ -66,12 +68,12 @@ pub struct SsrHostState {
 
 impl SsrHostState {
     /// Create a new SSR host state with default config
-    pub fn new() -> anyhow::Result<Self> {
+    pub fn new() -> Result<Self> {
         Self::with_config(SsrConfig::default())
     }
 
     /// Create a new SSR host state with custom config
-    pub fn with_config(config: SsrConfig) -> anyhow::Result<Self> {
+    pub fn with_config(config: SsrConfig) -> Result<Self> {
         let wasi = WasiCtxBuilder::new().inherit_stdio().build();
 
         let table = ResourceTable::new();
@@ -98,7 +100,18 @@ impl SsrHostState {
 
 impl Default for SsrHostState {
     fn default() -> Self {
-        Self::new().expect("Failed to create SsrHostState")
+        Self::new().unwrap_or_else(|e| {
+            tracing::warn!(
+                "Failed to create SsrHostState with default config: {}. Using minimal fallback.",
+                e
+            );
+            Self {
+                wasi: WasiCtxBuilder::new().build(),
+                table: ResourceTable::new(),
+                dom: SsrDom::new(),
+                config: SsrConfig::default(),
+            }
+        })
     }
 }
 

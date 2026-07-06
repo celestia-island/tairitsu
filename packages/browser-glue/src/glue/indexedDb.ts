@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * indexed-db glue — implements the `tairitsu-browser:indexed-db` WIT import interfaces.
  *

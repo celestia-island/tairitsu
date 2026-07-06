@@ -9,9 +9,9 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 use tairitsu_browser_wit_resolver::{
-    CACHE_DIR_NAME,
     cache::Cache,
     resolver::{PackageSpec, ResolveOptions, Resolver},
+    CACHE_DIR_NAME,
 };
 use tracing::error;
 

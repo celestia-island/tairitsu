@@ -40,6 +40,8 @@ interface PromiseState<T> {
  */
 interface IteratorState<T> {
   iterator: AsyncIterator<T>;
+  settled: boolean;
+  result?: IteratorResult<T>;
   nextPromise: Promise<IteratorResult<T>> | null;
 }
 
@@ -73,11 +75,7 @@ export function registerPromise<T>(promise: Promise<T>): bigint {
     .catch((error) => {
       state.settled = true;
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : typeof error === "string"
-            ? error
-            : String(error);
+        error instanceof Error ? error.message : typeof error === "string" ? error : String(error);
       state.result = { ok: false, error: errorMessage };
     });
 
@@ -102,7 +100,9 @@ export function pollPromise<T>(requestId: bigint): PromiseResult<T> | undefined 
     return undefined;
   }
 
-  return state.result as PromiseResult<T> | undefined;
+  const result = state.result as PromiseResult<T> | undefined;
+  promises.delete(requestId);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -165,11 +165,10 @@ export function clearTimer(timerId: bigint): void {
     throw new Error(`Timer ID ${timerId} not found`);
   }
 
-  if (typeof timer === "object" && timer !== null && "unref" in timer) {
-    clearInterval(timer);
-  } else {
-    clearTimeout(timer);
-  }
+  // Both clearTimeout and clearInterval accept either type in practice,
+  // so calling clearTimeout for both is safe in browser environments.
+  clearTimeout(timer);
+  clearInterval(timer);
 
   timers.delete(timerId);
 }
@@ -192,6 +191,7 @@ export function registerAsyncIterator<T>(iterator: AsyncIterator<T>): bigint {
 
   const state: IteratorState<T> = {
     iterator,
+    settled: false,
     nextPromise: null,
   };
 
@@ -215,46 +215,29 @@ export function pollIterator<T>(iteratorId: bigint): IteratorResult<T> | undefin
     throw new Error(`Async iterator ID ${iteratorId} not found`);
   }
 
+  if (state.settled) {
+    const result = state.result;
+    state.settled = false;
+    state.result = undefined;
+    state.nextPromise = null;
+    return result as IteratorResult<T> | undefined;
+  }
+
   if (!state.nextPromise) {
     state.nextPromise = state.iterator.next();
+    state.nextPromise
+      .then((value) => {
+        state.settled = true;
+        state.result = value;
+      })
+      .catch((error) => {
+        state.settled = true;
+        console.error(`[async] iterator.next() error:`, error);
+        state.result = { done: true, value: undefined };
+      });
   }
 
-  const result = handleIteratorPromise(state.nextPromise);
-  if (result !== undefined) {
-    state.nextPromise = null;
-  }
-
-  return result as IteratorResult<T> | undefined;
-}
-
-/**
- * Handle an iterator's next() promise.
- *
- * Returns undefined if the promise is still pending,
- * or the IteratorResult if it has settled.
- */
-function handleIteratorPromise<T>(
-  promise: Promise<IteratorResult<T>>
-): IteratorResult<T> | undefined {
-  let settled = false;
-  let result: IteratorResult<T> | undefined;
-
-  promise
-    .then((value) => {
-      settled = true;
-      result = value;
-    })
-    .catch((error) => {
-      settled = true;
-      console.error(`[async] iterator.next() error:`, error);
-      result = { done: true, value: undefined };
-    });
-
-  if (!settled) {
-    return undefined;
-  }
-
-  return result;
+  return undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -294,11 +277,8 @@ export function getAsyncStats(): {
  */
 export function clearAllAsyncState(): void {
   for (const timer of timers.values()) {
-    if (typeof timer === "object" && timer !== null && "unref" in timer) {
-      clearInterval(timer);
-    } else {
-      clearTimeout(timer);
-    }
+    clearTimeout(timer);
+    clearInterval(timer);
   }
   timers.clear();
   promises.clear();

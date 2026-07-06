@@ -1,0 +1,30 @@
+[package]
+name = "tairitsu-browser"
+version = "0.5.13"
+edition = "2024"
+rust-version = "1.85"
+authors = ["langyo <langyo.china@gmail.com>"]
+license-file = "LICENSE"
+description = "Lightweight headless browser automation — CDP engine + HTTP debug API"
+repository = "https://github.com/celestia-island/tairitsu"
+
+[lib]
+name = "tairitsu_browser"
+path = "src/lib.rs"
+
+[features]
+debug-browser = []
+
+[dependencies]
+tokio = { version = "^1", features = ["rt-multi-thread", "net", "process", "macros", "time", "sync"] }
+tokio-tungstenite = { version = "^0.27", features = ["rustls-tls-webpki-roots"] }
+axum = "^0.8"
+tower-http = { version = "^0.6", features = ["cors", "compression-gzip"] }
+reqwest = { version = "^0.13", features = ["json", "rustls"], default-features = false }
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+futures-util = "^0.3"
+futures = "^0.3"
+chrono = "^0.4"
+tracing = "^0.1"
+anyhow = "^1"

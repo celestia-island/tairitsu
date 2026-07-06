@@ -329,6 +329,20 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
          -> Result<(Result<(), String>,), wasmtime::Error> { Ok((Ok(()),)) },
     )?;
 
+    event_target.func_wrap(
+        "prevent-default",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _event: (u64,)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+
+    event_target.func_wrap(
+        "stop-propagation",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _event: (u64,)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+
     // Event methods
     let mut event = linker.instance("tairitsu-browser:full/event@0.2.0")?;
     event.func_wrap(

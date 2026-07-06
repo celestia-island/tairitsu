@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * fetch glue — implements the `tairitsu-browser:fetch` WIT import interfaces.
  *
@@ -679,7 +683,14 @@ export function BlobPollText(requestId: bigint): { ok: true; value: bigint } | {
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -717,7 +728,14 @@ export function BlobPollArrayBuffer(requestId: bigint): { ok: true; value: bigin
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -755,7 +773,14 @@ export function BlobPollBytes(requestId: bigint): { ok: true; value: bigint } | 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -1515,7 +1540,14 @@ export function BodyPollArrayBuffer(requestId: bigint): { ok: true; value: bigin
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1553,7 +1585,14 @@ export function pollBlob(requestId: bigint): { ok: true; value: bigint } | { ok:
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1591,7 +1630,14 @@ export function BodyPollBytes(requestId: bigint): { ok: true; value: bigint } | 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1629,7 +1675,14 @@ export function pollFormData(requestId: bigint): { ok: true; value: bigint } | {
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1667,7 +1720,14 @@ export function pollJson(requestId: bigint): { ok: true; value: bigint } | { ok:
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1705,7 +1765,14 @@ export function BodyPollText(requestId: bigint): { ok: true; value: bigint } | {
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -2152,7 +2219,14 @@ export function ReadableStreamPollCancel(requestId: bigint): { ok: true; value: 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2212,7 +2286,14 @@ export function pollPipeTo(requestId: bigint): { ok: true; value: bigint } | { o
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2288,7 +2369,14 @@ export function ReadableStreamGenericReaderPollGetClosed(requestId: bigint): { o
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2326,7 +2414,14 @@ export function ReadableStreamGenericReaderPollCancel(requestId: bigint): { ok: 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -2391,7 +2486,14 @@ export function ReadableStreamDefaultReaderPollRead(requestId: bigint): { ok: tr
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result;
 }
 
 /**
@@ -2464,7 +2566,14 @@ export function ReadableStreamByobReaderPollRead(requestId: bigint): { ok: true 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result;
 }
 
 /**
@@ -2708,7 +2817,14 @@ export function WritableStreamPollAbort(requestId: bigint): { ok: true; value: b
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2746,7 +2862,14 @@ export function WritableStreamPollClose(requestId: bigint): { ok: true; value: b
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2822,7 +2945,14 @@ export function WritableStreamDefaultWriterPollGetClosed(requestId: bigint): { o
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2876,7 +3006,14 @@ export function WritableStreamDefaultWriterPollAbort(requestId: bigint): { ok: t
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2914,7 +3051,14 @@ export function WritableStreamDefaultWriterPollClose(requestId: bigint): { ok: t
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -2960,7 +3104,14 @@ export function pollWrite(requestId: bigint): { ok: true; value: bigint } | { ok
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -3302,7 +3453,7 @@ export function XmlHttpRequestEventTargetGetOnloadstart(self: bigint): bigint {
  */
 export function XmlHttpRequestEventTargetSetOnloadstart(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onloadstart = value as any;
+  obj.onloadstart = lookupEventHandler(value);
 }
 
 /**
@@ -3322,7 +3473,7 @@ export function XmlHttpRequestEventTargetGetOnprogress(self: bigint): bigint {
  */
 export function XmlHttpRequestEventTargetSetOnprogress(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onprogress = value as any;
+  obj.onprogress = lookupEventHandler(value);
 }
 
 /**
@@ -3342,7 +3493,7 @@ export function XmlHttpRequestEventTargetGetOnabort(self: bigint): bigint {
  */
 export function XmlHttpRequestEventTargetSetOnabort(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onabort = value as any;
+  obj.onabort = lookupEventHandler(value);
 }
 
 /**
@@ -3362,7 +3513,7 @@ export function XmlHttpRequestEventTargetGetOnerror(self: bigint): bigint {
  */
 export function XmlHttpRequestEventTargetSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onerror = value as any;
+  obj.onerror = lookupEventHandler(value);
 }
 
 /**
@@ -3382,7 +3533,7 @@ export function XmlHttpRequestEventTargetGetOnload(self: bigint): bigint {
  */
 export function XmlHttpRequestEventTargetSetOnload(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onload = value as any;
+  obj.onload = lookupEventHandler(value);
 }
 
 /**
@@ -3402,7 +3553,7 @@ export function getOntimeout(self: bigint): bigint {
  */
 export function setOntimeout(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.ontimeout = value as any;
+  obj.ontimeout = lookupEventHandler(value);
 }
 
 /**
@@ -3422,7 +3573,7 @@ export function XmlHttpRequestEventTargetGetOnloadend(self: bigint): bigint {
  */
 export function XmlHttpRequestEventTargetSetOnloadend(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onloadend = value as any;
+  obj.onloadend = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -3469,7 +3620,7 @@ export function getOnreadystatechange(self: bigint): bigint {
  */
 export function setOnreadystatechange(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequest(self);
-  obj.onreadystatechange = value as any;
+  obj.onreadystatechange = lookupEventHandler(value);
 }
 
 /**

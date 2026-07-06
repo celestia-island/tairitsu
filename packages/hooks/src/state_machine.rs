@@ -158,11 +158,11 @@ impl ButtonStateMachine {
             _ => None,
         };
 
-        if let Some(new_state) = new_state
-            && new_state != self.state
-        {
-            self.state = new_state;
-            return Some(new_state);
+        if let Some(new_state) = new_state {
+            if new_state != self.state {
+                self.state = new_state;
+                return Some(new_state);
+            }
         }
 
         None

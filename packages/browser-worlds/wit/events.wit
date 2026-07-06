@@ -1,10 +1,10 @@
 /// Browser Events world — W3C Event interfaces.
 ///
-/// Version: tairitsu-browser:events@0.1.0
+/// Version: tairitsu-browser:events@0.2.0
 ///
 /// Status: initial subset — MouseEvent, KeyboardEvent, FocusEvent, InputEvent.
 
-package tairitsu-browser:events@0.1.0;
+package tairitsu-browser:events@0.2.0;
 
 /// Host-side event listener management.
 interface event-target {
@@ -80,19 +80,19 @@ interface event-callbacks {
     }
 
     /// Called when a registered mouse event fires.
-    on-mouse-event: func(listener-id: u64, data: mouse-event-data);
+    on-mouse-event: func(listener-id: u64, event: u64, data: mouse-event-data);
 
     /// Called when a registered keyboard event fires.
-    on-keyboard-event: func(listener-id: u64, data: keyboard-event-data);
+    on-keyboard-event: func(listener-id: u64, event: u64, data: keyboard-event-data);
 
     /// Called when a registered focus event fires.
-    on-focus-event: func(listener-id: u64, data: focus-event-data);
+    on-focus-event: func(listener-id: u64, event: u64, data: focus-event-data);
 
     /// Called when a registered input event fires.
-    on-input-event: func(listener-id: u64, data: input-event-data);
+    on-input-event: func(listener-id: u64, event: u64, data: input-event-data);
 
     /// Generic fallback for event types not covered above.
-    on-generic-event: func(listener-id: u64, event-type: string);
+    on-generic-event: func(listener-id: u64, event: u64, event-type: string);
 }
 
 /// Combined events world.

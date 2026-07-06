@@ -1,6 +1,6 @@
 //! Chromium browser downloader
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use futures::StreamExt;
 use std::{
     fs::File,
@@ -93,7 +93,7 @@ impl BrowserDownloader {
             .with_style(
                 ProgressStyle::default_bar()
                     .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})")
-                    .unwrap()
+                    .expect("invalid progress bar template")
                     .progress_chars("##-")
             );
 
@@ -150,7 +150,7 @@ impl BrowserDownloader {
                 .template(
                     "{spinner:.green} [{elapsed_precise}] [{bar:40.yellow/blue}] {pos}/{len} files",
                 )
-                .unwrap(),
+                .expect("invalid progress bar template"),
         );
 
         let exec_name = platform.executable_name();

@@ -22,10 +22,14 @@
 #   just gen-wit-all     - Alternative pipeline (simpler, fewer specs, idl-cache/)
 
 # Configure Windows to use PowerShell (UTF-8 encoding)
+set unstable
+set lists
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $PSDefaultParameterValues['*:Encoding'] = 'utf8';"]
 
 # Python interpreter — Windows ships as 'python', Unix as 'python3'
 python := if os_family() == "windows" { "python" } else { "python3" }
+
+import "./celestia-devtools.just"
 
 # Default: show help information
 default:
@@ -38,7 +42,7 @@ default:
 # Install required Rust toolchain components
 install-tools:
     rustup target add wasm32-wasip2
-    rustup component add rustfmt --toolchain nightly
+    rustup component add rustfmt
     rustup component add clippy
     {{python}} scripts/download_wasi_adapters.py
 
@@ -60,7 +64,7 @@ setup: install-tools init
 # JS / Node dependency initialization
 # ============================================================================
 
-# Install Node.js dependencies for packages/browser-glue (auto-detects pnpm/yarn/npm)
+# Install Node.js dependencies for packages/npm/celestia-tairitsu-web-glue (auto-detects pnpm/yarn/npm)
 init:
     {{python}} scripts/init_browser_glue.py
 
@@ -74,47 +78,17 @@ clean:
 
 # Clean the downloaded WebIDL cache (forces re-fetch on next wit-gen)
 clean-idl-cache:
-    @echo "Removing IDL caches..."
-    rm -rf scripts/idl-cache
-    rm -rf target/tairitsu-wit/webidl-cache
-
-# ============================================================================
-# W3C WebIDL → WIT generation (legacy aliases → unified pipeline below)
-# ============================================================================
-
-# [Deprecated] Use wit-gen instead
-gen-wit-fetch:
-    @just wit-fetch-idl
-
-# [Deprecated] Use wit-fetch-force instead
-gen-wit-fetch-force:
-    @just wit-fetch-force
-
-# [Deprecated] Use wit-gen-wit instead
-gen-wit:
-    @just wit-gen-wit
-
-# [Deprecated] Use wit-gen instead
-gen-wit-all:
-    @just wit-gen
+    @{{python}} scripts/clean_idl_cache.py
 
 # ============================================================================
 # Build tasks
 # ============================================================================
 
 # Build everything (Debug mode)
-build-dev: init
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Building all (Debug mode)..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo build --all
-
-# Build everything (Release mode)
-build: init
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Building all (Release mode)..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo build --release --all
+# Build everything. Release by default; `--dev` for debug, `--clean` to clean first.
+build *FLAGS='':
+    just init
+    just _build ":" "cargo build --all" "cargo build --release --all" {{FLAGS}}
 
 # Build simple example WASM module
 build-simple-wasm:
@@ -135,52 +109,15 @@ run-simple-demo:
     @echo "Running simple demo..."
     cargo run --package tairitsu-example-wit-native-simple --bin simple-demo
 
-# Run simple host (complete integration example)
-run-simple-host:
-    @echo "Running simple host..."
-    cargo run --package tairitsu-example-wit-native-simple --bin simple-host
-
-# Run simple WASM example (complete bidirectional communication)
-run-simple-wasm:
-    @echo "Building simple WASM..."
-    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
-    @echo "Running simple WASM example..."
-    cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
-
 # Run macro demo (macro-generated WIT interfaces)
 run-macro-demo:
     @echo "Running macro demo..."
     cargo run --package tairitsu-example-wit-native-macro --bin macro-demo
 
-# Run macro host (complete integration example)
-run-macro-host:
-    @echo "Running macro host..."
-    cargo run --package tairitsu-example-wit-native-macro --bin macro-host
-
-# Run macro WASM example (complete bidirectional communication)
-run-macro-wasm:
-    @echo "Building macro WASM..."
-    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
-    @echo "Running macro WASM example..."
-    cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
-
 # Run dynamic advanced demo (RON + complex types)
 run-dynamic-advanced:
     @echo "Running dynamic advanced example..."
     cargo run --package tairitsu-example-wit-dynamic-advanced --bin dynamic-advanced-demo
-
-# Run all examples
-run-all: run-simple-demo run-simple-host run-simple-wasm run-macro-demo run-macro-host run-macro-wasm run-dynamic-advanced
-
-# Run all WASM examples
-run-all-wasm:
-    @echo "Building all WASM modules..."
-    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
-    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
-    @echo "Running simple WASM example..."
-    cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
-    @echo "Running macro WASM example..."
-    cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
 
 # ============================================================================
 # Test tasks
@@ -279,17 +216,21 @@ clippy:
     cargo clippy --workspace --all-targets -- -D warnings
 
 # Run formatting check
+# NOTE: no `--all` — in a virtual workspace `cargo fmt` formats every member,
+# but `--all` would additionally walk path dependencies (e.g. the local
+# `../kou` dev override) and rewrite / fail on sibling repos outside this tree.
 fmt-check:
     @echo "Checking code formatting..."
-    cargo +nightly fmt --all -- --check --unstable-features
+    cargo fmt -- --check
 
 # Format all code
+# (no `--all`: see fmt-check — avoids traversing path deps like ../kou)
 fmt:
-    @echo "Formatting all code..."
-    cargo +nightly fmt --all -- --unstable-features
+    cargo fmt
+    python3 scripts/enforce_use_groups.py
 
-# CI checks (format check + test)
-ci: fmt-check test
+# CI checks (format check + clippy + test)
+ci: fmt-check clippy test
     @echo "✅ CI checks passed"
 
 # ============================================================================
@@ -302,7 +243,7 @@ watch:
     @echo "Watching for changes..."
     @echo "Press Ctrl+C to stop"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo watch -x check
+    @cargo watch -x check 2>/dev/null || echo "[HINT] Install cargo-watch: cargo install cargo-watch"
 
 # ============================================================================
 # Web development
@@ -314,6 +255,7 @@ watch:
 #   just dev --daemon --debug - Start daemon + debug API server (port 3001)
 #   just dev --daemon stop    - Stop daemon
 dev *FLAGS="":
+    @tairitsu --help > /dev/null 2>&1 || (echo "  Building tairitsu CLI..." && cargo build --release --package tairitsu-packager > /dev/null 2>&1)
     cd examples/website && tairitsu --manifest-path Cargo.toml dev --port 3000 --watch {{FLAGS}}
 
 # Dev server with debug/inspection API for agent automation
@@ -323,7 +265,7 @@ dev-debug *FLAGS="":
 # Build web demo for production (using tairitsu-packager + CDN demo)
 build-web: init
     @echo "Building website demo with tairitsu-packager..."
-    @{{python}} scripts/install_packager.py --quick || (cargo build --release --package tairitsu-packager && {{python}} scripts/install_packager.py)
+    @tairitsu --help > /dev/null 2>&1 || (cargo build --release --package tairitsu-packager && {{python}} scripts/install_packager.py)
     tairitsu --manifest-path examples/website build --release
     @echo "Building CDN modular demo..."
     {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist
@@ -331,7 +273,7 @@ build-web: init
 # Serve web demo (production build)
 serve-web: build-web
     @echo "Serving production build..."
-    cd examples/website/dist && {{python}} -m http.server 3001
+    @cd examples/website/dist && {{python}} -m http.server 3001 2>/dev/null || echo "[HINT] Python http.server not available; try: python -m http.server 3001"
 
 # ============================================================================
 # WIT generation — W3C WebIDL → WIT interface pipeline
@@ -372,7 +314,7 @@ wit-stats:
 
 # Generate TypeScript glue code from WIT files
 # Reads:  packages/browser-worlds/wit/generated/*.wit
-# Writes: packages/browser-glue/src/generated/*-glue.ts
+# Writes: packages/npm/celestia-tairitsu-web-glue/src/generated/*-glue.ts
 glue-gen:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "TypeScript Glue generation (WIT → TypeScript)"
@@ -395,7 +337,7 @@ wit-full: wit-gen glue-gen
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "✅ Full WIT → TypeScript Glue pipeline complete!"
     @echo "   Generated WIT: packages/browser-worlds/wit/generated/"
-    @echo "   Generated Glue: packages/browser-glue/src/generated/"
+    @echo "   Generated Glue: packages/npm/celestia-tairitsu-web-glue/src/generated/"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Show all W3C data sources used by the pipeline
@@ -464,7 +406,7 @@ doc-open: doc
 
 # Generate and build all per-domain npm glue packages
 npm-build-glue:
-    @echo "Generating per-domain glue packages..."
+    @echo "Generating unified browser-glue package..."
     {{python}} scripts/build_npm_glue_packages.py
 
 # Build Rust crates into optimized wasm component npm packages
@@ -478,12 +420,11 @@ npm-list-wasm:
 
 # Build all npm packages (glue + runtime + wasm)
 npm-build-all: npm-build-glue
-    cd packages/npm/runtime && npm run build
-    cd packages/npm/glue-core && npm run build
+    cd packages/npm/celestia-tairitsu-web-glue && npm run build
     {{python}} scripts/build_wasm_packages.py
 
 # Publish all npm packages to @celestia scope (requires NPM_TOKEN env var)
-publish: (publish-pkg "packages/browser-glue") (publish-pkg "packages/npm/runtime")
+publish: (publish-pkg "packages/npm/celestia-tairitsu-web-glue")
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "All npm packages published!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -495,29 +436,32 @@ publish-pkg dir:
 
 # Publish for real (not dry-run) — requires NPM_TOKEN
 publish-live:
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Publishing all npm packages (LIVE)..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @if [ -z "$NPM_TOKEN" ]; then echo "Error: NPM_TOKEN environment variable is not set."; exit 1; fi
-    npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
-    cd packages/npm/runtime && npm run build && npm publish --access public
-    cd packages/npm/glue-core && npm run build && npm publish --access public
-    cd packages/browser-glue && npm run build:production && npm publish --access public
-    @for dir in packages/npm/glue-*/; do cd "$$dir" && npm publish --access public && cd -; done
-    @for dir in packages/npm/*-wasm/; do cd "$$dir" && npm publish --access public && cd -; done
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "All npm packages published (LIVE)!"
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @{{python}} scripts/publish_live.py
 
 # Build all npm packages locally
 npm-build:
-    npm run build -w @celestia/tairitsu-browser-glue || (cd packages/browser-glue && npm run build)
-    npm run build -w @celestia/tairitsu-runtime || (cd packages/npm/runtime && npm run build)
+    npm run build -w @celestia/tairitsu-browser-glue || (cd packages/npm/celestia-tairitsu-web-glue && npm run build)
+    npm run build -w @celestia/tairitsu-runtime || (cd packages/npm/celestia-tairitsu-runtime && npm run build)
 
 # Build CDN demo with esm.sh CDN URLs (for production deployment)
 cdn-demo-prod:
     @echo "Building CDN demo (esm.sh mode)..."
     {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist --cdn-mode esm-sh
+
+# ============================================================================
+# WIT sync (packages/web embedded copy)
+# ============================================================================
+
+# Sync composed WIT files from browser-worlds into packages/web
+sync-wit:
+    @{{python}} scripts/sync_wit.py
+
+# Check that embedded WIT files are in sync with browser-worlds
+sync-wit-check:
+    @if [ ! -d packages/web/wit/composed ]; then echo "packages/web/wit/composed does not exist, run: just sync-wit" && exit 1; fi
+    @diff -r packages/browser-worlds/wit/composed packages/web/wit/composed \
+      || (echo "WIT files out of sync! Run: just sync-wit" && exit 1)
+    @echo "WIT files are in sync"
 
 # ============================================================================
 # Utilities
@@ -559,7 +503,7 @@ info:
     @echo "  - packages/browser-wit-resolver:  WIT package resolution + cache"
     @echo "  - packages/browser-worlds:        WIT world definitions (0.1.x hand-written,"
     @echo "                                    0.2.x generated from W3C WebIDL)"
-    @echo "  - packages/browser-glue:          TypeScript/SWC browser API glue"
+    @echo "  - packages/npm/celestia-tairitsu-web-glue:          TypeScript/SWC browser API glue"
     @echo ""
     @echo "Visual regression:"
     @echo "  just visual-capture - Capture screenshots via debug API"
@@ -572,47 +516,7 @@ info:
 
 # Capture screenshots via debug API server (requires running dev --debug)
 visual-capture:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    DEBUG_PORT="${DEBUG_PORT:-3001}"
-    BASE_URL="http://localhost:${DEBUG_PORT}"
-    OUTPUT_DIR="target/visual-diff/actual"
-    
-    mkdir -p "$OUTPUT_DIR"
-    
-    # Check debug server is running
-    if ! curl -sf "${BASE_URL}/health" > /dev/null 2>&1; then
-        echo "Error: Debug API not running at ${BASE_URL}"
-        echo "Start with: just dev-debug"
-        exit 1
-    fi
-    
-    PAGES=("home" "button" "form" "search" "switch" "feedback" "display" "avatar" "image" "tag" "empty" "comment")
-    
-    for page in "${PAGES[@]}"; do
-        echo -n "Capturing /${page}... "
-        
-        # Navigate to page
-        curl -sf -X POST "${BASE_URL}/navigate" \
-            -H 'Content-Type: application/json' \
-            -d "{\"url\":\"/${page}\"}" > /dev/null
-        
-        sleep 1
-        
-        # Take screenshot and decode base64 to PNG
-        RESPONSE=$(curl -sf -X POST "${BASE_URL}/screenshot" \
-            -H 'Content-Type: application/json' \
-            -d '{"full_page": false}')
-        
-        if [ $? -eq 0 ] && echo "$RESPONSE" | grep -q '"ok":true'; then
-            echo "$RESPONSE" | python3 -c "import sys,json,base64;d=json.load(sys.stdin);open('${OUTPUT_DIR}/${page}.png','wb').write(base64.b64decode(d['data']['data'])) if d.get('ok') else sys.exit(1); print('OK')"
-        else
-            echo "SKIP (server returned error)"
-        fi
-    done
-    
-    echo ""
-    echo "Screenshots saved to ${OUTPUT_DIR}/"
+    @{{python}} scripts/visual_capture.py
 
 # Run visual diff comparison against baseline
 visual-diff tolerance="0.01":
@@ -627,4 +531,5 @@ visual-update:
         --update-baseline
 
 # Full visual regression pipeline: capture + diff + report
-visual-regression: visual-capture visual-diff
+visual-regression: visual-capture
+    just visual-diff

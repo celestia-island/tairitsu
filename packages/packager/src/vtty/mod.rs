@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::{
-        Arc, Mutex,
         atomic::{AtomicU32, Ordering},
+        Arc, Mutex,
     },
 };
 
@@ -155,13 +155,6 @@ impl VttySession {
             .unwrap_or_default()
     }
 
-    pub fn get_line(&self, row: usize) -> String {
-        self.screen
-            .lock()
-            .map(|s| s.get_line(row))
-            .unwrap_or_default()
-    }
-
     pub fn find_text(&self, pattern: &str) -> Vec<(usize, usize)> {
         self.screen
             .lock()
@@ -214,7 +207,8 @@ impl VttySession {
             .lock()
             .map_err(|_| "PTY lock poisoned".to_string())?;
         if let Some(mut pty) = guard.take() {
-            pty.kill().map_err(|e| format!("PTY kill failed: {}", e))?;
+            pty.kill_and_reap()
+                .map_err(|e| format!("PTY kill failed: {}", e))?;
         }
         Ok(())
     }

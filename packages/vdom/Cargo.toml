@@ -3,7 +3,7 @@ name = "tairitsu-vdom"
 version.workspace = true
 description = "Virtual DOM core for Tairitsu - Platform abstraction, reactive system, and VNode"
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 edition.workspace = true
 repository.workspace = true
 
@@ -11,12 +11,12 @@ repository.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-anyhow = "^1"
-serde = { version = "^1", features = ["derive"] }
-tracing = "^0.1"
+anyhow = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-wit-bindgen = { version = "^0.50", features = ["macros"] }
+wit-bindgen = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, default-features = false, features = [

@@ -4,15 +4,13 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
-    Attribute, Expr, Ident, Meta, Result, Token, Type, Visibility,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
+    Attribute, Expr, Ident, Meta, Result, Token, Type, Visibility,
 };
 
 /// Parsed props field with optional default value from #[default(...)] attribute
 pub struct PropsField {
-    #[allow(dead_code)]
-    pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub name: Ident,
     pub ty: Type,
@@ -76,7 +74,6 @@ impl Parse for PropsField {
         let default = Self::extract_default(&mut attrs);
 
         Ok(PropsField {
-            attrs,
             vis,
             name,
             ty,
@@ -140,46 +137,32 @@ pub fn expand_define_props(input: PropsInput) -> TokenStream2 {
                 });
             }
             None => {
-                // No default - infer based on type
-                let ty_str = quote!(#field_ty).to_string();
+                let is_option = is_option_type(&field.ty);
+                let is_vec = is_vec_type(&field.ty);
+                let is_string = is_string_type(&field.ty);
 
-                // Check for Option<T> first (most specific)
-                if ty_str.starts_with("Option <") || ty_str.contains("Option <") {
+                if is_option {
                     prop_attrs.push(quote! {
                         #[props(default)]
                     });
                     default_values.push(quote! {
                         #field_name: None
                     });
-                }
-                // Check for Vec<T> before String since Vec<Vec<String>> contains "String"
-                else if ty_str.starts_with("Vec <") || ty_str.starts_with("Vec<") {
+                } else if is_vec {
                     prop_attrs.push(quote! {
                         #[props(default)]
                     });
                     default_values.push(quote! {
                         #field_name: Vec::new()
                     });
-                }
-                // Check for String (exact match patterns)
-                else if ty_str == "String" || ty_str.starts_with("String ") {
+                } else if is_string {
                     prop_attrs.push(quote! {
                         #[props(default)]
                     });
                     default_values.push(quote! {
                         #field_name: String::new()
                     });
-                }
-                // Check for HashMap/HashSet
-                else if ty_str.starts_with("HashMap") || ty_str.starts_with("HashSet") {
-                    prop_attrs.push(quote! {
-                        #[props(default)]
-                    });
-                    default_values.push(quote! {
-                        #field_name: Default::default()
-                    });
                 } else {
-                    // Try to use Default trait
                     prop_attrs.push(quote! {
                         #[props(default)]
                     });
@@ -217,4 +200,31 @@ pub fn expand_define_props(input: PropsInput) -> TokenStream2 {
     };
 
     expanded
+}
+
+fn is_option_type(ty: &Type) -> bool {
+    if let Type::Path(type_path) = ty {
+        let seg = type_path.path.segments.last();
+        seg.is_some_and(|s| s.ident == "Option")
+    } else {
+        false
+    }
+}
+
+fn is_vec_type(ty: &Type) -> bool {
+    if let Type::Path(type_path) = ty {
+        let seg = type_path.path.segments.last();
+        seg.is_some_and(|s| s.ident == "Vec")
+    } else {
+        false
+    }
+}
+
+fn is_string_type(ty: &Type) -> bool {
+    if let Type::Path(type_path) = ty {
+        let seg = type_path.path.segments.last();
+        seg.is_some_and(|s| s.ident == "String")
+    } else {
+        false
+    }
 }

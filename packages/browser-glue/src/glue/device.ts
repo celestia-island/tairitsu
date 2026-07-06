@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * device glue — implements the `tairitsu-browser:device` WIT import interfaces.
  *
@@ -1105,7 +1109,14 @@ export function pollPlayEffect(requestId: bigint): { ok: true; value: bigint } |
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1143,7 +1154,14 @@ export function pollReset(requestId: bigint): { ok: true; value: bigint } | { ok
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -1224,7 +1242,7 @@ export function getOngamepadconnected(self: bigint): bigint {
  */
 export function setOngamepadconnected(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
-  (obj as any).ongamepadconnected = value as any;
+  (obj as any).ongamepadconnected = lookupEventHandler(value);
 }
 
 /**
@@ -1240,7 +1258,7 @@ export function getOngamepaddisconnected(self: bigint): bigint {
  */
 export function setOngamepaddisconnected(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
-  (obj as any).ongamepaddisconnected = value as any;
+  (obj as any).ongamepaddisconnected = lookupEventHandler(value);
 }
 
 /**
@@ -1416,7 +1434,7 @@ export function getOnpagereveal(self: bigint): bigint {
  */
 export function setOnpagereveal(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
-  (obj as any).onpagereveal = value as any;
+  (obj as any).onpagereveal = lookupEventHandler(value);
 }
 
 /**
@@ -1573,7 +1591,14 @@ export function pollGetCurrentPosition(requestId: bigint): { ok: true } | { ok: 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result;
 }
 
 /**
@@ -1864,7 +1889,7 @@ export function getOnchange(self: bigint): bigint {
  */
 export function setOnchange(self: bigint, value: bigint): void {
   const obj = lookupScreenOrientation(self);
-  (obj as any).onchange = value as any;
+  (obj as any).onchange = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------

@@ -1,11 +1,12 @@
-name: Publish crates.io
+name: Publish
+
 on:
   push:
-    tags: [v*]
+    tags: [v[0-9]+.[0-9]+.[0-9]+]
 
 jobs:
-  verify-versions:
-    name: Verify version consistency
+  verify:
+    name: Verify versions
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,13 +15,13 @@ jobs:
         run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
       - name: Check all publishable packages match tag
         run: |
-          TAG_VERSION="${{ steps.tag.outputs.version }}"
+          TAG="${{ steps.tag.outputs.version }}"
           FAIL=0
           PACKAGES=(
+            "tairitsu:packages/runtime"
             "tairitsu-macros:packages/macros"
             "tairitsu-browser-worlds:packages/browser-worlds"
             "tairitsu-vdom:packages/vdom"
-            "tairitsu:packages/runtime"
             "tairitsu-style:packages/style"
             "tairitsu-hooks:packages/hooks"
             "tairitsu-browser-wit-resolver:packages/browser-wit-resolver"
@@ -29,63 +30,100 @@ jobs:
             "tairitsu-web:packages/web"
             "tairitsu-mcp:packages/mcp"
           )
-          for ENTRY in "${PACKAGES[@]}"; do
-            PKG="${ENTRY%%:*}"
-            DIR="${ENTRY##*:}"
-            CARGO_TOML="$DIR/Cargo.toml"
-            if [ ! -f "$CARGO_TOML" ]; then
-              echo "::error::$CARGO_TOML not found"
-              FAIL=1
-              continue
-            fi
-            VER=$(grep -oP '^version\s*=\s*"\K[^"]+' "$CARGO_TOML" 2>/dev/null || true)
-            if [ -z "$VER" ]; then
-              VER=$(grep -oP 'version\.workspace\s*=\s*true' "$CARGO_TOML" >/dev/null 2>&1 && echo "workspace" || echo "MISSING")
-            fi
-            if [ "$VER" = "workspace" ]; then
-              ROOT_VER=$(grep -oP '^version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
-              echo "::notice::$PKG uses workspace version ($ROOT_VER) — OK"
-            elif [ "$VER" = "$TAG_VERSION" ]; then
-              echo "::notice::$PKG version ($VER) matches tag — OK"
-            else
-              echo "::error::$PKG version ($VER) != tag ($TAG_VERSION) in $CARGO_TOML"
-              FAIL=1
-            fi
-          done
-          ROOT_VER=$(grep -oP '^version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
-          if [ "$ROOT_VER" != "$TAG_VERSION" ]; then
-            echo "::error::workspace.package version ($ROOT_VER) != tag ($TAG_VERSION)"
-            FAIL=1
-          fi
-          if [ "$FAIL" -ne 0 ]; then
-            echo "::error::Version mismatch detected."
-            exit 1
-          fi
-          echo "All versions match tag v$TAG_VERSION"
+          pip install tomlkit
+          python3 -c "
+          import tomlkit, sys
+          TAG = '$TAG'
+          PACKAGES = '''${
+            IFS=','
+            echo "${PACKAGES[*]}"
+          }'''.split(',')
+          FAIL = 0
+          with open('Cargo.toml') as f:
+              root = tomlkit.load(f)
+          root_ver = root.get('workspace', {}).get('package', {}).get('version', '')
+          if root_ver != TAG:
+              print(f'::error::workspace.package version ({root_ver}) != tag ({TAG})')
+              FAIL = 1
+          for entry in PACKAGES:
+              entry = entry.strip()
+              if not entry: continue
+              pkg, _, dir_ = entry.partition(':')
+              toml_path = f'{dir_}/Cargo.toml'
+              try:
+                  with open(toml_path) as f:
+                      d = tomlkit.load(f)
+              except FileNotFoundError:
+                  print(f'::error::{toml_path} not found')
+                  FAIL = 1
+                  continue
+              ver = d.get('package', {}).get('version', '')
+              if ver == root_ver:
+                  print(f'::notice::{pkg} uses workspace version ({root_ver})')
+              elif ver == TAG:
+                  print(f'::notice::{pkg} version ({ver}) matches tag')
+              else:
+                  print(f'::error::{pkg} version ({ver}) != tag ({TAG}) in {toml_path}')
+                  FAIL = 1
+          sys.exit(1 if FAIL else 0)
+          "
 
-  publish:
+  publish-crates:
     name: Publish to crates.io
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: verify-versions
-
+    needs: verify
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - run: rustc --version && cargo --version
-      - run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
+      - name: Strip examples from workspace to avoid git-dep conflicts
+        run: |
+          pip install tomlkit
+          python3 -c "
+          import tomlkit
+          with open('Cargo.toml') as f: d = tomlkit.load(f)
+          d['workspace']['members'] = [m for m in d['workspace']['members'] if not m.startswith('examples/')]
+          with open('Cargo.toml', 'w') as f: tomlkit.dump(d, f)
+          "
 
-      - run: cargo check -p tairitsu-macros 2>&1
-      - run: cargo publish -p tairitsu-macros         --allow-dirty -v
-      - run: cargo publish -p tairitsu-browser-worlds  --allow-dirty -v
-      - run: cargo publish -p tairitsu-vdom            --allow-dirty -v
-      - run: cargo publish -p tairitsu                  --allow-dirty -v
-      - run: cargo publish -p tairitsu-style            --allow-dirty -v
-      - run: cargo publish -p tairitsu-hooks            --allow-dirty -v
-      - run: cargo publish -p tairitsu-browser-wit-resolver --allow-dirty -v
-      - run: cargo publish -p tairitsu-ssr              --allow-dirty -v
-      - run: cargo publish -p tairitsu-packager         --allow-dirty -v
-      - run: cargo publish -p tairitsu-web              --allow-dirty -v
-      - run: cargo publish -p tairitsu-mcp              --allow-dirty -v
+      - run: echo "${{ secrets.CRATES_IO_API_TOKEN }}" | cargo login
+
+      - run: python3 scripts/publish_crates.py
+
+  publish-npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install esbuild
+        run: npm install -g esbuild@0.25.4
+
+      - name: Build glue packages
+        run: python3 scripts/build_npm_glue_packages.py
+
+      - name: Verify dist contents
+        run: |
+          cd packages/npm/celestia-tairitsu-web-glue
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+            echo "::error::dist/ is empty or missing — build failed"
+            exit 1
+          fi
+          echo "dist/ contents:"
+          find dist -type f | head -40
+          npm pack --dry-run 2>&1 | grep -E "npm notice (name|version|total files|package size)"
+
+      - name: Publish
+        run: |
+          cd packages/npm/celestia-tairitsu-web-glue
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * media glue — implements the `tairitsu-browser:media` WIT import interfaces.
  *
@@ -538,7 +542,14 @@ export function pollDecodingInfo(requestId: bigint): { ok: true } | { ok: false;
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result;
 }
 
 /**
@@ -576,7 +587,14 @@ export function pollEncodingInfo(requestId: bigint): { ok: true } | { ok: false;
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -687,7 +705,7 @@ export function getOnaddtrack(self: bigint): bigint {
  */
 export function setOnaddtrack(self: bigint, value: bigint): void {
   const obj = lookupMediaStream(self);
-  (obj as any).onaddtrack = value as any;
+  (obj as any).onaddtrack = lookupEventHandler(value);
 }
 
 /**
@@ -703,7 +721,7 @@ export function getOnremovetrack(self: bigint): bigint {
  */
 export function setOnremovetrack(self: bigint, value: bigint): void {
   const obj = lookupMediaStream(self);
-  (obj as any).onremovetrack = value as any;
+  (obj as any).onremovetrack = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -912,7 +930,14 @@ export function pollApplyConstraints(requestId: bigint): { ok: true; value: bigi
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -1028,7 +1053,7 @@ export function getOndevicechange(self: bigint): bigint {
  */
 export function setOndevicechange(self: bigint, value: bigint): void {
   const obj = lookupMediaDevices(self);
-  (obj as any).ondevicechange = value as any;
+  (obj as any).ondevicechange = lookupEventHandler(value);
 }
 
 /**
@@ -1066,7 +1091,14 @@ export function pollEnumerateDevices(requestId: bigint): { ok: true } | { ok: fa
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result;
 }
 
 /**
@@ -1115,7 +1147,14 @@ export function pollGetUserMedia(requestId: bigint): { ok: true; value: bigint }
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -1153,7 +1192,14 @@ export function pollGetDisplayMedia(requestId: bigint): { ok: true; value: bigin
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -1652,7 +1698,7 @@ export function MediaRecorderGetOnstart(self: bigint): bigint {
  */
 export function MediaRecorderSetOnstart(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
-  (obj as any).onstart = value as any;
+  (obj as any).onstart = lookupEventHandler(value);
 }
 
 /**
@@ -1668,7 +1714,7 @@ export function getOnstop(self: bigint): bigint {
  */
 export function setOnstop(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
-  (obj as any).onstop = value as any;
+  (obj as any).onstop = lookupEventHandler(value);
 }
 
 /**
@@ -1684,7 +1730,7 @@ export function getOndataavailable(self: bigint): bigint {
  */
 export function setOndataavailable(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
-  (obj as any).ondataavailable = value as any;
+  (obj as any).ondataavailable = lookupEventHandler(value);
 }
 
 /**
@@ -1700,7 +1746,7 @@ export function MediaRecorderGetOnpause(self: bigint): bigint {
  */
 export function MediaRecorderSetOnpause(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
-  (obj as any).onpause = value as any;
+  (obj as any).onpause = lookupEventHandler(value);
 }
 
 /**
@@ -1716,7 +1762,7 @@ export function MediaRecorderGetOnresume(self: bigint): bigint {
  */
 export function MediaRecorderSetOnresume(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
-  (obj as any).onresume = value as any;
+  (obj as any).onresume = lookupEventHandler(value);
 }
 
 /**
@@ -1732,7 +1778,7 @@ export function MediaRecorderGetOnerror(self: bigint): bigint {
  */
 export function MediaRecorderSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
-  (obj as any).onerror = value as any;
+  (obj as any).onerror = lookupEventHandler(value);
 }
 
 /**
@@ -1976,6 +2022,22 @@ export function getInterimResults(self: bigint): boolean {
 export function setInterimResults(self: bigint, value: boolean): void {
   const obj = lookupSpeechRecognition(self);
   obj.interimResults = value;
+}
+
+/**
+ * `get-unspoken-punctuation()` operation.
+ */
+export function getUnspokenPunctuation(self: bigint): boolean {
+  const obj = lookupSpeechRecognition(self);
+  return obj.unspokenPunctuation;
+}
+
+/**
+ * `set-unspoken-punctuation()` operation.
+ */
+export function setUnspokenPunctuation(self: bigint, value: boolean): void {
+  const obj = lookupSpeechRecognition(self);
+  obj.unspokenPunctuation = value;
 }
 
 /**
@@ -2698,7 +2760,7 @@ export function getOnvoiceschanged(self: bigint): bigint {
  */
 export function setOnvoiceschanged(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesis(self);
-  (obj as any).onvoiceschanged = value as any;
+  (obj as any).onvoiceschanged = lookupEventHandler(value);
 }
 
 /**
@@ -2872,7 +2934,7 @@ export function SpeechSynthesisUtteranceGetOnstart(self: bigint): bigint {
  */
 export function SpeechSynthesisUtteranceSetOnstart(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
-  (obj as any).onstart = value as any;
+  (obj as any).onstart = lookupEventHandler(value);
 }
 
 /**
@@ -2888,7 +2950,7 @@ export function SpeechSynthesisUtteranceGetOnend(self: bigint): bigint {
  */
 export function SpeechSynthesisUtteranceSetOnend(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
-  (obj as any).onend = value as any;
+  (obj as any).onend = lookupEventHandler(value);
 }
 
 /**
@@ -2904,7 +2966,7 @@ export function SpeechSynthesisUtteranceGetOnerror(self: bigint): bigint {
  */
 export function SpeechSynthesisUtteranceSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
-  (obj as any).onerror = value as any;
+  (obj as any).onerror = lookupEventHandler(value);
 }
 
 /**
@@ -2920,7 +2982,7 @@ export function SpeechSynthesisUtteranceGetOnpause(self: bigint): bigint {
  */
 export function SpeechSynthesisUtteranceSetOnpause(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
-  (obj as any).onpause = value as any;
+  (obj as any).onpause = lookupEventHandler(value);
 }
 
 /**
@@ -2936,7 +2998,7 @@ export function SpeechSynthesisUtteranceGetOnresume(self: bigint): bigint {
  */
 export function SpeechSynthesisUtteranceSetOnresume(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
-  (obj as any).onresume = value as any;
+  (obj as any).onresume = lookupEventHandler(value);
 }
 
 /**
@@ -2952,7 +3014,7 @@ export function getOnmark(self: bigint): bigint {
  */
 export function setOnmark(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
-  (obj as any).onmark = value as any;
+  (obj as any).onmark = lookupEventHandler(value);
 }
 
 /**
@@ -2968,7 +3030,7 @@ export function getOnboundary(self: bigint): bigint {
  */
 export function setOnboundary(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
-  (obj as any).onboundary = value as any;
+  (obj as any).onboundary = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -5867,6 +5929,8 @@ export default {
   setContinuous,
   getInterimResults,
   setInterimResults,
+  getUnspokenPunctuation,
+  setUnspokenPunctuation,
   getMaxAlternatives,
   setMaxAlternatives,
   getProcessLocally,

@@ -40,7 +40,7 @@ pub fn render() -> VNode {
     let rect_height_clone = rect_height.clone();
 
     rsx! {
-        div { id: "page-state-test", class: "ts-page",
+        div { id: "page-state-test", class: "hikari-page",
             h1 { "State Management Tests" }
             p { "Tests for reactive state management, signals, and context." }
 

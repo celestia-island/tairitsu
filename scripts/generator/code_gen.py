@@ -51,10 +51,22 @@ class CodeGenerator:
             handle_var = kebab_to_camel(target_iface + "Handles")
             return handle_var, handle_pascal
 
+    @staticmethod
+    def _auto_generated_header() -> List[str]:
+        """Standard header for all auto-generated TypeScript files."""
+        return [
+            "// @ts-nocheck",
+            "/* eslint-disable */",
+            "// prettier-ignore",
+            "",
+        ]
+
     def render_module(self, domain: GeneratedDomain, source_file: str) -> str:
         """Render TypeScript module for a domain using simple string templating."""
 
         lines: List[str] = []
+
+        lines.extend(self._auto_generated_header())
 
         lines.append("/**")
         lines.append(f" * {domain.name} glue — implements the `tairitsu-browser:{domain.name}` WIT import interfaces.")
@@ -620,7 +632,9 @@ class CodeGenerator:
                     value_expr = f"{value_param} ?? null"
                 elif conversion_type == "boolean-or-false":
                     value_expr = f"{value_param} ?? false"
-                elif conversion_type in ("enum-string", "event-handler"):
+                elif conversion_type == "event-handler":
+                    value_expr = f"lookupEventHandler({value_param})"
+                elif conversion_type == "enum-string":
                     value_expr = f"{value_param} as any"
                 elif isinstance(conversion_type, str) and conversion_type.startswith("string"):
                     value_expr = f"{value_param} as any"
@@ -631,10 +645,10 @@ class CodeGenerator:
                     _, target_pascal = self._get_handle_info(target_type)
                     value_expr = f"Array.from({value_param}).map((h: bigint) => lookup{target_pascal}(h))"
             
-            # Check if this is an event handler setter
+            # Check if this is an event handler setter (look up handle -> function)
             enum_key = (iface.wit_name, prop_name)
             if enum_key in EVENT_HANDLER_PROPERTIES:
-                value_expr = f"{value_param} as any"
+                value_expr = f"lookupEventHandler({value_param})"
             # Check if this is an enum setter
             elif enum_key in ENUM_SETTER_PROPERTIES:
                 enum_name = ENUM_SETTER_PROPERTIES[enum_key]
@@ -780,10 +794,17 @@ class CodeGenerator:
         lines.append("  if (!entry) {")
         lines.append("    return { ok: false, error: `Unknown request ID ${requestId}` };")
         lines.append("  }")
+        lines.append("  // Still pending — caller should poll again")
+        lines.append("  if (entry.result === null) {")
+        lines.append("    return undefined;")
+        lines.append("  }")
+        lines.append("  // Result is ready — clean up handle to prevent memory leak")
+        lines.append("  const result = entry.result;")
+        lines.append("  _asyncHandles.delete(requestId);")
         if func.return_is_void or not func.ts_return_inner:
-            lines.append("  return entry.result ?? undefined;")
+            lines.append("  return result;")
         else:
-            lines.append(f"  return entry.result as {{ ok: true; value: {func.ts_return_inner} }} | {{ ok: false; error: string }} | null ?? undefined;")
+            lines.append(f"  return result as {{ ok: true; value: {func.ts_return_inner} }} | {{ ok: false; error: string }};")
         lines.append("}")
 
     def render_index(self, domains: List[GeneratedDomain]) -> str:
@@ -797,6 +818,8 @@ class CodeGenerator:
         )
 
         lines: List[str] = []
+
+        lines.extend(self._auto_generated_header())
 
         lines.append("/**")
         lines.append(" * @tairitsu/browser-glue/generated")

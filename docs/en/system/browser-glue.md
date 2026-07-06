@@ -111,6 +111,20 @@ export function lookupHandle<T>(handle: bigint): T | null {
 }
 ```
 
+## Timer System
+
+The `platformHelpers.ts` module provides timer functions that bridge WIT
+callbacks to browser APIs:
+
+| Function | JS API | Callback type | WIT export |
+|----------|--------|---------------|------------|
+| `setTimeout` | `window.setTimeout` | One-shot (`FnOnce`) | `timer-callbacks.on-timeout` |
+| `setInterval` | `window.setInterval` | Recurring (`FnMut`) | `timer-callbacks.on-interval` |
+| `requestAnimationFrame` | `window.requestAnimationFrame` | Per-frame | `animation-callbacks.on-frame` |
+
+Interval callbacks fire repeatedly until cancelled via `clearInterval`.
+All timer state is stored on `globalThis.__tairitsuTimerState`.
+
 ## Build Process
 
 ```bash
@@ -137,12 +151,13 @@ graph TD
     SRC --> S4["consoleGlue.ts — Console interface"]
     SRC --> S5["styleGlue.ts — Style interface"]
     SRC --> S6["eventTargetGlue.ts — Event target"]
-    SRC --> S7["domGlue.ts — DOM operations"]
-    SRC --> S8["eventsGlue.ts — Event types"]
-    SRC --> S9["fetchGlue.ts — Fetch API"]
-    SRC --> S10["canvasGlue.ts — Canvas 2D"]
-    SRC --> S11["... (28 domains)"]
-    DIST --> D1["index.js — Compiled entry"]
+  SRC --> S7["domGlue.ts — DOM operations"]
+  SRC --> S8["eventsGlue.ts — Event types"]
+  SRC --> S9["fetchGlue.ts — Fetch API"]
+  SRC --> S10["canvasGlue.ts — Canvas 2D"]
+  SRC --> S11["platformHelpers.ts — setTimeout/setInterval/rAF"]
+  SRC --> S12["... (28 domains)"]
+  DIST --> D1["index.js — Compiled entry"]
     DIST --> D2["*.d.ts — Type declarations"]
     DIST --> D3["browser-glue/ — jco adapters"]
 ```

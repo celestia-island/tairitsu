@@ -1,29 +1,29 @@
 //! 404 Not Found page
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{VNode, el, txt};
+use tairitsu_vdom::{el, txt, VNode};
 
 use crate::i18n::{self, Language};
 
 pub fn render() -> VNode {
     let t = i18n::text(Language::ENGLISH);
     rsx! {
-        div { id: "page-not-found", class: "ts-page",
+        div { id: "page-not-found", class: "hikari-page",
             div { class: "hi-container hi-container-md",
                 section { class: "hi-section hi-section-lg",
                     div { class: "hi-section-body",
                         div { class: "hi-text-center",
                             h1 { class: "hi-text-2xl hi-text-secondary hi-mb-6", "404" }
                             ..vec![
-                                VNode::Element(el("p").class("hi-text-lg hi-text-primary").child(txt(t.not_found_title))),
-                                VNode::Element(el("p").class("hi-text-sm hi-text-primary").child(txt(t.not_found_desc))),
-                                VNode::Element(el("div").attr("style", "height:2rem")),
-                                VNode::Element(
+                                VNode::Element(Box::new(el("p").class("hi-text-lg hi-text-primary").child(txt(t.not_found_title)))),
+                                VNode::Element(Box::new(el("p").class("hi-text-sm hi-text-primary").child(txt(t.not_found_desc)))),
+                                VNode::Element(Box::new(el("div").attr("style", "height:2rem"))),
+                                VNode::Element(Box::new(
                                     el("a")
                                         .attr("href", "/")
                                         .class("hi-button hi-button-primary hi-button-md hi-button-width-auto hi-justify-center")
                                         .child(txt(t.not_found_action)),
-                                ),
+                                )),
                             ]
                         }
                     }

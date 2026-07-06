@@ -141,21 +141,11 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
 // WIT Interface Implementations
 // ============================================================================
 
-#[allow(dead_code)]
-struct FileSystemInterface {
-    handler: FileSystemHandler,
-}
+struct FileSystemInterface;
 
 impl FileSystemInterface {
     fn new() -> Self {
-        Self {
-            handler: FileSystemHandler::new(),
-        }
-    }
-
-    #[allow(dead_code)]
-    fn handler_mut(&mut self) -> &mut FileSystemHandler {
-        &mut self.handler
+        Self
     }
 }
 
@@ -220,10 +210,7 @@ fn main() -> Result<()> {
         data: b"{\"name\":\"tairitsu\",\"version\":\"0.1.0\"}".to_vec(),
     };
     info!("Command: {:?}", write_cmd);
-    match fs_handler
-        .execute(&write_cmd)
-        .map_err(|e| anyhow::anyhow!(e))?
-    {
+    match fs_handler.execute(&write_cmd).map_err(anyhow::Error::msg)? {
         Ok(result) => info!("  ✓ Result: {}", String::from_utf8_lossy(&result)),
         Err(e) => info!("  ✗ Error: {}", e),
     }
@@ -232,10 +219,7 @@ fn main() -> Result<()> {
         path: "/data/config.json".to_string(),
     };
     info!("Command: {:?}", read_cmd);
-    match fs_handler
-        .execute(&read_cmd)
-        .map_err(|e| anyhow::anyhow!(e))?
-    {
+    match fs_handler.execute(&read_cmd).map_err(anyhow::Error::msg)? {
         Ok(data) => {
             let content = String::from_utf8_lossy(&data);
             info!("  ✓ Read: {}", content);
@@ -249,22 +233,19 @@ fn main() -> Result<()> {
             path: "/data/file1.txt".to_string(),
             data: b"Content 1".to_vec(),
         })
-        .map_err(|e| anyhow::anyhow!(e))?;
+        .map_err(anyhow::Error::msg)?;
     let _ = fs_handler
         .execute(&FileSystemCommands::Write {
             path: "/data/file2.txt".to_string(),
             data: b"Content 2".to_vec(),
         })
-        .map_err(|e| anyhow::anyhow!(e))?;
+        .map_err(anyhow::Error::msg)?;
 
     let list_cmd = FileSystemCommands::List {
         directory: "/data".to_string(),
     };
     info!("Command: {:?}", list_cmd);
-    match fs_handler
-        .execute(&list_cmd)
-        .map_err(|e| anyhow::anyhow!(e))?
-    {
+    match fs_handler.execute(&list_cmd).map_err(anyhow::Error::msg)? {
         Ok(files) => {
             let files_str = String::from_utf8_lossy(&files);
             info!("  ✓ Files: {}", files_str);
@@ -279,10 +260,7 @@ fn main() -> Result<()> {
         url: "https://api.example.com/data".to_string(),
     };
     info!("Command: {:?}", get_cmd);
-    match net_handler
-        .execute(&get_cmd)
-        .map_err(|e| anyhow::anyhow!(e))?
-    {
+    match net_handler.execute(&get_cmd).map_err(anyhow::Error::msg)? {
         Ok(response) => info!("  ✓ Response: {}", String::from_utf8_lossy(&response)),
         Err(e) => info!("  ✗ Error: {}", e),
     }
@@ -292,10 +270,7 @@ fn main() -> Result<()> {
         body: b"{\"action\":\"test\"}".to_vec(),
     };
     info!("Command: {:?}", post_cmd);
-    match net_handler
-        .execute(&post_cmd)
-        .map_err(|e| anyhow::anyhow!(e))?
-    {
+    match net_handler.execute(&post_cmd).map_err(anyhow::Error::msg)? {
         Ok(response) => info!("  ✓ Response: {}", String::from_utf8_lossy(&response)),
         Err(e) => info!("  ✗ Error: {}", e),
     }

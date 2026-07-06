@@ -1,7 +1,7 @@
 [package]
 name = "tairitsu-website"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
 description = "Tairitsu framework website - documentation and demo"
 publish = false
 authors = ["langyo <langyo.china@gmail.com>"]
@@ -17,7 +17,6 @@ tairitsu-macros = { path = "../../packages/macros" }
 # For wasm builds, use only browser features (not server-side features like ssr/packager)
 tairitsu-web = { path = "../../packages/web", features = [
     "browser",
-    "i18n",
     "vdom",
     "wit-bindings",
 ], default-features = false }
@@ -28,13 +27,13 @@ hikari-components = { git = "https://github.com/celestia-island/hikari.git", bra
 hikari-icons = { git = "https://github.com/celestia-island/hikari.git", branch = "dev", features = ["tairitsu"] }
 
 # Markdown rendering
-pulldown-cmark = "0.12"
+pulldown-cmark = "^0.12"
 
 # Logging and error handling
-tracing = "^0.1"
+tracing = { workspace = true }
 # tracing-wasm uses wasm-bindgen which is incompatible with wasm32-wasip2 component model
 # Use basic console logging instead for WASI components
-anyhow = "^1"
+anyhow = { workspace = true }
 
 # Tairitsu Package configuration (replaces HTML template)
 [package.metadata.tairitsu]
@@ -221,7 +220,7 @@ head = """
     }
 
     function hideAllPages() {
-        document.querySelectorAll('.ts-page').forEach(function(p) {
+        document.querySelectorAll('.hikari-page').forEach(function(p) {
             p.classList.remove('is-active');
             p.setAttribute('aria-hidden', 'true');
         });

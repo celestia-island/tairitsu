@@ -27,7 +27,7 @@ pub fn render_all() -> Vec<VNode> {
 
 pub fn render_overview() -> VNode {
     rsx! {
-        div { id: "page-guides", class: "ts-page",
+        div { id: "page-guides", class: "hikari-page",
             ..vec![breadcrumb(&[("Home", "/"), ("Guides", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Guides" }

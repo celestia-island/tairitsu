@@ -100,7 +100,7 @@ impl Cache {
     /// Insert a value into the cache with the default TTL
     pub fn insert(&self, key: impl Into<String>, data: Vec<u8>) {
         let key = key.into();
-        let mut cache = self.inner.write().unwrap();
+        let mut cache = self.inner.write().unwrap_or_else(|e| e.into_inner());
         let ttl = cache.default_ttl;
 
         // Evict expired entries and enforce size limit
@@ -115,7 +115,7 @@ impl Cache {
     /// Insert a value with a custom TTL
     pub fn insert_with_ttl(&self, key: impl Into<String>, data: Vec<u8>, ttl: Duration) {
         let key = key.into();
-        let mut cache = self.inner.write().unwrap();
+        let mut cache = self.inner.write().unwrap_or_else(|e| e.into_inner());
 
         // Evict expired entries and enforce size limit
         Self::evict_expired(&mut cache.entries);
@@ -128,19 +128,19 @@ impl Cache {
 
     /// Remove a specific entry from the cache
     pub fn remove(&self, key: &str) -> bool {
-        let mut cache = self.inner.write().unwrap();
+        let mut cache = self.inner.write().unwrap_or_else(|e| e.into_inner());
         cache.entries.remove(key).is_some()
     }
 
     /// Clear all entries from the cache
     pub fn clear(&self) {
-        let mut cache = self.inner.write().unwrap();
+        let mut cache = self.inner.write().unwrap_or_else(|e| e.into_inner());
         cache.entries.clear();
     }
 
     /// Get the number of entries in the cache
     pub fn len(&self) -> usize {
-        let cache = self.inner.read().unwrap();
+        let cache = self.inner.read().unwrap_or_else(|e| e.into_inner());
         cache.entries.len()
     }
 
@@ -151,7 +151,7 @@ impl Cache {
 
     /// Get statistics about the cache
     pub fn stats(&self) -> CacheStats {
-        let cache = self.inner.read().unwrap();
+        let cache = self.inner.read().unwrap_or_else(|e| e.into_inner());
         let mut total_access_count = 0;
         let mut total_age = Duration::ZERO;
 

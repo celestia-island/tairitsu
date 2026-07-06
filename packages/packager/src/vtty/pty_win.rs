@@ -9,7 +9,7 @@ use std::{
     time::Duration,
 };
 
-use portable_pty::{Child, ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
+use portable_pty::{native_pty_system, Child, ChildKiller, CommandBuilder, MasterPty, PtySize};
 
 fn to_io(e: impl std::fmt::Display) -> io::Error {
     io::Error::new(io::ErrorKind::Other, e.to_string())
@@ -134,6 +134,37 @@ impl ConPty {
     /// Kill the child process and close PTY.
     pub fn kill(&mut self) -> io::Result<()> {
         self.killer.kill()
+    }
+
+    /// Kill the child process and wait for it to be reaped.
+    ///
+    /// Mirrors the Unix backend (`pty_unix.rs`): `portable-pty`'s ConPTY child
+    /// and killer expose the same `try_wait`/`kill` surface, so the same
+    /// bounded-reap loop works on Windows. Required because `mod.rs` calls this
+    /// unconditionally (no `#[cfg(unix)]` guard).
+    pub fn kill_and_reap(&mut self) -> io::Result<()> {
+        self.killer.kill()?;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            let mut guard = match self.child.lock() {
+                Ok(g) => g,
+                Err(_) => break,
+            };
+            match guard.try_wait() {
+                Ok(Some(_)) => break,
+                Ok(None) => {
+                    if std::time::Instant::now() > deadline {
+                        let _ = self.killer.kill();
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        let _ = guard.try_wait();
+                        break;
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
+                Err(_) => break,
+            }
+        }
+        Ok(())
     }
 
     /// Returns the PID of the child process.

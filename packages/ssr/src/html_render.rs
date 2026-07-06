@@ -57,7 +57,7 @@ impl SsrDom {
 
         // Opening html tag with language attribute
         buf.push_str("<html lang=\"");
-        buf.push_str(&config.lang);
+        html_escape_into(&mut buf, &config.lang);
         buf.push_str("\">\n");
 
         // Head section
@@ -65,12 +65,12 @@ impl SsrDom {
 
         // Meta charset
         buf.push_str("  <meta charset=\"");
-        buf.push_str(&config.charset);
+        html_escape_into(&mut buf, &config.charset);
         buf.push_str("\">\n");
 
         // Viewport meta tag
         buf.push_str("  <meta name=\"viewport\" content=\"");
-        buf.push_str(&config.viewport_content);
+        html_escape_attr_into(&mut buf, &config.viewport_content);
         buf.push_str("\">\n");
 
         // Page title
@@ -83,7 +83,7 @@ impl SsrDom {
         // CSS links
         for css_link in &config.css_links {
             buf.push_str("  <link rel=\"stylesheet\" href=\"");
-            buf.push_str(css_link);
+            html_escape_attr_into(&mut buf, css_link);
             buf.push_str("\">\n");
         }
 
@@ -157,7 +157,7 @@ impl SsrDom {
                 }
                 buf.push_str(prop);
                 buf.push(':');
-                buf.push_str(val);
+                html_escape_attr_into(buf, val);
             }
             buf.push('"');
         }
@@ -199,6 +199,7 @@ fn html_escape_attr_into(buf: &mut String, s: &str) {
         match ch {
             '&' => buf.push_str("&amp;"),
             '"' => buf.push_str("&quot;"),
+            '\'' => buf.push_str("&#39;"),
             '<' => buf.push_str("&lt;"),
             '>' => buf.push_str("&gt;"),
             _ => buf.push(ch),
@@ -244,6 +245,13 @@ mod tests {
         let mut buf = String::new();
         html_escape_attr_into(&mut buf, "a\"b&c");
         assert_eq!(buf, "a&quot;b&amp;c");
+    }
+
+    #[test]
+    fn test_html_attr_escape_single_quote() {
+        let mut buf = String::new();
+        html_escape_attr_into(&mut buf, "a'b");
+        assert_eq!(buf, "a&#39;b");
     }
 
     #[test]

@@ -1,4 +1,4 @@
-use tairitsu_vdom::{EffectHandle, create_effect};
+use tairitsu_vdom::{create_effect, EffectHandle};
 
 pub type Effect = EffectHandle;
 
@@ -11,9 +11,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cell::RefCell;
     use std::rc::Rc;
+
+    use super::*;
 
     #[test]
     fn test_use_effect() {

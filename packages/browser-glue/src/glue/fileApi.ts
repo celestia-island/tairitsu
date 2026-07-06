@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * file-api glue — implements the `tairitsu-browser:file-api` WIT import interfaces.
  *

@@ -288,11 +288,12 @@ impl SsrDom {
         let old_parent = self.nodes.get(&child).and_then(|n| n.parent);
 
         // Remove from existing parent (if different from new parent)
-        if let Some(old_parent) = old_parent
-            && old_parent != parent
-            && let Some(old_parent_node) = self.nodes.get_mut(&old_parent)
-        {
-            old_parent_node.remove_child(child);
+        if let Some(old_parent) = old_parent {
+            if old_parent != parent {
+                if let Some(old_parent_node) = self.nodes.get_mut(&old_parent) {
+                    old_parent_node.remove_child(child);
+                }
+            }
         }
 
         // Add to new parent
@@ -328,10 +329,10 @@ impl SsrDom {
     /// Get element by ID
     pub fn get_element_by_id(&self, id: &str) -> Option<u64> {
         for (&handle, node) in &self.nodes {
-            if let Some(attr_value) = node.get_attribute("id")
-                && attr_value == id
-            {
-                return Some(handle);
+            if let Some(attr_value) = node.get_attribute("id") {
+                if attr_value == id {
+                    return Some(handle);
+                }
             }
         }
         None

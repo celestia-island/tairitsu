@@ -6,8 +6,6 @@ pub mod browser;
 pub mod client_router;
 #[cfg(feature = "wit-bindings")]
 pub mod handle_cache;
-#[cfg(feature = "i18n")]
-pub mod i18n;
 #[cfg(feature = "wit-bindings")]
 pub mod navigation;
 pub mod prelude;
@@ -22,11 +20,6 @@ pub mod wit_platform;
 
 #[cfg(feature = "browser")]
 pub use browser::BrowserPlatform;
-#[cfg(feature = "i18n")]
-pub use i18n::{
-    I18nProvider, I18nState, Language, TextDirection, provide_i18n, set_locale, translate,
-    translate_or_key, use_locale,
-};
 #[cfg(feature = "wit-bindings")]
 pub use navigation::{current_path, navigate, replace};
 pub use prelude::*;
@@ -38,7 +31,11 @@ pub use runtime_integration::init_runtime;
 pub use ssr::SsrPlatform;
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub use wit_platform::prevent_event_default;
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub use wit_platform::{fetch_text, fetch_text_with_options};
 #[cfg(feature = "wit-bindings")]
 pub use wit_platform::{
-    WitElement, WitEvent, WitPlatform, get_pathname, push_state, replace_state,
+    get_pathname, push_state, replace_state, WitElement, WitEvent, WitPlatform,
 };
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub use wit_platform::{ws_close, ws_connect, ws_send, WsConnection};

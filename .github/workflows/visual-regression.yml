@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           targets: wasm32-wasip2
@@ -117,8 +117,8 @@ jobs:
           path: target/visual-diff/
           retention-days: 14
 
-      - name: Update baseline on main branch
-        if: github.ref == 'refs/heads/main' && steps.diff.outcome == 'success'
+      - name: Update baseline on master branch
+        if: github.ref == 'refs/heads/master' && steps.diff.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -182,7 +182,7 @@ jobs:
             }
 
       - name: Fail on visual diff failures
-        if: steps.diff.outcome == 'success' && github.ref != 'refs/heads/main'
+        if: steps.diff.outcome == 'success' && github.ref != 'refs/heads/master'
         run: |
           if [ -f target/visual-diff/report.json ]; then
             FAILED=$(python3 -c "import json; print(json.load(open('target/visual-diff/report.json'))['failed'])")

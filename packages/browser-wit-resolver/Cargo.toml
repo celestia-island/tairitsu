@@ -4,22 +4,20 @@ version.workspace = true
 edition.workspace = true
 description = "WIT package version resolution, cloud fetch, and local cache for Tairitsu browser worlds"
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 
 [dependencies]
 tairitsu-browser-worlds = { workspace = true, optional = true }
-anyhow = "^1"
-thiserror = "^2"
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
-tracing = "^0.1"
-reqwest = { version = "^0.12", features = [
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+reqwest = { workspace = true, features = [
   "blocking",
-  "json",
 ], optional = true }
-sha2 = "^0.10"
-hex = "^0.4"
+sha2 = { workspace = true }
+hex = { workspace = true }
 
 [features]
 default = ["embedded"]
@@ -27,4 +25,4 @@ fetch = ["reqwest"]
 embedded = ["tairitsu-browser-worlds"]
 
 [dev-dependencies]
-tempfile = "^3"
+tempfile = { workspace = true }

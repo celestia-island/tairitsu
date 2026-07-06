@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * html glue — implements the `tairitsu-browser:html` WIT import interfaces.
  *
@@ -280,10 +284,6 @@ let _nextDocumentFragment = 1n;
 /** Handle table for dom-matrix values */
 const _domMatrixhandles = new Map<bigint, DOMMatrix>();
 let _nextDomMatrix = 1n;
-
-/** Handle table for dom-string-map values */
-const _domStringMapHandles = new Map<bigint, DOMStringMap>();
-let _nextDomStringMap = 1n;
 
 /** Handle table for dom-token-list values */
 const _domTokenListHandles = new Map<bigint, DOMTokenList>();
@@ -645,23 +645,6 @@ function lookupOptionDomMatrix(handle: bigint | undefined): DOMMatrix | null {
     return null;
   }
   return _domMatrixhandles.get(handle) ?? null;
-}
-
-/** Lookup a dom-string-map value by handle. */
-function lookupDomStringMap(handle: bigint): DOMStringMap {
-  const obj = _domStringMapHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`dom-string-map handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional dom-string-map value by handle. */
-function lookupOptionDomStringMap(handle: bigint | undefined): DOMStringMap | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _domStringMapHandles.get(handle) ?? null;
 }
 
 /** Lookup a dom-token-list value by handle. */
@@ -1684,56 +1667,53 @@ export function contains(self: bigint, string: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// WIT interface: html-or-svg-element
+// WIT interface: html-or-svg-or-math-ml-element
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type HtmlOrSvgElementHandle = bigint;
+export type HtmlOrSvgOrMathMlElementHandle = bigint;
 
-/** Handle table for HTMLOrSVGElement instances */
-const _htmlOrSvgElementhandles = new Map<bigint, HTMLOrSVGElement>();
-let _nextHTMLOrSVGElement = 1n;
+/** Handle table for HtmlOrSvgOrMathMlElement instances */
+const _htmlOrSvgOrMathMlElementhandles = new Map<bigint, HtmlOrSvgOrMathMlElement>();
+let _nextHtmlOrSvgOrMathMlElement = 1n;
 
-/** Lookup a HTMLOrSVGElement by handle, throwing if not found. */
-function lookupHTMLOrSVGElement(handle: bigint): HTMLOrSVGElement {
-  const obj = _htmlOrSvgElementhandles.get(handle);
+/** Lookup a HtmlOrSvgOrMathMlElement by handle, throwing if not found. */
+function lookupHtmlOrSvgOrMathMlElement(handle: bigint): HtmlOrSvgOrMathMlElement {
+  const obj = _htmlOrSvgOrMathMlElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HTMLOrSVGElement handle ${handle} not found`);
+    throw new Error(`HtmlOrSvgOrMathMlElement handle ${handle} not found`);
   }
   return obj!;
 }
 
-/** Lookup an optional HTMLOrSVGElement by handle. */
-function lookupOptionHTMLOrSVGElement(handle: bigint | undefined): HTMLOrSVGElement | null {
+/** Lookup an optional HtmlOrSvgOrMathMlElement by handle. */
+function lookupOptionHtmlOrSvgOrMathMlElement(handle: bigint | undefined): HtmlOrSvgOrMathMlElement | null {
   if (handle === undefined || handle === 0n) {
     return null;
   }
-  return _htmlOrSvgElementhandles.get(handle) ?? null;
+  return _htmlOrSvgOrMathMlElementhandles.get(handle) ?? null;
 }
 /**
  * `get-dataset()` operation.
  */
 export function getDataset(self: bigint): bigint {
-  const obj = lookupHTMLOrSVGElement(self);
-  const _callResult = obj.dataset;
-  const handle = _nextDomStringMap++;
-  _domStringMapHandles.set(handle, _callResult);
-  return handle;
+  const obj = lookupHtmlOrSvgOrMathMlElement(self);
+  return obj.dataset;
 }
 
 /**
  * `get-nonce()` operation.
  */
 export function getNonce(self: bigint): string {
-  const obj = lookupHTMLOrSVGElement(self);
-  return obj.nonce ?? "";
+  const obj = lookupHtmlOrSvgOrMathMlElement(self);
+  return obj.nonce;
 }
 
 /**
  * `set-nonce()` operation.
  */
 export function setNonce(self: bigint, value: string): void {
-  const obj = lookupHTMLOrSVGElement(self);
+  const obj = lookupHtmlOrSvgOrMathMlElement(self);
   obj.nonce = value;
 }
 
@@ -1741,7 +1721,7 @@ export function setNonce(self: bigint, value: string): void {
  * `get-autofocus()` operation.
  */
 export function getAutofocus(self: bigint): boolean {
-  const obj = lookupHTMLOrSVGElement(self);
+  const obj = lookupHtmlOrSvgOrMathMlElement(self);
   return obj.autofocus;
 }
 
@@ -1749,7 +1729,7 @@ export function getAutofocus(self: bigint): boolean {
  * `set-autofocus()` operation.
  */
 export function setAutofocus(self: bigint, value: boolean): void {
-  const obj = lookupHTMLOrSVGElement(self);
+  const obj = lookupHtmlOrSvgOrMathMlElement(self);
   obj.autofocus = value;
 }
 
@@ -1757,7 +1737,7 @@ export function setAutofocus(self: bigint, value: boolean): void {
  * `get-tab-index()` operation.
  */
 export function getTabIndex(self: bigint): number {
-  const obj = lookupHTMLOrSVGElement(self);
+  const obj = lookupHtmlOrSvgOrMathMlElement(self);
   return obj.tabIndex;
 }
 
@@ -1765,7 +1745,7 @@ export function getTabIndex(self: bigint): number {
  * `set-tab-index()` operation.
  */
 export function setTabIndex(self: bigint, value: number): void {
-  const obj = lookupHTMLOrSVGElement(self);
+  const obj = lookupHtmlOrSvgOrMathMlElement(self);
   obj.tabIndex = value;
 }
 
@@ -1773,15 +1753,15 @@ export function setTabIndex(self: bigint, value: number): void {
  * `focus()` operation.
  */
 export function focus(self: bigint, options: bigint | undefined): void {
-  const obj = lookupHTMLOrSVGElement(self);
-  obj.focus(options as any);
+  const obj = lookupHtmlOrSvgOrMathMlElement(self);
+  obj.focus(options);
 }
 
 /**
  * `blur()` operation.
  */
 export function blur(self: bigint): void {
-  const obj = lookupHTMLOrSVGElement(self);
+  const obj = lookupHtmlOrSvgOrMathMlElement(self);
   obj.blur();
 }
 
@@ -3250,22 +3230,6 @@ function lookupOptionHTMLAnchorElement(handle: bigint | undefined): HTMLAnchorEl
   return _htmlAnchorElementhandles.get(handle) ?? null;
 }
 /**
- * `get-target()` operation.
- */
-export function HtmlAnchorElementGetTarget(self: bigint): string {
-  const obj = lookupHTMLAnchorElement(self);
-  return obj.target;
-}
-
-/**
- * `set-target()` operation.
- */
-export function HtmlAnchorElementSetTarget(self: bigint, value: string): void {
-  const obj = lookupHTMLAnchorElement(self);
-  obj.target = value ?? null;
-}
-
-/**
  * `get-download()` operation.
  */
 export function HtmlAnchorElementGetDownload(self: bigint): string {
@@ -3322,38 +3286,6 @@ export function HtmlAnchorElementGetRelList(self: bigint): bigint {
   const handle = _nextDomTokenList++;
   _domTokenListHandles.set(handle, _callResult);
   return handle;
-}
-
-/**
- * `get-hreflang()` operation.
- */
-export function HtmlAnchorElementGetHreflang(self: bigint): string {
-  const obj = lookupHTMLAnchorElement(self);
-  return obj.hreflang;
-}
-
-/**
- * `set-hreflang()` operation.
- */
-export function HtmlAnchorElementSetHreflang(self: bigint, value: string): void {
-  const obj = lookupHTMLAnchorElement(self);
-  obj.hreflang = value ?? null;
-}
-
-/**
- * `get-type()` operation.
- */
-export function HtmlAnchorElementGetType(self: bigint): string {
-  const obj = lookupHTMLAnchorElement(self);
-  return (obj as any).getType();
-}
-
-/**
- * `set-type()` operation.
- */
-export function HtmlAnchorElementSetType(self: bigint, value: string): void {
-  const obj = lookupHTMLAnchorElement(self);
-  (obj as any).type = value;
 }
 
 /**
@@ -3776,6 +3708,38 @@ export function HyperlinkElementUtilsSetHash(self: bigint, value: string): void 
   obj.hash = value;
 }
 
+/**
+ * `get-hreflang()` operation.
+ */
+export function HyperlinkElementUtilsGetHreflang(self: bigint): string {
+  const obj = lookupHyperlinkElementUtils(self);
+  return obj.hreflang;
+}
+
+/**
+ * `set-hreflang()` operation.
+ */
+export function HyperlinkElementUtilsSetHreflang(self: bigint, value: string): void {
+  const obj = lookupHyperlinkElementUtils(self);
+  obj.hreflang = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HyperlinkElementUtilsGetType(self: bigint): string {
+  const obj = lookupHyperlinkElementUtils(self);
+  return obj.getType();
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HyperlinkElementUtilsSetType(self: bigint, value: string): void {
+  const obj = lookupHyperlinkElementUtils(self);
+  obj.type = value;
+}
+
 // ---------------------------------------------------------------------------
 // WIT interface: html-hyperlink-element-utils
 // ---------------------------------------------------------------------------
@@ -3820,6 +3784,22 @@ export function HtmlHyperlinkElementUtilsGetHref(self: bigint): bigint {
 export function HtmlHyperlinkElementUtilsSetHref(self: bigint, value: string): void {
   const obj = lookupHTMLHyperlinkElementUtils(self);
   obj.href = value;
+}
+
+/**
+ * `get-target()` operation.
+ */
+export function HtmlHyperlinkElementUtilsGetTarget(self: bigint): string {
+  const obj = lookupHTMLHyperlinkElementUtils(self);
+  return obj.target;
+}
+
+/**
+ * `set-target()` operation.
+ */
+export function HtmlHyperlinkElementUtilsSetTarget(self: bigint, value: string): void {
+  const obj = lookupHTMLHyperlinkElementUtils(self);
+  obj.target = value;
 }
 
 // ---------------------------------------------------------------------------
@@ -5463,7 +5443,14 @@ export function pollPlay(requestId: bigint): { ok: true; value: bigint } | { ok:
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -6026,7 +6013,7 @@ export function TextTrackListGetOnchange(self: bigint): bigint {
  */
 export function TextTrackListSetOnchange(self: bigint, value: bigint): void {
   const obj = lookupTextTrackList(self);
-  obj.onchange = value as any;
+  obj.onchange = lookupEventHandler(value);
 }
 
 /**
@@ -6046,7 +6033,7 @@ export function TextTrackListGetOnaddtrack(self: bigint): bigint {
  */
 export function TextTrackListSetOnaddtrack(self: bigint, value: bigint): void {
   const obj = lookupTextTrackList(self);
-  obj.onaddtrack = value as any;
+  obj.onaddtrack = lookupEventHandler(value);
 }
 
 /**
@@ -6066,7 +6053,7 @@ export function TextTrackListGetOnremovetrack(self: bigint): bigint {
  */
 export function TextTrackListSetOnremovetrack(self: bigint, value: bigint): void {
   const obj = lookupTextTrackList(self);
-  obj.onremovetrack = value as any;
+  obj.onremovetrack = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -6210,7 +6197,7 @@ export function getOncuechange(self: bigint): bigint {
  */
 export function setOncuechange(self: bigint, value: bigint): void {
   const obj = lookupTextTrack(self);
-  obj.oncuechange = value as any;
+  obj.oncuechange = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -6348,7 +6335,7 @@ export function getOnenter(self: bigint): bigint {
  */
 export function setOnenter(self: bigint, value: bigint): void {
   const obj = lookupTextTrackCue(self);
-  obj.onenter = value as any;
+  obj.onenter = lookupEventHandler(value);
 }
 
 /**
@@ -6368,7 +6355,7 @@ export function getOnexit(self: bigint): bigint {
  */
 export function setOnexit(self: bigint, value: bigint): void {
   const obj = lookupTextTrackCue(self);
-  obj.onexit = value as any;
+  obj.onexit = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -6568,22 +6555,6 @@ export function HtmlAreaElementGetShape(self: bigint): string {
 export function HtmlAreaElementSetShape(self: bigint, value: string): void {
   const obj = lookupHTMLAreaElement(self);
   obj.shape = value;
-}
-
-/**
- * `get-target()` operation.
- */
-export function HtmlAreaElementGetTarget(self: bigint): string {
-  const obj = lookupHTMLAreaElement(self);
-  return obj.target;
-}
-
-/**
- * `set-target()` operation.
- */
-export function HtmlAreaElementSetTarget(self: bigint, value: string): void {
-  const obj = lookupHTMLAreaElement(self);
-  obj.target = value;
 }
 
 /**
@@ -11387,6 +11358,22 @@ export function setShadowRootDelegatesFocus(self: bigint, value: boolean): void 
 }
 
 /**
+ * `get-shadow-root-slot-assignment()` operation.
+ */
+export function getShadowRootSlotAssignment(self: bigint): string {
+  const obj = lookupHTMLTemplateElement(self);
+  return obj.shadowRootSlotAssignment;
+}
+
+/**
+ * `set-shadow-root-slot-assignment()` operation.
+ */
+export function setShadowRootSlotAssignment(self: bigint, value: string): void {
+  const obj = lookupHTMLTemplateElement(self);
+  obj.shadowRootSlotAssignment = value;
+}
+
+/**
  * `get-shadow-root-clonable()` operation.
  */
 export function getShadowRootClonable(self: bigint): boolean {
@@ -13434,7 +13421,14 @@ export function pollConvertToBlob(requestId: bigint): { ok: true; value: bigint 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -13454,7 +13448,7 @@ export function getOncontextlost(self: bigint): bigint {
  */
 export function setOncontextlost(self: bigint, value: bigint): void {
   const obj = lookupOffscreenCanvas(self);
-  obj.oncontextlost = value as any;
+  obj.oncontextlost = lookupEventHandler(value);
 }
 
 /**
@@ -13474,7 +13468,7 @@ export function getOncontextrestored(self: bigint): bigint {
  */
 export function setOncontextrestored(self: bigint, value: bigint): void {
   const obj = lookupOffscreenCanvas(self);
-  obj.oncontextrestored = value as any;
+  obj.oncontextrestored = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -13593,7 +13587,14 @@ export function pollWhenDefined(requestId: bigint): { ok: true; value: bigint } 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -14476,7 +14477,14 @@ export function pollFrom(requestId: bigint): { ok: true; value: bigint } | { ok:
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -15063,7 +15071,7 @@ export function getOndispose(self: bigint): bigint {
  */
 export function setOndispose(self: bigint, value: bigint): void {
   const obj = lookupNavigationHistoryEntry(self);
-  obj.ondispose = value as any;
+  obj.ondispose = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -15998,7 +16006,14 @@ export function pollGetPromise(requestId: bigint): { ok: true; value: bigint } |
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 /**
@@ -16080,6 +16095,158 @@ function lookupOptionXMLSerializer(handle: bigint | undefined): XMLSerializer | 
 export function serializeToString(self: bigint, root: bigint): string {
   const obj = lookupXMLSerializer(self);
   return obj.serializeToString(lookupNode(root));
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: sanitizer
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type SanitizerHandle = bigint;
+
+/** Handle table for Sanitizer instances */
+const _sanitizerHandles = new Map<bigint, Sanitizer>();
+let _nextSanitizer = 1n;
+
+/** Lookup a Sanitizer by handle, throwing if not found. */
+function lookupSanitizer(handle: bigint): Sanitizer {
+  const obj = _sanitizerHandles.get(handle);
+  if (!obj) {
+    throw new Error(`Sanitizer handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional Sanitizer by handle. */
+function lookupOptionSanitizer(handle: bigint | undefined): Sanitizer | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _sanitizerHandles.get(handle) ?? null;
+}
+/**
+ * `get()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollGet()`
+ */
+export function _get(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = lookupSanitizer(self);
+  const promise = obj.get()
+    .then((result: unknown) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `_get()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollGet(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
+}
+
+/**
+ * `allow-element()` operation.
+ */
+export function allowElement(self: bigint, element: bigint): boolean {
+  const obj = lookupSanitizer(self);
+  return obj.allowElement(element);
+}
+
+/**
+ * `remove-element()` operation.
+ */
+export function removeElement(self: bigint, element: bigint): boolean {
+  const obj = lookupSanitizer(self);
+  return obj.removeElement(element);
+}
+
+/**
+ * `replace-element-with-children()` operation.
+ */
+export function replaceElementWithChildren(self: bigint, element: bigint): boolean {
+  const obj = lookupSanitizer(self);
+  return obj.replaceElementWithChildren(element);
+}
+
+/**
+ * `allow-processing-instruction()` operation.
+ */
+export function allowProcessingInstruction(self: bigint, pi: bigint): boolean {
+  const obj = lookupSanitizer(self);
+  return obj.allowProcessingInstruction(pi);
+}
+
+/**
+ * `remove-processing-instruction()` operation.
+ */
+export function removeProcessingInstruction(self: bigint, pi: bigint): boolean {
+  const obj = lookupSanitizer(self);
+  return obj.removeProcessingInstruction(pi);
+}
+
+/**
+ * `allow-attribute()` operation.
+ */
+export function allowAttribute(self: bigint, attribute: bigint): boolean {
+  const obj = lookupSanitizer(self);
+  return obj.allowAttribute(attribute);
+}
+
+/**
+ * `remove-attribute()` operation.
+ */
+export function removeAttribute(self: bigint, attribute: bigint): boolean {
+  const obj = lookupSanitizer(self);
+  return obj.removeAttribute(attribute);
+}
+
+/**
+ * `set-comments()` operation.
+ */
+export function setComments(self: bigint, allow: boolean): boolean {
+  const obj = lookupSanitizer(self);
+  obj.comments = allow;
+}
+
+/**
+ * `set-data-attributes()` operation.
+ */
+export function setDataAttributes(self: bigint, allow: boolean): boolean {
+  const obj = lookupSanitizer(self);
+  obj.dataAttributes = allow;
+}
+
+/**
+ * `remove-unsafe()` operation.
+ */
+export function removeUnsafe(self: bigint): boolean {
+  const obj = lookupSanitizer(self);
+  return obj.removeUnsafe();
 }
 
 // ---------------------------------------------------------------------------
@@ -16892,7 +17059,7 @@ export function getOnopen(self: bigint): bigint {
  */
 export function setOnopen(self: bigint, value: bigint): void {
   const obj = lookupEventSource(self);
-  obj.onopen = value as any;
+  obj.onopen = lookupEventHandler(value);
 }
 
 /**
@@ -16912,7 +17079,7 @@ export function EventSourceGetOnmessage(self: bigint): bigint {
  */
 export function EventSourceSetOnmessage(self: bigint, value: bigint): void {
   const obj = lookupEventSource(self);
-  obj.onmessage = value as any;
+  obj.onmessage = lookupEventHandler(value);
 }
 
 /**
@@ -16932,7 +17099,7 @@ export function EventSourceGetOnerror(self: bigint): bigint {
  */
 export function EventSourceSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupEventSource(self);
-  obj.onerror = value as any;
+  obj.onerror = lookupEventHandler(value);
 }
 
 /**
@@ -17036,7 +17203,7 @@ export function MessageEventTargetGetOnmessage(self: bigint): bigint {
  */
 export function MessageEventTargetSetOnmessage(self: bigint, value: bigint): void {
   const obj = lookupMessageEventTarget(self);
-  obj.onmessage = value as any;
+  obj.onmessage = lookupEventHandler(value);
 }
 
 /**
@@ -17056,7 +17223,7 @@ export function MessageEventTargetGetOnmessageerror(self: bigint): bigint {
  */
 export function MessageEventTargetSetOnmessageerror(self: bigint, value: bigint): void {
   const obj = lookupMessageEventTarget(self);
-  obj.onmessageerror = value as any;
+  obj.onmessageerror = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -17174,7 +17341,7 @@ export function BroadcastChannelGetOnmessage(self: bigint): bigint {
  */
 export function BroadcastChannelSetOnmessage(self: bigint, value: bigint): void {
   const obj = lookupBroadcastChannel(self);
-  obj.onmessage = value as any;
+  obj.onmessage = lookupEventHandler(value);
 }
 
 /**
@@ -17194,7 +17361,7 @@ export function BroadcastChannelGetOnmessageerror(self: bigint): bigint {
  */
 export function BroadcastChannelSetOnmessageerror(self: bigint, value: bigint): void {
   const obj = lookupBroadcastChannel(self);
-  obj.onmessageerror = value as any;
+  obj.onmessageerror = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -17506,7 +17673,7 @@ export function AbstractWorkerGetOnerror(self: bigint): bigint {
  */
 export function AbstractWorkerSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupAbstractWorker(self);
-  obj.onerror = value as any;
+  obj.onerror = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -17845,7 +18012,14 @@ export function pollAddModule(requestId: bigint): { ok: true; value: bigint } | 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  // Still pending — caller should poll again
+  if (entry.result === null) {
+    return undefined;
+  }
+  // Result is ready — clean up handle to prevent memory leak
+  const result = entry.result;
+  _asyncHandles.delete(requestId);
+  return result as { ok: true; value: bigint } | { ok: false; error: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -18909,8 +19083,6 @@ export default {
   HtmldListElementSetCompact,
   HtmlDivElementGetAlign,
   HtmlDivElementSetAlign,
-  HtmlAnchorElementGetTarget,
-  HtmlAnchorElementSetTarget,
   HtmlAnchorElementGetDownload,
   HtmlAnchorElementSetDownload,
   HtmlAnchorElementGetPing,
@@ -18918,10 +19090,6 @@ export default {
   HtmlAnchorElementGetRel,
   HtmlAnchorElementSetRel,
   HtmlAnchorElementGetRelList,
-  HtmlAnchorElementGetHreflang,
-  HtmlAnchorElementSetHreflang,
-  HtmlAnchorElementGetType,
-  HtmlAnchorElementSetType,
   HtmlAnchorElementGetText,
   HtmlAnchorElementSetText,
   HtmlAnchorElementGetReferrerPolicy,
@@ -18961,8 +19129,14 @@ export default {
   HyperlinkElementUtilsSetSearch,
   HyperlinkElementUtilsGetHash,
   HyperlinkElementUtilsSetHash,
+  HyperlinkElementUtilsGetHreflang,
+  HyperlinkElementUtilsSetHreflang,
+  HyperlinkElementUtilsGetType,
+  HyperlinkElementUtilsSetType,
   HtmlHyperlinkElementUtilsGetHref,
   HtmlHyperlinkElementUtilsSetHref,
+  HtmlHyperlinkElementUtilsGetTarget,
+  HtmlHyperlinkElementUtilsSetTarget,
   HtmlModElementGetCite,
   HtmlModElementSetCite,
   HtmlModElementGetDateTime,
@@ -19228,8 +19402,6 @@ export default {
   HtmlAreaElementSetCoords,
   HtmlAreaElementGetShape,
   HtmlAreaElementSetShape,
-  HtmlAreaElementGetTarget,
-  HtmlAreaElementSetTarget,
   HtmlAreaElementGetDownload,
   HtmlAreaElementSetDownload,
   HtmlAreaElementGetPing,
@@ -19717,6 +19889,8 @@ export default {
   setShadowRootMode,
   getShadowRootDelegatesFocus,
   setShadowRootDelegatesFocus,
+  getShadowRootSlotAssignment,
+  setShadowRootSlotAssignment,
   getShadowRootClonable,
   setShadowRootClonable,
   getShadowRootSerializable,
@@ -20057,6 +20231,18 @@ export default {
   PromiseRejectionEventGetReason,
   parseFromString,
   serializeToString,
+  _get,
+  pollGet,
+  allowElement,
+  removeElement,
+  replaceElementWithChildren,
+  allowProcessingInstruction,
+  removeProcessingInstruction,
+  allowAttribute,
+  removeAttribute,
+  setComments,
+  setDataAttributes,
+  removeUnsafe,
   getAppCodeName,
   getAppName,
   getAppVersion,

@@ -178,7 +178,7 @@ pub fn overlay_script() -> String {
 /// let vnode = render_error_overlay(error);
 /// ```
 pub fn render_error_overlay(error: ErrorInfo) -> VNode {
-    VNode::Element(
+    VNode::Element(Box::new(
         VElement::new("div")
             .attr("id", "tairitsu-error-overlay")
             .class(format!(
@@ -189,24 +189,24 @@ pub fn render_error_overlay(error: ErrorInfo) -> VNode {
                     ""
                 }
             ))
-            .child(VNode::Element(
+            .child(VNode::Element(Box::new(
                 VElement::new("div")
                     .class("tairitsu-error-container")
                     .child(render_error_header(&error))
                     .child(render_error_body(&error))
                     .child(render_error_footer()),
-            )),
-    )
+            ))),
+    ))
 }
 
 fn render_error_header(error: &ErrorInfo) -> VNode {
-    VNode::Element(
+    VNode::Element(Box::new(
         VElement::new("div")
             .class("tairitsu-error-header")
-            .child(VNode::Element(
+            .child(VNode::Element(Box::new(
                 VElement::new("div")
                     .class("tairitsu-error-title")
-                    .child(VNode::Element(
+                    .child(VNode::Element(Box::new(
                         VElement::new("span")
                             .class(format!(
                                 "tairitsu-error-icon {}",
@@ -215,16 +215,16 @@ fn render_error_header(error: &ErrorInfo) -> VNode {
                             .child(VNode::Text(tairitsu_vdom::VText {
                                 text: error.error_type.icon().to_string(),
                             })),
-                    ))
-                    .child(VNode::Element(
+                    )))
+                    .child(VNode::Element(Box::new(
                         VElement::new("span")
                             .attr("data-title", "")
                             .child(VNode::Text(tairitsu_vdom::VText {
                                 text: error.error_type.title().to_string(),
                             })),
-                    )),
-            ))
-            .child(VNode::Element(
+                    ))),
+            )))
+            .child(VNode::Element(Box::new(
                 VElement::new("button")
                     .attr("class", "tairitsu-error-close")
                     .attr("data-close", "")
@@ -233,89 +233,89 @@ fn render_error_header(error: &ErrorInfo) -> VNode {
                     .child(VNode::Text(tairitsu_vdom::VText {
                         text: "\u{d7}".to_string(), // multiplication sign (×)
                     })),
-            )),
-    )
+            ))),
+    ))
 }
 
 fn render_error_body(error: &ErrorInfo) -> VNode {
-    VNode::Element(
+    VNode::Element(Box::new(
         VElement::new("div")
             .class("tairitsu-error-body")
-            .child(VNode::Element(
+            .child(VNode::Element(Box::new(
                 VElement::new("p")
                     .class("tairitsu-error-message")
                     .attr("data-message", "")
                     .child(VNode::Text(tairitsu_vdom::VText {
                         text: error.message.clone(),
                     })),
-            ))
+            )))
             .child(render_error_location(error))
             .child(render_error_stack(error)),
-    )
+    ))
 }
 
 fn render_error_location(error: &ErrorInfo) -> VNode {
     match &error.location {
-        Some(loc) => VNode::Element(
+        Some(loc) => VNode::Element(Box::new(
             VElement::new("div")
                 .class("tairitsu-error-location")
                 .attr("data-location", "")
-                .child(VNode::Element(
+                .child(VNode::Element(Box::new(
                     VElement::new("span")
                         .class("tairitsu-error-location-icon")
                         .child(VNode::Text(tairitsu_vdom::VText {
                             text: "\u{1f517}".to_string(), // link emoji
                         })),
-                ))
-                .child(VNode::Element(
+                )))
+                .child(VNode::Element(Box::new(
                     VElement::new("span")
                         .attr("data-location-text", "")
                         .child(VNode::Text(tairitsu_vdom::VText { text: loc.format() })),
-                )),
-        ),
-        None => VNode::Element(
+                ))),
+        )),
+        None => VNode::Element(Box::new(
             VElement::new("div")
                 .class("tairitsu-error-location tairitsu-error-hidden")
                 .attr("data-location", ""),
-        ),
+        )),
     }
 }
 
 fn render_error_stack(error: &ErrorInfo) -> VNode {
     match &error.stack {
-        Some(stack) => VNode::Element(
+        Some(stack) => VNode::Element(Box::new(
             VElement::new("div")
                 .class("tairitsu-error-stack")
                 .attr("data-stack", "")
-                .child(VNode::Element(
+                .child(VNode::Element(Box::new(
                     VElement::new("h4")
                         .class("tairitsu-error-stack-title")
                         .child(VNode::Text(tairitsu_vdom::VText {
                             text: "Stack Trace".to_string(),
                         })),
-                ))
-                .child(VNode::Element(
+                )))
+                .child(VNode::Element(Box::new(
                     VElement::new("pre")
                         .class("tairitsu-error-stack-content")
                         .attr("data-stack-content", "")
                         .child(VNode::Text(tairitsu_vdom::VText {
                             text: stack.clone(),
                         })),
-                )),
-        ),
-        None => VNode::Element(
+                ))),
+        )),
+        None => VNode::Element(Box::new(
             VElement::new("div")
                 .class("tairitsu-error-stack tairitsu-error-hidden")
                 .attr("data-stack", ""),
-        ),
+        )),
     }
 }
 
 fn render_error_footer() -> VNode {
-    VNode::Element(
+    VNode::Element(Box::new(
         VElement::new("div")
             .class("tairitsu-error-footer")
-            .child(VNode::Element(
+            .child(VNode::Element(Box::new(
                 VElement::new("button")
                     .class("tairitsu-error-button secondary")
                     .attr("data-copy", "")
@@ -323,8 +323,8 @@ fn render_error_footer() -> VNode {
                     .child(VNode::Text(tairitsu_vdom::VText {
                         text: "Copy Error".to_string(),
                     })),
-            ))
-            .child(VNode::Element(
+            )))
+            .child(VNode::Element(Box::new(
                 VElement::new("button")
                     .class("tairitsu-error-button primary")
                     .attr("data-reload", "")
@@ -332,8 +332,8 @@ fn render_error_footer() -> VNode {
                     .child(VNode::Text(tairitsu_vdom::VText {
                         text: "Reload".to_string(),
                     })),
-            )),
-    )
+            ))),
+    ))
 }
 
 /// Display component for rendering different error types
@@ -368,21 +368,21 @@ impl ErrorDisplay {
     }
 
     fn render_inline(&self) -> VNode {
-        VNode::Element(
+        VNode::Element(Box::new(
             VElement::new("div")
                 .class(format!(
                     "error-display {}",
                     self.error.error_type.css_class()
                 ))
-                .child(VNode::Element(VElement::new("strong").child(VNode::Text(
-                    tairitsu_vdom::VText {
+                .child(VNode::Element(Box::new(VElement::new("strong").child(
+                    VNode::Text(tairitsu_vdom::VText {
                         text: format!("{}:", self.error.error_type.title()),
-                    },
+                    }),
                 ))))
                 .child(VNode::Text(tairitsu_vdom::VText {
                     text: format!(" {}", self.error.message),
                 })),
-        )
+        ))
     }
 }
 
@@ -428,7 +428,9 @@ impl ErrorOverlay {
     /// Render the overlay
     pub fn render(&self) -> VNode {
         if self.errors.is_empty() {
-            return VNode::Element(VElement::new("div").attr("data-empty-overflow", ""));
+            return VNode::Element(Box::new(
+                VElement::new("div").attr("data-empty-overflow", ""),
+            ));
         }
 
         // Show the first error (most recent)
@@ -441,17 +443,17 @@ impl ErrorOverlay {
             return self.render();
         }
 
-        VNode::Element(
+        VNode::Element(Box::new(
             VElement::new("div")
-                .child(VNode::Element(
+                .child(VNode::Element(Box::new(
                     VElement::new("style")
                         .attr("type", "text/css")
                         .child(VNode::Text(tairitsu_vdom::VText {
                             text: Templates::overlay_styles().to_string(),
                         })),
-                ))
+                )))
                 .child(self.render()),
-        )
+        ))
     }
 }
 

@@ -3,33 +3,31 @@ name = "tairitsu-e2e"
 version.workspace = true
 description = "E2E testing framework for Tairitsu"
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 edition.workspace = true
 repository.workspace = true
 publish = false
 
 [dependencies]
-thirtyfour = { version = "^0.34", features = ["reqwest"] }
-chromiumoxide = { version = "^0.8", features = ["tokio-runtime"] }
-scraper = "^0.20"
+thirtyfour = { version = "^0.37", features = ["reqwest"] }
+scraper = "^0.22"
 tokio = { workspace = true }
-async-trait = "^0.1"
+async-trait = { workspace = true }
 log = "^0.4"
-tracing = "^0.1"
-tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
-anyhow = "^1"
-chrono = "^0.4"
-futures = "^0.3"
-tempfile = "^3"
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+futures = { workspace = true }
+tempfile = { workspace = true }
 tairitsu-ssr = { workspace = true }
-toml = "^0.8"
-clap = { version = "^4", features = ["derive"] }
-image = "^0.25"
+toml = { workspace = true }
+clap = { workspace = true }
+image = { workspace = true }
 
 [[bin]]
 name = "tairitsu-e2e"
 path = "src/main.rs"
 
-[dev-dependencies]

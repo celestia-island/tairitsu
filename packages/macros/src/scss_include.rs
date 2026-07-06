@@ -36,8 +36,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
-    LitStr,
     parse::{Parse, ParseStream},
+    LitStr,
 };
 
 // ─── Input syntax ──────────────────────────────────────────────────────
@@ -218,7 +218,7 @@ impl ScssExtractor {
         while self.remaining() {
             match self.ch() {
                 '/' if self.ch_at(1) == '*' => self.skip_block_comment(),
-                '/' if self.ch_at(1) != '\0' => {
+                '/' if self.ch_at(1) == '/' => {
                     self.advance(2);
                     self.skip_to_eol();
                 }
@@ -257,7 +257,7 @@ impl ScssExtractor {
                 '"' => self.skip_string_double(),
                 '\'' => self.skip_string_single(),
                 '/' if self.ch_at(1) == '*' => self.skip_block_comment(),
-                '/' if self.ch_at(1) != '\0' => {
+                '/' if self.ch_at(1) == '/' => {
                     self.advance(2);
                     self.skip_to_eol();
                 }
@@ -281,7 +281,7 @@ impl ScssExtractor {
                     self.advance(1);
                 }
                 '"' | '\'' => return,
-                '/' if self.ch_at(1) == '*' || self.ch_at(1) != '\0' => return,
+                '/' if self.ch_at(1) == '*' || self.ch_at(1) == '/' => return,
                 '.' => self.consume_class_selector(),
                 '#' => {
                     self.advance(1);

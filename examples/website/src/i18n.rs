@@ -1,4 +1,39 @@
-pub use tairitsu_web::i18n::Language;
+/// The languages this demo's UI strings are translated into.
+///
+/// Self-contained: this example no longer pulls i18n from `tairitsu-web`
+/// (i18n is owned by the hikari layer now).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Language {
+    ENGLISH,
+    CHINESE_SIMPLIFIED,
+    CHINESE_TRADITIONAL,
+    JAPANESE,
+    KOREAN,
+    FRENCH,
+    SPANISH,
+    RUSSIAN,
+}
+
+impl Language {
+    /// Default/fallback locale.
+    pub fn default_lang() -> Self {
+        Self::ENGLISH
+    }
+
+    /// The language's endonym.
+    pub fn native_name(&self) -> &'static str {
+        match self {
+            Self::ENGLISH => "English",
+            Self::CHINESE_SIMPLIFIED => "简体中文",
+            Self::CHINESE_TRADITIONAL => "繁體中文",
+            Self::JAPANESE => "日本語",
+            Self::KOREAN => "한국어",
+            Self::FRENCH => "Français",
+            Self::SPANISH => "Español",
+            Self::RUSSIAN => "Русский",
+        }
+    }
+}
 
 pub struct SiteText {
     pub hero_title: &'static str,

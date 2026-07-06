@@ -9,26 +9,9 @@
 use anyhow::Result;
 use log::{debug, error, info, warn};
 
-use tairitsu_web::{
-    Container, Image,
-    dynamic::host_imports::HostImportRegistry,
-    ron::{RonBinding, RonToolRegistry, typed_ron_tool},
-};
+use tairitsu_web::ron::{typed_ron_tool, RonBinding, RonToolRegistry};
 
-// ============================================================================
-// Host Import Implementation
-// ============================================================================
-
-#[allow(dead_code)]
-struct LoggerImport;
-
-#[allow(dead_code)]
-impl LoggerImport {
-    fn log(level: String, message: String) -> String {
-        println!("[{}] {}", level, message);
-        format!("Logged: {}", message)
-    }
-}
+use tairitsu::dynamic::host_imports::HostImportRegistry;
 
 // ============================================================================
 // Example Tool Implementations for Comparison
@@ -196,7 +179,7 @@ fn main() -> Result<()> {
     // ========================================================================
     info!("\n🧪 Scenario 6: Complex Type Support Verification");
 
-    use tairitsu_web::dynamic::{ron_to_val, val_to_ron};
+    use tairitsu::dynamic::{ron_to_val, val_to_ron};
     use wasmtime::component::Val;
 
     // Test 1: List type
@@ -376,36 +359,5 @@ fn main() -> Result<()> {
     info!("  4. Register host imports with HostImportRegistry");
 
     info!("\n🎉 Example completed successfully!");
-    Ok(())
-}
-
-// ============================================================================
-// Helper: Example Container Creation (Pseudo-code)
-// ============================================================================
-
-#[allow(dead_code)]
-fn example_container_creation() -> Result<()> {
-    use bytes::Bytes;
-
-    // Step 1: Load WASM binary
-    let wasm_binary = std::fs::read("guest_component.wasm")?;
-    let image = Image::new(Bytes::from(wasm_binary))?;
-
-    // Step 2: Build container with host imports
-    let builder = Container::builder(image);
-    // In real usage, you would call:
-    // let mut container = builder
-    //     .with_host_state(HostState::new()?)
-    //     .with_guest_initializer(|ctx| {
-    //         // Register WIT interface
-    //         // MyWit::add_to_linker(ctx.linker, |state| &mut state.my_data)?;
-    //         // let instance = MyWit::instantiate(ctx.store, ctx.component, ctx.linker)?;
-    //         // Ok(GuestInstance::new(instance))
-    //         Ok(GuestInstance::new(()))
-    //     })?
-    //     .build()?;
-
-    let _ = builder;
-    info!("Note: Container creation requires actual WASM component with WIT bindings");
     Ok(())
 }

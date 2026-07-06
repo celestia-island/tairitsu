@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use super::{FetchConfig, cache::Cache, error::FetchError, fetcher::Fetcher};
+use super::{cache::Cache, error::FetchError, fetcher::Fetcher, FetchConfig};
 
 /// HTTP fetcher for making HTTP requests with caching support
 #[derive(Clone)]
@@ -79,7 +79,7 @@ impl HttpFetcher {
     }
 
     /// Create a cache key for a request
-    #[allow(dead_code)]
+    #[cfg(feature = "data-fetcher")]
     fn cache_key(method: &str, url: &str, body: &[u8]) -> String {
         use std::hash::{Hash, Hasher};
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -105,19 +105,19 @@ impl HttpFetcher {
         // Add custom headers from config
         #[cfg(feature = "data-fetcher")]
         for (key, value) in &self.config.headers {
-            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
-                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value)
-            {
-                headers.insert(header_name, header_value);
+            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes()) {
+                if let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
+                    headers.insert(header_name, header_value);
+                }
             }
         }
 
         // Add additional headers
         for (key, value) in additional {
-            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
-                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value)
-            {
-                headers.insert(header_name, header_value);
+            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes()) {
+                if let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
+                    headers.insert(header_name, header_value);
+                }
             }
         }
 
@@ -214,6 +214,12 @@ impl Fetcher for HttpFetcher {
 
             let headers = self.build_headers(&HashMap::new());
 
+            let cache_key = if self.config.cache {
+                Some(Self::cache_key("POST", url, &body))
+            } else {
+                None
+            };
+
             let response = client
                 .post(url)
                 .headers(headers)
@@ -237,11 +243,8 @@ impl Fetcher for HttpFetcher {
 
             let data = bytes.to_vec();
 
-            // Store in cache
-            #[cfg(feature = "data-fetcher")]
-            if self.config.cache {
-                let cache_key = Self::cache_key("POST", url, &[]);
-                self.cache.insert(cache_key, data.clone());
+            if let Some(key) = cache_key {
+                self.cache.insert(key, data.clone());
             }
 
             Ok(data)
@@ -258,8 +261,9 @@ impl Fetcher for HttpFetcher {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::time::Duration;
+
+    use super::*;
 
     #[test]
     fn test_http_fetcher_new() {
@@ -282,6 +286,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "data-fetcher")]
     fn test_cache_key_generation() {
         let key1 = HttpFetcher::cache_key("GET", "http://example.com", &[]);
         let key2 = HttpFetcher::cache_key("GET", "http://example.com", &[]);
@@ -291,6 +296,23 @@ mod tests {
         assert_eq!(key1, key2);
         assert_ne!(key1, key3);
         assert_ne!(key1, key4);
+    }
+
+    #[test]
+    #[cfg(feature = "data-fetcher")]
+    fn test_cache_key_post_different_body() {
+        let post_key_body_a = HttpFetcher::cache_key("POST", "http://example.com/api", b"body_a");
+        let post_key_body_b = HttpFetcher::cache_key("POST", "http://example.com/api", b"body_b");
+        let post_key_empty = HttpFetcher::cache_key("POST", "http://example.com/api", &[]);
+
+        assert_ne!(
+            post_key_body_a, post_key_body_b,
+            "POST with different bodies must produce different cache keys"
+        );
+        assert_ne!(
+            post_key_body_a, post_key_empty,
+            "POST with body vs no body must produce different cache keys"
+        );
     }
 
     #[tokio::test]

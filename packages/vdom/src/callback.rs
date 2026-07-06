@@ -1,7 +1,4 @@
-use std::{
-    ops::{Deref, DerefMut},
-    rc::Rc,
-};
+use std::{ops::Deref, rc::Rc};
 
 /// A smart pointer wrapping `Fn(T) -> R` for event handling.
 ///
@@ -93,17 +90,6 @@ impl<T, R> Deref for Callback<T, R> {
     }
 }
 
-impl<T, R> DerefMut for Callback<T, R> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        // We cannot provide a mutable reference to the inner dyn Fn
-        // since it's behind an Rc. This implementation exists for
-        // completeness but panics at runtime if called.
-        // In practice, this is rarely needed since callbacks are typically
-        // invoked via call() or deref().
-        panic!("Cannot mutate a Callback's inner function");
-    }
-}
-
 impl<T, R, F> From<F> for Callback<T, R>
 where
     F: Fn(T) -> R + 'static,
@@ -181,9 +167,10 @@ pub type EventHandler<T> = Callback<T, ()>;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cell::Cell;
     use std::rc::Rc;
+
+    use super::*;
 
     #[test]
     fn test_callback_new() {
@@ -289,12 +276,5 @@ mod tests {
 
         callback2.call(20);
         assert_eq!(state.get(), 20);
-    }
-
-    #[test]
-    #[should_panic(expected = "Cannot mutate a Callback")]
-    fn test_callback_deref_mut_panics() {
-        let mut callback = Callback::new(|x: i32| x);
-        let _ = callback.deref_mut();
     }
 }

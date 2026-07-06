@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    io::Write as _,
+    path::{Path, PathBuf},
+};
 
 use clap::{Parser, Subcommand};
 
@@ -12,13 +15,23 @@ fn find_workspace_root(start: &Path) -> PathBuf {
         start.to_path_buf()
     };
 
+    let mut depth = 0u32;
     loop {
         if current.join("packages").is_dir() && current.join("Cargo.toml").is_file() {
             return current;
         }
         match current.parent() {
-            Some(parent) => current = parent.to_path_buf(),
+            Some(parent) => {
+                if parent == current {
+                    return start.to_path_buf();
+                }
+                current = parent.to_path_buf();
+            }
             None => return start.to_path_buf(),
+        }
+        depth += 1;
+        if depth > 64 {
+            return start.to_path_buf();
         }
     }
 }
@@ -99,6 +112,31 @@ enum Commands {
         /// Port for debug API server (default: same as dev port + 1, or 3001)
         #[arg(long)]
         debug_port: Option<u16>,
+
+        /// Clean output directory before building
+        #[arg(long)]
+        clean: bool,
+    },
+
+    /// Standalone browser + debug API server (no app project required).
+    ///
+    /// Launches a headless chromium and serves the agent-automation debug API,
+    /// so the MCP browser tools can drive ANY url — not just a tairitsu app's
+    /// dev server. Useful for screenshotting/automating arbitrary web pages
+    /// (e.g. a Vite dev server for a non-tairitsu frontend).
+    Debug {
+        /// Debug API port to listen on (default: 3001)
+        #[arg(short, long, default_value = "3001")]
+        port: u16,
+
+        /// Initial URL the browser opens (default: about:blank). The MCP
+        /// `navigate` tool can still go anywhere afterwards.
+        #[arg(short, long, default_value = "about:blank")]
+        url: String,
+
+        /// Proxy server for Chrome (e.g. http://localhost:7890)
+        #[arg(long)]
+        proxy: Option<String>,
     },
 
     /// Build for production
@@ -120,6 +158,12 @@ enum Commands {
         routes: Vec<String>,
     },
 
+    /// Pre-check and resolve build dependencies (icons, WIT, etc.)
+    Check {
+        #[command(subcommand)]
+        action: CheckCommands,
+    },
+
     /// Package application for distribution
     Package {
         /// Target platform (windows, macos, linux, all)
@@ -134,7 +178,13 @@ enum Commands {
         port: Option<u16>,
     },
 
-    /// Initialize a new Tairitsu project
+    /// Create a new Tairitsu project (alias for init)
+    New {
+        /// Project name
+        name: String,
+    },
+
+    /// Initialize a new Tairitsu project in current directory
     Init {
         /// Project name
         #[arg(short, long)]
@@ -254,6 +304,30 @@ enum Commands {
 #[derive(Subcommand)]
 enum McpCommands {}
 
+#[derive(Clone, Subcommand)]
+enum CheckCommands {
+    /// Resolve hikari-icons data (download SVGs, generate impl_icons! code)
+    Icons {
+        /// Use only cached SVGs, skip network downloads
+        #[arg(long)]
+        offline: bool,
+    },
+
+    /// Fetch and verify WIT packages
+    Wit {
+        /// Use only cached packages, skip network downloads
+        #[arg(long)]
+        offline: bool,
+    },
+
+    /// Run all checks (icons, WIT, etc.)
+    All {
+        /// Use only cached resources, skip network downloads
+        #[arg(long)]
+        offline: bool,
+    },
+}
+
 #[derive(Subcommand)]
 enum WitCommands {
     /// Fetch WIT packages from the registry and store in target/tairitsu-wit
@@ -295,36 +369,25 @@ enum WitCommands {
 
 #[derive(Subcommand)]
 enum IconsCommands {
-    /// Fetch icons from the configured source and cache them
+    /// Fetch icon sets and cache them locally
     Fetch {
-        /// Icon source (mdi, lucide, custom)
-        #[arg(short, long, default_value = "mdi")]
-        source: String,
+        /// Icon set name(s) to fetch (comma-separated, default: all configured)
+        #[arg(short, long)]
+        sets: Option<String>,
 
-        /// Force refresh (ignore cache)
+        /// Force refresh (re-download even if cached)
         #[arg(short, long)]
         force: bool,
+
+        /// Offline mode: skip network fetch, use cache only
+        #[arg(long)]
+        offline: bool,
     },
 
-    /// Build icon module from cached icons
-    Build {
-        /// Output file path (overrides Cargo.toml setting)
-        #[arg(short, long)]
-        output: Option<PathBuf>,
-
-        /// Icon names to include (comma-separated)
-        #[arg(short, long)]
-        icons: Option<String>,
-
-        /// Tags to include (comma-separated)
-        #[arg(short, long)]
-        tags: Option<String>,
-    },
-
-    /// List available icons (optionally filter by source/tag)
+    /// List available icons from cache (optionally filter by source/tag)
     List {
-        /// Icon source (mdi, lucide)
-        #[arg(short, long, default_value = "mdi")]
+        /// Icon source (mdi, lucide, etc.)
+        #[arg(short = 'S', long, default_value = "mdi")]
         source: String,
 
         /// Filter by tag
@@ -332,9 +395,35 @@ enum IconsCommands {
         tag: Option<String>,
 
         /// Search query
-        #[arg(short, long)]
+        #[arg(short = 'q', long)]
         search: Option<String>,
+
+        /// Offline mode
+        #[arg(long)]
+        offline: bool,
     },
+
+    /// Resolve icons from consumer Cargo.toml metadata (fetch + generate .dat)
+    Resolve {
+        /// Output directory for generated .dat files (default: hikari-icons package root)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+
+        /// Offline mode: skip network fetch, use cache only
+        #[arg(long)]
+        offline: bool,
+
+        /// Also generate woff2 subsets for sets that have fonts
+        #[arg(long)]
+        with_fonts: bool,
+
+        /// Static files output directory for woff2/CSS (default: target/tairitsu-dist/static)
+        #[arg(long)]
+        static_dir: Option<PathBuf>,
+    },
+
+    /// Show available icon sets and their sources
+    Sets,
 }
 
 #[derive(Subcommand)]
@@ -356,6 +445,64 @@ enum ResourcesCommands {
         #[arg(short, long, default_value = "text")]
         format: String,
     },
+}
+
+fn run_check(
+    action: CheckCommands,
+    manifest_path: &Option<PathBuf>,
+    verbose: u8,
+) -> crate::Result<()> {
+    let manifest_path = resolve_manifest_dir(manifest_path);
+
+    match action {
+        CheckCommands::Icons { offline } => {
+            crate::log_progress!("Resolving hikari-icons...");
+            let path = crate::wasm::resolve_hikari_icons(&manifest_path, offline, verbose > 0)?;
+            crate::log_ok!("hikari-icons resolved → {}", path.display());
+        }
+        CheckCommands::Wit { offline: _ } => {
+            crate::log_progress!("Checking WIT packages...");
+            crate::log_info!("(WIT check not yet implemented)");
+        }
+        CheckCommands::All { offline } => {
+            let mut ok = true;
+
+            crate::log_progress!("[1/2] Resolving hikari-icons...");
+            match crate::wasm::resolve_hikari_icons(&manifest_path, offline, verbose > 0) {
+                Ok(path) => crate::log_ok!("[1/2] hikari-icons → {}", path.display()),
+                Err(e) => {
+                    crate::log_fail!("[1/2] hikari-icons: {}", e);
+                    ok = false;
+                }
+            }
+
+            crate::log_progress!("[2/2] Checking WIT packages...");
+            crate::log_info!("[2/2] (WIT check not yet implemented)");
+
+            if !ok {
+                return Err(crate::TairitsuPackagerError::DoctorError(
+                    "Some checks failed".to_string(),
+                ));
+            }
+            crate::log_ok!("All checks passed.");
+        }
+    }
+    Ok(())
+}
+
+fn resolve_manifest_dir(path: &Option<PathBuf>) -> PathBuf {
+    match path {
+        Some(p) => {
+            if p.is_dir() {
+                p.clone()
+            } else {
+                p.parent()
+                    .map(|d| d.to_path_buf())
+                    .unwrap_or_else(|| p.clone())
+            }
+        }
+        None => std::path::PathBuf::from("."),
+    }
 }
 
 /// Handle synchronous daemon operations (status, shutdown, parent fork).
@@ -396,14 +543,19 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
     }
 
     if cli.daemon && !daemon::is_daemon() && !cli.dry_run {
-        // SAFETY: single-threaded at this point
-        unsafe {
-            std::env::set_var("TAIRITSU_LOG_TS", "1");
-        }
+        std::env::set_var("TAIRITSU_LOG_TS", "1");
         let was_running = daemon::is_daemon_running();
         if was_running {
-            crate::log_progress!("Restarting daemon...");
+            let killed_pid = daemon::read_pid().unwrap_or(0);
+            if cli.force {
+                crate::log_progress!("Force-restarting daemon...");
+            } else {
+                crate::log_progress!("Restarting daemon...");
+            }
             let _ = daemon::kill_daemon();
+            if cli.force && killed_pid > 0 {
+                crate::log_warn!("--force: killed previous daemon (PID {})", killed_pid);
+            }
             crate::log_ok!("Old daemon stopped.");
         } else {
             crate::log_progress!("Starting daemon...");
@@ -445,16 +597,21 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
         return SYNC_OK;
     }
 
+    // `check` is fully synchronous — no tokio needed
+    if let Some(Commands::Check { action }) = cli.command {
+        return Some(run_check(action, &cli.manifest_path, cli.verbose));
+    }
+
     // Not a sync daemon operation — proceed to async mode
     None
 }
 
 pub fn run_tokio() {
-    if daemon::is_daemon()
-        && let Err(e) = daemon::daemonize_self()
-    {
-        let _ = daemon::signal_failed(&format!("daemonize failed: {}", e));
-        std::process::exit(1);
+    if daemon::is_daemon() {
+        if let Err(e) = daemon::daemonize_self() {
+            let _ = daemon::signal_failed(&format!("daemonize failed: {}", e));
+            std::process::exit(1);
+        }
     }
 
     #[tokio::main]
@@ -595,6 +752,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             ssr,
             debug,
             debug_port,
+            clean,
         }) => {
             let config = crate::config::Config::load(&manifest_path)?;
             if ssr {
@@ -625,6 +783,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                         cli.verbose > 0,
                         debug,
                         debug_port,
+                        clean,
                     )
                     .await?;
                 }
@@ -635,6 +794,31 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     );
                     std::process::exit(1);
                 }
+            }
+        }
+        #[allow(unused_variables)]
+        Some(Commands::Debug { port, url, proxy }) => {
+            #[cfg(feature = "dev-server")]
+            {
+                crate::log_info!("Starting standalone debug browser (no app project)...");
+                let cfg = crate::debug::DebugServerConfig {
+                    base_url: url,
+                    dev_port: 0,
+                    dist_dir: "(standalone)".to_string(),
+                    package_name: "(browser-only)".to_string(),
+                    proxy,
+                };
+                // Advertise readiness so a co-located `tairitsu mcp` (or the
+                // standalone tairitsu-mcp bin) auto-discovers this debug API.
+                let _ = crate::daemon::signal_ready(0, Some(port));
+                crate::debug::start_debug_server(cfg, port).await?;
+            }
+            #[cfg(not(feature = "dev-server"))]
+            {
+                crate::log_fail!(
+                    "Dev-server feature is not enabled. Please enable the 'dev-server' feature."
+                );
+                std::process::exit(1);
             }
         }
         #[allow(unused_variables)]
@@ -699,10 +883,13 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         }
         Some(Commands::Preview { port }) => {
             crate::log_info!("{}", t.cli.preview_starting);
-            let port = port.unwrap_or(3000);
-            let _port = port;
+            let _port = port.unwrap_or(3000);
             crate::log_fail!("{}", t.cli.preview_not_implemented);
             std::process::exit(1);
+        }
+        Some(Commands::New { name }) => {
+            crate::log_info!("{}", t.cli.init_starting);
+            crate::utils::init_project(&name)?;
         }
         Some(Commands::Init { name }) => {
             crate::log_info!("{}", t.cli.init_starting);
@@ -751,115 +938,228 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
             }
         },
-        Some(Commands::Icons { action }) => match action {
-            IconsCommands::Fetch { source, force } => {
-                crate::log_info!("Fetching icons from {}...", source);
-                let target_dir = std::path::PathBuf::from("target");
-                let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
-                let cache_dir = target_dir
-                    .join(crate::icons::ICON_CACHE_DIR)
-                    .join(icon_source.to_string());
+        Some(Commands::Icons { action }) => {
+            let manifest_path = if manifest_path.is_dir() {
+                manifest_path
+            } else {
+                manifest_path
+                    .parent()
+                    .map(|p| p.to_path_buf())
+                    .unwrap_or(manifest_path)
+            };
+            let cache_root = crate::icons::resolve_cache_root(Some(&manifest_path));
+            match action {
+                IconsCommands::Fetch {
+                    sets,
+                    force,
+                    offline,
+                } => {
+                    let meta = crate::icons::read_consumer_metadata(&manifest_path)?;
+                    let set_names: Vec<String> = sets
+                        .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
+                        .unwrap_or_else(|| meta.sets.clone());
 
-                if force {
-                    crate::icons::force_fetch_icons(&icon_source, &cache_dir)?;
-                } else {
-                    crate::icons::fetch_icons(&icon_source, &cache_dir)?;
+                    if set_names.is_empty() {
+                        crate::log_info!("No icon sets configured. Use --sets or configure [package.metadata.hikari.icons]");
+                        return Ok(());
+                    }
+
+                    let cache = crate::icons::IconCache::new(cache_root, offline);
+
+                    for set_name in &set_names {
+                        if crate::icons::sources::find_source(set_name).is_none() {
+                            crate::log_fail!("Unknown icon set: '{}'", set_name);
+                            continue;
+                        }
+                        let version = "latest".to_string();
+
+                        if !force && cache.has_cache(set_name, &version) {
+                            crate::log_ok!("{} already cached", set_name);
+                            continue;
+                        }
+
+                        let fake_meta = crate::icons::HikariIconsMetadata {
+                            sets: vec![set_name.clone()],
+                            ..Default::default()
+                        };
+                        let result = crate::icons::resolve(&fake_meta, &cache)?;
+                        if result.sets.is_empty() {
+                            crate::log_fail!("{} — failed to fetch", set_name);
+                        } else {
+                            crate::log_ok!(
+                                "{} — {} icons cached",
+                                set_name,
+                                result.sets[0].icons.len()
+                            );
+                        }
+                    }
                 }
-                crate::log_info!("Icons cached successfully.");
-            }
-            IconsCommands::Build {
-                output,
-                icons,
-                tags,
-            } => {
-                crate::log_info!("Building icon module...");
+                IconsCommands::List {
+                    source,
+                    tag,
+                    search,
+                    offline,
+                } => {
+                    if crate::icons::sources::find_source(&source).is_none() {
+                        crate::log_fail!(
+                            "Unknown icon set: '{}'. Use 'tairitsu icons sets' to list available.",
+                            source
+                        );
+                        return Ok(());
+                    }
 
-                // Load Cargo.toml to get configuration
-                let cargo_toml_path = if manifest_path.is_dir() {
-                    manifest_path.join("Cargo.toml")
-                } else {
-                    manifest_path.clone()
-                };
-
-                let content = std::fs::read_to_string(&cargo_toml_path)?;
-                let manifest: toml::Value = toml::from_str(&content)?;
-                let icons_config = crate::icons::parse_icons_config(&manifest)?;
-
-                let output_path = output.unwrap_or_else(|| {
-                    icons_config
-                        .output
-                        .as_ref()
-                        .map(std::path::PathBuf::from)
-                        .unwrap_or_else(|| std::path::PathBuf::from("src/generated/icons.rs"))
-                });
-
-                let icon_names: Vec<String> = icons
-                    .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
-                    .unwrap_or_else(|| icons_config.icons.clone());
-
-                let tag_names: Vec<String> = tags
-                    .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
-                    .unwrap_or_else(|| icons_config.tags.clone());
-
-                let icon_config = crate::icons::IconConfig {
-                    source: icons_config
-                        .source
-                        .as_ref()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or_default(),
-                    names: icon_names,
-                    tags: tag_names,
-                    styles: vec![crate::icons::IconStyle::Filled],
-                    output: output_path,
-                };
-
-                let target_dir = std::path::PathBuf::from("target");
-                let result = crate::icons::build_icons(&icon_config, &target_dir)?;
-
-                crate::log_info!(
-                    "Generated {} icons to {}",
-                    result.icons_count,
-                    result.output_path.display()
-                );
-            }
-            IconsCommands::List {
-                source,
-                tag,
-                search,
-            } => {
-                crate::log_info!("Listing icons from {}...", source);
-
-                let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
-                let target_dir = std::path::PathBuf::from("target");
-                let cache_dir = target_dir
-                    .join(crate::icons::ICON_CACHE_DIR)
-                    .join(icon_source.to_string());
-
-                let metadata = crate::icons::fetch_icons(&icon_source, &cache_dir)?;
-
-                let icons = if let Some(query) = search {
-                    metadata.search(&query)
-                } else if let Some(tag_filter) = tag {
-                    metadata.filter_icons(&[], &[tag_filter])
-                } else {
-                    metadata.filter_icons(&[], &[])
-                };
-
-                crate::log_ok!("Found {} icons:", icons.len());
-                for icon in icons.iter().take(100) {
-                    let tags_str = if icon.tags.is_empty() {
-                        String::new()
-                    } else {
-                        format!(" [{}]", icon.tags.join(", "))
+                    let cache = crate::icons::IconCache::new(cache_root, offline);
+                    let manifest = {
+                        let set_dir = cache.set_dir(&source, "");
+                        std::fs::read_dir(&set_dir).ok().and_then(|entries| {
+                            entries.flatten().find_map(|e| {
+                                let ver = e.file_name().to_str()?.to_string();
+                                cache.load_manifest(&source, &ver)
+                            })
+                        })
                     };
-                    crate::log_info!("  {}{}", icon.name, tags_str);
-                }
 
-                if icons.len() > 100 {
-                    crate::log_info!("  ... and {} more", icons.len() - 100);
+                    let icons: Vec<(String, String, Vec<String>)> = match manifest {
+                        Some(m) => {
+                            let mut icons: Vec<(String, String, Vec<String>)> = m
+                                .icons
+                                .iter()
+                                .map(|(n, d)| (n.clone(), d.tags.join(", "), d.tags.clone()))
+                                .collect();
+                            if let Some(ref query) = search {
+                                let q = query.to_lowercase();
+                                icons.retain(|(name, _, tags)| {
+                                    name.to_lowercase().contains(&q)
+                                        || tags.iter().any(|t| t.to_lowercase().contains(&q))
+                                });
+                            } else if let Some(ref tag_filter) = tag {
+                                icons.retain(|(_, _, tags)| {
+                                    tags.iter().any(|t| t.eq_ignore_ascii_case(tag_filter))
+                                });
+                            }
+                            icons.sort_by(|a, b| a.0.cmp(&b.0));
+                            icons
+                        }
+                        None => {
+                            crate::log_fail!(
+                                "No cache for '{}'. Run 'tairitsu icons fetch' first.",
+                                source
+                            );
+                            return Ok(());
+                        }
+                    };
+
+                    crate::log_ok!("Found {} icons:", icons.len());
+                    for (name, tags_str, _) in icons.iter().take(100) {
+                        let tags = if tags_str.is_empty() {
+                            String::new()
+                        } else {
+                            format!(" [{}]", tags_str)
+                        };
+                        crate::log_info!("  {}{}", name, tags);
+                    }
+                    if icons.len() > 100 {
+                        crate::log_info!("  ... and {} more", icons.len() - 100);
+                    }
+                }
+                IconsCommands::Resolve {
+                    output,
+                    offline,
+                    with_fonts,
+                    static_dir,
+                } => {
+                    let meta = crate::icons::read_consumer_metadata(&manifest_path)?;
+
+                    if meta.sets.is_empty() {
+                        crate::log_info!(
+                            "No icon sets configured in [package.metadata.hikari.icons]"
+                        );
+                        return Ok(());
+                    }
+
+                    crate::log_info!("Configured sets: {:?}", meta.sets);
+
+                    let cache = crate::icons::IconCache::new(cache_root, offline);
+                    let result = crate::icons::resolve(&meta, &cache)?;
+
+                    if result.sets.is_empty() {
+                        crate::log_fail!("No icon sets resolved");
+                        return Ok(());
+                    }
+
+                    let output_dir = output.unwrap_or_else(|| manifest_path.join("packages/icons"));
+                    std::fs::create_dir_all(&output_dir)?;
+
+                    for resolved in &result.sets {
+                        let dat_path =
+                            output_dir.join(format!("{}_data.dat", resolved.source.name));
+                        let mut icons: Vec<_> = resolved.icons.iter().collect();
+                        icons.sort_by(|a, b| a.0.cmp(b.0));
+
+                        let mut f = std::fs::File::create(&dat_path)?;
+                        for (name, data) in &icons {
+                            writeln!(f, "{}\t{}", name, data.path_d)?;
+                        }
+
+                        crate::log_ok!(
+                            "  {} → {} icons → {}",
+                            resolved.source.name,
+                            icons.len(),
+                            dat_path.display()
+                        );
+
+                        if with_fonts && resolved.source.font_file.is_some() {
+                            let static_out = static_dir.clone().unwrap_or_else(|| {
+                                std::path::PathBuf::from("target/tairitsu-dist/static/fonts")
+                            });
+                            let icon_names: Vec<String> = resolved.icons.keys().cloned().collect();
+                            let cache_dir = cache.set_dir(resolved.source.name, &resolved.version);
+                            let extracted_dir = cache_dir.join("extracted");
+
+                            match crate::icons::generate_woff_subset(
+                                resolved.source,
+                                &icon_names,
+                                &extracted_dir,
+                                &static_out,
+                            ) {
+                                Ok(()) => {
+                                    crate::log_ok!(
+                                        "  {} → woff2 → {}",
+                                        resolved.source.name,
+                                        static_out.display()
+                                    );
+                                }
+                                Err(e) => {
+                                    crate::log_warn!(
+                                        "  {} → woff skipped: {}",
+                                        resolved.source.name,
+                                        e
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    crate::log_ok!(
+                        "Resolved {} icon sets (mode: {})",
+                        result.sets.len(),
+                        result.mode
+                    );
+                }
+                IconsCommands::Sets => {
+                    use crate::icons::sources::ICON_SOURCES;
+                    crate::log_ok!("Available icon sets ({}):", ICON_SOURCES.len());
+                    for source in ICON_SOURCES {
+                        let font = if source.font_file.is_some() {
+                            " [+font]"
+                        } else {
+                            ""
+                        };
+                        crate::log_info!("  {} — {}{}", source.name, source.display, font);
+                    }
                 }
             }
-        },
+        }
         #[allow(unused_variables)]
         Some(Commands::Ssr {
             port,
@@ -920,8 +1220,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
             }
         }
-        #[allow(unused_variables)]
-        Some(Commands::Mcp { url, action }) => {
+        Some(Commands::Mcp { url, action: _ }) => {
             let config = crate::mcp::McpConfig {
                 base_url: url.unwrap_or_default(),
             };
@@ -1211,6 +1510,9 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 );
                 std::process::exit(1);
             }
+        }
+        Some(Commands::Check { .. }) => {
+            crate::log_info!("Check completed in synchronous phase.");
         }
         None => {
             if cli.status || cli.shutdown || cli.daemon {

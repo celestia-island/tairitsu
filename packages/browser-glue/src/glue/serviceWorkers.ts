@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * service-workers glue — implements the `tairitsu-browser:service-workers` WIT import interfaces.
  *

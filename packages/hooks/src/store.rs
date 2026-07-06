@@ -277,7 +277,6 @@ macro_rules! store {
     ($name:ident, $ty:ty, $initial:expr) => {
         static $name: std::sync::OnceLock<$crate::Store<$ty>> = std::sync::OnceLock::new();
 
-        #[allow(dead_code)]
         fn $name() -> $crate::Store<$ty> {
             $name
                 .get_or_init(|| $crate::register_store($crate::Store::new($initial)))
@@ -297,7 +296,9 @@ macro_rules! store {
 /// ```
 #[macro_export]
 macro_rules! use_store {
-    ($store:expr) => {{ $store.get() }};
+    ($store:expr) => {{
+        $store.get()
+    }};
 }
 
 #[cfg(test)]

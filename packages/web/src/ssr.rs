@@ -22,6 +22,5 @@ impl SsrPlatform {
 }
 
 pub fn init() {
-    // Initialize SSR-specific features
-    println!("Initializing Tairitsu Web (SSR platform)");
+    tracing::info!("Initializing Tairitsu Web (SSR platform)");
 }

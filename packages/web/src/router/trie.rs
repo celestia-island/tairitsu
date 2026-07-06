@@ -1,6 +1,6 @@
 //! Trie-based route matching structure.
 
-use std::{collections::HashMap, sync::Arc};
+use std::{cell::RefCell, collections::HashMap, sync::Arc};
 
 use tairitsu_vdom::VNode;
 
@@ -9,26 +9,26 @@ use super::{Params, RouteHandler, RouteSegment};
 /// A node in the route matching trie
 pub struct TrieNode {
     /// Child nodes keyed by segment
-    children: HashMap<String, Arc<TrieNode>>,
+    children: RefCell<HashMap<String, Arc<TrieNode>>>,
     /// Dynamic child (for :param segments)
-    dynamic_child: Option<Arc<TrieNode>>,
+    dynamic_child: RefCell<Option<Arc<TrieNode>>>,
     /// Wildcard child (for * segments)
-    wildcard_child: Option<Arc<TrieNode>>,
+    wildcard_child: RefCell<Option<Arc<TrieNode>>>,
     /// Handler at this node (if any)
-    handler: Option<RouteHandler>,
+    handler: RefCell<Option<RouteHandler>>,
     /// Name of the route (if any)
-    name: Option<String>,
+    name: RefCell<Option<String>>,
 }
 
 impl TrieNode {
     /// Create a new trie node
     pub fn new() -> Self {
         Self {
-            children: HashMap::new(),
-            dynamic_child: None,
-            wildcard_child: None,
-            handler: None,
-            name: None,
+            children: RefCell::new(HashMap::new()),
+            dynamic_child: RefCell::new(None),
+            wildcard_child: RefCell::new(None),
+            handler: RefCell::new(None),
+            name: RefCell::new(None),
         }
     }
 
@@ -41,13 +41,14 @@ impl TrieNode {
     pub fn insert_named(
         &self,
         segments: Vec<RouteSegment>,
-        name: String,
+        name: Option<String>,
         handler: RouteHandler,
     ) {
         if segments.is_empty() {
-            // This is a leaf node - set the handler
-            // Note: We can't modify self directly, so this is a simplified version
-            // In a real implementation, you'd use interior mutability
+            *self.handler.borrow_mut() = Some(handler);
+            if let Some(n) = name {
+                *self.name.borrow_mut() = Some(n);
+            }
             return;
         }
 
@@ -56,29 +57,30 @@ impl TrieNode {
 
         match first.segment_type() {
             super::SegmentType::Static => {
-                if let Some(child) = self.children.get(&first.to_string()) {
-                    child.insert_named(rest.to_vec(), name, handler);
-                } else {
-                    // In a real implementation with interior mutability, we'd add the child
-                    let new_node = Arc::new(TrieNode::new());
-                    new_node.insert_named(rest.to_vec(), name, handler);
-                }
+                let key = first.to_string();
+                let mut children = self.children.borrow_mut();
+                let child = children
+                    .entry(key)
+                    .or_insert_with(|| Arc::new(TrieNode::new()))
+                    .clone();
+                drop(children);
+                child.insert_named(rest.to_vec(), name, handler);
             }
             super::SegmentType::Dynamic => {
-                if let Some(child) = &self.dynamic_child {
-                    child.insert_named(rest.to_vec(), name, handler);
-                } else {
-                    let new_node = Arc::new(TrieNode::new());
-                    new_node.insert_named(rest.to_vec(), name, handler);
-                }
+                let mut dynamic_child = self.dynamic_child.borrow_mut();
+                let child = dynamic_child
+                    .get_or_insert_with(|| Arc::new(TrieNode::new()))
+                    .clone();
+                drop(dynamic_child);
+                child.insert_named(rest.to_vec(), name, handler);
             }
             super::SegmentType::Wildcard => {
-                if let Some(child) = &self.wildcard_child {
-                    child.insert_named(rest.to_vec(), name, handler);
-                } else {
-                    let new_node = Arc::new(TrieNode::new());
-                    new_node.insert_named(rest.to_vec(), name, handler);
-                }
+                let mut wildcard_child = self.wildcard_child.borrow_mut();
+                let child = wildcard_child
+                    .get_or_insert_with(|| Arc::new(TrieNode::new()))
+                    .clone();
+                drop(wildcard_child);
+                child.insert_named(rest.to_vec(), name, handler);
             }
         }
     }
@@ -94,8 +96,9 @@ impl TrieNode {
         params: &mut Params,
     ) -> Option<(RouteHandler, Params, Option<String>)> {
         if segments.is_empty() {
-            if let Some(handler) = &self.handler {
-                return Some((handler.clone(), params.clone(), self.name.clone()));
+            let handler_guard = self.handler.borrow();
+            if let Some(handler) = handler_guard.as_ref() {
+                return Some((handler.clone(), params.clone(), self.name.borrow().clone()));
             }
             return None;
         }
@@ -104,27 +107,36 @@ impl TrieNode {
         let rest = &segments[1..];
 
         // Try static match first
-        if let Some(child) = self.children.get(&first.to_string()) {
-            if let Some(result) = child.find_helper(rest, params) {
-                return Some(result);
+        {
+            let children = self.children.borrow();
+            if let Some(child) = children.get(&first.to_string()) {
+                if let Some(result) = child.find_helper(rest, params) {
+                    return Some(result);
+                }
             }
         }
 
         // Try dynamic match
-        if let Some(child) = &self.dynamic_child {
-            if let Some(param_name) = first.param_name() {
-                params.insert(param_name.to_string(), first.to_string());
-                if let Some(result) = child.find_helper(rest, params) {
-                    return Some(result);
+        {
+            let dynamic_child = self.dynamic_child.borrow();
+            if let Some(child) = dynamic_child.as_ref() {
+                if let Some(param_name) = first.param_name() {
+                    params.insert(param_name.to_string(), first.to_string());
+                    if let Some(result) = child.find_helper(rest, params) {
+                        return Some(result);
+                    }
+                    params.remove(param_name);
                 }
-                params.remove(param_name);
             }
         }
 
         // Try wildcard match
-        if let Some(child) = &self.wildcard_child {
-            if let Some(result) = child.find_helper(rest, params) {
-                return Some(result);
+        {
+            let wildcard_child = self.wildcard_child.borrow();
+            if let Some(child) = wildcard_child.as_ref() {
+                if let Some(result) = child.find_helper(rest, params) {
+                    return Some(result);
+                }
             }
         }
 
@@ -146,12 +158,15 @@ impl TrieNode {
         depth: usize,
     ) -> Option<(RouteHandler, Params, Option<String>)> {
         // Check if we have a handler at this level
-        if let Some(handler) = &self.handler {
-            return Some((
-                handler.clone(),
-                params.clone(),
-                self.name.clone(),
-            ));
+        {
+            let handler_guard = self.handler.borrow();
+            if let Some(handler) = handler_guard.as_ref() {
+                return Some((
+                    handler.clone(),
+                    params.clone(),
+                    self.name.borrow().clone(),
+                ));
+            }
         }
 
         if segments.is_empty() {
@@ -162,27 +177,36 @@ impl TrieNode {
         let rest = &segments[1..];
 
         // Try static match first
-        if let Some(child) = self.children.get(&first.to_string()) {
-            if let Some(result) = child.find_prefix_helper(rest, params, depth + 1) {
-                return Some(result);
+        {
+            let children = self.children.borrow();
+            if let Some(child) = children.get(&first.to_string()) {
+                if let Some(result) = child.find_prefix_helper(rest, params, depth + 1) {
+                    return Some(result);
+                }
             }
         }
 
         // Try dynamic match
-        if let Some(child) = &self.dynamic_child {
-            if let Some(param_name) = first.param_name() {
-                params.insert(param_name.to_string(), first.to_string());
-                if let Some(result) = child.find_prefix_helper(rest, params, depth + 1) {
-                    return Some(result);
+        {
+            let dynamic_child = self.dynamic_child.borrow();
+            if let Some(child) = dynamic_child.as_ref() {
+                if let Some(param_name) = first.param_name() {
+                    params.insert(param_name.to_string(), first.to_string());
+                    if let Some(result) = child.find_prefix_helper(rest, params, depth + 1) {
+                        return Some(result);
+                    }
+                    params.remove(param_name);
                 }
-                params.remove(param_name);
             }
         }
 
         // Try wildcard match
-        if let Some(child) = &self.wildcard_child {
-            if let Some(result) = child.find_prefix_helper(rest, params, depth + 1) {
-                return Some(result);
+        {
+            let wildcard_child = self.wildcard_child.borrow();
+            if let Some(child) = wildcard_child.as_ref() {
+                if let Some(result) = child.find_prefix_helper(rest, params, depth + 1) {
+                    return Some(result);
+                }
             }
         }
 
@@ -201,7 +225,7 @@ impl TrieNode {
         segments: &mut Vec<String>,
     ) -> Option<String> {
         // Check if this node has the name we're looking for
-        if self.name.as_deref() == Some(name) {
+        if self.name.borrow().as_deref() == Some(name) {
             // Build the URL from collected segments
             let mut url = if segments.is_empty() {
                 "/".to_string()
@@ -212,7 +236,8 @@ impl TrieNode {
         }
 
         // Search children
-        for (key, child) in &self.children {
+        let children = self.children.borrow();
+        for (key, child) in children.iter() {
             let mut new_segments = segments.clone();
             new_segments.push(key.clone());
             if let Some(url) = child.url_for_helper(name, params, &mut new_segments) {

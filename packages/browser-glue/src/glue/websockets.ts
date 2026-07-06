@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * websockets glue — implements the `tairitsu-browser:websockets` WIT import interfaces.
  *

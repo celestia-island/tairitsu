@@ -1,7 +1,7 @@
 [package]
 name = "tairitsu-example-wit-native-simple"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
 publish = false
 authors = ["langyo <langyo.china@gmail.com>"]
 
@@ -11,12 +11,12 @@ authors = ["langyo <langyo.china@gmail.com>"]
 
 [dependencies]
 # Basic language and tools
-anyhow = "^1"
+anyhow = { workspace = true }
 
 # Data and serialization
 rand = "^0.8"
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 # Logging and tracing
 env_logger = "^0.11"
@@ -29,13 +29,13 @@ tairitsu = { path = "../../packages/runtime" }
 tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # MCP / network and protocols
-wit-bindgen = "^0.50"
-wit-component = "^0.243"
+wit-bindgen = "^0.57"
+wit-component = "^0.245"
 
 # For WASM guest builds
 [target.'cfg(target_family = "wasm")'.dependencies]
 # MCP / network and protocols
-wit-bindgen = { version = "^0.50", features = ["macros"] }
+wit-bindgen = { version = "^0.57", features = ["macros"] }
 
 [lib]
 # Library is used for the WASM guest side

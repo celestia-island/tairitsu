@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * @tairitsu/browser-glue/generated
  *
@@ -20,7 +24,7 @@
  * - `./fetch` — `tairitsu-browser:fetch` (30 interfaces)
  * - `./file-api` — `tairitsu-browser:file-api` (2 interfaces)
  * - `./geolocation` — `tairitsu-browser:geolocation` (1 interfaces)
- * - `./html` — `tairitsu-browser:html` (182 interfaces)
+ * - `./html` — `tairitsu-browser:html` (183 interfaces)
  * - `./indexed-db` — `tairitsu-browser:indexed-db` (7 interfaces)
  * - `./media` — `tairitsu-browser:media` (63 interfaces)
  * - `./misc` — `tairitsu-browser:misc` (4 interfaces)
@@ -32,7 +36,7 @@
  * - `./resize-observer` — `tairitsu-browser:resize-observer` (1 interfaces)
  * - `./service-workers` — `tairitsu-browser:service-workers` (2 interfaces)
  * - `./storage` — `tairitsu-browser:storage` (18 interfaces)
- * - `./svg` — `tairitsu-browser:svg` (53 interfaces)
+ * - `./svg` — `tairitsu-browser:svg` (52 interfaces)
  * - `./url` — `tairitsu-browser:url` (1 interfaces)
  * - `./wasm` — `tairitsu-browser:wasm` (6 interfaces)
  * - `./web-animations` — `tairitsu-browser:web-animations` (1 interfaces)
@@ -78,6 +82,6 @@ export * as workers from "./workers";
 export const GLUE_STATS = {
   totalDomains: 30,
   totalInterfaces: 569,
-  totalFunctions: 4667,
-  generatedAt: "2026-05-04T19:43:48.919507",
+  totalFunctions: 4684,
+  generatedAt: "2026-07-04T01:19:50.692074",
 };

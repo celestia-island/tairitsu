@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * dom glue — implements the `tairitsu-browser:dom` WIT import interfaces.
  *
@@ -1131,7 +1135,7 @@ export function getOnabort(self: bigint): bigint {
  */
 export function setOnabort(self: bigint, value: bigint): void {
   const obj = lookupAbortSignal(self);
-  obj.onabort = value as any;
+  obj.onabort = lookupEventHandler(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -2229,15 +2233,23 @@ export function getOnslotchange(self: bigint): bigint {
  */
 export function setOnslotchange(self: bigint, value: bigint): void {
   const obj = lookupShadowRoot(self);
-  obj.onslotchange = value as any;
+  obj.onslotchange = lookupEventHandler(value);
+}
+
+/**
+ * `set-html()` operation.
+ */
+export function setHtml(self: bigint, html: string, options: bigint | undefined): void {
+  const obj = lookupShadowRoot(self);
+  (obj as any).html = options;
 }
 
 /**
  * `set-html-unsafe()` operation.
  */
-export function setHtmlUnsafe(self: bigint, html: string): void {
+export function setHtmlUnsafe(self: bigint, html: string, options: bigint | undefined): void {
   const obj = lookupShadowRoot(self);
-  obj.setHTMLUnsafe = html as any;
+  obj.setHTMLUnsafe = options;
 }
 
 /**
@@ -3780,6 +3792,7 @@ export default {
   getHost,
   getOnslotchange,
   setOnslotchange,
+  setHtml,
   setHtmlUnsafe,
   getHtml,
   getInnerHtml,

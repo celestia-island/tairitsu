@@ -1,40 +1,38 @@
-// @ts-nocheck
-
 export const mutationRecord_exports = {
-  getType(self) {
-    if (!globalThis.__mutationRecordHandles) return '';
+  getType(self: bigint) {
+    if (!globalThis.__mutationRecordHandles) return "";
     const rec = globalThis.__mutationRecordHandles.get(self);
-    return rec ? rec.type : '';
+    return rec ? rec.type : "";
   },
-  getTarget(self) {
+  getTarget(self: bigint) {
     if (!globalThis.__mutationRecordHandles) return 0n;
     const rec = globalThis.__mutationRecordHandles.get(self);
     if (!rec || !rec.target) return 0n;
     return globalThis.__storeElement(rec.target);
   },
-  getPreviousSibling(self) {
+  getPreviousSibling(self: bigint) {
     if (!globalThis.__mutationRecordHandles) return undefined;
     const rec = globalThis.__mutationRecordHandles.get(self);
     if (!rec || !rec.previousSibling) return undefined;
     return globalThis.__storeNode(rec.previousSibling);
   },
-  getNextSibling(self) {
+  getNextSibling(self: bigint) {
     if (!globalThis.__mutationRecordHandles) return undefined;
     const rec = globalThis.__mutationRecordHandles.get(self);
     if (!rec || !rec.nextSibling) return undefined;
     return globalThis.__storeNode(rec.nextSibling);
   },
-  getAttributeName(self) {
+  getAttributeName(self: bigint) {
     if (!globalThis.__mutationRecordHandles) return undefined;
     const rec = globalThis.__mutationRecordHandles.get(self);
     return rec ? (rec.attributeName ?? undefined) : undefined;
   },
-  getAttributeNamespace(self) {
+  getAttributeNamespace(self: bigint) {
     if (!globalThis.__mutationRecordHandles) return undefined;
     const rec = globalThis.__mutationRecordHandles.get(self);
     return rec ? (rec.attributeNamespace ?? undefined) : undefined;
   },
-  getOldValue(self) {
+  getOldValue(self: bigint) {
     if (!globalThis.__mutationRecordHandles) return undefined;
     const rec = globalThis.__mutationRecordHandles.get(self);
     return rec ? (rec.oldValue ?? undefined) : undefined;

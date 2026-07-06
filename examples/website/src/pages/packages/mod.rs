@@ -1,6 +1,6 @@
 //! Package listing pages for tairitsu framework.
 
-use tairitsu_vdom::{VElement, VNode, txt};
+use tairitsu_vdom::{txt, VElement, VNode};
 
 use crate::components::breadcrumb;
 
@@ -52,25 +52,25 @@ pub fn render_overview() -> VNode {
         ),
     ];
 
-    VNode::Element(
+    VNode::Element(Box::new(
         VElement::new("div")
             .attr("id", "page-packages-overview")
-            .class("ts-page")
+            .class("hikari-page")
             .children(vec![
                 breadcrumb(&[("Home", "/"), ("Packages", "")]),
-                VNode::Element(
+                VNode::Element(Box::new(
                     VElement::new("section").class("page-hero").children(vec![
-                        VNode::Element(VElement::new("h1").child(txt("Packages"))),
-                        VNode::Element(VElement::new("p").child(txt("Tairitsu is organized into specialized crates, each addressing a specific concern in the WASM Component ecosystem."))),
+                        VNode::Element(Box::new(VElement::new("h1").child(txt("Packages")))),
+                        VNode::Element(Box::new(VElement::new("p").child(txt("Tairitsu is organized into specialized crates, each addressing a specific concern in the WASM Component ecosystem.")))),
                     ]),
-                ),
-                VNode::Element(
+                )),
+                VNode::Element(Box::new(
                     VElement::new("div")
                         .class("package-grid")
                         .children(cards),
-                ),
+                )),
             ]),
-    )
+    ))
 }
 
 pub fn render_list() -> VNode {
@@ -123,58 +123,68 @@ pub fn render_list() -> VNode {
 
     let mut items: Vec<VNode> = Vec::new();
     for (name, desc) in packages {
-        items.push(VNode::Element(
+        items.push(VNode::Element(Box::new(
             VElement::new("div")
                 .class("package-list-item")
                 .children(vec![
-                    VNode::Element(VElement::new("code").class("package-name").child(txt(name))),
-                    VNode::Element(VElement::new("span").class("package-desc").child(txt(desc))),
+                    VNode::Element(Box::new(
+                        VElement::new("code").class("package-name").child(txt(name)),
+                    )),
+                    VNode::Element(Box::new(
+                        VElement::new("span").class("package-desc").child(txt(desc)),
+                    )),
                 ]),
-        ));
+        )));
     }
 
-    VNode::Element(
+    VNode::Element(Box::new(
         VElement::new("div")
             .attr("id", "page-packages-list")
-            .class("ts-page")
+            .class("hikari-page")
             .children(vec![
                 breadcrumb(&[
                     ("Home", "/"),
                     ("Packages", "/packages"),
                     ("Package List", ""),
                 ]),
-                VNode::Element(VElement::new("section").class("page-hero").children(vec![
-                        VNode::Element(VElement::new("h1").child(txt("Package List"))),
-                        VNode::Element(
+                VNode::Element(Box::new(
+                    VElement::new("section").class("page-hero").children(vec![
+                        VNode::Element(Box::new(VElement::new("h1").child(txt("Package List")))),
+                        VNode::Element(Box::new(
                             VElement::new("p")
                                 .child(txt("Complete listing of all tairitsu workspace crates.")),
-                        ),
-                    ])),
-                VNode::Element(VElement::new("div").class("doc-content").children(items)),
+                        )),
+                    ]),
+                )),
+                VNode::Element(Box::new(
+                    VElement::new("div").class("doc-content").children(items),
+                )),
             ]),
-    )
+    ))
 }
 
 fn package_card_vnode(name: &str, title: &str, desc: &str) -> VNode {
-    VNode::Element(VElement::new("div").class("package-card").children(vec![
-                VNode::Element(
-                    VElement::new("div")
-                        .class("package-card-header")
-                        .children(vec![
-                            VNode::Element(VElement::new("code").child(txt(name))),
-                            VNode::Element(VElement::new("h3").child(txt(title))),
-                        ]),
-                ),
-                VNode::Element(
-                    VElement::new("p")
-                        .class("package-card-desc")
-                        .child(txt(desc)),
-                ),
-                VNode::Element(
-                    VElement::new("a")
-                        .attr("href", "#")
-                        .class("hi-button hi-button-ghost hi-button-sm")
-                        .child(txt("View Docs →")),
-                ),
-            ]))
+    VNode::Element(Box::new(
+        VElement::new("div").class("package-card").children(vec![
+            VNode::Element(Box::new(
+                VElement::new("div")
+                    .class("package-card-header")
+                    .children(vec![
+                        VNode::Element(Box::new(VElement::new("code").child(txt(name)))),
+                        VNode::Element(Box::new(VElement::new("h3").child(txt(title)))),
+                    ]),
+            )),
+            VNode::Element(Box::new(
+                VElement::new("p")
+                    .class("package-card-desc")
+                    .child(txt(desc)),
+            )),
+            VNode::Element(Box::new(
+                VElement::new("a")
+                    .attr("href", "#")
+                    .class("hi-button hi-button-ghost hi-button-sm")
+                    .child(txt("View Docs →")),
+            )),
+        ]),
+    ))
 }

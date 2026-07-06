@@ -17,7 +17,7 @@ fn main() {
             eprintln!("SSR stubs will not be generated, using minimal stubs");
 
             // Generate a minimal stub file anyway
-            let out_dir = std::env::var("OUT_DIR").unwrap();
+            let out_dir = std::env::var("OUT_DIR").expect("OUT_DIR not set");
             let generated_path = Path::new(&out_dir).join("ssr_stubs_gen.rs");
             let mut file = File::create(&generated_path).expect("Failed to create generated file");
             let minimal_code =
@@ -87,7 +87,7 @@ fn main() {
     let generated_code = generate_stubs(&interfaces);
 
     // Write to the generated file
-    let out_dir = std::env::var("OUT_DIR").unwrap();
+    let out_dir = std::env::var("OUT_DIR").expect("OUT_DIR not set");
     let generated_path = Path::new(&out_dir).join("ssr_stubs_gen.rs");
     let mut file = File::create(&generated_path).expect("Failed to create generated file");
     file.write_all(generated_code.as_bytes())
@@ -153,10 +153,10 @@ fn parse_wit_interfaces(wit_content: &str, manual_interfaces: &HashSet<&str>) ->
             in_interface = false;
         } else if in_interface && line.contains(": func") {
             // Parse function definition
-            if let Some(interface) = &mut current_interface
-                && let Some(func) = parse_function(line)
-            {
-                interface.functions.push(func);
+            if let Some(interface) = &mut current_interface {
+                if let Some(func) = parse_function(line) {
+                    interface.functions.push(func);
+                }
             }
         }
     }

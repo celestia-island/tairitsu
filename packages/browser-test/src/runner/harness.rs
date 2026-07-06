@@ -1,21 +1,17 @@
 //! Test harness for browser-glue tests
 
 use anyhow::{Context, Result};
-use futures::StreamExt;
+use serde_json::Value;
 use std::{path::PathBuf, time::Duration};
 
-use chromiumoxide::{
-    Page,
-    browser::{Browser, BrowserConfig},
-    js::EvaluationResult,
-};
-use tracing::{debug, info, warn};
+use tracing::{info, warn};
 
 use super::reporter::{TestReport, TestResult};
+use crate::browser::CdpClient;
 
-/// Helper to extract boolean from evaluation result
-fn eval_as_bool(result: EvaluationResult) -> bool {
-    result.value().and_then(|v| v.as_bool()).unwrap_or(false)
+/// Helper to extract boolean from an evaluate result.
+fn eval_as_bool(v: Value) -> bool {
+    v.as_bool().unwrap_or(false)
 }
 
 /// Test harness configuration
@@ -47,7 +43,7 @@ impl Default for TestHarnessConfig {
 /// Test harness for browser-glue
 pub struct TestHarness {
     config: TestHarnessConfig,
-    browser: Option<Browser>,
+    browser: Option<CdpClient>,
 }
 
 impl TestHarness {
@@ -65,96 +61,74 @@ impl TestHarness {
             "Starting Chromium browser at {:?}",
             self.config.chromium_path
         );
-
-        let mut browser_config =
-            BrowserConfig::builder().chrome_executable(self.config.chromium_path.clone());
-
-        if self.config.headless {
-            browser_config = browser_config.no_sandbox();
-        }
-
-        let config = browser_config
-            .build()
-            .map_err(|e| anyhow::anyhow!("Browser config error: {}", e))?;
-
-        let (browser, mut handler) = Browser::launch(config)
-            .await
-            .context("Failed to launch Chromium")?;
-
-        // Spawn the handler
-        tokio::spawn(async move {
-            while let Some(event) = handler.next().await {
-                debug!("Browser event: {:?}", event);
-            }
-        });
-
-        self.browser = Some(browser);
+        let client = CdpClient::launch(
+            &self.config.chromium_path,
+            self.config.headless,
+            "about:blank",
+        )
+        .await?;
+        self.browser = Some(client);
         info!("Browser started successfully");
         Ok(())
     }
 
     /// Run all browser-glue tests
     pub async fn run_tests(&self) -> Result<TestReport> {
-        let browser = self
+        let page = self
             .browser
             .as_ref()
             .context("Browser not started. Call start() first.")?;
 
         let mut report = TestReport::new();
 
-        // Create a new page
-        let page = browser
-            .new_page("about:blank")
-            .await
-            .context("Failed to create new page")?;
-
         info!("Running browser-glue tests...");
 
         // Test 1: DOM Handle Creation
         if self.should_run_test("dom-handle") {
-            let result = self.test_dom_handle(&page).await;
+            let result = self.test_dom_handle(page).await;
             report.add_result(result);
         }
 
         // Test 2: Event Listener
         if self.should_run_test("event-listener") {
-            let result = self.test_event_listener(&page).await;
+            let result = self.test_event_listener(page).await;
             report.add_result(result);
         }
 
         // Test 3: HTTP Fetch
         if self.should_run_test("http-fetch") {
-            let result = self.test_http_fetch(&page).await;
+            let result = self.test_http_fetch(page).await;
             report.add_result(result);
         }
 
-        // Test 4: Handle Table Operations
+        // Test 4: Handle Table
         if self.should_run_test("handle-table") {
-            let result = self.test_handle_table(&page).await;
+            let result = self.test_handle_table(page).await;
             report.add_result(result);
         }
 
-        // Test 5: Canvas Binding
+        // Test 5: Canvas
         if self.should_run_test("canvas") {
-            let result = self.test_canvas(&page).await;
+            let result = self.test_canvas(page).await;
             report.add_result(result);
         }
 
-        // Test 6: Event Dispatch Latency
+        // Test 6: Event Latency
         if self.should_run_test("event-latency") {
-            let result = self.test_event_latency(&page).await;
+            let result = self.test_event_latency(page).await;
             report.add_result(result);
         }
 
-        // Test 7: High-Frequency Event Stress
+        // Test 7: Event Stress
         if self.should_run_test("event-stress") {
-            let result = self.test_event_stress(&page).await;
+            let result = self.test_event_stress(page).await;
             report.add_result(result);
         }
 
         Ok(report)
     }
 
+    /// Check if a test should run based on the filter
     fn should_run_test(&self, test_name: &str) -> bool {
         match &self.config.filter {
             None => true,
@@ -170,7 +144,7 @@ impl TestHarness {
         }
     }
 
-    async fn test_dom_handle(&self, page: &Page) -> TestResult {
+    async fn test_dom_handle(&self, page: &CdpClient) -> TestResult {
         let test_name = "dom-handle";
         info!("Running test: {}", test_name);
 
@@ -191,13 +165,13 @@ impl TestHarness {
                 const divExists = document.getElementById('test-div') !== null;
                 const spanExists = document.getElementById('test-span') !== null;
                 const textContent = document.getElementById('test-span')?.textContent;
-                return divExists && spanExists && textContent === 'Hello from browser-glue';
+                return divExists && spanExists && textContent === 'Test content';
             })()
         "#;
 
         match page.evaluate(script).await {
-            Ok(result) => {
-                if eval_as_bool(result) {
+            Ok(v) => {
+                if eval_as_bool(v) {
                     TestResult::passed(test_name)
                 } else {
                     TestResult::failed(test_name, "DOM verification failed".to_string())
@@ -207,7 +181,7 @@ impl TestHarness {
         }
     }
 
-    async fn test_event_listener(&self, page: &Page) -> TestResult {
+    async fn test_event_listener(&self, page: &CdpClient) -> TestResult {
         let test_name = "event-listener";
         info!("Running test: {}", test_name);
 
@@ -223,8 +197,8 @@ impl TestHarness {
         "#;
 
         match page.evaluate(script).await {
-            Ok(result) => {
-                if eval_as_bool(result) {
+            Ok(v) => {
+                if eval_as_bool(v) {
                     TestResult::passed(test_name)
                 } else {
                     TestResult::failed(test_name, "Event listener did not execute".to_string())
@@ -234,7 +208,7 @@ impl TestHarness {
         }
     }
 
-    async fn test_http_fetch(&self, page: &Page) -> TestResult {
+    async fn test_http_fetch(&self, page: &CdpClient) -> TestResult {
         let test_name = "http-fetch";
         info!("Running test: {}", test_name);
 
@@ -251,8 +225,8 @@ impl TestHarness {
         "#;
 
         match page.evaluate(script).await {
-            Ok(result) => {
-                if eval_as_bool(result) {
+            Ok(v) => {
+                if eval_as_bool(v) {
                     TestResult::passed(test_name)
                 } else {
                     TestResult::failed(test_name, "Fetch request failed".to_string())
@@ -262,7 +236,7 @@ impl TestHarness {
         }
     }
 
-    async fn test_handle_table(&self, page: &Page) -> TestResult {
+    async fn test_handle_table(&self, page: &CdpClient) -> TestResult {
         let test_name = "handle-table";
         info!("Running test: {}", test_name);
 
@@ -294,8 +268,8 @@ impl TestHarness {
         "#;
 
         match page.evaluate(script).await {
-            Ok(result) => {
-                if eval_as_bool(result) {
+            Ok(v) => {
+                if eval_as_bool(v) {
                     TestResult::passed(test_name)
                 } else {
                     TestResult::failed(test_name, "Handle table operations failed".to_string())
@@ -305,7 +279,7 @@ impl TestHarness {
         }
     }
 
-    async fn test_canvas(&self, page: &Page) -> TestResult {
+    async fn test_canvas(&self, page: &CdpClient) -> TestResult {
         let test_name = "canvas";
         info!("Running test: {}", test_name);
 
@@ -329,8 +303,8 @@ impl TestHarness {
         "#;
 
         match page.evaluate(script).await {
-            Ok(result) => {
-                if eval_as_bool(result) {
+            Ok(v) => {
+                if eval_as_bool(v) {
                     TestResult::passed(test_name)
                 } else {
                     TestResult::failed(test_name, "Canvas operations failed".to_string())
@@ -340,7 +314,7 @@ impl TestHarness {
         }
     }
 
-    async fn test_event_latency(&self, page: &Page) -> TestResult {
+    async fn test_event_latency(&self, page: &CdpClient) -> TestResult {
         let test_name = "event-latency";
         info!("Running test: {}", test_name);
 
@@ -351,32 +325,32 @@ impl TestHarness {
                 btn.id = 'latency-test-btn';
                 let eventTime = 0;
                 let dispatchTime = 0;
-                
+
                 btn.addEventListener('click', (e) => {
                     eventTime = e.timeStamp;
                     dispatchTime = performance.now();
                 });
-                
+
                 document.body.appendChild(btn);
-                
+
                 // Trigger click
                 const clickTime = performance.now();
                 btn.click();
-                
+
                 // Wait for event processing
                 await new Promise(r => setTimeout(r, 10));
-                
+
                 // Calculate latency
                 const latency = dispatchTime - clickTime;
-                
+
                 // Should be < 16ms (60fps)
                 return latency < 16;
             })()
         "#;
 
         match page.evaluate(script).await {
-            Ok(result) => {
-                if eval_as_bool(result) {
+            Ok(v) => {
+                if eval_as_bool(v) {
                     TestResult::passed(test_name)
                 } else {
                     TestResult::failed(
@@ -389,7 +363,7 @@ impl TestHarness {
         }
     }
 
-    async fn test_event_stress(&self, page: &Page) -> TestResult {
+    async fn test_event_stress(&self, page: &CdpClient) -> TestResult {
         let test_name = "event-stress";
         info!("Running test: {}", test_name);
 
@@ -399,23 +373,23 @@ impl TestHarness {
                 const btn = document.createElement('button');
                 btn.id = 'stress-test-btn';
                 let eventCount = 0;
-                
+
                 btn.addEventListener('click', () => {
                     eventCount++;
                 });
-                
+
                 document.body.appendChild(btn);
-                
+
                 // Fire 100 events rapidly
                 const startTime = performance.now();
                 for (let i = 0; i < 100; i++) {
                     btn.click();
                 }
                 const elapsed = performance.now() - startTime;
-                
+
                 // Wait for all events to process
                 await new Promise(r => setTimeout(r, 50));
-                
+
                 // All 100 events should be processed
                 // Total time should be < 100ms (< 1ms per event)
                 return eventCount === 100 && elapsed < 100;
@@ -423,8 +397,8 @@ impl TestHarness {
         "#;
 
         match page.evaluate(script).await {
-            Ok(result) => {
-                if eval_as_bool(result) {
+            Ok(v) => {
+                if eval_as_bool(v) {
                     TestResult::passed(test_name)
                 } else {
                     TestResult::failed(
@@ -437,10 +411,9 @@ impl TestHarness {
         }
     }
 
-    /// Shutdown the browser
+    /// Shutdown the browser (chrome is reaped on drop via kill_on_drop).
     pub async fn shutdown(&mut self) -> Result<()> {
-        if let Some(mut browser) = self.browser.take() {
-            let _ = browser.close().await;
+        if self.browser.take().is_some() {
             info!("Browser closed");
         }
         Ok(())

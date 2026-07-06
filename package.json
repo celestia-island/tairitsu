@@ -1,0 +1,15 @@
+{
+  "name": "@celestia/tairitsu",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tairitsu - WASM Component Model web framework (monorepo root)",
+  "license": "MIT OR Apache-2.0",
+  "workspaces": [
+    "packages/browser-glue"
+  ],
+  "scripts": {
+    "build": "npm run build -w @celestia/tairitsu-browser-glue",
+    "build:glue": "npm run build -w @celestia/tairitsu-browser-glue",
+    "clean": "npm run clean -w @celestia/tairitsu-browser-glue"
+  }
+}

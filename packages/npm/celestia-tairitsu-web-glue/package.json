@@ -1,0 +1,25 @@
+{
+  "name": "@celestia-island/tairitsu-web-glue",
+  "version": "0.5.1",
+  "description": "Tairitsu CDN glue — pre-compiled JS bindings per WIT domain for browser consumption",
+  "license": "MIT OR Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celestia-island/tairitsu.git",
+    "directory": "packages/npm/celestia-tairitsu-web-glue"
+  },
+  "scripts": {
+    "build": "python3 ../../../scripts/build_npm_glue_packages.py",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "rimraf": "^5.0.0"
+  }
+}

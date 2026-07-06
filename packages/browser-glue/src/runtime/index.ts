@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Tairitsu Browser Glue - Runtime Entry Point
  *
@@ -22,16 +21,26 @@ import { INTERFACES, registerImportMap } from "./registry";
 
 // Auto-register when loaded
 registerImportMap();
-console.log('[tairitsu] Import map registered with', Object.keys(INTERFACES).length, 'interfaces');
+console.log("[tairitsu] Import map registered with", Object.keys(INTERFACES).length, "interfaces");
 
 // Export debug handle for diagnostics
 globalThis.__TAIRITSU_GLUE__ = {
   INTERFACES,
   handles: {
-    get elementHandles() { return globalThis.__elementHandles; },
-    get nodeHandles() { return globalThis.__nodeHandles; },
-    get documentHandles() { return globalThis.__documentHandles; },
-    get textHandles() { return globalThis.__textHandles; },
-    get nextHandle() { return globalThis.__nextHandle; },
+    get elementHandles() {
+      return globalThis.__elementHandles;
+    },
+    get nodeHandles() {
+      return globalThis.__nodeHandles;
+    },
+    get documentHandles() {
+      return globalThis.__documentHandles;
+    },
+    get textHandles() {
+      return globalThis.__textHandles;
+    },
+    get nextHandle() {
+      return globalThis.__nextHandle;
+    },
   },
 };

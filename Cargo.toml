@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "packages/browser",
     "packages/mcp",
     "packages/runtime",
     "packages/macros",
@@ -12,6 +13,7 @@ members = [
     "packages/browser-wit-resolver",
     "packages/browser-worlds",
     "packages/browser-test",
+    "packages/browser-fetch",
     "packages/ssr",
 
     "examples/wit-compile-time",
@@ -20,11 +22,25 @@ members = [
     "examples/wit-native-simple",
     "examples/wit-native-macro",
     "examples/vtty-graphics-demo",
+    "examples/todo-app",
+    "examples/wasi-plugin",
+    "examples/website",
 ]
 resolver = "2"
 
 [patch.crates-io]
+tairitsu = { path = "packages/runtime" }
 tairitsu-macros = { path = "packages/macros" }
+tairitsu-vdom = { path = "packages/vdom" }
+tairitsu-hooks = { path = "packages/hooks" }
+tairitsu-style = { path = "packages/style" }
+tairitsu-ssr = { path = "packages/ssr" }
+tairitsu-web = { path = "packages/web" }
+tairitsu-browser-worlds = { path = "packages/browser-worlds" }
+tairitsu-browser-wit-resolver = { path = "packages/browser-wit-resolver" }
+tairitsu-browser-fetch = { path = "packages/browser-fetch" }
+tairitsu-packager = { path = "packages/packager" }
+tairitsu-mcp = { path = "packages/mcp" }
 
 [profile.release]
 lto = true
@@ -41,13 +57,19 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
-version = "0.4.5"
+version = "0.5.14"
 authors = ["langyo <langyo.china@gmail.com>"]
-edition = "2024"
-license = "MIT OR Apache-2.0"
+edition = "2021"
+license-file = "LICENSE"
 repository = "https://github.com/celestia-island/tairitsu"
 
 [workspace.dependencies]
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+anyhow = "^1"
+tracing = "^0.1"
+thiserror = "^2"
+clap = { version = "^4", features = ["derive"] }
 tokio = { version = "^1", default-features = false, features = [
     "sync",
     "macros",
@@ -56,14 +78,57 @@ tokio = { version = "^1", default-features = false, features = [
     "time",
     "signal",
 ] }
-tairitsu = { version = "0.4.5", path = "packages/runtime" }
-tairitsu-macros = { version = "0.4.5", path = "packages/macros" }
-tairitsu-vdom = { version = "0.4.5", path = "packages/vdom" }
-tairitsu-hooks = { version = "0.4.5", path = "packages/hooks" }
-tairitsu-style = { version = "0.4.5", path = "packages/style" }
-tairitsu-ssr = { version = "0.4.5", path = "packages/ssr" }
-tairitsu-web = { version = "0.4.5", path = "packages/web" }
-tairitsu-browser-worlds = { version = "0.4.5", path = "packages/browser-worlds" }
-tairitsu-browser-wit-resolver = { version = "0.4.5", path = "packages/browser-wit-resolver" }
-tairitsu-packager = { version = "0.4.5", path = "packages/packager" }
-tairitsu-mcp = { version = "0.4.5", path = "packages/mcp" }
+wasmtime = { version = "^43", features = ["component-model"] }
+wasmtime-wasi = "^43"
+reqwest = { version = "^0.13", default-features = false, features = ["json", "blocking"] }
+tairitsu = { version = "^0.5.13", path = "packages/runtime" }
+tairitsu-macros = { version = "^0.5.13", path = "packages/macros" }
+tairitsu-vdom = { version = "^0.5.13", path = "packages/vdom" }
+tairitsu-hooks = { version = "^0.5.13", path = "packages/hooks" }
+tairitsu-style = { version = "^0.5.13", path = "packages/style" }
+tairitsu-ssr = { version = "^0.5.13", path = "packages/ssr" }
+tairitsu-web = { version = "^0.5.13", path = "packages/web" }
+tairitsu-browser-worlds = { version = "^0.5.13", path = "packages/browser-worlds" }
+tairitsu-browser-wit-resolver = { version = "^0.5.13", path = "packages/browser-wit-resolver" }
+tairitsu-browser-fetch = { version = "^0.5.13", path = "packages/browser-fetch" }
+tairitsu-packager = { version = "^0.5.13", path = "packages/packager" }
+tairitsu-mcp = { version = "^0.5.13", path = "packages/mcp" }
+# External dedicated engines the MCP server thinly wraps. Path deps so the
+# unpublished repos resolve locally until they ship to crates.io.
+# Kou's `font-fetch` downloads monospace/CJK faces once (cached on disk) —
+# the MCP uses the *async* load path so the blocking reqwest client is never
+# constructed inside the tokio runtime. System fonts serve as a zero-network
+# fallback when the download is unavailable or skipped.
+kou = { path = "../kou", default-features = false, features = ["font-fetch"] }
+bytes = "^1"
+sha2 = "^0.10"
+hex = "^0.4"
+futures = "^0.3"
+tracing-subscriber = "^0.3"
+regex = "^1"
+toml = "^0.9"
+grass = "^0.13"
+wit-parser = "^0.245"
+wit-component = "^0.245"
+wit-bindgen = { version = "^0.57", features = ["macros"] }
+tempfile = "^3"
+vte = "^0.15"
+portable-pty = "^0.8"
+image = "^0.25"
+base64 = "^0.22"
+crossterm = "^0.28"
+chrono = { version = "^0.4", default-features = false, features = ["clock", "serde"] }
+libc = "^0.2"
+indicatif = "^0.17"
+zip = { version = "^2", default-features = false, features = ["deflate"] }
+async-trait = "^0.1"
+axum = "^0.8"
+tower-http = "^0.6"
+tokio-stream = { version = "^0.1", default-features = false }
+dirs = "^6"
+which = "^8"
+uuid = { version = "^1.11", features = ["v4"] }
+rand = "^0.8"
+windows-sys = { version = "^0.59", default-features = false }
+env_logger = "^0.11"
+log = "^0.4"

@@ -44,15 +44,6 @@ impl DomHandle {
         Self(id)
     }
 
-    /// Construct a handle from a raw host id (internal use).
-    ///
-    /// Same as [`from_raw`](Self::from_raw) but without the type-safety warning.
-    /// For use by platform internals and tests that knowingly pass raw `u64`.
-    #[allow(dead_code)]
-    pub(crate) const fn from_raw_internal(id: u64) -> Self {
-        Self(id)
-    }
-
     /// The null handle (equivalent to an absent element).
     pub const fn null() -> Self {
         Self(0)
@@ -88,7 +79,7 @@ static REF_RESOLVER: Mutex<Option<RefResolverFn>> = Mutex::new(None);
 /// # Safety
 /// Caller must ensure the pointer remains valid for the program lifetime.
 pub fn register_ref_resolver(resolver: RefResolverFn) {
-    *REF_RESOLVER.lock().unwrap() = Some(resolver);
+    *REF_RESOLVER.lock().unwrap_or_else(|e| e.into_inner()) = Some(resolver);
 }
 
 /// Resolve a VDOM element ref to a [`DomHandle`], if the element has been mounted.
@@ -111,7 +102,7 @@ pub fn register_ref_resolver(resolver: RefResolverFn) {
 /// }
 /// ```
 pub fn resolve_element_ref(ref_: &AnyElementRef) -> Option<DomHandle> {
-    let resolver = REF_RESOLVER.lock().unwrap();
+    let resolver = REF_RESOLVER.lock().unwrap_or_else(|e| e.into_inner());
     if let Some(resolve) = *resolver {
         ref_.borrow()
             .as_ref()
@@ -141,6 +132,18 @@ static DOM_FUNCS: Mutex<Option<DomFuncs>> = Mutex::new(None);
 /// Function pointers for extended DOM operations.
 ///
 /// Filled in by the platform layer during bootstrap.
+///
+/// # Safety
+///
+/// All fields are `unsafe fn` pointers because they dereference raw DOM
+/// element handles (`u64`) obtained from the browser glue layer. The caller
+/// must ensure:
+///
+/// - The handle is valid (was obtained from a live element and not freed).
+/// - `register_dom_funcs` or `register_wit_funcs` was called before any
+///   function pointer is invoked.
+/// - The function pointers are not called concurrently with registration
+///   (guaranteed by the `Mutex` guarding `DOM_FUNCS`/`WIT_FUNCS`).
 pub struct DomFuncs {
     pub get_scroll_top: unsafe fn(u64) -> f64,
     pub set_scroll_top: unsafe fn(u64, f64),
@@ -158,6 +161,8 @@ pub struct DomFuncs {
     pub get_computed_style_value: unsafe fn(u64, &str) -> String,
     pub set_timeout_fn: unsafe fn(Box<dyn FnOnce()>, i32) -> i32,
     pub clear_timeout_fn: unsafe fn(i32),
+    pub set_interval_fn: unsafe fn(Box<dyn FnMut()>, i32) -> i32,
+    pub clear_interval_fn: unsafe fn(i32),
     pub request_animation_frame_fn: unsafe fn(Box<dyn FnMut(f64)>) -> u32,
     pub cancel_animation_frame_fn: unsafe fn(u32),
 }
@@ -175,7 +180,7 @@ pub unsafe fn register_wit_functions(
     get_bounding_client_rect: unsafe fn(u64) -> DomRect,
     set_attribute: unsafe fn(u64, &str, &str),
 ) {
-    *WIT_FUNCS.lock().unwrap() = Some(WitFuncs {
+    *WIT_FUNCS.lock().unwrap_or_else(|e| e.into_inner()) = Some(WitFuncs {
         set_style,
         get_bounding_client_rect,
         set_attribute,
@@ -187,7 +192,7 @@ pub unsafe fn register_wit_functions(
 /// # Safety
 /// Caller must ensure the pointers remain valid for the program lifetime.
 pub unsafe fn register_dom_functions(funcs: DomFuncs) {
-    *DOM_FUNCS.lock().unwrap() = Some(funcs);
+    *DOM_FUNCS.lock().unwrap_or_else(|e| e.into_inner()) = Some(funcs);
 }
 
 // ---------------------------------------------------------------------------
@@ -196,7 +201,7 @@ pub unsafe fn register_dom_functions(funcs: DomFuncs) {
 
 /// Set a CSS property on an element.
 pub fn set_style(el: DomHandle, property: &str, value: &str) {
-    if let Some(f) = WIT_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = WIT_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         unsafe {
             let _ = (f.set_style)(el.get_inner_id(), property, value);
         }
@@ -205,7 +210,7 @@ pub fn set_style(el: DomHandle, property: &str, value: &str) {
 
 /// Get the bounding client rect of an element.
 pub fn get_bounding_client_rect(el: DomHandle) -> DomRect {
-    if let Some(f) = WIT_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = WIT_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         unsafe { (f.get_bounding_client_rect)(el.get_inner_id()) }
     } else {
         DomRect {
@@ -219,7 +224,7 @@ pub fn get_bounding_client_rect(el: DomHandle) -> DomRect {
 
 /// Set an attribute on an element.
 pub fn set_attribute(el: DomHandle, name: &str, value: &str) {
-    if let Some(f) = WIT_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = WIT_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         unsafe { (f.set_attribute)(el.get_inner_id(), name, value) };
     }
 }
@@ -231,13 +236,13 @@ pub fn set_attribute(el: DomHandle, name: &str, value: &str) {
 pub fn get_scroll_top(el: DomHandle) -> f64 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .as_ref()
         .map_or(0.0, |f| unsafe { (f.get_scroll_top)(el.get_inner_id()) })
 }
 
 pub fn set_scroll_top(el: DomHandle, value: f64) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         unsafe { (f.set_scroll_top)(el.get_inner_id(), value) };
     }
 }
@@ -245,7 +250,7 @@ pub fn set_scroll_top(el: DomHandle, value: f64) {
 pub fn get_scroll_height(el: DomHandle) -> i32 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .as_ref()
         .map_or(0, |f| unsafe { (f.get_scroll_height)(el.get_inner_id()) })
 }
@@ -253,13 +258,13 @@ pub fn get_scroll_height(el: DomHandle) -> i32 {
 pub fn get_client_height(el: DomHandle) -> i32 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .as_ref()
         .map_or(0, |f| unsafe { (f.get_client_height)(el.get_inner_id()) })
 }
 
 pub fn class_list_add(el: DomHandle, tokens: &[&str]) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
         let ts: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
         unsafe { (f.class_list_add)(list, &ts) };
@@ -267,7 +272,7 @@ pub fn class_list_add(el: DomHandle, tokens: &[&str]) {
 }
 
 pub fn class_list_remove(el: DomHandle, tokens: &[&str]) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
         let ts: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
         unsafe { (f.class_list_remove)(list, &ts) };
@@ -275,30 +280,38 @@ pub fn class_list_remove(el: DomHandle, tokens: &[&str]) {
 }
 
 pub fn class_list_contains(el: DomHandle, token: &str) -> bool {
-    DOM_FUNCS.lock().unwrap().as_ref().is_some_and(|f| {
-        let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
-        unsafe { (f.class_list_contains)(list, token) }
-    })
+    DOM_FUNCS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .is_some_and(|f| {
+            let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
+            unsafe { (f.class_list_contains)(list, token) }
+        })
 }
 
 pub fn first_child(el: DomHandle) -> Option<DomHandle> {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .as_ref()
         .and_then(|f| unsafe { (f.first_child)(el.get_inner_id()) }.map(DomHandle::from_raw))
 }
 
 pub fn query_selector_on(el: DomHandle, selector: &str) -> Option<DomHandle> {
-    DOM_FUNCS.lock().unwrap().as_ref().and_then(|f| {
-        unsafe { (f.query_selector_on)(el.get_inner_id(), selector) }.map(DomHandle::from_raw)
-    })
+    DOM_FUNCS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .and_then(|f| {
+            unsafe { (f.query_selector_on)(el.get_inner_id(), selector) }.map(DomHandle::from_raw)
+        })
 }
 
 pub fn create_element(tag: &str) -> DomHandle {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .as_ref()
         .map_or(DomHandle::null(), |f| {
             DomHandle::from_raw(unsafe { (f.create_element)(tag) })
@@ -306,13 +319,13 @@ pub fn create_element(tag: &str) -> DomHandle {
 }
 
 pub fn append_child(parent: DomHandle, child: DomHandle) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         let _ = unsafe { (f.append_child)(parent.get_inner_id(), child.get_inner_id()) };
     }
 }
 
 pub fn remove_child(parent: DomHandle, child: DomHandle) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         let _ = unsafe { (f.remove_child)(parent.get_inner_id(), child.get_inner_id()) };
     }
 }
@@ -320,7 +333,7 @@ pub fn remove_child(parent: DomHandle, child: DomHandle) {
 pub fn get_computed_style_value(el: DomHandle, property: &str) -> String {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .as_ref()
         .map_or(String::new(), |f| unsafe {
             (f.get_computed_style_value)(el.get_inner_id(), property)
@@ -330,27 +343,41 @@ pub fn get_computed_style_value(el: DomHandle, property: &str) -> String {
 pub fn set_timeout(callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .as_ref()
         .map_or(0, |f| unsafe { (f.set_timeout_fn)(callback, ms) })
 }
 
 pub fn clear_timeout(id: i32) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         unsafe { (f.clear_timeout_fn)(id) };
+    }
+}
+
+pub fn set_interval(callback: Box<dyn FnMut()>, ms: i32) -> i32 {
+    DOM_FUNCS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .map_or(0, |f| unsafe { (f.set_interval_fn)(callback, ms) })
+}
+
+pub fn clear_interval(id: i32) {
+    if let Some(f) = DOM_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
+        unsafe { (f.clear_interval_fn)(id) };
     }
 }
 
 pub fn request_animation_frame(callback: Box<dyn FnMut(f64)>) -> u32 {
     DOM_FUNCS
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .as_ref()
         .map_or(0, |f| unsafe { (f.request_animation_frame_fn)(callback) })
 }
 
 pub fn cancel_animation_frame(id: u32) {
-    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+    if let Some(f) = DOM_FUNCS.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
         unsafe { (f.cancel_animation_frame_fn)(id) };
     }
 }

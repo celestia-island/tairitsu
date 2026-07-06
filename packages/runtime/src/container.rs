@@ -6,15 +6,15 @@
 use anyhow::{Context as AnyhowContext, Result};
 
 use wasmtime::{
-    Store,
     component::{Component, Linker},
     error::Context,
+    Store,
 };
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
-use crate::Image;
 #[cfg(feature = "dynamic")]
 use crate::dynamic::host_imports::HostImportRegistry;
+use crate::Image;
 
 /// Base trait for host state
 ///
@@ -33,12 +33,13 @@ pub struct HostState {
 }
 
 impl HostState {
-    /// Create a new host state
+    /// Create a new host state with no inherited capabilities
+    ///
+    /// The returned state has no stdio, network, or filesystem access by default.
+    /// Use [`HostState::with_wasi`] or [`HostState::default`] if you need
+    /// to customise WASI capabilities explicitly.
     pub fn new() -> Result<Self> {
-        let wasi = WasiCtxBuilder::new()
-            .inherit_stdio()
-            .inherit_network()
-            .build();
+        let wasi = WasiCtxBuilder::new().build();
 
         let table = ResourceTable::new();
 
@@ -110,6 +111,20 @@ impl GuestInstance {
         }
     }
 
+    /// Create a new guest instance with a dynamic invocation handle.
+    ///
+    /// When the guest instance is a raw [`wasmtime::component::Instance`]
+    /// (as opposed to a WIT-bindgen-generated wrapper), pass it as both
+    /// arguments so that [`Container::call_guest_raw_desc`] and friends work
+    /// without a typed WIT binding layer.
+    #[cfg(feature = "dynamic")]
+    pub fn new_dynamic(instance: wasmtime::component::Instance) -> Self {
+        Self {
+            inner: Box::new(instance),
+            dynamic_instance: Some(instance),
+        }
+    }
+
     /// Get the underlying instance
     ///
     /// # Type Parameters
@@ -170,10 +185,38 @@ impl<'a, T: HostStateImpl> GuestHandlerContext<'a, T> {
 
 /// Container builder
 ///
-/// Used to configure and create a WASM container instance
+/// Used to configure and create a WASM container instance.
+///
+/// # Multi-World Pattern
+///
+/// When multiple WIT worlds share the same WASM component (e.g. `webhook-handler`
+/// and `bot-handler`), create separate `Container` instances from the same `Image`.
+/// Each container's [`with_guest_initializer`](ContainerBuilder::with_guest_initializer)
+/// closure binds whichever WIT world is needed:
+///
+/// ```ignore
+/// // Same image, different WIT worlds
+/// let webhook = Container::builder(image.clone())
+///     .with_guest_initializer(|ctx| {
+///         WebhookHandler::add_to_linker(ctx.linker, |s| &mut s.data)?;
+///         let inst = WebhookHandler::instantiate(ctx.store, ctx.component, ctx.linker)?;
+///         Ok(GuestInstance::new(inst))
+///     })
+///     .build()?;
+///
+/// let bot = Container::builder(image)
+///     .with_guest_initializer(|ctx| {
+///         BotHandler::add_to_linker(ctx.linker, |s| &mut s.data)?;
+///         let inst = BotHandler::instantiate(ctx.store, ctx.component, ctx.linker)?;
+///         Ok(GuestInstance::new(inst))
+///     })
+///     .build()?;
+/// ```
 pub struct ContainerBuilder<T: HostStateImpl> {
     image: Image,
     host_state: T,
+    fuel_limit: Option<u64>,
+    epoch_deadline: Option<u64>,
     #[allow(clippy::type_complexity)]
     host_linker_init: Option<Box<dyn FnOnce(&mut Linker<T>) -> Result<(), anyhow::Error> + Send>>,
     #[allow(clippy::type_complexity)]
@@ -194,6 +237,8 @@ where
         Self {
             image,
             host_state: T::default(),
+            fuel_limit: None,
+            epoch_deadline: None,
             host_linker_init: None,
             guest_initializer: None,
         }
@@ -204,6 +249,33 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
     /// Use custom host state
     pub fn with_host_state(mut self, state: T) -> Self {
         self.host_state = state;
+        self
+    }
+
+    /// Set fuel limit for the container's WASM store.
+    ///
+    /// Requires that the [`Image`](crate::Image) was created with
+    /// [`Config::consume_fuel(true)`](wasmtime::Config::consume_fuel) via
+    /// [`Image::new_with_config`].
+    ///
+    /// Each consumed unit roughly corresponds to one WASM instruction.
+    /// When fuel runs out the guest invocation traps.
+    pub fn with_fuel_limit(mut self, limit: u64) -> Self {
+        self.fuel_limit = Some(limit);
+        self
+    }
+
+    /// Set epoch deadline for cooperative interruption of the guest.
+    ///
+    /// Requires that the [`Image`](crate::Image) was created with
+    /// [`Config::epoch_interruption(true)`](wasmtime::Config::epoch_interruption)
+    /// via [`Image::new_with_config`].
+    ///
+    /// The deadline counts down each time [`Engine::increment_epoch`] is called.
+    /// When it reaches zero the guest traps, allowing the host to implement
+    /// time-based timeouts.
+    pub fn with_epoch_deadline(mut self, deadline: u64) -> Self {
+        self.epoch_deadline = Some(deadline);
         self
     }
 
@@ -263,6 +335,15 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
     pub fn build(self) -> Result<Container<T>> {
         let mut store = Store::new(self.image.engine(), self.host_state);
 
+        if let Some(fuel) = self.fuel_limit {
+            store
+                .set_fuel(fuel)
+                .context("Failed to set fuel limit (ensure Image was created with consume_fuel(true) in Config)")?;
+        }
+        if let Some(deadline) = self.epoch_deadline {
+            store.set_epoch_deadline(deadline);
+        }
+
         let mut linker = Linker::new(self.image.engine());
         wasmtime_wasi::p2::add_to_linker_sync(&mut linker)
             .context("Failed to add WASI to linker")?;
@@ -292,6 +373,7 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
         Ok(Container {
             store,
             guest: guest_instance,
+            state: ContainerState::Created,
             #[cfg(feature = "dynamic")]
             dynamic_instance,
             #[cfg(feature = "dynamic")]
@@ -300,12 +382,46 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
     }
 }
 
+/// Lifecycle state of a [`Container`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ContainerState {
+    /// Container has been built but no guest call has been made yet.
+    Created,
+    /// Container is operational — at least one guest call has succeeded.
+    Running,
+    /// Container was explicitly stopped via [`Container::stop`].
+    Stopped,
+    /// An unrecoverable error occurred. Contains the error message.
+    Error(String),
+}
+
 /// A Container represents a running instance of an Image
 ///
-/// Similar to Docker containers, it maintains runtime state and can be started/stopped
+/// Similar to Docker containers, it maintains runtime state and can be started/stopped.
+///
+/// # Async usage
+///
+/// All guest-call methods are synchronous. To call them from an async context
+/// (e.g. a tokio web-handler), wrap the container in `Arc<Mutex<…>>` and use
+/// [`tokio::task::spawn_blocking`]:
+///
+/// ```ignore
+/// use std::sync::{Arc, Mutex};
+/// use tairitsu::Container;
+///
+/// let container = Arc::new(Mutex::new(container));
+/// let c = container.clone();
+/// let result = tokio::task::spawn_blocking(move || {
+///     c.lock().unwrap().call_guest_raw_desc("handle", payload)
+/// }).await??;
+/// ```
+///
+/// `Container<T>` is `Send` when `T: Send` (the default [`HostState`] satisfies
+/// this). It is **not** `Sync`, so always guard with a `Mutex`.
 pub struct Container<T: HostStateImpl = HostState> {
     store: Store<T>,
     guest: GuestInstance,
+    state: ContainerState,
 
     /// Dynamic instance for runtime function invocation (duplicated from guest for easier access)
     #[cfg(feature = "dynamic")]
@@ -354,6 +470,19 @@ impl<T: HostStateImpl> Container<T> {
         self.store.data()
     }
 
+    /// Return the current lifecycle state of the container.
+    pub fn state(&self) -> &ContainerState {
+        &self.state
+    }
+
+    /// Stop the container.
+    ///
+    /// After stopping, subsequent guest calls will return an error.
+    /// This transitions the state to [`ContainerState::Stopped`].
+    pub fn stop(&mut self) {
+        self.state = ContainerState::Stopped;
+    }
+
     /// Call a guest function by name with JSON payload
     ///
     /// This is a convenience method for dynamic invocation.
@@ -370,14 +499,14 @@ impl<T: HostStateImpl> Container<T> {
     /// ```ignore
     /// let result = container.call_guest_json("process", r#"{"input":"hello"}"#)?;
     /// ```
-    pub fn call_guest_json(&mut self, function_name: &str, json_payload: &str) -> Result<String> {
-        // JSON invocation is superseded by the RON-based call_guest_raw_desc() which
-        // preserves Rust type fidelity. This entry-point returns an error to guide
-        // callers to the preferred API.
+    #[deprecated(
+        since = "0.6.0",
+        note = "use call_guest_raw_desc() with RON format instead"
+    )]
+    pub fn call_guest_json(&mut self, function_name: &str, _json_payload: &str) -> Result<String> {
         anyhow::bail!(
-            "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}, Payload: {}",
+            "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}",
             function_name,
-            json_payload
         )
     }
 
@@ -405,8 +534,38 @@ impl<T: HostStateImpl> Container<T> {
         function_name: &str,
         raw_desc_payload: &str,
     ) -> Result<String> {
-        use crate::dynamic::{ron_to_val, val_to_ron};
+        match &self.state {
+            ContainerState::Stopped => {
+                anyhow::bail!("Container is stopped");
+            }
+            ContainerState::Error(e) => {
+                anyhow::bail!("Container is in error state: {}", e);
+            }
+            _ => {}
+        }
+
+        let result = self.call_guest_raw_desc_inner(function_name, raw_desc_payload);
+        match &result {
+            Ok(_) => self.state = ContainerState::Running,
+            Err(e) => {
+                let is_wasm_fatal = e.downcast_ref::<wasmtime::Trap>().is_some();
+                if is_wasm_fatal {
+                    self.state = ContainerState::Error(e.to_string());
+                }
+            }
+        }
+        result
+    }
+
+    #[cfg(feature = "dynamic")]
+    fn call_guest_raw_desc_inner(
+        &mut self,
+        function_name: &str,
+        raw_desc_payload: &str,
+    ) -> Result<String> {
         use wasmtime::component::Val;
+
+        use crate::dynamic::{ron_to_val, val_to_ron};
 
         // Get the function (direct field access avoids borrow checker issues)
         let instance = self
@@ -504,6 +663,40 @@ impl<T: HostStateImpl> Container<T> {
     /// ```
     #[cfg(feature = "dynamic")]
     pub fn call_guest_binary(
+        &mut self,
+        function_name: &str,
+        args: &[wasmtime::component::Val],
+    ) -> Result<Vec<wasmtime::component::Val>> {
+        match &self.state {
+            ContainerState::Stopped => {
+                anyhow::bail!("Container is stopped");
+            }
+            ContainerState::Error(e) => {
+                anyhow::bail!("Container is in error state: {}", e);
+            }
+            _ => {}
+        }
+
+        let result = self.call_guest_binary_inner(function_name, args);
+        match &result {
+            Ok(_) => self.state = ContainerState::Running,
+            Err(e) => {
+                let msg = e.to_string();
+                let is_wasm_fatal = msg.contains("trap")
+                    || msg.contains("out of memory")
+                    || msg.contains("fuel")
+                    || e.downcast_ref::<wasmtime::Error>().is_some()
+                    || e.downcast_ref::<wasmtime::Trap>().is_some();
+                if is_wasm_fatal {
+                    self.state = ContainerState::Error(msg);
+                }
+            }
+        }
+        result
+    }
+
+    #[cfg(feature = "dynamic")]
+    fn call_guest_binary_inner(
         &mut self,
         function_name: &str,
         args: &[wasmtime::component::Val],
@@ -731,7 +924,10 @@ impl<T: HostStateImpl> Container<T> {
             imports
                 .into_iter()
                 .map(|name| {
-                    let (params, results) = registry.get_signature(name).unwrap();
+                    let (params, results) =
+                        AnyhowContext::with_context(registry.get_signature(name), || {
+                            format!("missing signature for import: {name}")
+                        })?;
                     Ok(ImportInfo {
                         name: name.to_string(),
                         params,
@@ -775,7 +971,9 @@ fn ron_value_to_val(
 
 impl<T: HostStateImpl> std::fmt::Debug for Container<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Container").finish()
+        f.debug_struct("Container")
+            .field("state", &self.state)
+            .finish()
     }
 }
 
@@ -790,9 +988,22 @@ mod tests {
     }
 
     #[test]
+    fn test_host_state_new_does_not_inherit_stdio_or_network() {
+        let state = HostState::new().expect("should succeed");
+        let _ = state;
+    }
+
+    #[test]
     fn test_host_state_default_does_not_panic() {
         let state = HostState::default();
         let _ = state;
+    }
+
+    #[test]
+    fn test_host_state_new_equals_default() {
+        let new_state = HostState::new().expect("new should succeed");
+        let default_state = HostState::default();
+        let _ = (new_state, default_state);
     }
 
     #[test]
@@ -839,5 +1050,63 @@ mod tests {
             builder
         });
         assert!(state.is_ok());
+    }
+
+    #[test]
+    fn test_container_state_transitions() {
+        let created = ContainerState::Created;
+        let running = ContainerState::Running;
+        let stopped = ContainerState::Stopped;
+        let error = ContainerState::Error("trap".to_string());
+
+        assert_eq!(created, ContainerState::Created);
+        assert_eq!(running, ContainerState::Running);
+        assert_eq!(stopped, ContainerState::Stopped);
+        assert!(matches!(error, ContainerState::Error(msg) if msg == "trap"));
+    }
+
+    #[test]
+    fn test_container_state_equality() {
+        assert_eq!(ContainerState::Created, ContainerState::Created);
+        assert_ne!(ContainerState::Created, ContainerState::Running);
+        assert_ne!(ContainerState::Running, ContainerState::Stopped);
+        assert_ne!(
+            ContainerState::Error("a".into()),
+            ContainerState::Error("b".into())
+        );
+    }
+
+    #[test]
+    fn test_container_state_clone_debug() {
+        let state = ContainerState::Error("oom".to_string());
+        let cloned = state.clone();
+        assert_eq!(state, cloned);
+        let debug = format!("{:?}", state);
+        assert!(debug.contains("oom"));
+    }
+
+    #[test]
+    #[cfg(feature = "dynamic")]
+    fn test_call_guest_raw_desc_rejects_invalid_payload() {
+        use crate::Image;
+        let wasm = bytes::Bytes::from_static(b"\x00asm\x01\x00\x00\x00");
+        let img = match Image::new(wasm) {
+            Ok(img) => img,
+            Err(_) => return,
+        };
+        let mut container = Container::builder(img)
+            .with_guest_initializer(|_ctx| Ok(GuestInstance::new(())))
+            .build()
+            .expect("build should succeed");
+
+        let sensitive = r#"("SECRET_API_KEY_12345",)"#;
+        let result = container.call_guest_raw_desc("test_fn", sensitive);
+        assert!(result.is_err());
+        let err_msg = format!("{}", result.unwrap_err());
+        assert!(
+            !err_msg.contains("SECRET_API_KEY_12345"),
+            "Error message should not contain the payload, but got: {}",
+            err_msg
+        );
     }
 }

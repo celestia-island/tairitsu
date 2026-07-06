@@ -87,7 +87,7 @@ impl SvgUtils {
         }
 
         // First character must be a letter or underscore
-        let first_char = id.chars().next().unwrap();
+        let first_char = id.chars().next().expect("id is non-empty (checked above)");
         if !first_char.is_ascii_alphabetic() && first_char != '_' && first_char != '-' {
             return false;
         }

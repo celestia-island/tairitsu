@@ -1,10 +1,12 @@
 //! CLI entry point for tairitsu-browser-test
 
+use anyhow::Result;
+
 use clap::Parser;
 use tairitsu_browser_test::cli::Cli;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter(

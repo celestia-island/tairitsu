@@ -1,9 +1,27 @@
+//! React-like hooks system for Tairitsu.
+//!
+//! Provides 16 composable hooks for state management, side effects, animations,
+//! and asynchronous data fetching in Tairitsu components.
+//!
+//! # Available Hooks
+//!
+//! - **State**: [`use_signal`], [`use_state`], [`use_ref`]
+//! - **Side Effects**: [`use_effect`], [`use_memo`], [`use_callback`]
+//! - **Async**: [`use_suspense`], [`use_resource`]
+//! - **DOM**: [`use_dom_ref`], [`use_element_ref`]
+//! - **Animation**: [`use_animation`], [`use_simple_animation`]
+//! - **Context**: [`provide_context`], [`use_context`]
+//! - **Timer**: [`use_interval`]
+//! - **Interaction**: [`use_interaction_state`]
+
 pub mod animation;
 pub mod callback;
 pub mod context;
 pub mod dom_ref;
+pub mod dynamic;
 pub mod effect;
 pub mod element_ref;
+pub mod interval;
 pub mod memo;
 pub mod ref_;
 pub mod signal;
@@ -13,29 +31,32 @@ pub mod store;
 pub mod suspense;
 
 pub use animation::{
-    AnimationCallback, AnimationConfig, AnimationDirection, AnimationHandle, AnimationState,
-    EasingFunction, use_animation, use_simple_animation,
+    use_animation, use_simple_animation, AnimationCallback, AnimationConfig, AnimationDirection,
+    AnimationHandle, AnimationState, EasingFunction,
 };
-pub use callback::{Callback, use_callback, use_return_callback, use_void_callback};
-pub use context::{Context, consume_context, provide_context, use_context};
-pub use dom_ref::{DomRef, use_dom_ref};
-pub use element_ref::{ElementRef, use_element_ref};
-
-// Dioxus compatibility alias
+pub use callback::{use_callback, use_return_callback, use_void_callback, Callback};
+pub use context::{
+    clear_all_contexts, consume_context, consume_context_expect, drop_context, provide_context,
+    provide_context_scoped, use_context, Context, ContextGuard,
+};
+pub use dom_ref::{use_dom_ref, DomRef};
+pub use dynamic::{use_dynamic_text, use_dynamic_text_fn};
 pub use effect::use_effect;
-pub use memo::{Memo, use_memo, use_memo_with, use_memo_with_deps};
+pub use element_ref::{use_element_ref, ElementRef};
+pub use interval::{use_interval, IntervalHandle};
+pub use memo::{use_memo, use_memo_with, use_memo_with_deps, Memo};
 pub use provide_context as use_context_provider;
-pub use ref_::{UseRef, use_ref};
-pub use signal::{ReactiveSignal, use_signal};
+pub use ref_::{use_ref, UseRef};
+pub use signal::{use_signal, use_standalone_signal, ReactiveSignal, StandaloneSignal};
 pub use state::use_state;
 pub use state_machine::{
-    ButtonStateMachine, InteractionCallback, InteractionEvent, InteractionState,
-    use_interaction_state,
+    use_interaction_state, ButtonStateMachine, InteractionCallback, InteractionEvent,
+    InteractionState,
 };
-pub use store::{Store, StoreId, register_store};
+pub use store::{register_store, Store, StoreId};
 pub use suspense::{
-    Resource, ResourceState, ResourceStatus, Suspense, SuspenseBoundary, resource_state,
-    use_resource, use_suspense,
+    resource_state, use_resource, use_suspense, Resource, ResourceState, ResourceStatus, Suspense,
+    SuspenseBoundary,
 };
 
 // Re-export Event types from vdom for convenience

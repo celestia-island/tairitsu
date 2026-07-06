@@ -1,10 +1,20 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
-use syn::{Attribute, FnArg, Ident, ItemFn, Pat, PatType, Result, parse_macro_input};
+use syn::{Attribute, FnArg, Ident, ItemFn, Pat, PatType, Result};
 
 pub fn expand_component(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as ItemFn);
+    let input: ItemFn = match syn::parse(item.clone()) {
+        Ok(f) => f,
+        Err(e) => {
+            let msg = format!(
+                "#[component] can only be applied to functions. \
+                 Consider adding `fn` before the function name.\n{}",
+                e,
+            );
+            return syn::Error::new(e.span(), msg).to_compile_error().into();
+        }
+    };
 
     match expand_component_impl(input) {
         Ok(tokens) => tokens.into(),
@@ -23,18 +33,21 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
     let mut uses_existing_props = false;
     let mut existing_props_name: Option<syn::Type> = None;
 
-    if input.sig.inputs.len() == 1
-        && let Some(FnArg::Typed(pat_type)) = input.sig.inputs.first()
-        && let Pat::Ident(pat_ident) = &*pat_type.pat
-    {
-        // Check if param name is "props" and type ends with "Props"
-        if pat_ident.ident == "props"
-            && let syn::Type::Path(type_path) = &*pat_type.ty
-            && let Some(segment) = type_path.path.segments.last()
-            && segment.ident.to_string().ends_with("Props")
-        {
-            uses_existing_props = true;
-            existing_props_name = Some((*pat_type.ty).clone());
+    if input.sig.inputs.len() == 1 {
+        if let Some(FnArg::Typed(pat_type)) = input.sig.inputs.first() {
+            if let Pat::Ident(pat_ident) = &*pat_type.pat {
+                // Check if param name is "props" and type ends with "Props"
+                if pat_ident.ident == "props" {
+                    if let syn::Type::Path(type_path) = &*pat_type.ty {
+                        if let Some(segment) = type_path.path.segments.last() {
+                            if segment.ident.to_string().ends_with("Props") {
+                                uses_existing_props = true;
+                                existing_props_name = Some((*pat_type.ty).clone());
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -183,7 +196,8 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
 
     // Create the function
     let original_fn = if uses_existing_props {
-        let props_type = existing_props_name.unwrap();
+        let props_type = existing_props_name
+            .expect("existing_props_name must be set when uses_existing_props is true");
         quote! {
             #[allow(non_snake_case)]
             #[allow(unused_braces)]
@@ -202,7 +216,8 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
                 if *has_default {
                     quote! { let #name = props.#name; }
                 } else {
-                    quote! { let #name = props.#name.unwrap_or_default(); }
+                    let err_msg = format!("`{}` is required but was not provided", name);
+                    quote! { let #name = props.#name.expect(#err_msg); }
                 }
             })
             .collect();
@@ -251,10 +266,13 @@ fn has_props_attribute(attrs: &[Attribute], inner_name: &str) -> bool {
     attrs.iter().any(|attr| {
         // Check for #[props(...)] pattern
         if attr.path().is_ident("props") {
-            // Check the meta for the inner_name
             if let syn::Meta::List(meta_list) = &attr.meta {
-                // Check if any nested meta matches the inner_name
-                return meta_list.tokens.to_string().contains(inner_name);
+                // Parse nested meta items properly to avoid substring false positives.
+                // e.g. #[props(default_value)] should NOT match inner_name = "default".
+                // We use syn::parse2 with a custom parser for a comma-separated list of Meta.
+                return syn::parse2::<PropsMetaList>(meta_list.tokens.clone())
+                    .ok()
+                    .is_some_and(|list| list.0.iter().any(|m| m.path().is_ident(inner_name)));
             }
         }
         // Also check for direct #[default] for backward compatibility
@@ -265,6 +283,23 @@ fn has_props_attribute(attrs: &[Attribute], inner_name: &str) -> bool {
     })
 }
 
+/// Helper to parse a comma-separated list of `syn::Meta` items.
+struct PropsMetaList(Vec<syn::Meta>);
+
+impl syn::parse::Parse for PropsMetaList {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let mut metas = Vec::new();
+        while !input.is_empty() {
+            let meta = input.parse::<syn::Meta>()?;
+            metas.push(meta);
+            if input.peek(syn::Token![,]) {
+                let _ = input.parse::<syn::Token![,]>();
+            }
+        }
+        Ok(PropsMetaList(metas))
+    }
+}
+
 fn to_pascal_case(s: &str) -> String {
     let mut result = String::new();
     let mut capitalize_next = true;
@@ -273,7 +308,11 @@ fn to_pascal_case(s: &str) -> String {
         if ch == '_' || ch == '-' {
             capitalize_next = true;
         } else if capitalize_next {
-            result.push(ch.to_uppercase().next().unwrap());
+            result.push(
+                ch.to_uppercase()
+                    .next()
+                    .expect("to_uppercase always yields at least one char"),
+            );
             capitalize_next = false;
         } else {
             result.push(ch);
@@ -281,4 +320,52 @@ fn to_pascal_case(s: &str) -> String {
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use syn::parse_quote;
+
+    #[test]
+    fn test_has_props_attribute_detects_default() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(default)])];
+        assert!(has_props_attribute(&attrs, "default"));
+    }
+
+    #[test]
+    fn test_has_props_attribute_detects_children() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(children)])];
+        assert!(has_props_attribute(&attrs, "children"));
+    }
+
+    #[test]
+    fn test_has_props_attribute_no_false_positive() {
+        // #[props(default_value = "...")] should NOT match inner_name = "default"
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(default_value = "foo")])];
+        assert!(
+            !has_props_attribute(&attrs, "default"),
+            "default_value should not match 'default'"
+        );
+    }
+
+    #[test]
+    fn test_has_props_attribute_multiple() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(default, children)])];
+        assert!(has_props_attribute(&attrs, "default"));
+        assert!(has_props_attribute(&attrs, "children"));
+    }
+
+    #[test]
+    fn test_has_props_attribute_no_match() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[props(required)])];
+        assert!(!has_props_attribute(&attrs, "default"));
+        assert!(!has_props_attribute(&attrs, "children"));
+    }
+
+    #[test]
+    fn test_has_props_attribute_direct_default() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[default])];
+        assert!(has_props_attribute(&attrs, "default"));
+    }
 }

@@ -3,9 +3,16 @@ name = "tairitsu-web"
 version.workspace = true
 description = "Tairitsu Web Framework - Modular WebAssembly-first framework with SSR, CSR, SSG support"
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 edition.workspace = true
 repository.workspace = true
+include = [
+    "src/**/*",
+    "wit/composed/**/*",
+    "build.rs",
+    "Cargo.toml",
+    "README.md",
+]
 
 [dependencies]
 tairitsu = { workspace = true, optional = true }
@@ -15,15 +22,13 @@ tairitsu-macros = { workspace = true, optional = true }
 tairitsu-style = { workspace = true, optional = true }
 tairitsu-ssr = { workspace = true, optional = true }
 tairitsu-packager = { workspace = true, optional = true }
-iso639_enum = { version = "0.6", optional = true }
-anyhow = "^1"
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
-toml = "^0.8"
-tracing = "^0.1"
-wit-bindgen = { version = "^0.50", features = ["macros"], optional = true }
-wasm-bindgen = { version = "^0.2", optional = true }
-wasm-bindgen-futures = { version = "^0.4", optional = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+tracing = { workspace = true }
+wit-bindgen = { workspace = true, optional = true }
 
 [features]
 default = ["vdom", "hooks", "macros", "style", "ssr"]
@@ -32,11 +37,10 @@ hooks = ["dep:tairitsu-hooks"]
 macros = ["dep:tairitsu-macros"]
 style = ["dep:tairitsu-style"]
 router = []
-data-fetcher = ["ssr"]
-hmr = ["ssr"]
-fast-refresh = ["ssr", "hmr"]
-error-overlay = ["ssr", "hmr"]
-i18n = ["hooks", "dep:iso639_enum"]
+data-fetcher = ["ssr", "tairitsu-ssr?/data-fetcher"]
+hmr = ["ssr", "tairitsu-ssr?/hmr"]
+fast-refresh = ["ssr", "hmr", "tairitsu-ssr?/fast-refresh"]
+error-overlay = ["ssr", "hmr", "tairitsu-ssr?/error-overlay"]
 ssr = ["dep:tairitsu", "dep:tairitsu-ssr"]
 packager = ["dep:tairitsu", "dep:tairitsu-packager"]
 browser = ["vdom", "hooks", "macros", "style", "router"]
@@ -66,7 +70,8 @@ tokio = { workspace = true, default-features = false, features = [
 ] }
 
 [build-dependencies]
-toml = "^0.8"
+toml = { workspace = true }
+tairitsu-browser-worlds = { workspace = true }
 
 [package.metadata.docs.rs]
 features = ["full"]

@@ -59,7 +59,7 @@ impl ClassesBuilder {
     /// and adds it if valid. Returns the builder for chaining.
     pub fn add_utility(mut self, utility_class: &str) -> Self {
         if !utility_class.is_empty() {
-            let registry = self.registry.read().unwrap();
+            let registry = self.registry.read().unwrap_or_else(|e| e.into_inner());
             if registry.find(utility_class).is_some() {
                 self.classes.push(utility_class.to_string());
             }
@@ -70,7 +70,7 @@ impl ClassesBuilder {
     /// Add a utility class conditionally
     pub fn add_utility_if(mut self, utility_class: &str, condition: bool) -> Self {
         if condition && !utility_class.is_empty() {
-            let registry = self.registry.read().unwrap();
+            let registry = self.registry.read().unwrap_or_else(|e| e.into_inner());
             if registry.find(utility_class).is_some() {
                 self.classes.push(utility_class.to_string());
             }
@@ -86,7 +86,7 @@ impl ClassesBuilder {
         let css = if utility_class.is_empty() {
             None
         } else {
-            let registry = self.registry.read().unwrap();
+            let registry = self.registry.read().unwrap_or_else(|e| e.into_inner());
             let css = registry.generate_css(utility_class);
             if css.is_some() {
                 self.classes.push(utility_class.to_string());
@@ -101,7 +101,7 @@ impl ClassesBuilder {
     /// This method generates CSS rules for all utility classes that have been
     /// added to the builder. Returns a string containing all the CSS rules.
     pub fn generate_css(&self) -> String {
-        let registry = self.registry.read().unwrap();
+        let registry = self.registry.read().unwrap_or_else(|e| e.into_inner());
         let mut css_rules = Vec::new();
 
         for class in &self.classes {
@@ -126,7 +126,7 @@ impl ClassesBuilder {
     /// Register a custom utility class
     pub fn register_utility(self, utility: Arc<dyn UtilityClass>) -> Self {
         {
-            let mut registry = self.registry.write().unwrap();
+            let mut registry = self.registry.write().unwrap_or_else(|e| e.into_inner());
             registry.register(utility);
         }
         self
@@ -206,7 +206,7 @@ impl ClassesBuilder {
     /// if it matches a registered utility.
     pub fn add_utilities(mut self, classes: &str) -> Self {
         let classes_to_add: Vec<String> = {
-            let registry = self.registry.read().unwrap();
+            let registry = self.registry.read().unwrap_or_else(|e| e.into_inner());
             classes
                 .split_whitespace()
                 .filter(|class| registry.find(class).is_some())
@@ -221,7 +221,7 @@ impl ClassesBuilder {
     pub fn add_utilities_if(mut self, classes: &str, condition: bool) -> Self {
         if condition {
             let classes_to_add: Vec<String> = {
-                let registry = self.registry.read().unwrap();
+                let registry = self.registry.read().unwrap_or_else(|e| e.into_inner());
                 classes
                     .split_whitespace()
                     .filter(|class| registry.find(class).is_some())

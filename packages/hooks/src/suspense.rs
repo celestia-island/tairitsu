@@ -26,7 +26,7 @@
 //!     });
 //!
 //!     Suspense::new(
-//!         VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Loading...")))),
+//!         VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Loading..."))))),
 //!         || match data.read() {
 //!             ResourceState::Loading => VNode::Text(VText::new("Loading...")),
 //!             ResourceState::Ready(value) => VNode::Text(VText::new(value)),
@@ -53,7 +53,7 @@ use std::{
     sync::Arc,
 };
 
-use tairitsu_vdom::{VNode, runtime};
+use tairitsu_vdom::{runtime, VNode};
 
 /// State of an async resource.
 #[derive(Clone, Debug, PartialEq)]
@@ -156,7 +156,7 @@ impl ResourceRegistry {
         state: ResourceStateOp,
     ) -> Vec<runtime::ComponentId> {
         if let Some(resource_state) = self.resources.get(&id) {
-            *resource_state.lock().unwrap() = state;
+            *resource_state.lock().unwrap_or_else(|e| e.into_inner()) = state;
         }
 
         // Get all components that depend on this resource
@@ -186,17 +186,19 @@ impl ResourceRegistry {
     }
 
     fn get_resource_state(&self, id: ResourceId) -> Option<ResourceStateOp> {
-        self.resources.get(&id).map(|arc| *arc.lock().unwrap())
+        self.resources
+            .get(&id)
+            .map(|arc| *arc.lock().unwrap_or_else(|e| e.into_inner()))
     }
 
     fn track_access(&mut self, resource_id: ResourceId) {
         self.accessed_resources.borrow_mut().insert(resource_id);
 
         // If we're in a suspense boundary, track this resource
-        if let Some(boundary_id) = self.active_boundary
-            && let Some(boundary) = self.suspense_boundaries.get_mut(&boundary_id)
-        {
-            boundary.tracked_resources.insert(resource_id);
+        if let Some(boundary_id) = self.active_boundary {
+            if let Some(boundary) = self.suspense_boundaries.get_mut(&boundary_id) {
+                boundary.tracked_resources.insert(resource_id);
+            }
         }
     }
 
@@ -246,7 +248,7 @@ fn has_loading_resources(boundary_id: runtime::ComponentId) -> bool {
         if let Some(boundary) = reg.get_boundary(boundary_id) {
             for &resource_id in &boundary.tracked_resources {
                 if let Some(state) = reg.resources.get(&resource_id) {
-                    let guard = state.lock().unwrap();
+                    let guard = state.lock().unwrap_or_else(|e| e.into_inner());
                     if matches!(&*guard, ResourceStateOp::Loading) {
                         return true;
                     }
@@ -364,7 +366,11 @@ impl<T> Resource<T> {
     {
         *self.inner.state.borrow_mut() = new_state.clone();
         // Also update the thread-safe state for cross-thread access
-        *self.inner.thread_safe_state.lock().unwrap() = new_state.clone();
+        *self
+            .inner
+            .thread_safe_state
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = new_state.clone();
 
         // Update the global registry
         let registry_state = match new_state {
@@ -411,7 +417,7 @@ pub fn use_resource<T, F, Fut>(fetcher: F) -> Resource<T>
 where
     T: Clone + 'static + std::marker::Send,
     F: FnOnce() -> Fut + 'static + std::marker::Send,
-    Fut: Future<Output = Result<T, String>> + 'static + std::marker::Send,
+    Fut: Future<Output = anyhow::Result<T>> + 'static + std::marker::Send,
 {
     let component_id = runtime::use_component(VNode::empty);
 
@@ -434,43 +440,33 @@ where
     };
 
     // Spawn the async operation
-    // Note: In a real implementation, this would integrate with a proper async runtime
-    // For now, we provide a thread-pool based approach for testing
-    #[cfg(test)]
+    // Non-WASM targets: spawn a thread with a tokio runtime to execute the future.
+    // WASM targets: the future is discarded (requires wasm-bindgen-futures or similar).
+    #[cfg(not(target_family = "wasm"))]
     {
-        // For testing, we need to use a different approach
-        // since we can't send Rc across threads
-        // We'll use a channel to communicate the result
         let (tx, rx) = std::sync::mpsc::channel();
 
-        // Clone the Arc for thread-safe access
         let thread_safe_state = Arc::clone(&inner.thread_safe_state);
 
         std::thread::spawn(move || {
-            // Create a minimal runtime for the future
-            // In production, use the proper runtime
             let rt = tokio::runtime::Builder::new_current_thread()
                 .enable_all()
                 .build()
-                .unwrap();
+                .expect("failed to build tokio runtime");
 
             let result = rt.block_on(fetcher());
 
-            // Send the result back
             let _ = tx.send(result);
         });
 
-        // Spawn a thread to wait for the result and update the resource
         std::thread::spawn(move || {
             if let Ok(result) = rx.recv() {
-                // Update the thread-safe state
                 let new_state = match result {
                     Ok(value) => ResourceState::Ready(value),
-                    Err(err) => ResourceState::Error(err),
+                    Err(err) => ResourceState::Error(err.to_string()),
                 };
-                *thread_safe_state.lock().unwrap() = new_state.clone();
+                *thread_safe_state.lock().unwrap_or_else(|e| e.into_inner()) = new_state.clone();
 
-                // Update the global registry
                 let registry_state = match new_state {
                     ResourceState::Loading => ResourceStateOp::Loading,
                     ResourceState::Ready(_) => ResourceStateOp::Ready,
@@ -483,7 +479,6 @@ where
                         .update_resource(resource_id, registry_state)
                 });
 
-                // Mark the component as dirty so it will re-render
                 for comp_id in affected {
                     runtime::mark_dirty(comp_id);
                 }
@@ -492,11 +487,12 @@ where
         });
     }
 
-    #[cfg(not(test))]
+    #[cfg(target_family = "wasm")]
     {
-        // For non-test environments, we can't spawn threads with futures
-        // In production, this would integrate with the platform's async runtime
-        let _ = fetcher; // Suppress unused warning
+        let _ = fetcher;
+        tracing::warn!(
+            "use_resource: async execution not supported on WASM targets without wasm-bindgen-futures. Resource will remain in Loading state."
+        );
     }
 
     resource
@@ -520,8 +516,8 @@ where
 ///
 /// fn component() -> VNode {
 ///     Suspense::new(
-///         VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Loading...")))),
-///         || VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Content loaded!")))),
+///         VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Loading..."))))),
+///         || VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Content loaded!"))))),
 ///     ).render()
 /// }
 /// ```
@@ -593,8 +589,8 @@ impl Suspense {
 ///
 /// fn component() -> VNode {
 ///     use_suspense(
-///         VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Loading...")))),
-///         || VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Content loaded!")))),
+///         VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Loading...")))),
+///         || VNode::Element(Box::new(VElement::new("div").child(VNode::Text(VText::new("Content loaded!")))),
 ///     )
 /// }
 /// ```
@@ -696,8 +692,9 @@ pub fn trigger_resource_update<T: Clone + Send + Sync + 'static>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::time::Duration;
+
+    use super::*;
 
     #[test]
     fn test_resource_state_loading() {
@@ -759,7 +756,7 @@ mod tests {
     #[test]
     fn test_use_resource_sync() {
         // Test with an immediately-ready future
-        let resource = use_resource(|| async { Ok::<_, String>("immediate") });
+        let resource = use_resource(|| async { Ok::<_, anyhow::Error>("immediate") });
 
         // Give the thread a moment to complete
         std::thread::sleep(Duration::from_millis(500));
@@ -773,13 +770,13 @@ mod tests {
 
     #[test]
     fn test_use_resource_error() {
-        let resource = use_resource(|| async { Err::<(), _>("fetch failed".to_string()) });
+        let resource = use_resource(|| async { Err::<(), _>(anyhow::anyhow!("fetch failed")) });
 
         // Give the thread a moment to complete
         std::thread::sleep(Duration::from_millis(500));
 
         match resource.read() {
-            ResourceState::Error(msg) => assert_eq!(msg, "fetch failed"),
+            ResourceState::Error(msg) => assert!(msg.contains("fetch failed")),
             ResourceState::Loading => panic!("Resource should have errored"),
             ResourceState::Ready(_) => panic!("Resource should have errored"),
         }
@@ -798,7 +795,7 @@ mod tests {
 
     #[test]
     fn test_resource_clone() {
-        let resource = use_resource(|| async { Ok::<_, String>(42) });
+        let resource = use_resource(|| async { Ok::<_, anyhow::Error>(42) });
 
         let resource_clone = resource.clone();
 
@@ -813,9 +810,9 @@ mod tests {
 
     #[test]
     fn test_resource_id() {
-        let resource1 = use_resource(|| async { Ok::<_, String>(1) });
+        let resource1 = use_resource(|| async { Ok::<_, anyhow::Error>(1) });
 
-        let resource2 = use_resource(|| async { Ok::<_, String>(2) });
+        let resource2 = use_resource(|| async { Ok::<_, anyhow::Error>(2) });
 
         // Resources should have different IDs
         assert_ne!(resource1.id(), resource2.id());
@@ -826,7 +823,7 @@ mod tests {
         // Create a resource that will take time to load
         let resource = use_resource(|| async {
             std::thread::sleep(Duration::from_millis(100));
-            Ok::<_, String>("loaded")
+            Ok::<_, anyhow::Error>("loaded")
         });
 
         let fallback = VNode::Text(tairitsu_vdom::VText::new("Loading..."));
@@ -881,7 +878,7 @@ mod tests {
 
     #[test]
     fn test_multiple_reads_same_resource() {
-        let resource = use_resource(|| async { Ok::<_, String>(42) });
+        let resource = use_resource(|| async { Ok::<_, anyhow::Error>(42) });
 
         std::thread::sleep(Duration::from_millis(500));
 
@@ -897,7 +894,7 @@ mod tests {
     fn test_resource_peek() {
         let resource = use_resource(|| async {
             // Very short async operation
-            Ok::<_, String>("peek test")
+            Ok::<_, anyhow::Error>("peek test")
         });
 
         // Wait for resource to load - give it enough time

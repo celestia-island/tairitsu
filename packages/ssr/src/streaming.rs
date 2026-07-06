@@ -112,11 +112,20 @@ impl HtmlChunk {
     }
 }
 
-/// Escape a string for use in a JavaScript string literal
+/// Escape a string for use in a JavaScript string literal.
+///
+/// Escapes backtick template literals and also replaces `</script` sequences
+/// to prevent premature closing of the wrapping `<script>` tag (XSS vector).
 fn javascript_escape(s: &str) -> String {
     let mut result = String::with_capacity(s.len() + 2);
     result.push('`');
-    for c in s.chars() {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let c = s[i..]
+            .chars()
+            .next()
+            .expect("non-empty slice at byte offset i");
         match c {
             '`' => result.push_str("\\`"),
             '$' => result.push_str("\\$"),
@@ -124,8 +133,14 @@ fn javascript_escape(s: &str) -> String {
             '\n' => result.push_str("\\n"),
             '\r' => result.push_str("\\r"),
             '\t' => result.push_str("\\t"),
+            '<' if s[i + c.len_utf8()..].to_lowercase().starts_with("/script") => {
+                result.push_str("<\\/script");
+                i += c.len_utf8() + "/script".len();
+                continue;
+            }
             _ => result.push(c),
         }
+        i += c.len_utf8();
     }
     result.push('`');
     result
@@ -230,13 +245,13 @@ pub async fn render_to_stream(wasm_bytes: &[u8], config: SsrConfig) -> Result<Ht
 /// use tairitsu_vdom::{VElement, VNode};
 ///
 /// # async fn example() {
-/// let fallback = VNode::Element(VElement::new("div").child(VNode::Text(
+/// let fallback = VNode::Element(Box::new(VElement::new("div").child(VNode::Text(
 ///     tairitsu_vdom::VText::new("Loading...")
-/// )));
+/// ))));
 ///
-/// let content = VNode::Element(VElement::new("div").child(VNode::Text(
+/// let content = VNode::Element(Box::new(VElement::new("div").child(VNode::Text(
 ///     tairitsu_vdom::VText::new("Hello, World!")
-/// )));
+/// ))));
 ///
 /// let chunks = render_suspense_boundary("my-suspense", fallback, content).await;
 ///
@@ -327,9 +342,10 @@ pub fn hydration_script() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use futures::stream::StreamExt;
     use tairitsu_vdom::{VElement, VText};
+
+    use super::*;
 
     #[test]
     fn test_html_chunk_content_to_string() {
@@ -363,13 +379,11 @@ mod tests {
     fn test_html_chunk_is_complete() {
         assert!(HtmlChunk::Complete.is_complete());
         assert!(!HtmlChunk::Content("test".to_string()).is_complete());
-        assert!(
-            !HtmlChunk::SuspensePlaceholder {
-                id: "test".to_string(),
-                html: "test".to_string(),
-            }
-            .is_complete()
-        );
+        assert!(!HtmlChunk::SuspensePlaceholder {
+            id: "test".to_string(),
+            html: "test".to_string(),
+        }
+        .is_complete());
     }
 
     #[test]
@@ -379,14 +393,55 @@ mod tests {
         assert_eq!(javascript_escape("hello$world"), "`hello\\$world`");
         assert_eq!(javascript_escape("hello\nworld"), "`hello\\nworld`");
         assert_eq!(javascript_escape("hello\\world"), "`hello\\\\world`");
+        assert_eq!(javascript_escape("</script>"), "`<\\/script>`");
+        assert_eq!(javascript_escape("</SCRIPT>"), "`<\\/script>`");
+    }
+
+    #[test]
+    fn test_javascript_escape_script_edge_cases() {
+        assert_eq!(
+            javascript_escape("</script></script>"),
+            "`<\\/script><\\/script>`"
+        );
+        assert_eq!(
+            javascript_escape("<script>alert(1)</script>"),
+            "`<script>alert(1)<\\/script>`"
+        );
+        assert_eq!(javascript_escape("  </script>  "), "`  <\\/script>  `");
+        assert_eq!(javascript_escape("</Script>"), "`<\\/script>`");
+    }
+
+    #[test]
+    fn test_javascript_escape_combined() {
+        let input = "hello`\n$\\</script>";
+        let escaped = javascript_escape(input);
+        assert!(escaped.starts_with('`'));
+        assert!(escaped.ends_with('`'));
+        assert!(!escaped.contains("</script>"));
+        assert!(escaped.contains("\\`"));
+        assert!(escaped.contains("\\n"));
+        assert!(escaped.contains("\\$"));
+        assert!(escaped.contains("\\\\"));
+    }
+
+    #[test]
+    fn test_javascript_escape_empty() {
+        assert_eq!(javascript_escape(""), "``");
+    }
+
+    #[test]
+    fn test_javascript_escape_unicode() {
+        assert_eq!(javascript_escape("你好世界"), "`你好世界`");
     }
 
     #[tokio::test]
     async fn test_render_suspense_boundary() {
-        let fallback =
-            VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Loading..."))));
-        let content =
-            VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Hello, World!"))));
+        let fallback = VNode::Element(Box::new(
+            VElement::new("div").child(VNode::Text(VText::new("Loading..."))),
+        ));
+        let content = VNode::Element(Box::new(
+            VElement::new("div").child(VNode::Text(VText::new("Hello, World!"))),
+        ));
 
         let chunks = render_suspense_boundary("test-suspense", fallback, content).await;
 
@@ -411,11 +466,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_render_vnode_to_stream() {
-        let vnode = VNode::Element(
+        let vnode = VNode::Element(Box::new(
             VElement::new("div")
                 .attr("id", "test")
                 .child(VNode::Text(VText::new("Hello"))),
-        );
+        ));
 
         let mut stream = render_vnode_to_stream(vnode);
 

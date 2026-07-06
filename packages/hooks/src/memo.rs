@@ -1,6 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
-use tairitsu_vdom::{Classes, Signal, Style};
+use tairitsu_vdom::{
+    create_effect, Classes, IntoClassValue, IntoStyleValue, Signal, Style, VElement,
+};
 
 /// A memoized value that only recomputes when dependencies change.
 ///
@@ -33,15 +35,28 @@ where
         }
     }
 
-    /// Gets the current memoized value.
-    /// Returns a Signal for reactivity.
+    /// Returns a read-only reference to the internal signal for reactivity.
+    ///
+    /// Callers should only use `.get()` on the returned signal. Calling `.set()`
+    /// bypasses the memo contract and may lead to inconsistent state.
+    #[deprecated(note = "Use .read() instead to avoid exposing internal Signal. \
+        If you need reactive tracking, use the signal returned by .signal()")]
     pub fn value(&self) -> Signal<T> {
         self.value.clone()
     }
 
-    /// Gets the current value directly (Dioxus compatibility).
+    /// Gets the current value directly.
     pub fn read(&self) -> T {
         self.value.get()
+    }
+
+    /// Returns the internal signal for reactive dependency tracking.
+    ///
+    /// This is intended for use in `create_effect` closures where you need
+    /// the signal to be tracked as a dependency. Prefer `.read()` for
+    /// simple value access.
+    pub fn signal(&self) -> &Signal<T> {
+        &self.value
     }
 
     /// Updates the dependencies and recomputes if they have changed.
@@ -93,8 +108,41 @@ where
     }
 }
 
+impl<D, F> IntoStyleValue for Memo<String, D, F>
+where
+    D: PartialEq + 'static,
+    F: Fn() -> String + Clone + 'static,
+{
+    fn apply_to(self, element: &mut VElement) {
+        let signal = self.signal().clone();
+        element.dynamic_styles.push((
+            "cssText".to_string(),
+            std::rc::Rc::new(std::cell::RefCell::new(move || signal.get())),
+        ));
+    }
+}
+
+impl<D, F> IntoClassValue for Memo<String, D, F>
+where
+    D: PartialEq + 'static,
+    F: Fn() -> String + Clone + 'static,
+{
+    fn apply_to(self, element: &mut VElement) {
+        let signal = self.signal().clone();
+        element
+            .dynamic_classes
+            .push(std::rc::Rc::new(std::cell::RefCell::new(move || {
+                signal.get()
+            })));
+    }
+}
+
 /// Creates a memoized value that only recomputes when accessed signals change.
 /// This is the Dioxus-compatible API that accepts just a compute function.
+///
+/// Internally uses reactive signal tracking: when the compute function calls
+/// `.get()` on a `Signal`, that signal is automatically tracked as a dependency.
+/// When any tracked signal changes, the value is recomputed.
 ///
 /// # Arguments
 /// * `compute` - A function that computes the value
@@ -112,7 +160,23 @@ where
     T: Clone + 'static,
     F: Fn() -> T + Clone + 'static,
 {
-    Memo::new(compute, ())
+    let value = Signal::new(compute());
+    let compute = Rc::new(compute);
+
+    {
+        let compute = compute.clone();
+        let value = value.clone();
+        create_effect(move || {
+            let v = compute();
+            value.set(v);
+        });
+    }
+
+    Memo {
+        value,
+        compute: (*compute).clone(),
+        deps: Rc::new(RefCell::new(())),
+    }
 }
 
 /// Creates a memoized value with explicit dependencies.
@@ -128,7 +192,7 @@ where
 /// # Example
 /// ```ignore
 /// let memo = use_memo_with_deps(|| expensive_computation(a, b), (a, b));
-/// let value = memo.value().get();
+/// let value = memo.read();
 /// ```
 pub fn use_memo_with_deps<T, D, F>(compute: F, deps: D) -> Memo<T, D, F>
 where
@@ -151,13 +215,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cell::Cell;
+
+    use super::*;
 
     #[test]
     fn test_use_memo_basic() {
         let memo = use_memo(|| 42);
-        assert_eq!(memo.value().get(), 42);
+        assert_eq!(memo.read(), 42);
     }
 
     #[test]
@@ -174,17 +239,17 @@ mod tests {
         );
 
         // Initial computation
-        assert_eq!(memo.value().get(), 100);
+        assert_eq!(memo.read(), 100);
         assert_eq!(compute_count.get(), 1);
 
         // Same dependency - should not recompute
         memo.update_deps(10);
-        assert_eq!(memo.value().get(), 100);
+        assert_eq!(memo.read(), 100);
         assert_eq!(compute_count.get(), 1);
 
         // Different dependency - should recompute
         memo.update_deps(20);
-        assert_eq!(memo.value().get(), 100);
+        assert_eq!(memo.read(), 100);
         assert_eq!(compute_count.get(), 2);
     }
 
@@ -192,11 +257,11 @@ mod tests {
     fn test_use_memo_with_tuple_deps() {
         let memo = use_memo_with_deps(|| "hello world", (1, 2));
 
-        assert_eq!(memo.value().get(), "hello world");
+        assert_eq!(memo.read(), "hello world");
 
         // Same tuple - no recompute
         memo.update_deps((1, 2));
-        assert_eq!(memo.value().get(), "hello world");
+        assert_eq!(memo.read(), "hello world");
     }
 
     #[test]
@@ -204,14 +269,14 @@ mod tests {
         let memo1 = use_memo_with(|| vec![1, 2, 3], ());
         let memo2 = memo1.clone();
 
-        assert_eq!(memo1.value().get(), memo2.value().get());
+        assert_eq!(memo1.read(), memo2.read());
     }
 
     #[test]
     fn test_use_memo_string_deps() {
         let memo = use_memo_with_deps(|| "computed", String::from("dep1"));
 
-        assert_eq!(memo.value().get(), "computed");
+        assert_eq!(memo.read(), "computed");
 
         // Same string - no recompute
         memo.update_deps(String::from("dep1"));
@@ -224,7 +289,7 @@ mod tests {
     fn test_use_memo_vec_deps() {
         let memo = use_memo_with_deps(|| 100, vec![1, 2, 3]);
 
-        assert_eq!(memo.value().get(), 100);
+        assert_eq!(memo.read(), 100);
 
         // Same vec - no recompute
         memo.update_deps(vec![1, 2, 3]);

@@ -1,9 +1,11 @@
 //! Browser management module
 
 mod cache;
+pub mod cdp;
 mod downloader;
 mod platform;
 
 pub use cache::BrowserCache;
-pub use downloader::{BrowserDownloader, CHROME_VERSION, DownloadProgress};
-pub use platform::{Platform, detect_platform};
+pub use cdp::CdpClient;
+pub use downloader::{BrowserDownloader, DownloadProgress, CHROME_VERSION};
+pub use platform::{detect_platform, Platform};

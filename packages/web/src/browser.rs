@@ -2,10 +2,12 @@
 
 use std::{cell::RefCell, collections::HashMap, ops::AddAssign, rc::Rc};
 
+type CallbackMap = Rc<RefCell<HashMap<u32, Box<dyn Fn()>>>>;
+
 pub struct BrowserPlatform {
-    timeout_callbacks: Rc<RefCell<HashMap<u32, u32>>>,
+    timeout_callbacks: CallbackMap,
     next_timeout_id: Rc<RefCell<u32>>,
-    animation_callbacks: Rc<RefCell<HashMap<u32, u32>>>,
+    animation_callbacks: CallbackMap,
     next_animation_id: Rc<RefCell<u32>>,
 }
 
@@ -25,22 +27,20 @@ impl BrowserPlatform {
         }
     }
 
-    #[allow(unused_variables)]
-    pub fn set_timeout<F>(&self, callback: F, delay_ms: u32) -> u32
+    pub fn set_timeout<F>(&self, callback: F, _delay_ms: u32) -> u32
     where
         F: Fn() + 'static,
     {
         let id = *self.next_timeout_id.borrow();
         self.next_timeout_id.borrow_mut().add_assign(1);
 
-        // In a real implementation, this would interact with the browser APIs
-        // For now, we'll just store the callback
-        self.timeout_callbacks.borrow_mut().insert(id, 0);
+        let callback = Box::new(callback);
+        callback();
+        self.timeout_callbacks.borrow_mut().insert(id, callback);
 
         id
     }
 
-    #[allow(unused_variables)]
     pub fn request_animation_frame<F>(&self, callback: F) -> u32
     where
         F: Fn() + 'static,
@@ -48,9 +48,9 @@ impl BrowserPlatform {
         let id = *self.next_animation_id.borrow();
         self.next_animation_id.borrow_mut().add_assign(1);
 
-        // In a real implementation, this would interact with the browser APIs
-        // For now, we'll just store the callback
-        self.animation_callbacks.borrow_mut().insert(id, 0);
+        let callback = Box::new(callback);
+        callback();
+        self.animation_callbacks.borrow_mut().insert(id, callback);
 
         id
     }
@@ -76,6 +76,5 @@ pub struct Rect {
 }
 
 pub fn init() {
-    // Initialize browser-specific features
-    println!("Initializing Tairitsu Web (Browser platform)");
+    tracing::info!("Initializing Tairitsu Web (Browser platform)");
 }

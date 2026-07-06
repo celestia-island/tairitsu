@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use clap::Parser;
 use tairitsu_e2e::run_all_tests;
 use thirtyfour::{DesiredCapabilities, WebDriver};
@@ -18,15 +20,13 @@ struct Args {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     let args = Args::parse();
 
     tracing_subscriber::fmt().with_env_filter("info").init();
 
-    unsafe {
-        std::env::set_var("WEBSITE_BASE_URL", &args.website_url);
-        std::env::set_var("E2E_SCREENSHOTS_DIR", &args.screenshots_dir);
-    }
+    std::env::set_var("WEBSITE_BASE_URL", &args.website_url);
+    std::env::set_var("E2E_SCREENSHOTS_DIR", &args.screenshots_dir);
 
     info!("Starting E2E tests...");
     info!("Selenium URL: {}", args.selenium_url);

@@ -14,13 +14,13 @@ use tracing::error;
 #[cfg(feature = "dev-server")]
 use {
     axum::{
-        Router,
         extract::Request,
         middleware::{self, Next},
         response::{Html, Response},
         routing::get,
+        Router,
     },
-    tairitsu_ssr::{SsrConfig, render_full_page},
+    tairitsu_ssr::{render_full_page, SsrConfig},
     tower_http::services::ServeDir,
 };
 
@@ -37,8 +37,9 @@ pub async fn ssr_dev_server(
     open: bool,
     _watch: bool,
 ) -> crate::Result<()> {
-    use crate::wasm::build_component;
     use std::time::Instant;
+
+    use crate::wasm::build_component;
 
     crate::log_info!("Tairitsu SSR development server");
 
@@ -226,10 +227,12 @@ async fn no_cache_headers(request: Request, next: Next) -> Response {
     let headers = response.headers_mut();
     headers.insert(
         "Cache-Control",
-        "no-cache, no-store, must-revalidate".parse().unwrap(),
+        "no-cache, no-store, must-revalidate"
+            .parse()
+            .expect("valid header value"),
     );
-    headers.insert("Pragma", "no-cache".parse().unwrap());
-    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Pragma", "no-cache".parse().expect("valid header value"));
+    headers.insert("Expires", "0".parse().expect("valid header value"));
     response
 }
 
@@ -272,7 +275,8 @@ pub fn prerender_routes(
     #[cfg(feature = "ssr")]
     {
         use std::fs;
-        use tairitsu_ssr::{SsrConfig, render_full_page};
+
+        use tairitsu_ssr::{render_full_page, SsrConfig};
 
         let discovered = config.discovered_routes();
         let effective_routes: Vec<String> = if routes.is_empty() && !discovered.is_empty() {
@@ -330,7 +334,13 @@ pub fn prerender_routes(
                 output_dir.join("index.html")
             } else {
                 let route_path = output_dir.join(clean_route).join("index.html");
-                fs::create_dir_all(route_path.parent().unwrap())?;
+                let parent = route_path.parent().ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "route path {} has no parent directory",
+                        route_path.display()
+                    )
+                })?;
+                fs::create_dir_all(parent)?;
                 route_path
             };
 

@@ -4,9 +4,11 @@ version.workspace = true
 edition.workspace = true
 publish = true
 authors.workspace = true
-description = "A WebAssembly runtime for running component-model based WASM modules"
-license = "Apache-2.0"
+description = "Core WASM Component Model runtime — Container, Registry, WIT binding, RON/Binary interop"
+license-file.workspace = true
 repository.workspace = true
+keywords = ["wasm", "wit", "component-model", "runtime", "webassembly"]
+categories = ["wasm", "api-bindings"]
 
 [features]
 default = []
@@ -14,15 +16,25 @@ dynamic = []
 
 [dependencies]
 tairitsu-macros = { workspace = true }
-anyhow = "^1"
-bytes = "^1"
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
+anyhow = { workspace = true }
+bytes = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 ron = "^0.8"
-wasmtime = { version = "^43", features = ["component-model"] }
-wasmtime-wasi = "^43"
-wit-component = "^0.243"
-wit-parser = "^0.243"
+wasmtime = { workspace = true }
+wasmtime-wasi = { workspace = true }
+wit-component = { workspace = true }
+wit-parser = { workspace = true }
 
 [build-dependencies]
-wit-parser = "^0.243"
+wit-parser = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+]

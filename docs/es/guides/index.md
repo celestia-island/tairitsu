@@ -1,28 +1,44 @@
-# Tairitsu Documentation Hub (English)
+# Tairitsu — Centro de documentación (Español)
 
-> Generic WASM Component Runtime Engine
+> Framework full-stack basado en el modelo de componentes WASM
 
-This is the complete English documentation baseline for Tairitsu.
+## Primeros pasos
 
-## Navigation
+| Documento | Descripción |
+|:--|:--|
+| [Tutorial de inicio](getting-started.md) | Desde cero hasta una aplicación full-stack funcional. Cubre `tairitsu new`, tu primer componente, ejecución servidor + cliente y despliegue. |
+| [Inicio rápido](quick-start.md) | Configuración y verificación en 5 minutos. |
+| [Mapa del workspace](workspace-map.md) | Tour de la estructura del monorepo. |
+| [Construir, probar y publicar](build-test-release.md) | Cómo usar las recetas de `just` para el flujo de desarrollo. |
 
-### Guides
-- [Quick Start](./quick-start.md)
-- [Workspace Map](./workspace-map.md)
-- [Build, Test, and Release](./build-test-release.md)
-- [Migration from web-sys to WIT bindings](./migration.md)
-- [Troubleshooting](./troubleshooting.md)
-- [Glossary](./glossary.md)
+## Migración
 
-### System
-- [System Overview](../system/overview.md)
-- [Runtime and Container Model](../system/runtime.md)
-- [W3C WebIDL to WIT Pipeline](../system/wit-pipeline.md)
-- [Dual Web Backends](../system/web-backends.md)
-- [Browser Glue Architecture](../system/browser-glue.md)
-- [Versioning Strategy](../system/versioning.md)
+| Documento | Descripción |
+|:--|:--|
+| [De web-sys a enlaces WIT](migration.md) | Transición de `wasm-bindgen`/`web-sys` a enlaces WIT del Component Model. |
 
-### Components
-- [Layered Package Overview](../components/index.md)
-- [Workspace Package List](../components/packages.md)
+## Referencia
 
+| Documento | Descripción |
+|:--|:--|
+| [Glosario](glossary.md) | Términos clave: WIT, Component Model, VNode, Signal, Platform, Container, etc. |
+| [Solución de problemas](troubleshooting.md) | Problemas comunes y soluciones. |
+
+## Arquitectura
+
+| Documento | Descripción |
+|:--|:--|
+| [Resumen del sistema](../system/overview.md) | Arquitectura de cuatro capas: Interface → Runtime → Platform → Tooling |
+| [Runtime y modelo de contenedor](../system/runtime.md) | Ciclo de vida Image/Container/Registry, enlace WIT, invocación dinámica |
+| [VDOM y renderizado](../system/vdom.md) | Diferenciación del DOM virtual, parcheo, sistema de eventos, planificador reactivo |
+| [Pipeline W3C WebIDL → WIT](../system/wit-pipeline.md) | Cómo 50+ especificaciones WebIDL se convierten en interfaces WIT |
+| [Backends web duales](../system/web-backends.md) | Estrategia WitPlatform vs WebPlatform |
+| [Arquitectura Browser Glue](../system/browser-glue.md) | Capa TypeScript que conecta WIT ABI con el DOM |
+| [Estrategia de versionado](../system/versioning.md) | Versionado semántico en el workspace multi-crate |
+
+## Referencia de paquetes
+
+| Documento | Descripción |
+|:--|:--|
+| [Resumen de paquetes por capas](../components/index.md) | Jerarquía de Crates en cuatro capas con grafo de dependencias |
+| [Lista de paquetes del workspace](../components/packages.md) | Descripción detallada de cada Crate |

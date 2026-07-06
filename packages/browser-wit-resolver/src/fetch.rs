@@ -4,9 +4,9 @@
 //! When the flag is disabled the client returns a "not available" error,
 //! directing users to run the fetch subcommand or enable the feature.
 
-use anyhow::Result;
 #[cfg(not(feature = "fetch"))]
 use anyhow::bail;
+use anyhow::Result;
 use std::collections::HashMap;
 
 #[cfg(feature = "fetch")]
@@ -16,14 +16,21 @@ use crate::resolver::PackageSpec;
 
 /// Client for fetching WIT package files from a remote registry.
 pub struct FetchClient {
-    #[allow(dead_code)]
+    #[cfg(feature = "fetch")]
     registry_url: String,
+    #[cfg(not(feature = "fetch"))]
+    _registry_url: String,
 }
 
 impl FetchClient {
     /// Create a new client pointing at the given registry base URL.
     pub fn new(registry_url: String) -> Self {
-        Self { registry_url }
+        Self {
+            #[cfg(feature = "fetch")]
+            registry_url,
+            #[cfg(not(feature = "fetch"))]
+            _registry_url: registry_url,
+        }
     }
 
     /// Fetch all WIT files for `spec` from the registry.
@@ -55,6 +62,11 @@ impl FetchClient {
     fn fetch_impl(&self, spec: &PackageSpec) -> Result<HashMap<String, Vec<u8>>> {
         use anyhow::Context;
 
+        let client = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .context("Failed to build HTTP client")?;
+
         let base = format!(
             "{}/{}/{}/{}",
             self.registry_url.trim_end_matches('/'),
@@ -66,7 +78,9 @@ impl FetchClient {
         // Fetch the manifest first to learn which files are available.
         let manifest_url = format!("{base}/manifest.json");
         debug!("GET {manifest_url}");
-        let manifest_resp = reqwest::blocking::get(&manifest_url)
+        let manifest_resp = client
+            .get(&manifest_url)
+            .send()
             .with_context(|| format!("Fetching manifest from {manifest_url}"))?
             .error_for_status()
             .with_context(|| format!("HTTP error fetching {manifest_url}"))?;
@@ -80,7 +94,9 @@ impl FetchClient {
         for filename in manifest.file_hashes.keys() {
             let url = format!("{base}/{filename}");
             debug!("GET {url}");
-            let bytes = reqwest::blocking::get(&url)
+            let bytes = client
+                .get(&url)
+                .send()
                 .with_context(|| format!("Fetching {url}"))?
                 .error_for_status()
                 .with_context(|| format!("HTTP error fetching {url}"))?

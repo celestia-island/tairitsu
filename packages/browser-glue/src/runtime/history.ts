@@ -1,4 +1,3 @@
-// @ts-nocheck
 // History interface - provides browser history API for WIT browser world
 
 export const history_exports = {
@@ -8,22 +7,29 @@ export const history_exports = {
   getScrollRestoration() {
     const value = window.history.scrollRestoration;
     switch (value) {
-      case 'auto': return 0n;
-      case 'manual': return 1n;
-      default: return 0n;
+      case "auto":
+        return 0n;
+      case "manual":
+        return 1n;
+      default:
+        return 0n;
     }
   },
-  setScrollRestoration(value) {
-    let enumValue;
-    if (value === 0n) { enumValue = 'auto'; }
-    else if (value === 1n) { enumValue = 'manual'; }
-    else { enumValue = 'auto'; }
+  setScrollRestoration(value: bigint) {
+    let enumValue: ScrollRestoration;
+    if (value === 0n) {
+      enumValue = "auto";
+    } else if (value === 1n) {
+      enumValue = "manual";
+    } else {
+      enumValue = "auto";
+    }
     window.history.scrollRestoration = enumValue;
   },
   getState() {
     return window.history.state || null;
   },
-  go(delta) {
+  go(delta: number) {
     window.history.go(delta);
   },
   back() {
@@ -32,10 +38,10 @@ export const history_exports = {
   forward() {
     window.history.forward();
   },
-  pushState(data, unused, url) {
+  pushState(data: any, unused: string, url: string) {
     window.history.pushState(data, unused, url);
   },
-  replaceState(data, unused, url) {
+  replaceState(data: any, unused: string, url: string) {
     window.history.replaceState(data, unused, url);
   },
 };

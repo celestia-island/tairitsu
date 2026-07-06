@@ -31,12 +31,12 @@ macro_rules! define_typed_classes {
 }
 
 #[cfg(test)]
-#[allow(dead_code)]
 mod tests {
     use super::*;
     use crate::ClassesBuilder;
 
     define_typed_classes! {
+        #[allow(dead_code)]
         TestDisplay {
             Flex => "hi-flex",
             Hidden => "hi-hidden",

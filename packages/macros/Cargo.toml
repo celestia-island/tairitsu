@@ -3,7 +3,7 @@ name = "tairitsu-macros"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 description = "Procedural macros for Tairitsu framework (rsx!, scss!, component, wit_interface!, etc.)"
 
@@ -14,9 +14,9 @@ proc-macro = true
 proc-macro2 = "^1"
 quote = "^1"
 syn = { version = "^2", features = ["full", "parsing"] }
-grass = "^0.13"
-sha2 = "^0.10"
-hex = "^0.4"
-regex = "^1"
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
+grass = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

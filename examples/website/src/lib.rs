@@ -28,7 +28,7 @@ pub fn run_app() -> Result<()> {
         platform.mount_vnode_to_app(vnode.clone())?;
 
         let root_handle = get_element_by_id(0, "app").expect("#app element not found");
-        let root_element = WitElement(root_handle);
+        let root_element = WitElement::from_raw(root_handle);
         tairitsu_web::init_runtime(root_element);
 
         let component_id = tairitsu_vdom::use_component(|| App.render());

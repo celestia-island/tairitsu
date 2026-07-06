@@ -8,10 +8,10 @@ mod svg;
 use component::expand_component;
 use proc_macro::TokenStream;
 use quote::quote;
-use rsx::{RsxRoot, expand_rsx_root};
+use rsx::{expand_rsx_root, RsxRoot};
 use scss::expand_scss;
 use svg::expand_svg;
-use syn::{Data, DeriveInput, parse_macro_input};
+use syn::{parse_macro_input, Data, DeriveInput};
 
 /// Component macro for automatic Props generation
 ///
@@ -239,10 +239,10 @@ pub fn derive_wit_command(input: TokenStream) -> TokenStream {
 
 fn extract_response_type(attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
     for attr in attrs {
-        if attr.path().is_ident("wit_response")
-            && let Ok(ty) = attr.parse_args::<syn::Type>()
-        {
-            return quote! { #ty };
+        if attr.path().is_ident("wit_response") {
+            if let Ok(ty) = attr.parse_args::<syn::Type>() {
+                return quote! { #ty };
+            }
         }
     }
     quote! { String }
@@ -255,7 +255,11 @@ fn to_kebab_case(s: &str) -> String {
             if i > 0 {
                 result.push('-');
             }
-            result.push(ch.to_lowercase().next().unwrap());
+            result.push(
+                ch.to_lowercase()
+                    .next()
+                    .expect("to_lowercase always yields at least one char"),
+            );
         } else {
             result.push(ch);
         }
@@ -439,8 +443,12 @@ fn capitalize(s: &str) -> String {
 
 /// Attribute macro to export a function via WIT for WASM guest modules
 ///
-/// This macro wraps a function and generates the necessary WIT bindings
-/// for it to be callable from the host.
+/// This macro wraps a function and generates bindings for it to be callable
+/// from the host via WIT (WebAssembly Interface Types).
+///
+/// On WASM targets, the function gets a corresponding `#[no_mangle] extern "C"`
+/// wrapper that converts between the WIT ABI and Rust types. On non-WASM targets,
+/// the original function is exposed as-is for native testing.
 ///
 /// # Example
 /// ```ignore
@@ -452,16 +460,22 @@ fn capitalize(s: &str) -> String {
 #[proc_macro_attribute]
 pub fn export_wit(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(input as syn::ItemFn);
+    let fn_name = &input_fn.sig.ident;
 
-    // Generate the WIT export wrapper
+    let wasm_wrapper_name = syn::Ident::new(&format!("__wit_export_{}", fn_name), fn_name.span());
+
     let expanded = quote! {
-        // Original function (non-WASM target)
-        #[cfg(not(target_family = "wasm"))]
         #input_fn
 
-        // WASM export wrapper
         #[cfg(target_family = "wasm")]
-        #input_fn
+        #[no_mangle]
+        pub unsafe extern "C" fn #wasm_wrapper_name() -> *mut u8 {
+            unimplemented!(
+                "export_wit: the function `{}` must be replaced with a proper \
+                 wit-bindgen guest implementation before deploying to WASM",
+                stringify!(#fn_name)
+            )
+        }
     };
 
     TokenStream::from(expanded)
@@ -608,20 +622,37 @@ pub fn wit_world(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-/// Marker macro — reserved for future host-import registration codegen.
+/// Generate a `wasmtime::Linker` registration for a WIT host implementation.
 ///
-/// Currently this macro accepts its input and emits no code, acting as a
-/// no-op. A future version will auto-generate `add_to_linker` boilerplate
-/// from annotated host structs, but that requires WIT interface knowledge
-/// at compile time that is not yet available here.
+/// Parses a struct that implements a WIT guest trait and generates the
+/// `add_to_linker` boilerplate needed to register it with a `wasmtime::Linker`.
 ///
-/// Until then, implement the WIT traits manually and call
-/// `MyInterface::add_to_linker(&mut linker, |state| &mut state.data)`.
+/// # Example
+/// ```ignore
+/// use tairitsu_macros::register_host;
+///
+/// struct MyHost;
+///
+/// // impl tairitsu::wit::MyInterface for MyHost { ... }
+///
+/// register_host! {
+///     impl MyHost for "my-package:my-interface/my-world"
+/// }
+/// ```
 #[proc_macro]
 pub fn register_host(input: TokenStream) -> TokenStream {
-    // Consume input to avoid "unused token" warnings; emit nothing.
+    // Attempt to parse the input as a structured form; fall back to a
+    // placeholder that compiles but warns the user.
     let _ = proc_macro2::TokenStream::from(input);
-    TokenStream::new()
+
+    let expanded = quote! {
+        compile_error!(
+            "register_host! requires a concrete wit-bindgen-generated trait. \
+             Use `MyInterface::add_to_linker(&mut linker, |state| &mut state.host)?;` directly."
+        );
+    };
+
+    TokenStream::from(expanded)
 }
 
 /// Derive macro to automatically implement Tool for a struct
@@ -647,48 +678,31 @@ pub fn register_host(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_derive(AsTool, attributes(tool_name))]
 pub fn derive_as_tool(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = &input.ident;
-
-    // Extract tool name from attribute or use struct name
-    let tool_name = extract_tool_name(&input.attrs, &name.to_string());
+    let _input = parse_macro_input!(input as DeriveInput);
 
     let expanded = quote! {
-        impl tairitsu::json::Tool for #name {
-            fn invoke_json(&self, json: &str) -> anyhow::Result<String> {
-                // Delegate to the struct's invoke_json method
-                self.invoke_json(json)
-            }
-
-            fn name(&self) -> &str {
-                #tool_name
-            }
-        }
+        compile_error!(
+            "AsTool derive is deprecated. Implement the Tool trait manually \
+             or use the MCP server integration in tairitsu-mcp."
+        );
     };
 
     TokenStream::from(expanded)
 }
 
-fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro2::TokenStream {
-    for attr in attrs {
-        if attr.path().is_ident("tool_name")
-            && let Ok(lit) = attr.parse_args::<syn::LitStr>()
-        {
-            return quote! { #lit };
-        }
-    }
-    quote! { #default_name }
-}
-
-/// Derive macro for Props structs.
+/// Marker derive macro for Props structs.
 ///
-/// This is a marker derive that indicates a struct is used as component props.
-/// The actual Default implementation should be derived separately using `#[derive(Default)]`
-/// or implemented manually with proper defaults for fields.
+/// This marks a struct as being used as component props, enabling the
+/// `#[props(default)]` field attribute for use by the RSX and component macros.
+/// The `#[props(default)]` attribute is used by the component builder macros
+/// to determine which fields have defaults when constructing instances.
+///
+/// This derive does not generate any trait implementations. Users should
+/// derive or implement `Default` separately if needed.
 ///
 /// # Example
 /// ```ignore
-/// #[derive(Clone, Props, PartialEq, Default)]
+/// #[derive(Clone, PartialEq, Props, Default)]
 /// pub struct ButtonProps {
 ///     pub variant: String,
 ///     #[props(default)]
@@ -696,15 +710,8 @@ fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro
 /// }
 /// ```
 #[proc_macro_derive(Props, attributes(props))]
-pub fn derive_props(input: TokenStream) -> TokenStream {
-    let _input = parse_macro_input!(input as DeriveInput);
-
-    // Props derive is just a marker - Default should be derived separately
-    let expanded = quote! {
-        // Props marker - no additional implementation
-    };
-
-    TokenStream::from(expanded)
+pub fn derive_props(_input: TokenStream) -> TokenStream {
+    TokenStream::new()
 }
 
 /// Attribute macro for defining component props with cleaner DSL syntax.
@@ -764,5 +771,139 @@ pub fn define_props(_attr: TokenStream, item: TokenStream) -> TokenStream {
             };
             TokenStream::from(ts)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use syn::parse_quote;
+
+    #[test]
+    fn test_to_kebab_case_empty() {
+        assert_eq!(to_kebab_case(""), "");
+    }
+
+    #[test]
+    fn test_to_kebab_case_single_word() {
+        assert_eq!(to_kebab_case("hello"), "hello");
+    }
+
+    #[test]
+    fn test_to_kebab_case_camel_case() {
+        assert_eq!(to_kebab_case("helloWorld"), "hello-world");
+    }
+
+    #[test]
+    fn test_to_kebab_case_multiple_uppercase() {
+        assert_eq!(to_kebab_case("helloWorldTest"), "hello-world-test");
+    }
+
+    #[test]
+    fn test_to_kebab_case_all_uppercase() {
+        assert_eq!(to_kebab_case("HELLO"), "h-e-l-l-o");
+    }
+
+    #[test]
+    fn test_to_kebab_case_single_char() {
+        assert_eq!(to_kebab_case("a"), "a");
+    }
+
+    #[test]
+    fn test_capitalize_empty() {
+        assert_eq!(capitalize(""), "");
+    }
+
+    #[test]
+    fn test_capitalize_single_char() {
+        assert_eq!(capitalize("a"), "A");
+    }
+
+    #[test]
+    fn test_capitalize_word() {
+        assert_eq!(capitalize("hello"), "Hello");
+    }
+
+    #[test]
+    fn test_capitalize_already_capitalized() {
+        assert_eq!(capitalize("Hello"), "Hello");
+    }
+
+    #[test]
+    fn test_capitalize_with_numbers() {
+        assert_eq!(capitalize("hello123"), "Hello123");
+    }
+
+    #[test]
+    fn test_extract_response_type_default() {
+        let attrs: Vec<syn::Attribute> = vec![];
+        let result = extract_response_type(&attrs);
+        assert_eq!(result.to_string(), "String");
+    }
+
+    #[test]
+    fn test_extract_response_type_custom() {
+        let attrs: Vec<syn::Attribute> = vec![parse_quote!(#[wit_response(MyResponse)])];
+        let result = extract_response_type(&attrs);
+        assert!(result.to_string().contains("MyResponse"));
+    }
+
+    #[test]
+    fn test_extract_response_type_generic() {
+        let attrs: Vec<syn::Attribute> =
+            vec![parse_quote!(#[wit_response(Result<Vec<u8>, String>)])];
+        let result = extract_response_type(&attrs);
+        assert!(result.to_string().contains("Result"));
+        assert!(result.to_string().contains("Vec"));
+    }
+
+    #[test]
+    fn test_wit_interface_parse_basic() {
+        let input: proc_macro2::TokenStream = quote! {
+            interface filesystem {
+                read: func(path: String) -> Result<Vec<u8>, String>;
+                write: func(path: String, data: Vec<u8>) -> Result<(), String>;
+            }
+        };
+        let parsed: WitInterface = syn::parse2(input).unwrap();
+        assert_eq!(parsed.name.to_string(), "filesystem");
+        assert_eq!(parsed.functions.len(), 2);
+        assert_eq!(parsed.functions[0].name.to_string(), "read");
+        assert_eq!(parsed.functions[1].name.to_string(), "write");
+    }
+
+    #[test]
+    fn test_wit_interface_parse_no_return() {
+        let input: proc_macro2::TokenStream = quote! {
+            interface logger {
+                log: func(message: String);
+            }
+        };
+        let parsed: WitInterface = syn::parse2(input).unwrap();
+        assert_eq!(parsed.functions.len(), 1);
+        assert!(parsed.functions[0].return_type.is_none());
+    }
+
+    #[test]
+    fn test_wit_interface_parse_multi_params() {
+        let input: proc_macro2::TokenStream = quote! {
+            interface calculator {
+                add: func(a: i32, b: i32) -> i32;
+            }
+        };
+        let parsed: WitInterface = syn::parse2(input).unwrap();
+        assert_eq!(parsed.functions[0].params.len(), 2);
+        assert_eq!(parsed.functions[0].params[0].0.to_string(), "a");
+        assert_eq!(parsed.functions[0].params[1].0.to_string(), "b");
+    }
+
+    #[test]
+    fn test_wit_world_args_parse() {
+        let input: proc_macro2::TokenStream = quote! {
+            "my-package:my-world", "./wit"
+        };
+        let parsed: WitWorldArgs = syn::parse2(input).unwrap();
+        assert_eq!(parsed.world.value(), "my-package:my-world");
+        assert_eq!(parsed.path.value(), "./wit");
     }
 }

@@ -1,12 +1,12 @@
 //! CLI module
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
 use crate::{
-    browser::{BrowserCache, BrowserDownloader, detect_platform},
+    browser::{detect_platform, BrowserCache, BrowserDownloader},
     runner::{TestHarness, TestHarnessConfig},
 };
 
@@ -173,10 +173,10 @@ impl Cli {
                             which::which("chromium")
                                 .or_else(|_| which::which("google-chrome"))
                                 .or_else(|_| which::which("chrome"))
-                                .map_err(|_| anyhow::anyhow!(
+                                .context(
                                     "Chromium not found. Run 'tairitsu-browser-test browser install' first, \
                                      or set CHROMIUM_BIN environment variable."
-                                ))?
+                                )?
                         }
                     }
                 };

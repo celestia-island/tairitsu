@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use portable_pty::{Child, ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
+use portable_pty::{native_pty_system, Child, ChildKiller, CommandBuilder, MasterPty, PtySize};
 
 fn to_io(e: impl std::fmt::Display) -> io::Error {
     io::Error::other(e.to_string())
@@ -28,13 +28,28 @@ impl UnixPty {
         };
         let pair = pty_system.openpty(size).map_err(to_io)?;
 
-        let mut cmd = CommandBuilder::new("/bin/bash");
+        let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
+        let mut cmd = CommandBuilder::new(shell);
         cmd.arg("-c");
         cmd.arg(command);
+        cmd.env("TERM", "xterm-256color");
         if let Some(dir) = cwd {
             cmd.cwd(dir);
         }
         let child = pair.slave.spawn_command(cmd).map_err(to_io)?;
+
+        {
+            let master_fd = pair.master.as_raw_fd().unwrap_or(-1);
+            if master_fd >= 0 {
+                let mut termios: std::mem::MaybeUninit<libc::termios> =
+                    std::mem::MaybeUninit::uninit();
+                if unsafe { libc::tcgetattr(master_fd, termios.as_mut_ptr()) } == 0 {
+                    let termios = unsafe { termios.assume_init_mut() };
+                    termios.c_lflag &= !(libc::ECHO | libc::ECHONL);
+                    unsafe { libc::tcsetattr(master_fd, libc::TCSANOW, termios) };
+                }
+            }
+        }
 
         let killer = child.clone_killer();
 
@@ -55,7 +70,9 @@ impl UnixPty {
             *guard = Some(self.master.take_writer().map_err(to_io)?);
         }
         if let Some(ref mut w) = *guard {
-            w.write(data)
+            w.write_all(data)?;
+            w.flush()?;
+            Ok(data.len())
         } else {
             Err(to_io("no writer"))
         }
@@ -105,8 +122,29 @@ impl UnixPty {
         }
     }
 
-    pub fn kill(&mut self) -> io::Result<()> {
-        self.killer.kill()
+    pub fn kill_and_reap(&mut self) -> io::Result<()> {
+        self.killer.kill()?;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            let mut guard = match self.child.lock() {
+                Ok(g) => g,
+                Err(_) => break,
+            };
+            match guard.try_wait() {
+                Ok(Some(_)) => break,
+                Ok(None) => {
+                    if std::time::Instant::now() > deadline {
+                        let _ = self.killer.kill();
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        let _ = guard.try_wait();
+                        break;
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
+                Err(_) => break,
+            }
+        }
+        Ok(())
     }
 
     pub fn pid(&self) -> u32 {

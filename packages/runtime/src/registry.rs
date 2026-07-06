@@ -36,7 +36,7 @@ impl Registry {
         let image =
             Image::new(wasm_binary).context(format!("Failed to create image '{}'", name))?;
 
-        let mut images = self.images.lock().expect("registry images lock poisoned");
+        let mut images = self.images.lock().unwrap_or_else(|e| e.into_inner());
         images.insert(name.clone(), image);
 
         Ok(())
@@ -52,7 +52,7 @@ impl Registry {
         let image = Image::from_component(component_binary)
             .context(format!("Failed to create component image '{}'", name))?;
 
-        let mut images = self.images.lock().expect("registry images lock poisoned");
+        let mut images = self.images.lock().unwrap_or_else(|e| e.into_inner());
         images.insert(name, image);
 
         Ok(())
@@ -60,7 +60,7 @@ impl Registry {
 
     /// Get image by name
     pub fn get_image(&self, name: &str) -> Option<Image> {
-        let images = self.images.lock().expect("registry images lock poisoned");
+        let images = self.images.lock().unwrap_or_else(|e| e.into_inner());
         images.get(name).cloned()
     }
 
@@ -73,40 +73,34 @@ impl Registry {
     where
         F: FnOnce(&mut Container) -> R,
     {
-        let mut containers = self
-            .containers
-            .lock()
-            .expect("registry containers lock poisoned");
+        let mut containers = self.containers.lock().unwrap_or_else(|e| e.into_inner());
         containers.get_mut(name).map(f)
     }
 
     /// Stop and remove container (similar to docker stop/rm)
     pub fn stop_container(&self, name: &str) -> Option<Container> {
-        let mut containers = self
-            .containers
-            .lock()
-            .expect("registry containers lock poisoned");
+        let mut containers = self.containers.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(container) = containers.get_mut(name) {
+            container.stop();
+        }
         containers.remove(name)
     }
 
     /// List all registered image names
     pub fn list_images(&self) -> Vec<String> {
-        let images = self.images.lock().expect("registry images lock poisoned");
+        let images = self.images.lock().unwrap_or_else(|e| e.into_inner());
         images.keys().cloned().collect()
     }
 
     /// List all running container names
     pub fn list_containers(&self) -> Vec<String> {
-        let containers = self
-            .containers
-            .lock()
-            .expect("registry containers lock poisoned");
+        let containers = self.containers.lock().unwrap_or_else(|e| e.into_inner());
         containers.keys().cloned().collect()
     }
 
     /// Remove image by name
     pub fn remove_image(&self, name: &str) -> Option<Image> {
-        let mut images = self.images.lock().expect("registry images lock poisoned");
+        let mut images = self.images.lock().unwrap_or_else(|e| e.into_inner());
         images.remove(name)
     }
 }
@@ -128,8 +122,9 @@ impl std::fmt::Debug for Registry {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use bytes::Bytes;
+
+    use super::*;
 
     const MINIMAL_WASM: &[u8] = b"\x00asm\x01\x00\x00\x00";
 

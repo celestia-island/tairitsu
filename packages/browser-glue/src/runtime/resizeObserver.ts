@@ -1,21 +1,19 @@
-// @ts-nocheck
-
 export const resizeObserver_exports = {
-  observe(self, target, options) {
+  observe(self: bigint, target: bigint, options: any) {
     const observer = globalThis.__lookupElement(self);
     const el = globalThis.__lookupElement(target);
     if (observer && el) {
       observer.observe(el, options);
     }
   },
-  unobserve(self, target) {
+  unobserve(self: bigint, target: bigint) {
     const observer = globalThis.__lookupElement(self);
     const el = globalThis.__lookupElement(target);
     if (observer && el) {
       observer.unobserve(el);
     }
   },
-  disconnect(self) {
+  disconnect(self: bigint) {
     const observer = globalThis.__lookupElement(self);
     if (observer) {
       observer.disconnect();

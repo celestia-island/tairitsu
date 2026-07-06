@@ -105,14 +105,18 @@ fn expand_inline_svg(content: &str) -> TokenStream2 {
     let sanitized = sanitize_svg(content);
 
     quote! {
-        tairitsu::SafeSvg::from_static(#sanitized)
+        tairitsu_vdom::SafeSvg::from_static(#sanitized)
     }
 }
 
 /// Expand file-based SVG
 fn expand_file_svg(path: &str) -> TokenStream2 {
-    // Get the crate root directory
-    let crate_root = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let crate_root = match std::env::var("CARGO_MANIFEST_DIR") {
+        Ok(v) => v,
+        Err(_) => {
+            return quote! { compile_error!("CARGO_MANIFEST_DIR not set — cannot resolve SVG file path") }
+        }
+    };
 
     let full_path = std::path::Path::new(&crate_root).join(path);
 
@@ -131,7 +135,7 @@ fn expand_file_svg(path: &str) -> TokenStream2 {
     let sanitized = sanitize_svg(&content);
 
     quote! {
-        tairitsu::SafeSvg::from_static(#sanitized)
+        tairitsu_vdom::SafeSvg::from_static(#sanitized)
     }
 }
 
@@ -160,7 +164,7 @@ fn expand_id_svg(id: &str) -> TokenStream2 {
                 Ok(content) => {
                     let sanitized = sanitize_svg(&content);
                     return quote! {
-                        tairitsu::SafeSvg::from_static(#sanitized)
+                        tairitsu_vdom::SafeSvg::from_static(#sanitized)
                     };
                 }
                 Err(err) => {
@@ -182,30 +186,31 @@ fn expand_id_svg(id: &str) -> TokenStream2 {
 
     let index_path = target_dir.join("tairitsu/resources/index.json");
 
-    if index_path.exists()
-        && let Ok(index_content) = std::fs::read_to_string(&index_path)
-        && let Ok(index) = serde_json::from_str::<ResourceIndexJson>(&index_content)
-    {
-        // Find SVG by ID
-        for svg_entry in index.svg {
-            if svg_entry.id == id {
-                // Found by ID, read the source file
-                let svg_path = crate_root_path.join(&svg_entry.source);
-                match std::fs::read_to_string(&svg_path) {
-                    Ok(content) => {
-                        let sanitized = sanitize_svg(&content);
-                        return quote! {
-                            tairitsu::SafeSvg::from_static(#sanitized)
-                        };
-                    }
-                    Err(err) => {
-                        let error_msg = format!(
-                            "Failed to read SVG file '{}' (indexed as '{}'): {}",
-                            svg_entry.source, id, err
-                        );
-                        return quote! {
-                            compile_error!(#error_msg)
-                        };
+    if index_path.exists() {
+        if let Ok(index_content) = std::fs::read_to_string(&index_path) {
+            if let Ok(index) = serde_json::from_str::<ResourceIndexJson>(&index_content) {
+                // Find SVG by ID
+                for svg_entry in index.svg {
+                    if svg_entry.id == id {
+                        // Found by ID, read the source file
+                        let svg_path = crate_root_path.join(&svg_entry.source);
+                        match std::fs::read_to_string(&svg_path) {
+                            Ok(content) => {
+                                let sanitized = sanitize_svg(&content);
+                                return quote! {
+                                    tairitsu_vdom::SafeSvg::from_static(#sanitized)
+                                };
+                            }
+                            Err(err) => {
+                                let error_msg = format!(
+                                    "Failed to read SVG file '{}' (indexed as '{}'): {}",
+                                    svg_entry.source, id, err
+                                );
+                                return quote! {
+                                    compile_error!(#error_msg)
+                                };
+                            }
+                        }
                     }
                 }
             }
@@ -239,9 +244,32 @@ struct SvgResourceJson {
 /// This performs the same sanitization as SafeSvg::new(), but at compile time
 /// so the resulting binary only contains sanitized content.
 fn sanitize_svg(content: &str) -> String {
-    let mut result = remove_script_tags(content);
+    // Strip null bytes to prevent <scr\0ipt> bypass
+    let no_nulls = content.replace('\0', "");
+    // Strip HTML comments before script removal to prevent comment bypass
+    let no_comments = strip_html_comments(&no_nulls);
+    let mut result = remove_script_tags(&no_comments);
     result = remove_event_handlers(&result);
     result = sanitize_urls(&result);
+    result
+}
+
+/// Strip HTML comments (<!-- ... -->) from content.
+/// This prevents attackers from hiding <script> inside comments.
+fn strip_html_comments(content: &str) -> String {
+    let mut result = String::with_capacity(content.len());
+    let mut remaining = content;
+    while let Some(start) = remaining.find("<!--") {
+        result.push_str(&remaining[..start]);
+        if let Some(end) = remaining[start + 4..].find("-->") {
+            remaining = &remaining[start + 4 + end + 3..];
+        } else {
+            // Unclosed comment — treat rest as comment
+            remaining = "";
+            break;
+        }
+    }
+    result.push_str(remaining);
     result
 }
 
@@ -275,12 +303,16 @@ fn remove_event_handlers(content: &str) -> String {
     let len = bytes.len();
 
     while i < len {
-        // Look for whitespace followed by "on"
-        if i > 0
-            && (bytes[i - 1] == b' '
-                || bytes[i - 1] == b'\t'
-                || bytes[i - 1] == b'\n'
-                || bytes[i - 1] == b'\r')
+        // Look for "on" preceded by whitespace or '<' (attribute boundary)
+        // Note: we do NOT match '"' or '\'' because those indicate being inside
+        // an attribute value, not at an attribute name boundary.
+        let is_prefix = i == 0
+            || bytes[i - 1] == b' '
+            || bytes[i - 1] == b'\t'
+            || bytes[i - 1] == b'\n'
+            || bytes[i - 1] == b'\r'
+            || bytes[i - 1] == b'<';
+        if is_prefix
             && i + 2 < len
             && (bytes[i] == b'o' || bytes[i] == b'O')
             && (bytes[i + 1] == b'n' || bytes[i + 1] == b'N')
@@ -350,7 +382,40 @@ fn remove_event_handlers(content: &str) -> String {
 }
 
 fn sanitize_urls(content: &str) -> String {
-    content.replace("javascript:", "blocked:")
+    // Single-pass: scan for dangerous URL schemes case-insensitively
+    let dangerous_schemes = [
+        "javascript:",
+        "vbscript:",
+        "data:text/html,",
+        "data:text/html;",
+    ];
+    let mut result = String::with_capacity(content.len());
+    let mut remaining = content;
+    while !remaining.is_empty() {
+        let lower = remaining.to_lowercase();
+        let mut earliest: Option<(usize, &str)> = None;
+        for &scheme in &dangerous_schemes {
+            if let Some(pos) = lower.find(scheme) {
+                match earliest {
+                    None => earliest = Some((pos, scheme)),
+                    Some((prev, _)) if pos < prev => earliest = Some((pos, scheme)),
+                    _ => {}
+                }
+            }
+        }
+        match earliest {
+            Some((pos, scheme)) => {
+                result.push_str(&remaining[..pos]);
+                result.push_str("blocked:");
+                remaining = &remaining[pos + scheme.len()..];
+            }
+            None => {
+                result.push_str(remaining);
+                break;
+            }
+        }
+    }
+    result
 }
 
 #[cfg(test)]
@@ -366,6 +431,33 @@ mod tests {
     }
 
     #[test]
+    fn test_sanitize_script_in_html_comment() {
+        let input = r#"<svg><!-- <script>alert('xss')</script> --><path d="M0 0"/></svg>"#;
+        let result = sanitize_svg(input);
+        assert!(!result.contains("<script"));
+        assert!(!result.contains("alert"));
+        assert!(result.contains("<path"));
+    }
+
+    #[test]
+    fn test_sanitize_script_null_byte_bypass() {
+        let input = "<svg><scr\0ipt>alert('xss')</scr\0ipt><path d=\"M0 0\"/></svg>";
+        let result = sanitize_svg(input);
+        assert!(!result.contains('\0'));
+        assert!(!result.contains("script"));
+        assert!(result.contains("<path"));
+    }
+
+    #[test]
+    fn test_sanitize_script_case_variants() {
+        let input = "<svg><SCRIPT>alert(1)</SCRIPT><ScRiPt>alert(2)</ScRiPt></svg>";
+        let result = sanitize_svg(input);
+        assert!(!result.contains("SCRIPT"));
+        assert!(!result.contains("ScRiPt"));
+        assert!(!result.contains("alert"));
+    }
+
+    #[test]
     fn test_sanitize_removes_event_handlers() {
         let input = r#"<svg onclick="alert('xss')"><path d="M0 0"/></svg>"#;
         let result = sanitize_svg(input);
@@ -374,10 +466,66 @@ mod tests {
     }
 
     #[test]
+    fn test_sanitize_removes_event_handlers_case_variants() {
+        let input = r#"<svg ONCLICK="alert(1)" onLoad="alert(2)"><path d="M0 0"/></svg>"#;
+        let result = sanitize_svg(input);
+        assert!(!result.contains("ONCLICK"));
+        assert!(!result.contains("onLoad"));
+        assert!(!result.contains("onload"));
+    }
+
+    #[test]
+    fn test_sanitize_removes_event_handlers_single_quotes() {
+        let input = r#"<svg onclick='alert("xss")'><circle/></svg>"#;
+        let result = sanitize_svg(input);
+        assert!(!result.contains("onclick"));
+    }
+
+    #[test]
+    fn test_sanitize_removes_event_handlers_unquoted() {
+        let input = r#"<svg onclick=alert('xss')><circle/></svg>"#;
+        let result = sanitize_svg(input);
+        assert!(!result.contains("onclick"));
+    }
+
+    #[test]
     fn test_sanitize_removes_javascript_url() {
         let input = r#"<a xlink:href="javascript:alert('xss')">link</a>"#;
         let result = sanitize_svg(input);
         assert!(!result.contains("javascript:"));
+    }
+
+    #[test]
+    fn test_sanitize_removes_javascript_url_case_insensitive() {
+        let input = r#"<a xlink:href="JaVaScRiPt:alert('xss')">link</a>"#;
+        let result = sanitize_svg(input);
+        assert!(!result.contains("JaVaScRiPt:"));
+        assert!(!result.contains("javascript:"));
+    }
+
+    #[test]
+    fn test_sanitize_removes_vbscript_url() {
+        let input = r#"<a xlink:href="vbscript:msgbox('xss')">link</a>"#;
+        let result = sanitize_svg(input);
+        assert!(
+            !result.contains("vbscript:"),
+            "vbscript: scheme should be blocked, got: {}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_sanitize_removes_dangerous_data_url() {
+        let input = r#"<a href="data:text/html,<script>alert('xss')</script>">Click</a>"#;
+        let result = sanitize_svg(input);
+        assert!(!result.contains("data:text/html"));
+    }
+
+    #[test]
+    fn test_sanitize_preserves_safe_data_url() {
+        let input = r#"<image href="data:image/png;base64,iVBORw0KGgo="/>"#;
+        let result = sanitize_svg(input);
+        assert!(result.contains("data:image/png"));
     }
 
     #[test]
@@ -393,5 +541,23 @@ mod tests {
         let input = "<use xlink:href=\"#my-symbol\"/>";
         let result = sanitize_svg(input);
         assert!(result.contains("#my-symbol"));
+    }
+
+    #[test]
+    fn test_sanitize_complex_svg() {
+        let input = r##"
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <script>evil()</script>
+                <circle cx="50" cy="50" r="40" onclick="bad()" fill="red"/>
+                <a xlink:href="javascript:void(0)">link</a>
+                <use href="#symbol"/>
+            </svg>
+        "##;
+        let result = sanitize_svg(input);
+        assert!(!result.contains("<script"));
+        assert!(!result.contains("onclick"));
+        assert!(!result.contains("javascript:"));
+        assert!(result.contains("circle"));
+        assert!(result.contains("symbol"));
     }
 }

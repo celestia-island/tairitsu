@@ -23,9 +23,9 @@ fn test_pty_spawn_and_kill() {
     let alive = pty.is_alive();
     eprintln!("is_alive after 300ms: {}", alive);
 
-    match pty.kill() {
-        Ok(()) => eprintln!("kill succeeded"),
-        Err(e) => eprintln!("kill error (may have already exited): {}", e),
+    match pty.kill_and_reap() {
+        Ok(()) => eprintln!("kill_and_reap succeeded"),
+        Err(e) => eprintln!("kill_and_reap error (may have already exited): {}", e),
     }
     assert!(!pty.is_alive(), "PTY should be dead after kill attempt");
 }
@@ -58,26 +58,34 @@ fn test_pty_write_and_read() {
 
     pty.write(b"echo HELLO_VTTY_TEST\n").expect("write failed");
 
-    wait_ms(500);
+    wait_ms(800);
 
     let mut buf = [0u8; 4096];
-    let n = match pty.read_nonblocking(&mut buf) {
-        Ok(n) => n,
-        Err(e) => {
-            eprintln!("read error: {}", e);
-            0
+    let mut all_output = String::new();
+    for _ in 0..5 {
+        let n = match pty.read_nonblocking(&mut buf) {
+            Ok(n) => n,
+            Err(e) => {
+                eprintln!("read error: {}", e);
+                0
+            }
+        };
+        if n > 0 {
+            all_output.push_str(&String::from_utf8_lossy(&buf[..n]));
         }
-    };
-    let output = String::from_utf8_lossy(&buf[..n]);
-    eprintln!("PTY output: {:?}", output);
+        if all_output.contains("HELLO_VTTY_TEST") {
+            break;
+        }
+        wait_ms(200);
+    }
+    eprintln!("PTY output: {:?}", all_output);
     assert!(
-        output.contains("HELLO_VTTY_TEST") || n > 0,
-        "Should have some output from echo, got {} bytes: {:?}",
-        n,
-        output
+        all_output.contains("HELLO_VTTY_TEST") || !all_output.is_empty(),
+        "Should have some output from echo, got: {:?}",
+        all_output
     );
 
-    pty.kill().ok();
+    pty.kill_and_reap().ok();
 }
 
 #[cfg(windows)]
@@ -110,7 +118,7 @@ fn test_pty_write_and_read() {
         output
     );
 
-    pty.kill().ok();
+    pty.kill_and_reap().ok();
 }
 
 #[cfg(unix)]
@@ -120,7 +128,7 @@ fn test_pty_resize() {
         .expect("spawn failed");
 
     pty.resize(120, 40).expect("resize failed");
-    pty.kill().ok();
+    pty.kill_and_reap().ok();
 }
 
 #[cfg(windows)]
@@ -142,7 +150,7 @@ fn test_pty_pid() {
     assert!(pid > 0, "PID should be positive");
     assert!(pty.is_alive(), "PTY should be alive after spawn");
 
-    pty.kill().ok();
+    pty.kill_and_reap().ok();
 }
 
 #[cfg(windows)]

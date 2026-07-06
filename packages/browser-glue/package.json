@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/celestia-org/tairitsu.git",
+    "url": "https://github.com/celestia-island/tairitsu.git",
     "directory": "packages/browser-glue"
   },
   "publishConfig": {
@@ -99,13 +99,21 @@
     "build:watch": "swc src -d dist --strip-leading-paths --watch",
     "build:glue": "python3 ../../scripts/generate_browser_glue.py",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/runtime/**/*.ts\" \"src/async.ts\" \"src/handles.ts\" \"src/index.ts\"",
+    "lint:fix": "eslint --fix \"src/runtime/**/*.ts\" \"src/async.ts\" \"src/handles.ts\" \"src/index.ts\"",
+    "format": "prettier --write \"src/runtime/**/*.ts\" \"src/async.ts\" \"src/handles.ts\" \"src/index.ts\"",
+    "format:check": "prettier --check \"src/runtime/**/*.ts\" \"src/async.ts\" \"src/handles.ts\" \"src/index.ts\"",
     "clean": "rimraf dist"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@swc/cli": "^0.3.0",
     "@swc/core": "^1.7.0",
     "esbuild": "^0.25.0",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.0",
     "rimraf": "^5.0.0",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.20.0"
   }
 }

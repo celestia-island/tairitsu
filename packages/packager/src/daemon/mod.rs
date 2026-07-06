@@ -117,26 +117,26 @@ pub fn wait_for_child_signal(
             return Ok(None);
         }
 
-        if let Some(pid) = child_pid
-            && !check_process_exists(pid)
-        {
-            std::thread::sleep(std::time::Duration::from_millis(500));
-            stream_new_content(&stdout_path, &mut log_cursor);
-            if let Ok(content) = fs::read_to_string(&ready_path) {
-                if let Some((port, _debug_port)) = parse_ready_port(&content) {
-                    return Ok(Some(port));
+        if let Some(pid) = child_pid {
+            if !check_process_exists(pid) {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                stream_new_content(&stdout_path, &mut log_cursor);
+                if let Ok(content) = fs::read_to_string(&ready_path) {
+                    if let Some((port, _debug_port)) = parse_ready_port(&content) {
+                        return Ok(Some(port));
+                    }
+                    print_signal_failure(&content);
+                    return Ok(None);
                 }
-                print_signal_failure(&content);
-                return Ok(None);
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::UnexpectedEof,
+                    format!(
+                        "Daemon child process (PID {}) exited unexpectedly. Check logs at {}",
+                        pid,
+                        stdout_path.display()
+                    ),
+                ));
             }
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::UnexpectedEof,
-                format!(
-                    "Daemon child process (PID {}) exited unexpectedly. Check logs at {}",
-                    pid,
-                    stdout_path.display()
-                ),
-            ));
         }
 
         std::thread::sleep(std::time::Duration::from_millis(200));
@@ -155,6 +155,37 @@ pub fn wait_for_child_signal(
 /// Clean up the readiness signal file
 pub fn cleanup_ready_file() {
     let _ = fs::remove_file(ready_file_path());
+}
+
+/// Register signal handlers to clean up ready/pid files on daemon exit.
+/// Must be called from within a tokio runtime.
+pub async fn register_cleanup_on_exit() {
+    let ready = ready_file_path();
+    let pid = pid_file_path();
+
+    let ready_ctrlc = ready.clone();
+    let pid_ctrlc = pid.clone();
+    tokio::spawn(async move {
+        tokio::signal::ctrl_c().await.ok();
+        let _ = fs::remove_file(&ready_ctrlc);
+        let _ = fs::remove_file(&pid_ctrlc);
+        std::process::exit(0);
+    });
+
+    #[cfg(unix)]
+    {
+        let ready_sig = ready;
+        let pid_sig = pid;
+        tokio::spawn(async move {
+            let mut sigterm =
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                    .expect("failed to register SIGTERM handler");
+            sigterm.recv().await;
+            let _ = fs::remove_file(&ready_sig);
+            let _ = fs::remove_file(&pid_sig);
+            std::process::exit(0);
+        });
+    }
 }
 
 /// Truncate daemon log files so the parent can stream fresh output.
@@ -264,26 +295,29 @@ pub fn daemonize_self() -> std::io::Result<()> {
         }
 
         // Redirect stdin to /dev/null
-        let devnull = std::ffi::CString::new("/dev/null").unwrap();
+        let devnull = std::ffi::CString::new("/dev/null").expect("literal contains no null bytes");
         let null_fd = libc::open(devnull.as_ptr(), libc::O_RDWR);
         if null_fd == -1 {
             return Err(std::io::Error::last_os_error());
         }
         if libc::dup2(null_fd, libc::STDIN_FILENO) == -1 {
+            let err = std::io::Error::last_os_error();
             libc::close(null_fd);
-            return Err(std::io::Error::last_os_error());
+            return Err(err);
         }
 
         // Redirect stdout
         if libc::dup2(stdout.as_raw_fd(), libc::STDOUT_FILENO) == -1 {
+            let err = std::io::Error::last_os_error();
             libc::close(null_fd);
-            return Err(std::io::Error::last_os_error());
+            return Err(err);
         }
 
         // Redirect stderr
         if libc::dup2(stderr.as_raw_fd(), libc::STDERR_FILENO) == -1 {
+            let err = std::io::Error::last_os_error();
             libc::close(null_fd);
-            return Err(std::io::Error::last_os_error());
+            return Err(err);
         }
 
         libc::close(null_fd);
@@ -311,7 +345,7 @@ pub fn daemonize_self() -> std::io::Result<()> {
 
     unsafe {
         use windows_sys::Win32::System::Console::{
-            STD_ERROR_HANDLE, STD_OUTPUT_HANDLE, SetStdHandle,
+            SetStdHandle, STD_ERROR_HANDLE, STD_OUTPUT_HANDLE,
         };
 
         let stdout_handle = stdout_file.into_raw_handle();
@@ -372,10 +406,10 @@ pub fn read_pid() -> std::io::Result<u32> {
 
 /// Check if a daemon is running
 pub fn is_daemon_running() -> bool {
-    if let Ok(pid) = read_pid()
-        && pid > 0
-    {
-        return check_process_exists(pid);
+    if let Ok(pid) = read_pid() {
+        if pid > 0 {
+            return check_process_exists(pid);
+        }
     }
     false
 }
@@ -493,14 +527,13 @@ pub fn port_owner_info(port: u16) -> Option<PortOwnerInfo> {
 
 /// Kill the daemon process and wait for it to exit
 pub fn kill_daemon() -> std::io::Result<bool> {
-    if let Ok(pid) = read_pid()
-        && pid > 0
-        && check_process_exists(pid)
-    {
-        kill_process_by_pid(pid);
-        let _ = fs::remove_file(pid_file_path());
-        let _ = fs::remove_file(ready_file_path());
-        return Ok(true);
+    if let Ok(pid) = read_pid() {
+        if pid > 0 && check_process_exists(pid) {
+            kill_process_by_pid(pid);
+            let _ = fs::remove_file(pid_file_path());
+            let _ = fs::remove_file(ready_file_path());
+            return Ok(true);
+        }
     }
     Ok(false)
 }
@@ -615,6 +648,7 @@ fn spawn_daemon_process_windows(
     args: &[std::ffi::OsString],
 ) -> std::io::Result<u32> {
     use std::{io, mem, ptr};
+
     use windows_sys::Win32::Foundation::{
         CloseHandle, GENERIC_READ, GENERIC_WRITE, HANDLE, INVALID_HANDLE_VALUE,
     };
@@ -623,9 +657,9 @@ fn spawn_daemon_process_windows(
         CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
     };
     use windows_sys::Win32::System::Threading::{
-        CreateProcessW, DeleteProcThreadAttributeList, EXTENDED_STARTUPINFO_PRESENT,
-        InitializeProcThreadAttributeList, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION,
-        STARTF_USESTDHANDLES, STARTUPINFOEXW, UpdateProcThreadAttribute,
+        CreateProcessW, DeleteProcThreadAttributeList, InitializeProcThreadAttributeList,
+        UpdateProcThreadAttribute, EXTENDED_STARTUPINFO_PRESENT, PROCESS_INFORMATION,
+        PROC_THREAD_ATTRIBUTE_HANDLE_LIST, STARTF_USESTDHANDLES, STARTUPINFOEXW,
     };
 
     const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -844,17 +878,14 @@ where
             fs::create_dir_all(parent)?;
         }
 
-        // SAFETY: single-threaded at this point, no concurrent env access
-        unsafe {
-            env::set_var(
-                "TAIRITSU_COLOR",
-                if std::io::stderr().is_terminal() {
-                    "1"
-                } else {
-                    "0"
-                },
-            );
-        }
+        env::set_var(
+            "TAIRITSU_COLOR",
+            if std::io::stderr().is_terminal() {
+                "1"
+            } else {
+                "0"
+            },
+        );
 
         let pid = spawn_daemon_process_windows(&exe, &args)?;
         Ok(pid)

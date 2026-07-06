@@ -1,10 +1,10 @@
 [package]
 name = "tairitsu-packager"
 version.workspace = true
-edition = "2024"
+edition.workspace = true
 description = "Build and packaging tool for Tairitsu applications"
 authors.workspace = true
-license = "MIT OR Apache-2.0"
+license-file.workspace = true
 repository.workspace = true
 
 [[bin]]
@@ -12,69 +12,50 @@ name = "tairitsu"
 path = "src/main.rs"
 
 [dependencies]
-tairitsu-vdom = { workspace = true, optional = true }
 tairitsu-browser-wit-resolver = { workspace = true }
 tairitsu-browser-worlds = { workspace = true }
+tairitsu-browser-fetch = { workspace = true, optional = true }
 tairitsu-ssr = { workspace = true, optional = true }
-anyhow = "^1"
-thiserror = "^2"
-serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
-toml = "^0.8"
-tokio = { version = "^1", default-features = false, features = [
-  "sync",
-  "macros",
-  "io-util",
-  "rt",
-  "rt-multi-thread",
-  "time",
-  "signal",
-], optional = true }
-futures = "^0.3"
-tracing = "^0.1"
-tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
-clap = { version = "^4", features = ["derive"], optional = true }
-indicatif = "^0.17"
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "net", "process"], optional = true }
+futures = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+clap = { workspace = true, optional = true }
+indicatif = { workspace = true }
 webbrowser = "^1"
 walkdir = "^2"
 notify = { version = "^6", optional = true }
-axum = { version = "^0.8", optional = true }
-tower-http = { version = "^0.6", features = ["fs", "cors", "compression-gzip"], optional = true }
-tokio-stream = { version = "^0.1", features = ["sync"], optional = true }
-wry = { version = "^0.48", optional = true }
-tao = { version = "^0.30", optional = true }
-chromiumoxide = { version = "^0.9", features = [
-  "fetcher",
-  "native-tls",
-  "zip0",
-], optional = true }
-grass = "^0.13"
-regex = "^1"
-wit-parser = "^0.243"
-sha2 = "^0.10"
-yuuka = "0.6"
-sys-locale = "0.3"
-crossterm = { version = "0.28", optional = true }
-chrono = { version = "0.4", default-features = false, features = [
-  "clock",
-  "serde",
-] }
-reqwest = { version = "^0.12", features = [
+axum = { workspace = true, optional = true }
+tower-http = { workspace = true, features = ["fs", "cors", "compression-gzip"], optional = true }
+tokio-stream = { workspace = true, features = ["sync"], optional = true }
+tokio-tungstenite = { version = "^0.27", default-features = false, features = ["connect"], optional = true }
+grass = { workspace = true }
+regex = { workspace = true }
+wit-parser = { workspace = true }
+sha2 = { workspace = true }
+yuuka = "^0.6"
+sys-locale = "^0.3"
+crossterm = { workspace = true, optional = true }
+chrono = { workspace = true }
+reqwest = { workspace = true, features = [
   "blocking",
-  "json",
   "stream",
 ], optional = true }
-zip = { version = "^2", default-features = false, features = [
-  "deflate",
-], optional = true }
-image = { version = "^0.25", optional = true }
-base64 = { version = "^0.22", optional = true }
+zip = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
 include_dir = "^0.7"
-vte = { version = "^0.15", optional = true }
-portable-pty = { version = "^0.8", optional = true }
+tera = "^1"
+vte = { workspace = true, optional = true }
+portable-pty = { workspace = true, optional = true }
 
 [dev-dependencies]
-tempfile = "3"
+tempfile = { workspace = true }
 
 [features]
 default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-api", "debug-browser", "vtty", "visual-diff", "test-runner"]
@@ -87,25 +68,29 @@ dev-server = [
   "tokio",
   "tokio-stream",
 ]
-debug-browser = ["dev-server", "reqwest", "chromiumoxide", "base64"]
+debug-browser = ["dev-server", "reqwest", "tokio-tungstenite", "base64", "tairitsu-browser-fetch"]
 debug-api = ["dev-server"]
 ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]
 icon-fetch = ["reqwest", "zip"]
 visual-diff = ["image", "base64"]
+# Use full Chrome for Testing (~300MB) instead of the default headless-shell
+# (~90MB). Forwarded to tairitsu-browser-fetch's additive `full` toggle.
+browser-full = ["tairitsu-browser-fetch/full"]
 test-runner = ["reqwest", "image", "base64"]
 vtty = ["vte", "portable-pty"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
- libc = "0.2"
+ libc = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59", features = [
+windows-sys = { version = "^0.59", features = [
   "Win32_Foundation",
   "Win32_Security",
   "Win32_Storage_FileSystem",
   "Win32_System_Console",
   "Win32_System_Threading",
   "Win32_System_Memory",
+  "Win32_System_Diagnostics_ToolHelp",
 ] }
-libc = { version = "0.2", optional = true }
+

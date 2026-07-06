@@ -17,13 +17,9 @@ pub fn toggle_dark_mode() {
     DARK_MODE.with(|c| c.set(!c.get()));
     tairitsu_vdom::rerender();
 }
-use crate::{
-    components::{sidebar, top_nav},
-    pages::{event_test, guides, home, not_found, packages, system},
-    theme,
-};
-
-
+use crate::components::{sidebar, top_nav};
+use crate::pages::{event_test, guides, home, not_found, packages, system};
+use crate::theme;
 
 /// Render the full app — all pages included for JS-based SPA show/hide.
 pub fn render() -> VNode {
@@ -39,8 +35,15 @@ pub fn render() -> VNode {
 
 fn layout_shell(children: Vec<VNode>) -> VNode {
     let theme_style = theme::tairitsu_style();
-    let dark_class = if is_dark_mode() { " hi-layout-dark" } else { "" };
-    let layout_class = format!("hi-layout{} hi-layout-has-sidebar hi-ambient-bg", dark_class);
+    let dark_class = if is_dark_mode() {
+        " hi-layout-dark"
+    } else {
+        ""
+    };
+    let layout_class = format!(
+        "hi-layout{} hi-layout-has-sidebar hi-ambient-bg",
+        dark_class
+    );
     rsx! {
         div { id: "ts-app",
             class: layout_class,

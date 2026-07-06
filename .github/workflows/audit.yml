@@ -8,6 +8,8 @@ on:
     paths:
       - 'Cargo.lock'
       - 'Cargo.toml'
+      - 'package.json'
+      - 'packages/browser-glue/package.json'
 
 jobs:
   audit:
@@ -18,7 +20,7 @@ jobs:
 
       - name: Install cargo-audit
         uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-audit
+      - run: cargo install cargo-audit --locked
 
       - name: Run audit
         run: cargo audit
@@ -31,7 +33,26 @@ jobs:
 
       - name: Install cargo-deny
         uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-deny
+      - run: cargo install cargo-deny --locked
 
       - name: Run deny check
         run: cargo deny check
+
+  npm-audit:
+    name: NPM Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: .
+
+      - name: Run npm audit
+        run: npm audit --omit=dev
+        working-directory: .

@@ -7,7 +7,11 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use tracing::trace;
 
-use crate::{VNode, patch::Patch};
+use crate::{
+    patch::Patch,
+    reactive::{EffectHandle, SignalId},
+    VNode,
+};
 
 /// Component ID - unique identifier for each component instance
 pub type ComponentId = usize;
@@ -21,28 +25,58 @@ type ScheduleCallback = Rc<RefCell<dyn FnMut(Box<dyn FnOnce()>)>>;
 /// Callback type for applying patches to the DOM
 type ApplyPatchesCallback = Rc<RefCell<dyn FnMut(ComponentId, Vec<Patch>)>>;
 
+thread_local! {
+    static HOOK_SLOT: RefCell<HashMap<(ComponentId, String), Box<dyn std::any::Any>>> = RefCell::new(HashMap::new());
+}
+
+/// Retrieve or initialize a hook slot for the given component and key.
+/// Returns a clone of the stored value if present, otherwise stores and
+/// returns the result of `init_fn`.
+pub fn hook_slot<T: Clone + 'static>(
+    component_id: ComponentId,
+    key: &str,
+    init_fn: impl FnOnce() -> T,
+) -> T {
+    HOOK_SLOT.with(|slots| {
+        let mut slots = slots.borrow_mut();
+        let entry = slots
+            .entry((component_id, key.to_string()))
+            .or_insert_with(|| Box::new(init_fn()));
+        entry
+            .downcast_ref::<T>()
+            .cloned()
+            .expect("hook_slot: type mismatch — the same (component_id, key) was reused with a different type")
+    })
+}
+
+/// Clear all hook slots for a component (called during cleanup).
+pub fn clear_hook_slots(component_id: ComponentId) {
+    HOOK_SLOT.with(|slots| {
+        slots
+            .borrow_mut()
+            .retain(|(cid, _), _| *cid != component_id);
+    });
+}
+
+/// Reset the hook slot counter (useful for testing).
+pub fn reset_hook_slots() {
+    HOOK_SLOT.with(|slots| slots.borrow_mut().clear());
+}
+
 /// Inner state of the reactive runtime
 struct RuntimeInner {
-    /// Next available component ID
     next_id: ComponentId,
-    /// Active component being rendered (for dependency tracking)
     active_component: Option<ComponentId>,
-    /// Map of component ID to its current VNode
     component_vnodes: HashMap<ComponentId, VNode>,
-    /// Map of component ID to its render function
     render_functions: HashMap<ComponentId, RenderFn>,
-    /// Map of signal inner Rc to component IDs that depend on it
     signal_dependencies: HashMap<usize, Vec<ComponentId>>,
-    /// Pending re-renders (dirty components)
     dirty_components: Vec<ComponentId>,
-    /// Callback for scheduling renders via requestAnimationFrame
     schedule_callback: Option<ScheduleCallback>,
-    /// Callback for applying patches to the DOM
     apply_patches_callback: Option<ApplyPatchesCallback>,
-    /// Whether a re-render is scheduled
     scheduled: bool,
-    /// Pending rAF callback ID
     raf_id: Option<u32>,
+    effect_handles: HashMap<ComponentId, Vec<EffectHandle>>,
+    element_to_component: HashMap<u64, ComponentId>,
 }
 
 impl RuntimeInner {
@@ -58,6 +92,8 @@ impl RuntimeInner {
             apply_patches_callback: None,
             scheduled: false,
             raf_id: None,
+            effect_handles: HashMap::new(),
+            element_to_component: HashMap::new(),
         }
     }
 }
@@ -125,6 +161,24 @@ pub fn update_render_function(id: ComponentId, render_fn: impl FnMut() -> VNode 
     });
 }
 
+/// Mark a component as dirty without triggering an immediate flush.
+///
+/// Unlike [`mark_dirty`], this does NOT flush synchronously. It only adds
+/// the component to the dirty list. The actual re-render happens on the
+/// next scheduled frame or explicit `flush_render` call.
+///
+/// This is safe to call while holding a `RefMut` on a signal's inner `RefCell`,
+/// because it never invokes render functions synchronously.
+pub fn mark_dirty_deferred(id: ComponentId) {
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        if !rt.dirty_components.contains(&id) {
+            rt.dirty_components.push(id);
+            trace!("Deferred: marked component {} as dirty", id);
+        }
+    });
+}
+
 /// Mark a component as dirty and schedule a re-render.
 pub fn mark_dirty(id: ComponentId) {
     let should_flush_sync = RUNTIME.with(|runtime| {
@@ -175,25 +229,52 @@ pub fn with_component<T>(id: ComponentId, f: impl FnOnce() -> T) -> T {
     })
 }
 
-/// Track a signal dependency for the current component.
-pub fn track_signal(signal_ptr: usize) {
-    RUNTIME.with(|runtime| {
-        let rt = runtime.borrow_mut();
+/// Get the ID of the currently active component, if any.
+pub fn active_component_id() -> Option<ComponentId> {
+    RUNTIME.with(|runtime| runtime.borrow().active_component)
+}
 
+/// Track a signal dependency for the current component.
+pub fn track_signal(signal_id: SignalId) {
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
         if let Some(component_id) = rt.active_component {
-            drop(rt);
-            RUNTIME.with(|runtime| {
-                let mut rt = runtime.borrow_mut();
-                rt.signal_dependencies
-                    .entry(signal_ptr)
-                    .or_insert_with(Vec::new)
-                    .push(component_id);
-                trace!(
-                    "Component {} now depends on signal {:?}",
-                    component_id, signal_ptr
-                );
-            });
+            rt.signal_dependencies
+                .entry(signal_id)
+                .or_insert_with(Vec::new)
+                .push(component_id);
+            trace!(
+                "Component {} now depends on signal {:?}",
+                component_id,
+                signal_id
+            );
         }
+    });
+}
+
+/// Check if a signal is currently tracked in the dependency graph.
+#[cfg(test)]
+pub fn signal_is_tracked(signal_id: SignalId) -> bool {
+    RUNTIME
+        .try_with(|runtime| {
+            runtime
+                .borrow()
+                .signal_dependencies
+                .contains_key(&signal_id)
+        })
+        .unwrap_or(false)
+}
+
+/// Remove a signal from the dependency tracking. Called automatically when a Signal is dropped.
+///
+/// Uses `try_with` to handle the case where the thread-local RUNTIME has already
+/// been destroyed (e.g. during thread shutdown when signals are dropped after
+/// the runtime).
+pub fn unregister_signal(signal_id: SignalId) {
+    let _ = RUNTIME.try_with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        rt.signal_dependencies.remove(&signal_id);
+        trace!("Unregistered signal {:?}", signal_id);
     });
 }
 
@@ -245,6 +326,13 @@ fn render_component(id: ComponentId) {
         rt.active_component = Some(id);
         let _ = prev;
 
+        // Stop previous render's effect handles so they don't accumulate.
+        if let Some(handles) = rt.effect_handles.remove(&id) {
+            for handle in handles {
+                handle.stop();
+            }
+        }
+
         let old_vnode = rt.component_vnodes.get(&id).cloned();
         let apply_patches_cb = rt.apply_patches_callback.clone();
 
@@ -263,9 +351,10 @@ fn render_component(id: ComponentId) {
     let new_vnode = (ext.render_fn.borrow_mut())();
 
     // Phase 3: store the new VNode (brief borrow).
+    // NOTE: active_component stays Some(id) so that patch application
+    // (Phase 4) can register newly created DOM elements to this component.
     RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
-        rt.active_component = None;
         rt.component_vnodes.insert(id, new_vnode.clone());
     });
 
@@ -287,6 +376,11 @@ fn render_component(id: ComponentId) {
             guard(id, patches);
         }
     }
+
+    // Phase 5: reset active component after patch application is complete.
+    RUNTIME.with(|runtime| {
+        runtime.borrow_mut().active_component = None;
+    });
 }
 
 pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
@@ -296,31 +390,35 @@ pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
 }
 
 /// Subscribe a component to a signal's changes.
-pub fn subscribe_component(signal_ptr: usize, component_id: ComponentId) {
+pub fn subscribe_component(signal_id: SignalId, component_id: ComponentId) {
     RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
         rt.signal_dependencies
-            .entry(signal_ptr)
+            .entry(signal_id)
             .or_insert_with(Vec::new)
             .push(component_id);
         trace!(
             "Component {} subscribed to signal {:?}",
-            component_id, signal_ptr
+            component_id,
+            signal_id
         );
     });
 }
 
 /// Notify all dependent components that a signal has changed.
-pub fn notify_signal(signal_ptr: usize) {
-    RUNTIME.with(|runtime| {
-        let rt = runtime.borrow();
-
-        if let Some(components) = rt.signal_dependencies.get(&signal_ptr) {
-            for &component_id in components {
-                mark_dirty(component_id);
-            }
-        }
+pub fn notify_signal(signal_id: SignalId) {
+    let components: Vec<ComponentId> = RUNTIME.with(|runtime| {
+        runtime
+            .borrow()
+            .signal_dependencies
+            .get(&signal_id)
+            .cloned()
+            .unwrap_or_default()
     });
+
+    for component_id in components {
+        mark_dirty(component_id);
+    }
 }
 
 /// Cleanup resources for a component.
@@ -330,14 +428,71 @@ pub fn cleanup_component(id: ComponentId) {
         rt.render_functions.remove(&id);
         rt.component_vnodes.remove(&id);
         rt.dirty_components.retain(|&c| c != id);
+        rt.element_to_component.retain(|_, &mut c| c != id);
 
-        // Remove signal dependencies
-        for deps in rt.signal_dependencies.values_mut() {
+        rt.signal_dependencies.retain(|_, deps| {
             deps.retain(|&c| c != id);
+            !deps.is_empty()
+        });
+
+        if let Some(handles) = rt.effect_handles.remove(&id) {
+            for handle in handles {
+                handle.stop();
+            }
         }
 
         trace!("Cleaned up component {}", id);
     });
+
+    clear_hook_slots(id);
+}
+
+pub fn register_effect_handle(id: ComponentId, handle: EffectHandle) {
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        rt.effect_handles.entry(id).or_default().push(handle);
+    });
+}
+
+/// Register a DOM element handle as belonging to the currently active component.
+///
+/// Called from the platform layer when `render_vnode` creates a new element.
+/// The mapping is used by [`on_element_removed`] to detect cross-component
+/// subtree removal and trigger [`cleanup_component`].
+pub fn register_element(handle: u64) {
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        if let Some(id) = rt.active_component {
+            rt.element_to_component.insert(handle, id);
+        }
+    });
+}
+
+/// Called when a DOM element is removed from the tree.
+///
+/// If the removed element belongs to a **different** component than the one
+/// currently being re-rendered, the owning component is fully cleaned up
+/// (effects stopped, signal subscriptions removed, render function dropped).
+///
+/// If the element belongs to the currently rendering component, only the
+/// mapping entry is removed — the component itself is still active.
+pub fn on_element_removed(handle: u64) {
+    let info = RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        let cid = rt.element_to_component.remove(&handle);
+        let is_self = cid.is_some_and(|id| rt.active_component == Some(id));
+        (cid, is_self)
+    });
+
+    let (Some(cid), is_self) = info else {
+        return;
+    };
+
+    if is_self {
+        return;
+    }
+
+    cleanup_component(cid);
 }
 
 /// Get the current VNode for a component (useful for testing).
@@ -455,5 +610,106 @@ mod tests {
 
         // Check that patches were applied
         assert!(!applied_patches.borrow().is_empty());
+    }
+
+    #[test]
+    fn test_register_element_with_active_component() {
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+
+        with_component(id, || {
+            register_element(42);
+        });
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.get(&42), Some(&id));
+        });
+    }
+
+    #[test]
+    fn test_register_element_without_active_component() {
+        register_element(99);
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.get(&99), None);
+        });
+    }
+
+    #[test]
+    fn test_on_element_removed_no_mapping() {
+        on_element_removed(9999);
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert!(rt.element_to_component.is_empty());
+        });
+    }
+
+    #[test]
+    fn test_on_element_removed_cross_component_cleanup() {
+        let id1 = use_component(|| VNode::Text(crate::vnode::VText::new("a")));
+        let id2 = use_component(|| VNode::Text(crate::vnode::VText::new("b")));
+
+        with_component(id1, || {
+            register_element(100);
+        });
+        with_component(id2, || {
+            register_element(200);
+            register_element(201);
+        });
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.len(), 3);
+        });
+
+        with_component(id1, || {
+            on_element_removed(200);
+        });
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.get(&100), Some(&id1));
+            assert_eq!(rt.element_to_component.get(&200), None);
+            assert_eq!(rt.element_to_component.get(&201), None);
+            assert!(!rt.render_functions.contains_key(&id2));
+            assert!(!rt.component_vnodes.contains_key(&id2));
+        });
+    }
+
+    #[test]
+    fn test_on_element_removed_same_component_skips_cleanup() {
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+
+        with_component(id, || {
+            register_element(300);
+            on_element_removed(300);
+        });
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert!(rt.render_functions.contains_key(&id));
+            assert!(!rt.element_to_component.contains_key(&300));
+        });
+    }
+
+    #[test]
+    fn test_cleanup_component_removes_element_mappings() {
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+
+        with_component(id, || {
+            register_element(400);
+            register_element(401);
+        });
+
+        cleanup_component(id);
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.element_to_component.get(&400), None);
+            assert_eq!(rt.element_to_component.get(&401), None);
+            assert!(!rt.render_functions.contains_key(&id));
+        });
     }
 }

@@ -1,13 +1,11 @@
-// @ts-nocheck
-
 export const parentNode_exports = {
-  querySelector(self, selectors) {
+  querySelector(self: bigint, selectors: string) {
     const el = globalThis.__lookupElement(self);
     const result = el.querySelector(selectors);
     if (!result) return undefined;
     return globalThis.__storeElement(result);
   },
-  querySelectorAll(self, selectors) {
+  querySelectorAll(self: bigint, selectors: string) {
     const el = globalThis.__lookupElement(self);
     const result = el.querySelectorAll(selectors);
     if (!globalThis.__nodeListHandles) {

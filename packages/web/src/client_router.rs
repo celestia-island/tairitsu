@@ -7,13 +7,16 @@
 //! - Re-rendering on URL change (polled every 200ms)
 //! - Programmatic navigation via navigate()
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
+
+use tairitsu_vdom::TimerOps;
 
 use crate::wit_platform::{self, WitPlatform};
 
 thread_local! {
     static INSTANCE: RefCell<Option<RouterServiceInner>> = RefCell::new(None);
     static CURRENT_PATH: RefCell<String> = RefCell::new("/".to_string());
+    static POLLING_ACTIVE: Cell<bool> = const { Cell::new(false) };
 }
 
 struct RouterServiceInner {
@@ -35,7 +38,14 @@ pub fn init_router(
     do_render(&inner, &path);
     INSTANCE.with(|i| *i.borrow_mut() = Some(inner));
     set_current_path(&path);
+    POLLING_ACTIVE.with(|a| a.set(true));
     schedule_poll();
+}
+
+/// Stop the router and clean up polling.
+pub fn stop_router() {
+    POLLING_ACTIVE.with(|a| a.set(false));
+    INSTANCE.with(|i| *i.borrow_mut() = None);
 }
 
 /// Programmatically navigate to a path (pushState + re-render).
@@ -76,8 +86,7 @@ fn do_render(inner: &RouterServiceInner, path: &str) {
 fn schedule_poll() {
     INSTANCE.with(|i| {
         if let Some(ref inner) = *i.borrow() {
-            let _ = tairitsu_vdom::Platform::set_timeout(
-                &inner.platform,
+            let _ = inner.platform.set_timeout(
                 Box::new(|| {
                     poll_url_change();
                 }),
@@ -88,6 +97,9 @@ fn schedule_poll() {
 }
 
 fn poll_url_change() {
+    if !POLLING_ACTIVE.with(|a| a.get()) {
+        return;
+    }
     let current = wit_platform::get_pathname();
     if current != current_path() {
         let normalized = normalize_path(&current);
@@ -106,7 +118,11 @@ fn normalize_path(path: &str) -> String {
     if p.ends_with('/') && p.len() > 1 {
         p.pop();
     }
-    if p.is_empty() { "/".to_string() } else { p }
+    if p.is_empty() {
+        "/".to_string()
+    } else {
+        p
+    }
 }
 
 pub fn current_path() -> String {

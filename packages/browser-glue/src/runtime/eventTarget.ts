@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 // Initialize global handle tables for event listeners
 globalThis.__listenerHandles = globalThis.__listenerHandles || new Map();
 globalThis.__nextListenerHandle = globalThis.__nextListenerHandle || 1n;
@@ -38,56 +36,84 @@ export const eventTarget_exports = {
               globalThis.__eventHandles.set(eventHandle, event);
 
               let listenerId = 0n;
-              for (const [id, info] of globalThis.__listenerHandles) {
-                if (info.element === element && info.type === eventType) {
-                  listenerId = id;
-                  break;
+              const cached = (globalThis as any).__listenerByElement?.get(element)?.get(eventType);
+              if (cached) {
+                listenerId = cached;
+              } else {
+                for (const [id, info] of globalThis.__listenerHandles) {
+                  if (info.element === element && info.type === eventType) {
+                    listenerId = id;
+                    break;
+                  }
                 }
               }
 
               if (listenerId !== 0n) {
                 const evtType = event.type;
                 try {
-                  if (evtType === "mouseenter" || evtType === "mouseleave" || evtType === "mousemove" ||
-                      evtType === "mousedown" || evtType === "mouseup" || evtType === "click" ||
-                      evtType === "dblclick" || evtType === "mouseover" || evtType === "mouseout" ||
-                      evtType === "contextmenu" || evtType === "wheel") {
+                  if (
+                    evtType === "mouseenter" ||
+                    evtType === "mouseleave" ||
+                    evtType === "mousemove" ||
+                    evtType === "mousedown" ||
+                    evtType === "mouseup" ||
+                    evtType === "click" ||
+                    evtType === "dblclick" ||
+                    evtType === "mouseover" ||
+                    evtType === "mouseout" ||
+                    evtType === "contextmenu" ||
+                    evtType === "wheel"
+                  ) {
+                    const me = event as MouseEvent;
                     callbacks.onMouseEvent(listenerId, eventHandle, {
-                      clientX: event.clientX,
-                      clientY: event.clientY,
-                      offsetX: event.offsetX,
-                      offsetY: event.offsetY,
-                      button: event.button || 0,
-                      buttons: event.buttons || 0,
-                      ctrlKey: event.ctrlKey || false,
-                      shiftKey: event.shiftKey || false,
-                      altKey: event.altKey || false,
-                      metaKey: event.metaKey || false,
+                      clientX: me.clientX,
+                      clientY: me.clientY,
+                      offsetX: me.offsetX,
+                      offsetY: me.offsetY,
+                      button: me.button || 0,
+                      buttons: me.buttons || 0,
+                      ctrlKey: me.ctrlKey || false,
+                      shiftKey: me.shiftKey || false,
+                      altKey: me.altKey || false,
+                      metaKey: me.metaKey || false,
                     });
-                  } else if (evtType === "keydown" || evtType === "keyup" || evtType === "keypress") {
+                  } else if (
+                    evtType === "keydown" ||
+                    evtType === "keyup" ||
+                    evtType === "keypress"
+                  ) {
+                    const ke = event as KeyboardEvent;
                     callbacks.onKeyboardEvent(listenerId, eventHandle, {
-                      key: event.key || "",
-                      code: event.code || "",
-                      keyCode: event.keyCode || 0,
-                      ctrlKey: event.ctrlKey || false,
-                      shiftKey: event.shiftKey || false,
-                      altKey: event.altKey || false,
-                      metaKey: event.metaKey || false,
-                      repeat: event.repeat || false,
+                      key: ke.key || "",
+                      code: ke.code || "",
+                      keyCode: ke.keyCode || 0,
+                      ctrlKey: ke.ctrlKey || false,
+                      shiftKey: ke.shiftKey || false,
+                      altKey: ke.altKey || false,
+                      metaKey: ke.metaKey || false,
+                      repeat: ke.repeat || false,
                     });
-                  } else if (evtType === "focus" || evtType === "blur" || evtType === "focusin" || evtType === "focusout") {
+                  } else if (
+                    evtType === "focus" ||
+                    evtType === "blur" ||
+                    evtType === "focusin" ||
+                    evtType === "focusout"
+                  ) {
                     callbacks.onFocusEvent(listenerId, eventHandle, {
                       relatedTarget: undefined,
                     });
                   } else if (evtType === "input" || evtType === "change") {
+                    const ie = event as InputEvent;
                     callbacks.onInputEvent(listenerId, eventHandle, {
-                      data: event.data,
-                      inputType: event.inputType || "",
+                      data: ie.data,
+                      inputType: ie.inputType || "",
                     });
                   } else {
                     callbacks.onGenericEvent(listenerId, eventHandle, evtType);
                   }
-                } catch(e) { console.error("[tairitsu-glue] event dispatch error:", e); }
+                } catch (e) {
+                  console.error("[tairitsu-glue] event dispatch error:", e);
+                }
               }
             } finally {
               globalThis.__dispatchingEvents.delete(dispatchKey);
@@ -99,8 +125,19 @@ export const eventTarget_exports = {
       element.addEventListener(eventType, listener, useCapture);
 
       // Store the listener for later reference
-      const handle = globalThis.__nextListenerHandle++;
-      globalThis.__listenerHandles.set(handle, { element, type: eventType, listener });
+      const handle = (globalThis as any).__nextListenerHandle++ as unknown as bigint;
+      (globalThis as any).__listenerHandles.set(handle, { element, type: eventType, listener });
+
+      // Maintain a reverse index for O(1) listener lookup by element+type
+      if (!(globalThis as any).__listenerByElement) {
+        (globalThis as any).__listenerByElement = new Map();
+      }
+      let byType = (globalThis as any).__listenerByElement.get(element);
+      if (!byType) {
+        byType = new Map();
+        (globalThis as any).__listenerByElement.set(element, byType);
+      }
+      byType.set(eventType, handle);
 
       return handle;
     } catch (error) {
@@ -121,7 +158,12 @@ export const eventTarget_exports = {
 
       if (listenerInfo && listenerInfo.element === element && listenerInfo.type === eventType) {
         element.removeEventListener(eventType, listenerInfo.listener);
-        globalThis.__listenerHandles.delete(listenerHandle);
+        (globalThis as any).__listenerHandles.delete(listenerHandle);
+        const byType = (globalThis as any).__listenerByElement?.get(element);
+        if (byType && byType.get(eventType) === listenerHandle) {
+          byType.delete(eventType);
+          if (byType.size === 0) (globalThis as any).__listenerByElement.delete(element);
+        }
       }
     } catch (error) {
       console.error(`Error removing event listener: ${error}`);

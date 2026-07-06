@@ -163,8 +163,12 @@ fn expand_inline_scss(content: &str, scope: Option<&str>) -> TokenStream2 {
 
 /// Expand file-based SCSS
 fn expand_file_scss(path: &str, scope: Option<&str>) -> TokenStream2 {
-    // Get the crate root directory
-    let crate_root = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let crate_root = match std::env::var("CARGO_MANIFEST_DIR") {
+        Ok(v) => v,
+        Err(_) => {
+            return quote! { compile_error!("CARGO_MANIFEST_DIR not set — cannot resolve SCSS file path") }
+        }
+    };
 
     let full_path = std::path::Path::new(&crate_root).join(path);
 
@@ -266,7 +270,7 @@ fn process_class_names(scss: &str, hash: &str, class_map: &mut HashMap<String, S
                     class_map.insert(current_class.clone(), hashed_class.clone());
                     result.push_str(&hashed_class);
                 }
-                result.push(' ');
+                result.push('.');
                 current_class.clear();
             } else if ch == '&' {
                 current_class.clear();

@@ -3,7 +3,10 @@ fn main() {
     let wit_dir = std::path::Path::new(&manifest_dir).join("wit");
     if wit_dir.exists() {
         println!("cargo:wit_dir={}", wit_dir.display());
-        println!("cargo:wit_composed_dir={}", wit_dir.join("composed").display());
+        println!(
+            "cargo:wit_composed_dir={}",
+            wit_dir.join("composed").display()
+        );
     }
     println!("cargo:rerun-if-changed=wit/");
 }

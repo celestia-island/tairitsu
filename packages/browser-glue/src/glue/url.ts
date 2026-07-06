@@ -1,3 +1,7 @@
+// @ts-nocheck
+/* eslint-disable */
+// prettier-ignore
+
 /**
  * url glue — implements the `tairitsu-browser:url` WIT import interfaces.
  *

@@ -4,7 +4,7 @@
 //! to Wasmtime Component Model `Val` types, with full support for nested
 //! complex types.
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use ron::Value as RonValue;
 
 use wasmtime::component::{Type, Val};
@@ -84,8 +84,9 @@ pub fn ron_value_to_val(ron_value: RonValue, target_type: &Type) -> Result<Val> 
 
 // Basic type handlers
 mod basic {
-    use super::*;
     use ron::Value as RonValue;
+
+    use super::*;
 
     pub fn deserialize_bool(ron: RonValue) -> Result<Val> {
         match ron {
@@ -134,6 +135,9 @@ mod basic {
         match ron {
             RonValue::Number(n) => {
                 let v = n.as_i64().context("U64 expected")?;
+                if v < 0 {
+                    bail!("U64 out of range (negative): {}", v);
+                }
                 Ok(Val::U64(v as u64))
             }
             _ => bail!("Expected number for u64, got {:?}", ron),
@@ -214,8 +218,9 @@ mod basic {
 
 // Complex type handlers
 mod complex {
-    use super::*;
     use ron::Value as RonValue;
+
+    use super::*;
 
     /// Type alias for recursive deserializer function
     pub type Deserializer = fn(RonValue, &Type) -> Result<Val>;
@@ -447,7 +452,51 @@ mod tests {
         assert!(matches!(val, Val::String(_)));
     }
 
-    // Note: Tests for complex types (list, tuple, option, result) are in
-    // integration_test.rs and mod.rs tests, where we can get types from
-    // actual WASM component functions instead of manually constructing them.
+    #[test]
+    fn test_deserialize_u64_positive() {
+        let val = ron_to_val("0", &Type::U64).unwrap();
+        assert!(matches!(val, Val::U64(0)));
+
+        let val = ron_to_val("42", &Type::U64).unwrap();
+        assert!(matches!(val, Val::U64(42)));
+
+        let val = ron_to_val("9223372036854775807", &Type::U64).unwrap();
+        assert!(matches!(val, Val::U64(9223372036854775807)));
+    }
+
+    #[test]
+    fn test_deserialize_u64_rejects_negative() {
+        let result = ron_to_val("-1", &Type::U64);
+        assert!(result.is_err(), "u64 should reject -1");
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("negative"),
+            "Error should mention negative: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_deserialize_u64_rejects_large_negative() {
+        let result = ron_to_val("-999999", &Type::U64);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_deserialize_u32_out_of_range() {
+        let result = ron_to_val("4294967296", &Type::U32);
+        assert!(result.is_err(), "u32 should reject values > u32::MAX");
+    }
+
+    #[test]
+    fn test_deserialize_u32_negative() {
+        let result = ron_to_val("-1", &Type::U32);
+        assert!(result.is_err(), "u32 should reject negative");
+    }
+
+    #[test]
+    fn test_deserialize_non_number_for_u64() {
+        let result = ron_to_val("\"hello\"", &Type::U64);
+        assert!(result.is_err());
+    }
 }

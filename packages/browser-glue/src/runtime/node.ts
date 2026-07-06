@@ -1,36 +1,37 @@
-// @ts-nocheck
-
 export const node_exports = {
-  appendChild(self, child) {
+  appendChild(self: bigint, child: bigint) {
     const parent = globalThis.__lookupNode(self);
     const childNode = globalThis.__lookupNode(child);
     const result = parent.appendChild(childNode);
     return globalThis.__storeNode(result);
   },
-  removeChild(self, child) {
+  removeChild(self: bigint, child: bigint) {
     const parent = globalThis.__lookupNode(self);
     const childNode = globalThis.__lookupNode(child);
     const result = parent.removeChild(childNode);
     return globalThis.__storeNode(result);
   },
-  setTextContent(self, text) {
+  setTextContent(self: bigint, text: string) {
     globalThis.__lookupNode(self).textContent = text;
   },
-  getTextContent(self) {
+  getTextContent(self: bigint) {
     return globalThis.__lookupNode(self).textContent || "";
   },
-  getParentElement(self) {
+  getParentElement(self: bigint) {
     const el = globalThis.__lookupNode(self).parentElement;
     if (!el) return undefined;
-    return globalThis.__elementHandles.get(el);
+    for (const [handle, elem] of globalThis.__elementHandles.entries()) {
+      if (elem === el) return handle;
+    }
+    return undefined;
   },
-  getFirstChild(self) {
+  getFirstChild(self: bigint) {
     const node = globalThis.__lookupNode(self);
     const first = node.firstChild;
     if (!first) return undefined;
     return globalThis.__storeNode(first);
   },
-  getChildNodes(self) {
+  getChildNodes(self: bigint) {
     const node = globalThis.__lookupNode(self);
     if (!node) return undefined;
     const children = node.childNodes;
@@ -42,7 +43,7 @@ export const node_exports = {
     globalThis.__nodeListHandles.set(handle, children);
     return handle;
   },
-  insertBefore(self, newChild, referenceChild) {
+  insertBefore(self: bigint, newChild: bigint, referenceChild: bigint | undefined) {
     const parent = globalThis.__lookupNode(self);
     const child = globalThis.__lookupNode(newChild);
     const refChild = referenceChild !== undefined ? globalThis.__lookupNode(referenceChild) : null;

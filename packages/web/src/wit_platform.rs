@@ -263,17 +263,54 @@ impl WitPlatform {
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub mod wasm_impl {
-    use anyhow::Result;
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::sync::atomic::{AtomicU64, Ordering};
 
+    use anyhow::Result;
     use tairitsu_vdom::{
-        CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent,
-        KeyboardEvent, MouseEvent, Platform, VNode,
+        CanvasContext, CanvasOps, ClipboardOps, ContentEditableOps, DomOps, DomRect, EventData,
+        EventWitHandle, FileOps, FocusEvent, GenericEvent, GeoOps, IdbOps, InputEvent,
+        KeyboardEvent, LayoutOps, MediaOps, MediaQueryOps, MouseEvent, ObserverOps, QueryOps,
+        ScrollOps, TimerOps, VNode,
     };
 
     use super::{WitElement, WitEvent, WitPlatform};
+
+    thread_local! {
+        static CURRENT_RENDER_COMPONENT: RefCell<Option<tairitsu_vdom::ComponentId>> = RefCell::new(None);
+    }
+
+    pub fn with_render_component<T>(id: tairitsu_vdom::ComponentId, f: impl FnOnce() -> T) -> T {
+        struct Guard;
+        impl Drop for Guard {
+            fn drop(&mut self) {
+                CURRENT_RENDER_COMPONENT.with(|c| {
+                    *c.borrow_mut() = None;
+                });
+            }
+        }
+
+        CURRENT_RENDER_COMPONENT.with(|c| {
+            *c.borrow_mut() = Some(id);
+        });
+
+        let _guard = Guard;
+        f()
+    }
+
+    fn create_tracked_effect<F>(f: F) -> tairitsu_vdom::EffectHandle
+    where
+        F: FnMut() + 'static,
+    {
+        let handle = tairitsu_vdom::create_effect(f);
+        CURRENT_RENDER_COMPONENT.with(|c| {
+            if let Some(id) = *c.borrow() {
+                tairitsu_vdom::register_effect_handle(id, handle.clone());
+            }
+        });
+        handle
+    }
 
     unsafe extern "C" {
         fn tairitsu_component_bootstrap();
@@ -323,29 +360,40 @@ pub mod wasm_impl {
     /// Log an error (native fallback).
     #[cfg(not(target_family = "wasm"))]
     fn log_error(message: &str) {
-        eprintln!("[WitPlatform ERROR] {}", message);
+        tracing::error!("[WitPlatform ERROR] {}", message);
     }
 
     /// Log a warning (native fallback).
     #[cfg(not(target_family = "wasm"))]
     fn log_warning(message: &str) {
-        eprintln!("[WitPlatform WARNING] {}", message);
+        tracing::warn!("[WitPlatform WARNING] {}", message);
     }
 
     /// Log diagnostic information (native fallback).
     #[cfg(not(target_family = "wasm"))]
     fn log_info(message: &str) {
-        eprintln!("[WitPlatform] {}", message);
+        tracing::info!("[WitPlatform] {}", message);
     }
 
     type GeoCallback =
         Box<dyn FnOnce(Result<tairitsu_vdom::GeoPosition, tairitsu_vdom::GeoPositionError>)>;
+
+    type IntervalCallback = Box<dyn FnMut()>;
+
+    pub(super) struct WsHandleEntry {
+        pub handle: u64,
+        pub on_open_cb_id: u64,
+        pub on_message_cb_id: u64,
+        pub on_close_cb_id: u64,
+        pub on_error_cb_id: u64,
+    }
 
     thread_local! {
         static EVENT_CALLBACKS: RefCell<EventCallbackMap> = RefCell::new(HashMap::new());
         static ELEMENT_LISTENERS: RefCell<HashMap<(u64, String), u64>>
             = RefCell::new(HashMap::new());
         static TIMEOUT_CALLBACKS: RefCell<HashMap<u64, TimeoutCallback>> = RefCell::new(HashMap::new());
+        static INTERVAL_CALLBACKS: RefCell<HashMap<u64, IntervalCallback>> = RefCell::new(HashMap::new());
         pub static ANIMATION_CALLBACKS: RefCell<HashMap<u64, AnimationCallback>> = RefCell::new(HashMap::new());
         static RESIZE_OBSERVER_CALLBACKS: RefCell<HashMap<u64, ResizeObserverCallback>> = RefCell::new(HashMap::new());
         static MUTATION_OBSERVER_CALLBACKS: RefCell<HashMap<u64, MutationObserverCallback>> = RefCell::new(HashMap::new());
@@ -353,11 +401,16 @@ pub mod wasm_impl {
         static SCROLL_CALLBACKS: RefCell<HashMap<u64, ScrollCallback>> = RefCell::new(HashMap::new());
         static WINDOW_RESIZE_CALLBACKS: RefCell<HashMap<u64, WindowResizeCallback>> = RefCell::new(HashMap::new());
         static VIDEO_FRAME_CALLBACKS: RefCell<HashMap<u64, VideoFrameCallback>> = RefCell::new(HashMap::new());
-        static PROMISE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
+        pub(super) static PROMISE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
         static GEO_CALLBACKS: RefCell<HashMap<u64, GeoCallback>> = RefCell::new(HashMap::new());
         static FILE_READER_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
         static FILE_READER_BIN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<Vec<u8>, String>)>>> = RefCell::new(HashMap::new());
         static IDB_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_OPEN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_MESSAGE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnMut(String)>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_CLOSE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(u16, String)>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_ERROR_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_HANDLE_MAP: RefCell<HashMap<u64, WsHandleEntry>> = RefCell::new(HashMap::new());
     }
 
     // -- WIT binding generation -------------------------------------------
@@ -371,10 +424,7 @@ pub mod wasm_impl {
     pub mod bindings {
         use super::BrowserComponent;
 
-        wit_bindgen::generate!({
-            path: "../browser-worlds/wit/composed",
-            world: "browser-full",
-        });
+        include!(concat!(env!("OUT_DIR"), "/wit_bindings_generated.rs"));
 
         export!(BrowserComponent);
     }
@@ -470,6 +520,7 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::MouseEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
+            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
             let current_target =
                 bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
@@ -491,6 +542,7 @@ pub mod wasm_impl {
                     .alt_key(data.alt_key)
                     .meta_key(data.meta_key)
                     .event_handle(wit_handle)
+                    .target(target.unwrap_or(0))
                     .current_target(current_target.unwrap_or(0)),
             );
             dispatch_event(listener_id, "mouse", event);
@@ -549,11 +601,27 @@ pub mod wasm_impl {
 
         fn on_generic_event(listener_id: u64, event_handle: u64, event_type: String) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let event: Box<dyn EventData> = Box::new(
-                GenericEvent::new()
-                    .event_type(&event_type)
-                    .event_handle(wit_handle),
-            );
+            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
+
+            let event: Box<dyn EventData> = match event_type.as_str() {
+                "submit" => {
+                    let evt = tairitsu_vdom::SubmitEvent::new().with_event_handle(wit_handle);
+                    let mut evt = evt;
+                    evt.target = target;
+                    Box::new(evt)
+                }
+                "change" => {
+                    let evt = tairitsu_vdom::ChangeEvent::new().with_event_handle(wit_handle);
+                    let mut evt = evt;
+                    evt.target = target;
+                    Box::new(evt)
+                }
+                _ => Box::new(
+                    GenericEvent::new()
+                        .event_type(&event_type)
+                        .event_handle(wit_handle),
+                ),
+            };
             dispatch_event(listener_id, &event_type, event);
         }
     }
@@ -563,9 +631,23 @@ pub mod wasm_impl {
         EVENT_CALLBACKS.with(|m| {
             let mut handler_opt = m.borrow_mut().remove(&listener_id);
             if let Some(handler) = &mut handler_opt {
-                handler(event);
+                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    handler(event);
+                }));
+                if let Err(e) = result {
+                    let msg = e
+                        .downcast_ref::<String>()
+                        .map(|s| s.as_str())
+                        .or_else(|| e.downcast_ref::<&str>().copied())
+                        .unwrap_or("unknown panic");
+                    tracing::error!(
+                        "Event handler for '{}' (listener {}) panicked: {}",
+                        _event_type,
+                        listener_id,
+                        msg
+                    );
+                }
             }
-            // Re-insert the handler so it can be called again
             if let Some(handler) = handler_opt {
                 m.borrow_mut().insert(listener_id, handler);
             }
@@ -579,6 +661,15 @@ pub mod wasm_impl {
                     if let Some(cb) = callback {
                         cb();
                     }
+                }
+            });
+        }
+
+        fn on_interval(callback_id: u64) {
+            INTERVAL_CALLBACKS.with(|m| {
+                let mut callbacks = m.borrow_mut();
+                if let Some(callback) = callbacks.get_mut(&callback_id) {
+                    callback();
                 }
             });
         }
@@ -793,6 +884,40 @@ pub mod wasm_impl {
         }
     }
 
+    impl bindings::exports::tairitsu_browser::full::web_socket_callbacks::Guest for BrowserComponent {
+        fn on_web_socket_open(callback_id: u64) {
+            WS_OPEN_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback();
+                }
+            });
+        }
+
+        fn on_web_socket_message(callback_id: u64, data: String) {
+            WS_MESSAGE_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().get_mut(&callback_id) {
+                    callback(data);
+                }
+            });
+        }
+
+        fn on_web_socket_close(callback_id: u64, code: u16, reason: String) {
+            WS_CLOSE_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback(code, reason);
+                }
+            });
+        }
+
+        fn on_web_socket_error(callback_id: u64) {
+            WS_ERROR_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback();
+                }
+            });
+        }
+    }
+
     impl bindings::exports::tairitsu_browser::full::lifecycle::Guest for BrowserComponent {
         fn start() -> Result<(), String> {
             // Validate the WIT environment before starting the component
@@ -911,6 +1036,22 @@ pub mod wasm_impl {
                     });
                     bindings::tairitsu_browser::full::platform_helpers::clear_timeout(id);
                 },
+                set_interval_fn: |callback: Box<dyn FnMut()>, ms: i32| -> i32 {
+                    let callback_id = next_callback_id();
+                    INTERVAL_CALLBACKS.with(|m| {
+                        m.borrow_mut().insert(callback_id, callback);
+                    });
+                    bindings::tairitsu_browser::full::platform_helpers::set_interval(
+                        callback_id,
+                        ms,
+                    )
+                },
+                clear_interval_fn: |id: i32| {
+                    INTERVAL_CALLBACKS.with(|m| {
+                        m.borrow_mut().remove(&(id as u64));
+                    });
+                    bindings::tairitsu_browser::full::platform_helpers::clear_interval(id);
+                },
                 request_animation_frame_fn: |callback: Box<dyn FnMut(f64)>| -> u32 {
                     let callback_id = next_callback_id();
                     ANIMATION_CALLBACKS.with(|m| {
@@ -956,7 +1097,7 @@ pub mod wasm_impl {
 
     // -- Platform trait implementation ------------------------------------
 
-    impl Platform for WitPlatform {
+    impl DomOps for WitPlatform {
         type Element = WitElement;
         type Event = WitEvent;
 
@@ -1094,6 +1235,133 @@ pub mod wasm_impl {
             }
         }
 
+        fn add_event_listener_with_options(
+            &self,
+            element: &Self::Element,
+            event: &str,
+            handler: Box<dyn FnMut(Box<dyn EventData>)>,
+            options: tairitsu_vdom::ListenerOptions,
+        ) {
+            let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
+                element.as_raw(),
+                event,
+                options.capture,
+            )
+            .unwrap_or_else(|e| {
+                log_error(&format!("add_event_listener failed: {}", e));
+                0
+            });
+
+            EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, handler));
+
+            ELEMENT_LISTENERS.with(|m| {
+                m.borrow_mut()
+                    .insert((element.as_raw(), event.to_string()), listener_id);
+            });
+
+            log_info(&format!(
+                "Added event listener with options: event={}, listener_id={}",
+                event, listener_id
+            ));
+        }
+
+        fn get_inner_html(&self, element: &Self::Element) -> String {
+            bindings::tairitsu_browser::full::element::get_inner_html(element.as_raw())
+        }
+
+        fn set_inner_html(&self, element: &Self::Element, html: String) {
+            bindings::tairitsu_browser::full::element::set_inner_html(element.as_raw(), &html);
+        }
+
+        fn get_attribute(&self, element: &Self::Element, name: &str) -> Option<String> {
+            bindings::tairitsu_browser::full::element::get_attribute(element.as_raw(), name)
+        }
+
+        fn class_list_add(&self, element: &Self::Element, tokens: &[&str]) {
+            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
+            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
+            bindings::tairitsu_browser::full::dom_token_list::add(list, &wit_tokens);
+        }
+
+        fn class_list_remove(&self, element: &Self::Element, tokens: &[&str]) {
+            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
+            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
+            bindings::tairitsu_browser::full::dom_token_list::remove(list, &wit_tokens);
+        }
+
+        fn class_list_contains(&self, element: &Self::Element, token: &str) -> bool {
+            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
+            bindings::tairitsu_browser::full::dom_token_list::contains(list, token)
+        }
+
+        fn first_child(&self, element: &Self::Element) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::node::get_first_child(element.as_raw())
+                .map(WitElement::from_raw)
+        }
+
+        fn insert_before(
+            &self,
+            parent: &Self::Element,
+            new_node: &Self::Element,
+            reference_node: Option<&Self::Element>,
+        ) {
+            let ref_handle = reference_node.map(|r| r.as_raw());
+            let _ = bindings::tairitsu_browser::full::node::insert_before(
+                parent.as_raw(),
+                new_node.as_raw(),
+                ref_handle,
+            );
+        }
+
+        fn query_selector_on(
+            &self,
+            element: &Self::Element,
+            selector: &str,
+        ) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::parent_node::query_selector(
+                element.as_raw(),
+                selector,
+            )
+            .map(WitElement::from_raw)
+        }
+    }
+
+    impl TimerOps for WitPlatform {
+        fn set_timeout(&self, callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
+            let callback_id = next_callback_id();
+            TIMEOUT_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
+            bindings::tairitsu_browser::full::platform_helpers::set_timeout(callback_id, ms)
+        }
+
+        fn clear_timeout(&self, id: i32) {
+            TIMEOUT_CALLBACKS.with(|m| m.borrow_mut().remove(&(id as u64)));
+            bindings::tairitsu_browser::full::platform_helpers::clear_timeout(id)
+        }
+
+        fn set_interval(&self, callback: Box<dyn FnMut()>, ms: i32) -> i32 {
+            let callback_id = next_callback_id();
+            INTERVAL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::set_interval(callback_id, ms)
+        }
+
+        fn clear_interval(&self, id: i32) {
+            INTERVAL_CALLBACKS.with(|m| m.borrow_mut().remove(&(id as u64)));
+            bindings::tairitsu_browser::full::platform_helpers::clear_interval(id)
+        }
+
+        fn request_animation_frame(&self, callback: Box<dyn FnOnce(f64)>) -> u32 {
+            let callback_id = next_callback_id();
+            ANIMATION_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
+            bindings::tairitsu_browser::full::platform_helpers::request_animation_frame(callback_id)
+        }
+
+        fn cancel_animation_frame(&self, id: u32) {
+            ANIMATION_CALLBACKS.with(|m| m.borrow_mut().remove(&(id as u64)));
+            bindings::tairitsu_browser::full::platform_helpers::cancel_animation_frame(id)
+        }
+    }
+
+    impl LayoutOps for WitPlatform {
         fn get_bounding_client_rect(&self, element: &Self::Element) -> DomRect {
             let rect = bindings::tairitsu_browser::full::element::get_bounding_client_rect(
                 element.as_raw(),
@@ -1114,50 +1382,28 @@ pub mod wasm_impl {
             bindings::tairitsu_browser::full::window::get_inner_height()
         }
 
-        fn set_timeout(&self, callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
-            let callback_id = next_callback_id();
-            TIMEOUT_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
-            bindings::tairitsu_browser::full::platform_helpers::set_timeout(callback_id, ms)
+        fn get_element_scroll_top(&self, element: &Self::Element) -> f64 {
+            bindings::tairitsu_browser::full::element::get_scroll_top(element.as_raw())
         }
 
-        fn clear_timeout(&self, id: i32) {
-            bindings::tairitsu_browser::full::platform_helpers::clear_timeout(id)
+        fn set_element_scroll_top(&self, element: &Self::Element, value: f64) {
+            bindings::tairitsu_browser::full::element::set_scroll_top(element.as_raw(), value);
         }
 
-        fn request_animation_frame(&self, callback: Box<dyn FnOnce(f64)>) -> u32 {
-            let callback_id = next_callback_id();
-            ANIMATION_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
-            bindings::tairitsu_browser::full::platform_helpers::request_animation_frame(callback_id)
+        fn get_element_scroll_height(&self, element: &Self::Element) -> i32 {
+            bindings::tairitsu_browser::full::element::get_scroll_height(element.as_raw())
         }
 
-        fn cancel_animation_frame(&self, id: u32) {
-            bindings::tairitsu_browser::full::platform_helpers::cancel_animation_frame(id)
+        fn get_element_client_height(&self, element: &Self::Element) -> i32 {
+            bindings::tairitsu_browser::full::element::get_client_height(element.as_raw())
         }
 
-        fn get_canvas_context(
-            &self,
-            element: &Self::Element,
-            context_type: &str,
-        ) -> Option<CanvasContext> {
-            bindings::tairitsu_browser::full::html_canvas_element::get_context(
-                element.as_raw(),
-                context_type,
-                None,
-            )
+        fn get_element_client_width(&self, element: &Self::Element) -> i32 {
+            bindings::tairitsu_browser::full::element::get_client_width(element.as_raw())
         }
+    }
 
-        fn canvas_set_fill_style(&self, ctx: CanvasContext, color: &str) {
-            bindings::tairitsu_browser::full::canvas_fill_stroke_styles::set_fill_style(ctx, color)
-        }
-
-        fn canvas_fill_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
-            bindings::tairitsu_browser::full::canvas_rect::fill_rect(ctx, x, y, w, h)
-        }
-
-        fn canvas_clear_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
-            bindings::tairitsu_browser::full::canvas_rect::clear_rect(ctx, x, y, w, h)
-        }
-
+    impl ObserverOps for WitPlatform {
         fn create_resize_observer(
             &self,
             callback: Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>,
@@ -1213,7 +1459,9 @@ pub mod wasm_impl {
         fn disconnect_mutation(&self, observer: u64) {
             bindings::tairitsu_browser::full::mutation_observer::disconnect(observer);
         }
+    }
 
+    impl MediaQueryOps for WitPlatform {
         fn match_media(&self, query: &str) -> u64 {
             bindings::tairitsu_browser::full::window::match_media(query)
         }
@@ -1243,58 +1491,9 @@ pub mod wasm_impl {
                 Some(listener_id),
             );
         }
+    }
 
-        fn get_element_by_id(&self, id: &str) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::platform_helpers::get_element_by_id(id)
-                .map(WitElement::from_raw)
-        }
-
-        fn query_selector(&self, selector: &str) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::platform_helpers::query_selector(selector)
-                .map(WitElement::from_raw)
-        }
-
-        fn query_selector_all(&self, selector: &str) -> Vec<Self::Element> {
-            bindings::tairitsu_browser::full::platform_helpers::query_selector_all(selector)
-                .into_iter()
-                .map(WitElement::from_raw)
-                .collect()
-        }
-
-        fn element_from_point(&self, x: i32, y: i32) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::document::element_from_point(x as f64, y as f64)
-                .map(WitElement::from_raw)
-        }
-
-        fn element_closest(
-            &self,
-            element: &Self::Element,
-            selector: &str,
-        ) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::element::closest(element.as_raw(), selector)
-                .map(WitElement::from_raw)
-        }
-
-        fn get_scroll_y(&self) -> f64 {
-            bindings::tairitsu_browser::full::window::get_scroll_y()
-        }
-
-        fn scroll_to(&self, top: f64, behavior: &str) {
-            bindings::tairitsu_browser::full::platform_helpers::scroll_to(top, behavior)
-        }
-
-        fn on_scroll(&self, callback: Box<dyn FnMut(f64, f64)>) {
-            let callback_id = next_callback_id();
-            SCROLL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
-            bindings::tairitsu_browser::full::platform_helpers::on_scroll(callback_id);
-        }
-
-        fn on_resize(&self, callback: Box<dyn FnMut(i32, i32)>) {
-            let callback_id = next_callback_id();
-            WINDOW_RESIZE_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
-            bindings::tairitsu_browser::full::platform_helpers::on_resize_callback(callback_id);
-        }
-
+    impl ClipboardOps for WitPlatform {
         fn copy_to_clipboard(&self, text: &str) -> bool {
             bindings::tairitsu_browser::full::platform_helpers::copy_to_clipboard(text)
         }
@@ -1330,46 +1529,9 @@ pub mod wasm_impl {
                 m.borrow_mut().insert(promise_id, on_complete);
             });
         }
+    }
 
-        fn prefers_dark_mode(&self) -> bool {
-            bindings::tairitsu_browser::full::platform_helpers::prefers_dark_mode()
-        }
-
-        fn get_element_rect_by_id(&self, id: &str) -> Option<DomRect> {
-            bindings::tairitsu_browser::full::platform_helpers::get_element_rect_by_id(id).map(
-                |rect| DomRect {
-                    x: rect.x,
-                    y: rect.y,
-                    width: rect.width,
-                    height: rect.height,
-                },
-            )
-        }
-
-        fn get_bounding_rect_by_class(
-            &self,
-            class_name: &str,
-            element: &Self::Element,
-        ) -> Option<DomRect> {
-            bindings::tairitsu_browser::full::platform_helpers::get_bounding_rect_by_class(
-                class_name,
-                element.as_raw(),
-            )
-            .map(|rect| DomRect {
-                x: rect.x,
-                y: rect.y,
-                width: rect.width,
-                height: rect.height,
-            })
-        }
-
-        fn request_fullscreen(&self, element: &Self::Element) {
-            let _ = bindings::tairitsu_browser::full::element::request_fullscreen(
-                element.as_raw(),
-                None,
-            );
-        }
-
+    impl ContentEditableOps for WitPlatform {
         fn get_contenteditable_state(
             &self,
             element: &Self::Element,
@@ -1403,87 +1565,167 @@ pub mod wasm_impl {
                 editable,
             );
         }
+    }
 
-        fn get_inner_html(&self, element: &Self::Element) -> String {
-            bindings::tairitsu_browser::full::element::get_inner_html(element.as_raw())
+    impl ScrollOps for WitPlatform {
+        fn get_scroll_y(&self) -> f64 {
+            bindings::tairitsu_browser::full::window::get_scroll_y()
         }
 
-        fn set_inner_html(&self, element: &Self::Element, html: String) {
-            bindings::tairitsu_browser::full::element::set_inner_html(element.as_raw(), &html);
+        fn scroll_to(&self, top: f64, behavior: &str) {
+            bindings::tairitsu_browser::full::platform_helpers::scroll_to(top, behavior)
         }
 
-        fn get_element_scroll_top(&self, element: &Self::Element) -> f64 {
-            bindings::tairitsu_browser::full::element::get_scroll_top(element.as_raw())
+        fn on_scroll(&self, callback: Box<dyn FnMut(f64, f64)>) {
+            let callback_id = next_callback_id();
+            SCROLL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::on_scroll(callback_id);
         }
 
-        fn set_element_scroll_top(&self, element: &Self::Element, value: f64) {
-            bindings::tairitsu_browser::full::element::set_scroll_top(element.as_raw(), value);
+        fn on_resize(&self, callback: Box<dyn FnMut(i32, i32)>) {
+            let callback_id = next_callback_id();
+            WINDOW_RESIZE_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::on_resize_callback(callback_id);
         }
 
-        fn get_element_scroll_height(&self, element: &Self::Element) -> i32 {
-            bindings::tairitsu_browser::full::element::get_scroll_height(element.as_raw())
+        fn prefers_dark_mode(&self) -> bool {
+            bindings::tairitsu_browser::full::platform_helpers::prefers_dark_mode()
         }
 
-        fn get_element_client_height(&self, element: &Self::Element) -> i32 {
-            bindings::tairitsu_browser::full::element::get_client_height(element.as_raw())
-        }
-
-        fn get_element_client_width(&self, element: &Self::Element) -> i32 {
-            bindings::tairitsu_browser::full::element::get_client_width(element.as_raw())
-        }
-
-        fn get_attribute(&self, element: &Self::Element, name: &str) -> Option<String> {
-            bindings::tairitsu_browser::full::element::get_attribute(element.as_raw(), name)
-        }
-
-        fn class_list_add(&self, element: &Self::Element, tokens: &[&str]) {
-            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
-            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
-            bindings::tairitsu_browser::full::dom_token_list::add(list, &wit_tokens);
-        }
-
-        fn class_list_remove(&self, element: &Self::Element, tokens: &[&str]) {
-            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
-            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
-            bindings::tairitsu_browser::full::dom_token_list::remove(list, &wit_tokens);
-        }
-
-        fn class_list_contains(&self, element: &Self::Element, token: &str) -> bool {
-            let list = bindings::tairitsu_browser::full::element::get_class_list(element.as_raw());
-            bindings::tairitsu_browser::full::dom_token_list::contains(list, token)
-        }
-
-        fn first_child(&self, element: &Self::Element) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::node::get_first_child(element.as_raw())
-                .map(WitElement::from_raw)
-        }
-
-        fn insert_before(
-            &self,
-            parent: &Self::Element,
-            new_node: &Self::Element,
-            reference_node: Option<&Self::Element>,
-        ) {
-            let ref_handle = reference_node.map(|r| r.as_raw());
-            let _ = bindings::tairitsu_browser::full::node::insert_before(
-                parent.as_raw(),
-                new_node.as_raw(),
-                ref_handle,
+        fn request_fullscreen(&self, element: &Self::Element) {
+            let _ = bindings::tairitsu_browser::full::element::request_fullscreen(
+                element.as_raw(),
+                None,
             );
         }
 
-        fn query_selector_on(
+        fn get_scroll_top_from_point(&self, x: i32, y: i32) -> f64 {
+            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_from_point(x, y)
+        }
+
+        fn get_scroll_top_by_selector(&self, selector: &str) -> f64 {
+            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_by_selector(selector)
+        }
+
+        fn get_target_element_from_event(
+            &self,
+            client_x: i32,
+            client_y: i32,
+        ) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::document::element_from_point(
+                client_x as f64,
+                client_y as f64,
+            )
+            .map(WitElement::from_raw)
+        }
+    }
+
+    impl QueryOps for WitPlatform {
+        fn get_element_by_id(&self, id: &str) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::get_element_by_id(id)
+                .map(WitElement::from_raw)
+        }
+
+        fn query_selector(&self, selector: &str) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::query_selector(selector)
+                .map(WitElement::from_raw)
+        }
+
+        fn query_selector_all(&self, selector: &str) -> Vec<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::query_selector_all(selector)
+                .into_iter()
+                .map(WitElement::from_raw)
+                .collect()
+        }
+
+        fn element_from_point(&self, x: i32, y: i32) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::document::element_from_point(x as f64, y as f64)
+                .map(WitElement::from_raw)
+        }
+
+        fn element_closest(
             &self,
             element: &Self::Element,
             selector: &str,
         ) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::parent_node::query_selector(
-                element.as_raw(),
-                selector,
-            )
-            .map(WitElement::from_raw)
+            bindings::tairitsu_browser::full::element::closest(element.as_raw(), selector)
+                .map(WitElement::from_raw)
         }
 
+        fn get_element_rect_by_id(&self, id: &str) -> Option<DomRect> {
+            bindings::tairitsu_browser::full::platform_helpers::get_element_rect_by_id(id).map(
+                |rect| DomRect {
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                },
+            )
+        }
+
+        fn get_bounding_rect_by_class(
+            &self,
+            class_name: &str,
+            element: &Self::Element,
+        ) -> Option<DomRect> {
+            bindings::tairitsu_browser::full::platform_helpers::get_bounding_rect_by_class(
+                class_name,
+                element.as_raw(),
+            )
+            .map(|rect| DomRect {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+            })
+        }
+    }
+
+    impl CanvasOps for WitPlatform {
+        fn get_canvas_context(
+            &self,
+            element: &Self::Element,
+            context_type: &str,
+        ) -> Option<CanvasContext> {
+            bindings::tairitsu_browser::full::html_canvas_element::get_context(
+                element.as_raw(),
+                context_type,
+                None,
+            )
+        }
+
+        fn canvas_set_fill_style(&self, ctx: CanvasContext, color: &str) {
+            bindings::tairitsu_browser::full::canvas_fill_stroke_styles::set_fill_style(ctx, color)
+        }
+
+        fn canvas_fill_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
+            bindings::tairitsu_browser::full::canvas_rect::fill_rect(ctx, x, y, w, h)
+        }
+
+        fn canvas_clear_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
+            bindings::tairitsu_browser::full::canvas_rect::clear_rect(ctx, x, y, w, h)
+        }
+
+        fn draw_qrcode_on_canvas_by_id(
+            &self,
+            canvas_id: &str,
+            matrix: &[Vec<bool>],
+            modules: u64,
+            color: &str,
+            background: &str,
+        ) -> bool {
+            let wit_matrix: Vec<Vec<bool>> = matrix.to_vec();
+            bindings::tairitsu_browser::full::platform_helpers::draw_qrcode_on_canvas_by_id(
+                canvas_id,
+                &wit_matrix,
+                modules,
+                color,
+                background,
+            )
+        }
+    }
+
+    impl MediaOps for WitPlatform {
         fn video_play(&self, element: &Self::Element) {
             let _ = bindings::tairitsu_browser::full::html_media_element::play(element.as_raw());
         }
@@ -1547,45 +1789,9 @@ pub mod wasm_impl {
                 analyser,
             )
         }
+    }
 
-        fn draw_qrcode_on_canvas_by_id(
-            &self,
-            canvas_id: &str,
-            matrix: &[Vec<bool>],
-            modules: u64,
-            color: &str,
-            background: &str,
-        ) -> bool {
-            let wit_matrix: Vec<Vec<bool>> = matrix.to_vec();
-            bindings::tairitsu_browser::full::platform_helpers::draw_qrcode_on_canvas_by_id(
-                canvas_id,
-                &wit_matrix,
-                modules,
-                color,
-                background,
-            )
-        }
-
-        fn get_scroll_top_from_point(&self, x: i32, y: i32) -> f64 {
-            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_from_point(x, y)
-        }
-
-        fn get_scroll_top_by_selector(&self, selector: &str) -> f64 {
-            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_by_selector(selector)
-        }
-
-        fn get_target_element_from_event(
-            &self,
-            client_x: i32,
-            client_y: i32,
-        ) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::document::element_from_point(
-                client_x as f64,
-                client_y as f64,
-            )
-            .map(WitElement::from_raw)
-        }
-
+    impl GeoOps for WitPlatform {
         fn get_current_position(
             &self,
             on_success: Box<dyn FnOnce(tairitsu_vdom::GeoPosition)>,
@@ -1616,7 +1822,9 @@ pub mod wasm_impl {
                 maximum_age,
             );
         }
+    }
 
+    impl FileOps for WitPlatform {
         fn file_reader_sync_read_as_text(
             &self,
             blob: u64,
@@ -1667,7 +1875,9 @@ pub mod wasm_impl {
                 callback_id,
             );
         }
+    }
 
+    impl IdbOps for WitPlatform {
         fn idb_open(
             &self,
             name: &str,
@@ -1839,6 +2049,8 @@ pub mod wasm_impl {
             VNode::Element(velement) => {
                 let element = platform.create_element(&velement.tag);
 
+                tairitsu_vdom::runtime::register_element(element.as_raw());
+
                 // Populate element_ref if present
                 if let Some(ref element_ref) = velement.element_ref {
                     use std::any::Any;
@@ -1890,11 +2102,57 @@ pub mod wasm_impl {
                     }
                 }
 
+                for (name, compute) in &velement.dynamic_attributes {
+                    let raw = element.as_raw();
+                    let name = name.clone();
+                    let compute = compute.clone();
+                    create_tracked_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        bindings::tairitsu_browser::full::element::set_attribute(
+                            raw, &name, &value,
+                        );
+                    });
+                }
+
+                for (name, compute) in &velement.dynamic_styles {
+                    let raw = element.as_raw();
+                    let name = name.clone();
+                    let compute = compute.clone();
+                    let platform = platform.clone();
+                    create_tracked_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        let el = WitElement::from_raw(raw);
+                        platform.set_style(&el, &name, &value);
+                    });
+                }
+
+                for compute in &velement.dynamic_classes {
+                    let raw = element.as_raw();
+                    let compute = compute.clone();
+                    create_tracked_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        bindings::tairitsu_browser::full::element::set_attribute(
+                            raw, "class", &value,
+                        );
+                    });
+                }
+
                 platform.append_child(parent, &element);
             }
             VNode::Text(vtext) => {
                 let text_node = platform.create_text_node(&vtext.text);
                 platform.append_child(parent, &text_node);
+            }
+            VNode::DynamicText(dt) => {
+                let text_node = platform.create_text_node(&dt.initial);
+                platform.append_child(parent, &text_node);
+
+                let raw = text_node.as_raw();
+                let compute = dt.compute.clone();
+                create_tracked_effect(move || {
+                    let new_text = (compute.borrow_mut())();
+                    bindings::tairitsu_browser::full::node::set_text_content(raw, Some(&new_text));
+                });
             }
             VNode::Fragment(children) => {
                 for child in children {
@@ -2047,6 +2305,8 @@ pub mod wasm_impl {
             VNode::Element(velement) => {
                 let element = platform.create_element(&velement.tag);
 
+                tairitsu_vdom::runtime::register_element(element.as_raw());
+
                 // Populate element_ref if present (for patch-created elements)
                 if let Some(ref element_ref) = velement.element_ref {
                     use std::any::Any;
@@ -2075,9 +2335,56 @@ pub mod wasm_impl {
                     );
                 }
 
+                for (name, compute) in &velement.dynamic_attributes {
+                    let raw = element.as_raw();
+                    let name = name.clone();
+                    let compute = compute.clone();
+                    create_tracked_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        bindings::tairitsu_browser::full::element::set_attribute(
+                            raw, &name, &value,
+                        );
+                    });
+                }
+
+                for (name, compute) in &velement.dynamic_styles {
+                    let raw = element.as_raw();
+                    let name = name.clone();
+                    let compute = compute.clone();
+                    let p = platform.clone();
+                    create_tracked_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        let el = WitElement::from_raw(raw);
+                        p.set_style(&el, &name, &value);
+                    });
+                }
+
+                for compute in &velement.dynamic_classes {
+                    let raw = element.as_raw();
+                    let compute = compute.clone();
+                    create_tracked_effect(move || {
+                        let value = (compute.borrow_mut())();
+                        bindings::tairitsu_browser::full::element::set_attribute(
+                            raw, "class", &value,
+                        );
+                    });
+                }
+
                 Ok(element)
             }
             VNode::Text(vtext) => Ok(platform.create_text_node(&vtext.text)),
+            VNode::DynamicText(dt) => {
+                let text_node = platform.create_text_node(&dt.initial);
+
+                let raw = text_node.as_raw();
+                let compute = dt.compute.clone();
+                create_tracked_effect(move || {
+                    let new_text = (compute.borrow_mut())();
+                    bindings::tairitsu_browser::full::node::set_text_content(raw, Some(&new_text));
+                });
+
+                Ok(text_node)
+            }
             VNode::Fragment(_) => {
                 // Fragments can't be represented as a single element
                 // Create a placeholder div
@@ -2140,6 +2447,19 @@ pub mod wasm_impl {
                 for child in children {
                     render_vnode(platform, child, element)?;
                 }
+            }
+            VNode::DynamicText(dt) => {
+                bindings::tairitsu_browser::full::node::set_text_content(
+                    element.as_raw(),
+                    Some(&dt.initial),
+                );
+
+                let raw = element.as_raw();
+                let compute = dt.compute.clone();
+                create_tracked_effect(move || {
+                    let new_text = (compute.borrow_mut())();
+                    bindings::tairitsu_browser::full::node::set_text_content(raw, Some(&new_text));
+                });
             }
         }
 
@@ -2209,7 +2529,7 @@ pub mod wasm_impl {
         }
 
         // If the node is an element, render its children
-        if let VNode::Element(velement) = node {
+        if let VNode::Element(Box::new(velement)) = node {
             for child in &velement.children {
                 render_vnode(platform, child, &new_element)?;
             }
@@ -2222,6 +2542,7 @@ pub mod wasm_impl {
     fn remove_child_at(platform: &WitPlatform, parent: &WitElement, index: usize) -> Result<()> {
         let child = get_child_at(parent, index)?;
         if let Some(child_element) = child {
+            tairitsu_vdom::runtime::on_element_removed(child_element.as_raw());
             platform.remove_child(parent, &child_element);
         }
         Ok(())
@@ -2259,7 +2580,6 @@ pub fn push_state(url: &str) {
     {
         wasm_impl::wasm_push_state(url);
     }
-    #[allow(unused_variables)]
     let _ = url;
 }
 
@@ -2269,7 +2589,6 @@ pub fn replace_state(url: &str) {
     {
         wasm_impl::wasm_replace_state(url);
     }
-    #[allow(unused_variables)]
     let _ = url;
 }
 
@@ -2297,6 +2616,120 @@ pub fn get_parent_element(platform: &WitPlatform, element: &WitElement) -> Optio
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub fn prevent_event_default(event_handle: u64) {
     wasm_impl::prevent_event_default(event_handle)
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub struct WsConnection {
+    handle: u64,
+    on_message_cb_id: u64,
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+impl WsConnection {
+    pub fn send(&self, data: &str) {
+        wasm_impl::bindings::tairitsu_browser::full::web_socket::send(self.handle, data);
+    }
+
+    pub fn close(&self, code: Option<u16>, reason: Option<&str>) {
+        wasm_impl::bindings::tairitsu_browser::full::web_socket::close(self.handle, code, reason);
+    }
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+impl Drop for WsConnection {
+    fn drop(&mut self) {
+        wasm_impl::WS_HANDLE_MAP.with(|m| {
+            m.borrow_mut().remove(&self.handle);
+        });
+        wasm_impl::WS_MESSAGE_CALLBACKS.with(|m| {
+            m.borrow_mut().remove(&self.on_message_cb_id);
+        });
+    }
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn ws_connect(
+    url: &str,
+    on_open: Box<dyn FnOnce()>,
+    on_message: Box<dyn FnMut(String)>,
+    on_close: Box<dyn FnOnce(u16, String)>,
+    on_error: Box<dyn FnOnce()>,
+) -> WsConnection {
+    let handle =
+        wasm_impl::bindings::tairitsu_browser::full::platform_helpers::connect_web_socket(url);
+
+    let on_open_cb_id = wasm_impl::WS_HANDLE_MAP.with(|m| {
+        let next = (m.borrow().len() as u64) * 4 + 1;
+        let msg_cb_id = next + 1;
+        let close_cb_id = next + 2;
+        let err_cb_id = next + 3;
+        m.borrow_mut().insert(
+            handle,
+            wasm_impl::WsHandleEntry {
+                handle,
+                on_open_cb_id: next,
+                on_message_cb_id: msg_cb_id,
+                on_close_cb_id: close_cb_id,
+                on_error_cb_id: err_cb_id,
+            },
+        );
+        next
+    });
+    let msg_cb_id = on_open_cb_id + 1;
+    let close_cb_id = on_open_cb_id + 2;
+    let err_cb_id = on_open_cb_id + 3;
+
+    wasm_impl::WS_OPEN_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(on_open_cb_id, on_open);
+    });
+    wasm_impl::WS_MESSAGE_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(msg_cb_id, on_message);
+    });
+    wasm_impl::WS_CLOSE_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(close_cb_id, on_close);
+    });
+    wasm_impl::WS_ERROR_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(err_cb_id, on_error);
+    });
+
+    WsConnection {
+        handle,
+        on_message_cb_id: msg_cb_id,
+    }
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn ws_send(conn: &WsConnection, data: &str) {
+    conn.send(data);
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn ws_close(conn: &WsConnection, code: Option<u16>, reason: Option<&str>) {
+    conn.close(code, reason);
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn fetch_text(url: &str, on_complete: Box<dyn FnOnce(Result<String, String>)>) {
+    let promise_id =
+        wasm_impl::bindings::tairitsu_browser::full::platform_helpers::fetch_promise(url, None);
+    wasm_impl::PROMISE_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(promise_id, on_complete);
+    });
+}
+
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn fetch_text_with_options(
+    url: &str,
+    options: &str,
+    on_complete: Box<dyn FnOnce(Result<String, String>)>,
+) {
+    let promise_id = wasm_impl::bindings::tairitsu_browser::full::platform_helpers::fetch_promise(
+        url,
+        Some(options),
+    );
+    wasm_impl::PROMISE_CALLBACKS.with(|m| {
+        m.borrow_mut().insert(promise_id, on_complete);
+    });
 }
 
 #[cfg(test)]
@@ -2414,7 +2847,7 @@ mod tests {
         }
 
         // Test ReplaceNode patch
-        let new_node = VNode::Element(VElement::new("div"));
+        let new_node = VNode::Element(Box::new(VElement::new("div")));
         let replace_patch = Patch::ReplaceNode {
             node: new_node.clone(),
         };
@@ -2771,6 +3204,7 @@ mod tests {
     #[test]
     fn test_wit_element_any_operations() {
         use std::any::TypeId;
+
         use tairitsu_vdom::ElementHandle;
 
         let element = super::WitElement::from_raw(777);
