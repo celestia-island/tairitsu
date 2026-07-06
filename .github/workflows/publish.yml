@@ -73,13 +73,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - name: Strip examples from workspace to avoid git-dep conflicts
+      - name: Strip examples and path-dep packages from workspace
         run: |
           pip install tomlkit
           python3 -c "
           import tomlkit
           with open('Cargo.toml') as f: d = tomlkit.load(f)
-          d['workspace']['members'] = [m for m in d['workspace']['members'] if not m.startswith('examples/')]
+          members = d['workspace']['members']
+          # Remove examples and packages with external path deps (mcp needs kou)
+          d['workspace']['members'] = [
+              m for m in members
+              if not m.startswith('examples/') and m != 'packages/mcp'
+          ]
           with open('Cargo.toml', 'w') as f: tomlkit.dump(d, f)
           "
 
