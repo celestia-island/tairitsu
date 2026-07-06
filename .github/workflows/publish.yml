@@ -2,7 +2,7 @@ name: Publish
 
 on:
   push:
-    tags: [v[0-9]+.[0-9]+.[0-9]+]
+    tags: [v*]
 
 jobs:
   verify:
@@ -14,30 +14,25 @@ jobs:
         id: tag
         run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
       - name: Check all publishable packages match tag
+        env:
+          TAG: ${{ steps.tag.outputs.version }}
         run: |
-          TAG="${{ steps.tag.outputs.version }}"
-          FAIL=0
-          PACKAGES=(
-            "tairitsu:packages/runtime"
-            "tairitsu-macros:packages/macros"
-            "tairitsu-browser-worlds:packages/browser-worlds"
-            "tairitsu-vdom:packages/vdom"
-            "tairitsu-style:packages/style"
-            "tairitsu-hooks:packages/hooks"
-            "tairitsu-browser-wit-resolver:packages/browser-wit-resolver"
-            "tairitsu-ssr:packages/ssr"
-            "tairitsu-packager:packages/packager"
-            "tairitsu-web:packages/web"
-            "tairitsu-mcp:packages/mcp"
-          )
           pip install tomlkit
           python3 -c "
-          import tomlkit, sys
-          TAG = '$TAG'
-          PACKAGES = '''${
-            IFS=','
-            echo "${PACKAGES[*]}"
-          }'''.split(',')
+          import tomlkit, sys, os
+          TAG = os.environ['TAG']
+          PACKAGES = [
+              'tairitsu:packages/runtime',
+              'tairitsu-macros:packages/macros',
+              'tairitsu-browser-worlds:packages/browser-worlds',
+              'tairitsu-vdom:packages/vdom',
+              'tairitsu-style:packages/style',
+              'tairitsu-hooks:packages/hooks',
+              'tairitsu-browser-wit-resolver:packages/browser-wit-resolver',
+              'tairitsu-ssr:packages/ssr',
+              'tairitsu-packager:packages/packager',
+              'tairitsu-web:packages/web',
+          ]
           FAIL = 0
           with open('Cargo.toml') as f:
               root = tomlkit.load(f)
@@ -58,8 +53,8 @@ jobs:
                   FAIL = 1
                   continue
               ver = d.get('package', {}).get('version', '')
-              if ver == root_ver:
-                  print(f'::notice::{pkg} uses workspace version ({root_ver})')
+              if isinstance(ver, dict) or (isinstance(ver, str) and 'workspace' in str(ver).lower()):
+                  print(f'::notice::{pkg} uses workspace version ({root_ver}) — OK')
               elif ver == TAG:
                   print(f'::notice::{pkg} version ({ver}) matches tag')
               else:
@@ -78,13 +73,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - name: Strip examples from workspace to avoid git-dep conflicts
+      - name: Strip examples and path-dep packages from workspace
         run: |
           pip install tomlkit
           python3 -c "
           import tomlkit
           with open('Cargo.toml') as f: d = tomlkit.load(f)
-          d['workspace']['members'] = [m for m in d['workspace']['members'] if not m.startswith('examples/')]
+          members = d['workspace']['members']
+          # Remove examples and packages with external path deps (mcp needs kou)
+          d['workspace']['members'] = [
+              m for m in members
+              if not m.startswith('examples/') and m != 'packages/mcp'
+          ]
           with open('Cargo.toml', 'w') as f: tomlkit.dump(d, f)
           "
 
