@@ -2,6 +2,7 @@
 title = "Tairitsu"
 description = "Core WASM Component Model runtime — Container, Registry, WIT binding, RON/Binary interop"
 
+cname = "tairitsu.docs.celestia.world"
 [languages]
 default = "en"
 order = ["en", "zhs", "zht", "ja", "ko", "fr", "es", "ru", "ar"]
