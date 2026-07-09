@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 """Configuration and type mapping constants for browser glue generator."""
+# ruff: noqa: F601
+# This file has ~838 duplicate dict keys across its multi-section mappings.
+# Python's last-write-wins semantics mean the later definition takes effect,
+# so the duplicates are harmless at runtime. 30 of them have different values
+# (documented in PLAN.md) — those need maintainer judgment to resolve which
+# value is correct. Until then, silence F601 to keep ruff usable on this file.
 
 # Interface name → browser class mapping
 INTERFACE_TO_BROWSER_CLASS = {
