@@ -8,7 +8,10 @@ edition.workspace = true
 repository.workspace = true
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+# rlib only — this crate is consumed as a normal Rust dependency by
+# hikari-components, lagrange, etc. cdylib would produce a DLL that the
+# Rust linker cannot use as a regular dep.
+crate-type = ["rlib"]
 
 [features]
 default = []

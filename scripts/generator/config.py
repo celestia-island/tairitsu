@@ -6189,7 +6189,7 @@ INTERFACE_ATTR_OVERRIDES = {
     ("window", "navigation"): "navigator",
     # NamedNodeMap.namedItem should be getNamedItem
     ("named-node-map", "named-item"): "getNamedItem",
-    # ClipboardItem.type should be types (plural) 
+    # ClipboardItem.type should be types (plural)
     ("clipboard-item", "type"): "types",
     # WebGLRenderingContextBase.shader-source getter should call getShaderSource
     ("web-gl-rendering-context-base", "shader-source"): "getShaderSource",
@@ -7783,7 +7783,7 @@ def correct_type_casing(name: str) -> str:
 
 def strip_generic_params(name: str) -> str:
     """Strip generic parameters from a type name for use in variable/function names.
-    
+
     Examples:
         'MessageEventTarget<any>' -> 'MessageEventTarget'
         'Foo<T, U>' -> 'Foo'

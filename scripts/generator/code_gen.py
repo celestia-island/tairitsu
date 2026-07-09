@@ -40,7 +40,7 @@ class CodeGenerator:
 
     def _get_handle_info(self, target_iface: str) -> tuple:
         """Get handle variable name and pascal name for a target interface.
-        
+
         Returns (handle_var, handle_pascal) tuple.
         """
         if target_iface in SYNTHETIC_HANDLE_TYPES:
@@ -79,7 +79,7 @@ class CodeGenerator:
         lines.append(" * All browser objects are represented as opaque bigint handles.")
         lines.append(" */")
         lines.append("")
-        
+
         if CUSTOM_TYPE_DEFINITIONS:
             lines.append("// ---------------------------------------------------------------------------")
             lines.append("// Custom type definitions")
@@ -90,7 +90,7 @@ class CodeGenerator:
                 lines.append(f"export type {type_name} = {type_def};")
                 lines.append("")
             lines.append("")
-        
+
         all_function_names = []
         helper_function_names = set()
         for iface in domain.interfaces:
@@ -101,11 +101,11 @@ class CodeGenerator:
                 all_function_names.append(func.ts_name)
                 if func.is_async and not func.has_explicit_poll:
                     all_function_names.append(f"poll{func.pascal_name}")
-        
+
         name_counts = Counter(all_function_names)
         duplicate_names = {name for name, count in name_counts.items() if count > 1}
         duplicate_names.update(helper_function_names)
-        
+
         function_namespace = {}
         for iface in domain.interfaces:
             for func in iface.functions:
@@ -114,7 +114,7 @@ class CodeGenerator:
                 else:
                     exported_name = func.ts_name
                 function_namespace[(iface.name, func.ts_name)] = exported_name
-                
+
                 if func.is_async and not func.has_explicit_poll:
                     poll_name = f"poll{func.pascal_name}"
                     if poll_name in duplicate_names:
@@ -148,19 +148,19 @@ class CodeGenerator:
                     target_type = HANDLE_RETURNING_FUNCTIONS[key]
                     if target_type in SYNTHETIC_HANDLE_TYPES:
                         needed_synthetic_types.add(target_type)
-                
+
                 if key in HANDLE_RETURNING_ARRAY_PROPERTIES:
                     target_list_type, element_type = HANDLE_RETURNING_ARRAY_PROPERTIES[key]
                     if element_type in SYNTHETIC_HANDLE_TYPES:
                         needed_synthetic_types.add(element_type)
-                
+
                 # Check for EVENT_HANDLER_PROPERTIES in getters
                 if func.is_getter:
                     prop_name = func.browser_attr if func.browser_attr else kebab_to_camel(func.wit_name[4:] if func.wit_name.startswith("get-") else func.wit_name)
                     event_handler_key = (iface.wit_name, prop_name)
                     if event_handler_key in EVENT_HANDLER_PROPERTIES:
                         needed_synthetic_types.add("event-handler")
-                
+
                 for param in func.params:
                     param_key = (iface.wit_name, func.wit_name, param.wit_name)
                     if param_key in PARAMETER_BIGINT_TO_NUMBER_ALIAS:
@@ -186,7 +186,7 @@ class CodeGenerator:
                             needed_synthetic_types.add(target_iface)
 
         generated_helpers = set()
-        
+
         if needed_synthetic_types:
             lines.append("// ---------------------------------------------------------------------------")
             lines.append("// Synthetic handle tables for primitive/utility types")
@@ -199,7 +199,7 @@ class CodeGenerator:
                     lines.append(f"const _{handle_var} = new Map<bigint, {ts_type}>();")
                     lines.append(f"let _next{handle_pascal} = 1n;")
                     lines.append("")
-            
+
             lines.append("// ---------------------------------------------------------------------------")
             lines.append("// Helper functions for handle lookups")
             lines.append("// ---------------------------------------------------------------------------")
@@ -241,7 +241,7 @@ class CodeGenerator:
             if iface.handle_type:
                 is_singleton = iface.wit_name in GLOBAL_SINGLETONS
                 js_type = iface.js_type_for_handles or iface.browser_class
-                
+
                 if is_singleton:
                     global_ref = GLOBAL_SINGLETONS[iface.wit_name]
                     lines.append(f"/** Handle for global singleton {iface.browser_class} (fixed to 0n). */")
@@ -319,7 +319,7 @@ class CodeGenerator:
         """Render a single function."""
 
         exported_name = function_namespace.get((iface.name, func.ts_name), func.ts_name)
-        
+
         poll_name = None
         if func.is_async and not func.has_explicit_poll:
             poll_name = function_namespace.get((iface.name, f"poll{func.pascal_name}"), f"poll{func.pascal_name}")
@@ -357,7 +357,7 @@ class CodeGenerator:
     def _render_async_body(self, lines: List[str], func: GeneratedFunction, iface: GeneratedInterface) -> None:
         """Render async function body."""
         lines.append("  const requestId = _nextAsyncHandle++;")
-        
+
         if func.is_global_singleton:
             obj_ref = func.browser_class
             args = self._get_converted_browser_args(func, iface, skip_self=True)
@@ -418,13 +418,13 @@ class CodeGenerator:
             obj_ref = "obj"
         else:
             obj_ref = "obj"
-        
+
         prop_name = func.browser_attr if func.browser_attr else kebab_to_camel(func.wit_name[4:] if func.wit_name.startswith("get-") else func.wit_name)
         needs_type_assertion = (iface.wit_name, prop_name) in PROPERTIES_NEEDING_TYPE_ASSERTION
         obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion else obj_ref
-        
+
         handle_key = (iface.wit_name, kebab_to_camel(func.wit_name))
-        
+
         if func.is_getter_but_method:
             method_name = func.browser_method
             args = self._get_converted_browser_args(func, iface, skip_self=True)
@@ -570,11 +570,11 @@ class CodeGenerator:
             obj_ref = "obj"
         else:
             obj_ref = "obj"
-        
+
         prop_name = func.browser_attr if func.browser_attr else kebab_to_camel(func.wit_name[4:] if func.wit_name.startswith("set-") else func.wit_name)
         needs_type_assertion = (iface.wit_name, prop_name) in PROPERTIES_NEEDING_TYPE_ASSERTION
         obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion else obj_ref
-        
+
         if func.is_setter_but_method:
             args = self._get_converted_browser_args(func, iface, skip_self=True)
             setter_method_key = (iface.wit_name, func.wit_name[4:] if func.wit_name.startswith("set-") else func.wit_name)
@@ -609,7 +609,7 @@ class CodeGenerator:
         elif func.params:
             value_param = func.params[-1].name
             value_expr = value_param
-            
+
             # Check config for parameter conversion
             param_key = (iface.wit_name, func.wit_name, func.params[-1].wit_name)
             if param_key in PARAMETER_BIGINT_TO_NUMBER_ALIAS:
@@ -644,7 +644,7 @@ class CodeGenerator:
                     target_type = conversion_type[13:]
                     _, target_pascal = self._get_handle_info(target_type)
                     value_expr = f"Array.from({value_param}).map((h: bigint) => lookup{target_pascal}(h))"
-            
+
             # Check if this is an event handler setter (look up handle -> function)
             enum_key = (iface.wit_name, prop_name)
             if enum_key in EVENT_HANDLER_PROPERTIES:
@@ -711,9 +711,9 @@ class CodeGenerator:
             obj_ref = "obj"
         else:
             obj_ref = "" if func.is_global_singleton else "obj"
-        
+
         args = self._get_converted_browser_args(func, iface, skip_self=True)
-        
+
         method_name = func.browser_method if func.browser_method else kebab_to_camel(func.wit_name)
         needs_type_assertion = (iface.wit_name, method_name) in PROPERTIES_NEEDING_TYPE_ASSERTION
         obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion and obj_ref else obj_ref
@@ -870,11 +870,11 @@ class CodeGenerator:
                 continue
             if func.skip_first_param and param.name == func.params[0].name:
                 continue
-            
+
             skip_key = (iface.wit_name, func.wit_name, param.wit_name)
             if skip_key in PARAMS_TO_SKIP:
                 continue
-            
+
             key = (iface.wit_name, func.wit_name, param.wit_name)
             if key in PARAMETER_BIGINT_TO_NUMBER_ALIAS:
                 conversion_type = PARAMETER_BIGINT_TO_NUMBER_ALIAS[key]
@@ -1037,5 +1037,5 @@ class CodeGenerator:
                         converted_args.append(f"Number({param.name})")
                 else:
                     converted_args.append(param.name)
-        
+
         return ", ".join(converted_args)

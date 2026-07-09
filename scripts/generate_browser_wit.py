@@ -581,7 +581,7 @@ def _parse_member(stmt: str) -> Optional[WebIDLMember]:
         readonly = stmt.startswith("readonly ")
         if readonly:
             stmt = stmt[9:].lstrip()
-        
+
         # Remove stringifier prefix (e.g., "stringifier attribute USVString href")
         if stmt.startswith("stringifier "):
             stmt = stmt[12:].lstrip()
@@ -954,12 +954,12 @@ def _generate_special_type_defs(interfaces: List[WebIDLInterface], domain: str) 
         (iface for iface in interfaces if iface.name == "global-event-handlers"),
         None
     )
-    
+
     if global_event_handlers_iface:
         lines.append("/// Event handler function type")
         lines.append("///")
         lines.append("type event-handler-record = record {")
-        
+
         # Collect all event handler names from the interface
         event_handlers = []
         for member in global_event_handlers_iface.members:
@@ -968,17 +968,17 @@ def _generate_special_type_defs(interfaces: List[WebIDLInterface], domain: str) 
                 parts = member.name.split("-")
                 handler_name = parts[0] + "".join(p.capitalize() for p in parts[1:])
                 event_handlers.append(handler_name)
-        
+
         # Generate record fields (sorted for consistency)
         for handler in sorted(event_handlers):
             lines.append(f"    {handler}: option<event-handler-handle>;")
-        
+
         lines.append("};")
         lines.append("")
         lines.append("/// Event handler function handle")
         lines.append("type event-handler-handle = u64;")
         lines.append("")
-    
+
     return lines
 
 def generate_domain_wit(
@@ -1248,7 +1248,7 @@ def _extract_all_interfaces(
 ) -> Tuple[List[str], List[str], List[str], List[str], Set[str]]:
     """
     Extract and deduplicate interfaces from handwritten and generated WIT files.
-    
+
     Returns:
         handwritten_interfaces: interface blocks from handwritten files
         auto_interfaces: interface blocks from generated files (excluding handwritten)
@@ -1300,12 +1300,12 @@ EXPORTED_CALLBACKS = [
 def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
     """
     Generate browser-full.wit in two formats:
-    
+
     1. **Composed directory** (`wit/composed/`): Multi-file WIT package where
        interface definitions are split across files and `browser-full.wit` is
        a pure world block (~600 lines). This is the format used by wit-bindgen
        and wasmtime for code generation.
-    
+
     2. **Monolithic file** (`wit/browser-full.wit`): All interfaces inlined
        into a single file (~16K lines). Kept for backward compatibility and
        as a human-readable reference.
@@ -1435,7 +1435,7 @@ def _generate_composed(
 ) -> None:
     """
     Generate the composed/ directory as a multi-file WIT package.
-    
+
     Layout:
         composed/
           browser-full.wit  — package declaration + world block only

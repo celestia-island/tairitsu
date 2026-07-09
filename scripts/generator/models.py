@@ -45,7 +45,7 @@ class GeneratedFunction:
     is_global_singleton: bool = False
     skip_first_param: bool = False
     docs: List[str] = field(default_factory=list)
-    
+
     exported_name: str = ""
 
 

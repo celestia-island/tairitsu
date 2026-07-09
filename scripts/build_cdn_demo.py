@@ -156,12 +156,12 @@ def generate_per_specifier_modules(dist_dir: Path) -> dict[str, str]:
         (core_dir / "index.js").write_text(iife_code, encoding="utf-8")
 
     specifier_to_path = {}
-    
+
     for specifier, info in GLUE_SPECIFIER_MAP.items():
         pkg_name = info["package"]
         export_obj = info["export_obj"]
         functions = info["functions"]
-        
+
         # Create a safe filename from the specifier
         safe_name = specifier.replace("@tairitsu-glue/", "").replace("/", "-")
         module_file = shims_dir / f"{safe_name}.js"
@@ -170,7 +170,7 @@ def generate_per_specifier_modules(dist_dir: Path) -> dict[str, str]:
         # a local copy of the glue package
         pkg_local_dir = shims_dir / pkg_name
         pkg_local_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Build the re-export module
         # For local mode: import from relative local package
 
@@ -182,10 +182,10 @@ def generate_per_specifier_modules(dist_dir: Path) -> dict[str, str]:
         )
         for fn in functions:
             module_code += f"export const {fn} = {export_obj}.{fn};\n"
-        
+
         module_file.write_text(module_code, encoding="utf-8")
         specifier_to_path[specifier] = f"/{CDN_SHIMS_DIR}/{safe_name}.js"
-    
+
     return specifier_to_path
 
 
@@ -194,18 +194,18 @@ def copy_glue_packages_to_shims(dist_dir: Path):
     packages_needed = set()
     for info in GLUE_SPECIFIER_MAP.values():
         packages_needed.add(info["package"])
-    
+
     shims_dir = dist_dir / CDN_SHIMS_DIR
-    
+
     for pkg_name in packages_needed:
         pkg_dist = NPM_DIR / pkg_name / "dist"
         pkg_src = NPM_DIR / pkg_name / "src"
         target_dir = shims_dir / pkg_name
-        
+
         if target_dir.exists():
             shutil.rmtree(target_dir)
         target_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Check if there's a built dist, otherwise use source directly
         if pkg_dist.exists():
             for f in pkg_dist.iterdir():
@@ -222,22 +222,22 @@ def copy_modular_wasm_packages(dist_dir: Path):
     """Copy modular wasm component packages to the dist directory."""
     modules_dir = dist_dir / CDN_MODULES_DIR
     modules_dir.mkdir(parents=True, exist_ok=True)
-    
+
     wasm_packages = [
         "celestia-tairitsu-web-glue",
     ]
-    
+
     copied = []
     for pkg_name in wasm_packages:
         pkg_dir = NPM_DIR / pkg_name
         if not pkg_dir.exists():
             print(f"  Warning: {pkg_name} not found, skipping")
             continue
-        
+
         target_dir = modules_dir / pkg_name
         if target_dir.exists():
             shutil.rmtree(target_dir)
-        
+
         # Copy the entire dist directory
         dist_src = pkg_dir / "dist"
         if dist_src.exists():
@@ -248,14 +248,14 @@ def copy_modular_wasm_packages(dist_dir: Path):
             total_size = sum(f.stat().st_size for f in target_dir.rglob("*") if f.is_file())
             print(f"  {pkg_name}: {len(wasm_files)} wasm, {len(js_files)} js, {total_size // 1024}KB")
             copied.append(pkg_name)
-    
+
     return copied
 
 
 def build_import_map(specifier_map: dict[str, str], cdn_mode: str) -> dict[str, str]:
     """Build the import map entries."""
     imports = {}
-    
+
     if cdn_mode == "esm-sh":
         # For esm.sh mode, point to CDN URLs
         for specifier, info in GLUE_SPECIFIER_MAP.items():
@@ -265,13 +265,13 @@ def build_import_map(specifier_map: dict[str, str], cdn_mode: str) -> dict[str, 
     else:
         # For local mode, use the generated shim modules
         imports.update(specifier_map)
-    
+
     # Always add WASI preview2-shim CDN URLs (these are needed by jco wrappers)
     imports["@bytecodealliance/preview2-shim/cli"] = "https://esm.sh/@bytecodealliance/preview2-shim/cli"
     imports["@bytecodealliance/preview2-shim/filesystem"] = "https://esm.sh/@bytecodealliance/preview2-shim/filesystem"
     imports["@bytecodealliance/preview2-shim/io"] = "https://esm.sh/@bytecodealliance/preview2-shim/io"
     imports["@bytecodealliance/preview2-shim/random"] = "https://esm.sh/@bytecodealliance/preview2-shim/random"
-    
+
     return imports
 
 
@@ -281,35 +281,35 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
     if not source_html.exists():
         print(f"Error: {source_html} not found. Run 'tairitsu build' first.")
         sys.exit(1)
-    
+
     html = source_html.read_text(encoding="utf-8")
-    
+
     # Find the boot script section
     # The current HTML has:
     # 1. <script src="/browser-glue/__tairitsu_glue__.js?v=..."></script>
     # 2. <script type="module"> ... (big boot script) ... </script>
-    
+
     import_map_json = json.dumps({"imports": import_map}, indent=2)
-    
+
     # Build the CDN boot HTML by replacing the boot section
     # Strategy: replace everything from the glue script tag to the end of the module script
-    
+
     # Find the comment + glue script section
     comment_marker = '    <!-- Import map (WASI preview2-shim + tairitsu-glue interfaces)'
     glue_marker = '<script src="/browser-glue/__tairitsu_glue__.js'
     module_end_marker = '</script>\n</body>'
-    
+
     # Start from the comment if found, otherwise from the glue script
     comment_start = html.find(comment_marker)
     glue_start = html.find(glue_marker)
     replace_start = comment_start if comment_start != -1 else glue_start
-    
+
     module_end = html.rfind(module_end_marker)
-    
+
     if replace_start == -1 or module_end == -1:
         print("Error: Could not find boot script markers in index.html")
         sys.exit(1)
-    
+
     head_part = html[:replace_start]
     # tail_part starts after </body> tag
 
@@ -320,12 +320,12 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
     existing_module_start = html.find('<script type="module">\n        import { instantiateWithWrapper }', glue_start)
     if existing_module_start == -1:
         existing_module_start = html.find('<script type="module">', glue_start)
-    
+
     # Extract post-boot code (everything after the wasm instantiation)
     # Look for the stylesReady function and everything after
     post_boot_marker = "const stylesReady = ()"
     post_boot_idx = html.find(post_boot_marker, existing_module_start)
-    
+
     post_boot_code = ""
     if post_boot_idx != -1:
         # Find the end of the module script
@@ -342,7 +342,7 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
                 else:
                     dedented.append(line)
             post_boot_code = '\n'.join(dedented)
-    
+
     cdn_boot = f'''    <!-- CDN Boot Mode: Static import map + modular glue packages -->
     <script type="importmap">
     {import_map_json}
@@ -556,7 +556,7 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
     </script>'''
 
     new_html = head_part + cdn_boot + '\n</body>\n</html>'
-    
+
     output_path = dist_dir / "cdn-index.html"
     output_path.write_text(new_html, encoding="utf-8")
     print(f"  Generated: {output_path.relative_to(dist_dir)}")
@@ -589,7 +589,7 @@ def main():
     # Step 2: Copy glue packages to shims directory
     print("\n[2/4] Copying glue packages...")
     copy_glue_packages_to_shims(dist_dir)
-    
+
     # Step 3: Copy modular wasm packages
     print("\n[3/4] Copying modular wasm packages...")
     wasm_pkgs = copy_modular_wasm_packages(dist_dir)

@@ -57,13 +57,13 @@ class WitParser:
         wit_name = func.name
         ts_name = kebab_to_camel(wit_name)
         browser_method = ts_name
-        
+
         if wit_name in BROWSER_API_NAME_MAPPINGS:
             browser_method = BROWSER_API_NAME_MAPPINGS[wit_name]
-        
+
         if ts_name in JS_RESERVED_WORDS:
             ts_name = f"_{ts_name}"
-        
+
         pascal_name = kebab_to_pascal(wit_name)
         is_global_singleton = interface.name in GLOBAL_SINGLETONS
 
@@ -74,14 +74,14 @@ class WitParser:
 
         for i, p in enumerate(func.params):
             param_name = kebab_to_camel(p.name)
-            
+
             if param_name in JS_RESERVED_WORDS:
                 param_name = f"_{param_name}"
-            
+
             key = (interface.name, wit_name, p.name)
             needs_lookup = False
             target_pascal = ""
-            
+
             if key in PARAMETER_HANDLE_MAPPING:
                 target_iface, _ = PARAMETER_HANDLE_MAPPING[key]
                 target_pascal = correct_type_casing(kebab_to_pascal(target_iface))
@@ -98,22 +98,22 @@ class WitParser:
                     needs_lookup = True
                     handle_iface = wit_type_str_check[:-7]
                     target_pascal = correct_type_casing(kebab_to_pascal(handle_iface))
-            
+
             wit_type_str = wit_type_to_string(p.type_)
-            
+
             is_first_handle_param = (i == 0 and (isinstance(p.type_, WitHandle) or wit_type_str.endswith("-handle")))
-            
+
             if is_global_singleton and i == 0 and p.name == "self":
                 continue
-            
+
             if is_first_handle_param:
                 skip_first_param = True
-            
+
             params.append(GeneratedParam(param_name, ts_type, wit_type_str, needs_lookup, target_pascal, p.name))
 
             if i == 0 and not is_global_singleton:
                 self_param = param_name
-            
+
             if i > 0:
                 browser_args_list.append(param_name)
 
@@ -130,11 +130,11 @@ class WitParser:
             return_is_optional = isinstance(func.result, WitOption)
             if not return_is_void:
                 ts_return_inner = ts_return
-                return_is_handle = (ts_return == "bigint" and 
+                return_is_handle = (ts_return == "bigint" and
                                    (isinstance(func.result, WitHandle) or
                                     any(ta.name == wit_type_to_string(func.result) and ta.name.endswith("-handle")
                                         for ta in interface.type_aliases)))
-                
+
                 key = (interface.name, kebab_to_camel(wit_name))
                 if key in HANDLE_RETURNING_FUNCTIONS:
                     return_is_handle = True
@@ -149,27 +149,27 @@ class WitParser:
         is_async = self._is_async_function(wit_name, func, interface.name)
         is_getter_but_method = is_getter and wit_name[4:] in GETTER_BUT_ACTUALLY_METHOD
         is_setter_but_method = is_setter and (interface.name, wit_name[4:]) in SETTER_BUT_ACTUALLY_METHOD
-        
+
         has_self_param = any(p.name == "self" for p in func.params)
         first_param_is_handle = (
-            func.params and 
-            (isinstance(func.params[0].type_, WitHandle) or 
+            func.params and
+            (isinstance(func.params[0].type_, WitHandle) or
              wit_type_to_string(func.params[0].type_).endswith("-handle"))
         )
         is_static = func.is_static or (not has_self_param and not first_param_is_handle and not is_global_singleton)
-  
+
         if is_async:
             ts_return_inner_original = ts_return_inner
             ts_return = "bigint"
             return_is_void = False
- 
+
         browser_attr = ""
         browser_args = ", ".join(browser_args_list)
         value_param = "value"
-        
+
         if is_global_singleton:
             browser_class = GLOBAL_SINGLETONS[interface.name]
-        
+
         key = (interface.name, ts_name)
         if key in STATIC_METHOD_RETURN_OVERRIDES:
             ts_return = STATIC_METHOD_RETURN_OVERRIDES[key]
@@ -194,7 +194,7 @@ class WitParser:
                 browser_attr = INTERFACE_ATTR_OVERRIDES[interface_key]
             else:
                 browser_attr = BROWSER_API_NAME_MAPPINGS.get(wit_name, BROWSER_API_NAME_MAPPINGS.get(attr_name, kebab_to_camel(attr_name)))
-            
+
             # Check for NUMBER_TO_BIGINT_PROPERTIES - need to use property name
             prop_name = browser_attr
             num_key = (interface.name, prop_name)
@@ -204,7 +204,7 @@ class WitParser:
                 else:
                     ts_return = "bigint"
                 ts_return_inner = ""
-            
+
             # Check for ENUM_PROPERTIES
             if num_key in ENUM_PROPERTIES:
                 if return_is_optional:
@@ -212,7 +212,7 @@ class WitParser:
                 else:
                     ts_return = "bigint"
                 ts_return_inner = ""
-            
+
             # Check for EVENT_HANDLER_PROPERTIES
             if num_key in EVENT_HANDLER_PROPERTIES:
                 ts_return = "bigint"
