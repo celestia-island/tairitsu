@@ -137,7 +137,7 @@ Same component, two execution paths:
 
 ## License
 
-Licensed under the [Synthetic Source License (SySL), Version 1.0](./LICENSE.txt).
+Licensed under the [Synthetic Source License (SySL), Version 1.0](./LICENSE).
 ## Name
 
 "Tairitsu" (対立) means "conflict" or "opposition" in Japanese, from the rhythm game [Arcaea](https://arcaea.lowiro.com/).
