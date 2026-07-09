@@ -79,7 +79,7 @@ WASM 组件需要类似容器的生命周期管理：
 ## 下一步
 
 - [运行时与容器模型](runtime.md) — 深入了解 Container/Image/Registry
-- [VDOM 与渲染](vdom.md) — 浏览器端 VDOM 工作原理
+- [VDOM 与渲染](../../en/system/vdom.md) — 浏览器端 VDOM 工作原理
 - [WIT 管线](wit-pipeline.md) — W3C WebIDL → WIT 生成
 - [Web 后端](web-backends.md) — 双 WitPlatform / WebPlatform 策略
 - [浏览器胶水层](browser-glue.md) — TypeScript 桥接层

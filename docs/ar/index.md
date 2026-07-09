@@ -7,10 +7,10 @@ Tairitsu هو إطار عمل متكامل يعتمد على نموذج مكون
 | أريد... | ابدأ هنا |
 |:--|:--|
 | التجربة في 5 دقائق | [البدء السريع](guides/quick-start.md) |
-| التعلم من الصفر | [دليل المبتدئين](guides/getting-started.md) |
+| التعلم من الصفر | [دليل المبتدئين](../en/guides/getting-started.md) |
 | فهم البنية | [نظرة عامة على النظام](system/overview.md) |
 | عرض جميع الحزم | [خريطة الحزم](components/index.md) |
-| الانتقال من Dioxus | [دليل الانتقال](guides/migration/dioxus-to-tairitsu.md) |
+| الانتقال من Dioxus | [دليل الانتقال](../en/guides/migration/dioxus-to-tairitsu.md) |
 | حل مشكلة | [استكشاف الأخطاء](guides/troubleshooting.md) |
 | تصفح مساحة العمل | [خريطة مساحة العمل](guides/workspace-map.md) |
 | البحث عن مصطلح | [المسرد](guides/glossary.md) |

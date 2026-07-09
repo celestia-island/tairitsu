@@ -7,10 +7,10 @@ Tairitsu — полнофункциональный фреймворк на ба
 | Я хочу... | Начните здесь |
 |:--|:--|
 | Попробовать за 5 минут | [Быстрый старт](guides/quick-start.md) |
-| Учиться с нуля | [Руководство для начинающих](guides/getting-started.md) |
+| Учиться с нуля | [Руководство для начинающих](../en/guides/getting-started.md) |
 | Понять архитектуру | [Обзор системы](system/overview.md) |
 | Посмотреть все пакеты | [Карта пакетов](components/index.md) |
-| Мигрировать с Dioxus | [Руководство по миграции](guides/migration/dioxus-to-tairitsu.md) |
+| Мигрировать с Dioxus | [Руководство по миграции](../en/guides/migration/dioxus-to-tairitsu.md) |
 | Решить проблему | [Устранение неполадок](guides/troubleshooting.md) |
 | Просмотреть workspace | [Карта workspace](guides/workspace-map.md) |
 | Посмотреть термины | [Глоссарий](guides/glossary.md) |

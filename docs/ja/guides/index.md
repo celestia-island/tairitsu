@@ -6,7 +6,7 @@
 
 | ドキュメント | 説明 |
 |:--|:--|
-| [入門チュートリアル](getting-started.md) | ゼロからフルスタックアプリを構築。`tairitsu new`、初めてのコンポーネント、サーバー＋ブラウザ実行、デプロイまで。 |
+| [入門チュートリアル](../../en/guides/getting-started.md) | ゼロからフルスタックアプリを構築。`tairitsu new`、初めてのコンポーネント、サーバー＋ブラウザ実行、デプロイまで。 |
 | [クイックスタート](quick-start.md) | 5分でセットアップと動作確認。 |
 | [ワークスペース構成](workspace-map.md) | モノレポ構造のツアー。 |
 | [ビルド・テスト・リリース](build-test-release.md) | `just` レシピを使った開発ワークフロー。 |
@@ -30,7 +30,7 @@
 |:--|:--|
 | [システム概要](../system/overview.md) | 4層アーキテクチャ: Interface → Runtime → Platform → Tooling |
 | [ランタイムとコンテナモデル](../system/runtime.md) | Image/Container/Registry ライフサイクル、WIT バインディング、動的呼び出し |
-| [VDOM とレンダリング](../system/vdom.md) | 仮想 DOM の差分、パッチ、イベントシステム、リアクティブスケジューラ |
+| [VDOM とレンダリング](../../en/system/vdom.md) | 仮想 DOM の差分、パッチ、イベントシステム、リアクティブスケジューラ |
 | [W3C WebIDL → WIT パイプライン](../system/wit-pipeline.md) | 50+ の WebIDL 仕様がどのように WIT インターフェースになるか |
 | [Web バックエンド二系統](../system/web-backends.md) | WitPlatform と WebPlatform の戦略 |
 | [Browser Glue アーキテクチャ](../system/browser-glue.md) | WIT ABI と DOM を繋ぐ TypeScript 層 |

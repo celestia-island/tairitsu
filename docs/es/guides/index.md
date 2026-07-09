@@ -6,7 +6,7 @@
 
 | Documento | Descripción |
 |:--|:--|
-| [Tutorial de inicio](getting-started.md) | Desde cero hasta una aplicación full-stack funcional. Cubre `tairitsu new`, tu primer componente, ejecución servidor + cliente y despliegue. |
+| [Tutorial de inicio](../../en/guides/getting-started.md) | Desde cero hasta una aplicación full-stack funcional. Cubre `tairitsu new`, tu primer componente, ejecución servidor + cliente y despliegue. |
 | [Inicio rápido](quick-start.md) | Configuración y verificación en 5 minutos. |
 | [Mapa del workspace](workspace-map.md) | Tour de la estructura del monorepo. |
 | [Construir, probar y publicar](build-test-release.md) | Cómo usar las recetas de `just` para el flujo de desarrollo. |
@@ -30,7 +30,7 @@
 |:--|:--|
 | [Resumen del sistema](../system/overview.md) | Arquitectura de cuatro capas: Interface → Runtime → Platform → Tooling |
 | [Runtime y modelo de contenedor](../system/runtime.md) | Ciclo de vida Image/Container/Registry, enlace WIT, invocación dinámica |
-| [VDOM y renderizado](../system/vdom.md) | Diferenciación del DOM virtual, parcheo, sistema de eventos, planificador reactivo |
+| [VDOM y renderizado](../../en/system/vdom.md) | Diferenciación del DOM virtual, parcheo, sistema de eventos, planificador reactivo |
 | [Pipeline W3C WebIDL → WIT](../system/wit-pipeline.md) | Cómo 50+ especificaciones WebIDL se convierten en interfaces WIT |
 | [Backends web duales](../system/web-backends.md) | Estrategia WitPlatform vs WebPlatform |
 | [Arquitectura Browser Glue](../system/browser-glue.md) | Capa TypeScript que conecta WIT ABI con el DOM |

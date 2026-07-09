@@ -6,7 +6,7 @@
 
 | المستند | الوصف |
 |:--|:--|
-| [دليل المبتدئين](getting-started.md) | من الصفر إلى تطبيق متكامل يعمل. يغطي `tairitsu new`، أول مكوّن، تشغيل الخادم + المتصفح، والنشر. |
+| [دليل المبتدئين](../../en/guides/getting-started.md) | من الصفر إلى تطبيق متكامل يعمل. يغطي `tairitsu new`، أول مكوّن، تشغيل الخادم + المتصفح، والنشر. |
 | [البدء السريع](quick-start.md) | الإعداد والتحقق في 5 دقائق. |
 | [خريطة مساحة العمل](workspace-map.md) | جولة في هيكل المستودع الموحد. |
 | [البناء والاختبار والإصدار](build-test-release.md) | كيفية استخدام وصفات `just` لسير عمل التطوير. |
@@ -30,7 +30,7 @@
 |:--|:--|
 | [نظرة عامة على النظام](../system/overview.md) | بنية من أربع طبقات: Interface → Runtime → Platform → Tooling |
 | [وقت التشغيل ونموذج الحاوية](../system/runtime.md) | دورة حياة Image/Container/Registry، روابط WIT، الاستدعاء الديناميكي |
-| [VDOM والعرض](../system/vdom.md) | مقارنة DOM الافتراضي، التصحيح، نظام الأحداث، المجدول التفاعلي |
+| [VDOM والعرض](../../en/system/vdom.md) | مقارنة DOM الافتراضي، التصحيح، نظام الأحداث، المجدول التفاعلي |
 | [خط أنابيب W3C WebIDL → WIT](../system/wit-pipeline.md) | كيف تصبح 50+ مواصفة WebID واجهات WIT |
 | [الخلفيات المزدوجة للويب](../system/web-backends.md) | استراتيجية WitPlatform مقابل WebPlatform |
 | [بنية Browser Glue](../system/browser-glue.md) | طبقة TypeScript التي تربط WIT ABI بـ DOM |

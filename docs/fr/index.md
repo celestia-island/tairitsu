@@ -7,10 +7,10 @@ Tairitsu est un framework full-stack propulsé par le modèle de composants WASM
 | Je veux... | Commencer ici |
 |:--|:--|
 | Essayer en 5 minutes | [Démarrage rapide](guides/quick-start.md) |
-| Apprendre depuis le début | [Tutoriel de démarrage](guides/getting-started.md) |
+| Apprendre depuis le début | [Tutoriel de démarrage](../en/guides/getting-started.md) |
 | Comprendre l'architecture | [Vue d'ensemble du système](system/overview.md) |
 | Voir tous les paquets | [Carte des paquets](components/index.md) |
-| Migrer depuis Dioxus | [Guide de migration](guides/migration/dioxus-to-tairitsu.md) |
+| Migrer depuis Dioxus | [Guide de migration](../en/guides/migration/dioxus-to-tairitsu.md) |
 | Résoudre un problème | [Dépannage](guides/troubleshooting.md) |
 | Explorer le workspace | [Carte du workspace](guides/workspace-map.md) |
 | Consulter les termes | [Glossaire](guides/glossary.md) |

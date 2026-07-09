@@ -6,7 +6,7 @@
 
 | 文档 | 说明 |
 |:--|:--|
-| [入门教程](getting-started.md) | 从零开始构建全栈应用。涵盖 `tairitsu new`、第一个组件、服务端+浏览器运行、部署。 |
+| [入门教程](../../en/guides/getting-started.md) | 从零开始构建全栈应用。涵盖 `tairitsu new`、第一个组件、服务端+浏览器运行、部署。 |
 | [快速开始](quick-start.md) | 5 分钟安装与验证。 |
 | [工作区导览](workspace-map.md) | Monorepo 结构一览。 |
 | [构建、测试与发布](build-test-release.md) | 如何使用 `just` 命令进行开发工作流。 |
@@ -16,7 +16,7 @@
 | 文档 | 说明 |
 |:--|:--|
 | [从 web-sys 迁移到 WIT 绑定](migration.md) | 从 `wasm-bindgen`/`web-sys` 迁移到 Component Model WIT 绑定。 |
-| [从 Dioxus 迁移到 Tairitsu](migration/dioxus-to-tairitsu.md) | API 对比：组件、Hooks、事件、路由、状态管理、条件渲染。 |
+| [从 Dioxus 迁移到 Tairitsu](../../en/guides/migration/dioxus-to-tairitsu.md) | API 对比：组件、Hooks、事件、路由、状态管理、条件渲染。 |
 
 ## 参考
 
@@ -31,7 +31,7 @@
 |:--|:--|
 | [系统总览](../system/overview.md) | 四层架构：Interface → Runtime → Platform → Tooling |
 | [运行时与容器模型](../system/runtime.md) | Image/Container/Registry 生命周期、WIT 绑定、动态调用 |
-| [VDOM 与渲染](../system/vdom.md) | 虚拟 DOM 差分、修补、事件系统、响应式调度器 |
+| [VDOM 与渲染](../../en/system/vdom.md) | 虚拟 DOM 差分、修补、事件系统、响应式调度器 |
 | [W3C WebIDL → WIT 流水线](../system/wit-pipeline.md) | 50+ WebIDL 规格如何转换为 WIT 接口 |
 | [Web 平台双后端](../system/web-backends.md) | WitPlatform 与 WebPlatform 策略 |
 | [Browser Glue 架构](../system/browser-glue.md) | 桥接 WIT ABI 与 DOM 的 TypeScript 层 |
@@ -48,5 +48,5 @@
 
 | 文档 | 说明 |
 |:--|:--|
-| [调试代理](../skills/debug-agent.md) | 使用 MCP 服务器进行 AI 辅助调试 |
-| [企业支持](../enterprise/support.md) | 商业支持选项 |
+| [调试代理](../../en/skills/debug-agent.md) | 使用 MCP 服务器进行 AI 辅助调试 |
+| [企业支持](../../en/enterprise/support.md) | 商业支持选项 |
