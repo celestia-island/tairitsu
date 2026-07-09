@@ -36,7 +36,7 @@ just run-simple-demo
 just run-dynamic-advanced
 ```
 
-更多示例见 [examples/README.md](../../../examples/README.md)。
+更多示例见 [examples 目录](../../../examples)。
 
 ## 4. 浏览器 WIT 路线（可选）
 
