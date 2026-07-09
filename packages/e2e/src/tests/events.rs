@@ -423,9 +423,9 @@ impl EventTests {
             var forms = document.querySelectorAll('form');
             if (forms.length === 0) return 'no forms';
             var submitted = false;
-            forms[0].addEventListener('submit', function(e) { 
-                e.preventDefault(); 
-                submitted = true; 
+            forms[0].addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitted = true;
             });
             var submitBtn = forms[0].querySelector('button[type="submit"], input[type="submit"]');
             if (submitBtn) submitBtn.click();
