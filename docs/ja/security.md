@@ -111,5 +111,3 @@ TairitsuはブラウザサンドボックスでWebAssemblyを実行：
 ## 関連リソース
 
 - [エンタープライズサポート](enterprise/support.md)
-- [プライバシーポリシー](PRIVACY.md)
-- [利用規約](TERMS.md)
