@@ -2294,6 +2294,12 @@ pub mod wasm_impl {
             Patch::RemoveEvent { name } => {
                 platform.remove_event_listener(element, name);
             }
+
+            // Patch is marked #[non_exhaustive] in tairitsu-vdom; future
+            // variants must not break this match.
+            _ => {
+                tracing::warn!("unhandled patch variant, skipping");
+            }
         }
 
         Ok(())
@@ -2529,7 +2535,8 @@ pub mod wasm_impl {
         }
 
         // If the node is an element, render its children
-        if let VNode::Element(Box::new(velement)) = node {
+        if let VNode::Element(boxed) = node {
+            let velement = boxed.as_ref();
             for child in &velement.children {
                 render_vnode(platform, child, &new_element)?;
             }
