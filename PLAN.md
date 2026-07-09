@@ -63,3 +63,25 @@
 4. 评估为本仓库固定 `rust-toolchain`（≥1.91）以避免 MSRV 漂移。
 5. 定期刷新本 PLAN.md 以反映最新状态。
 
+
+---
+
+## 维护记录（2026-07-10）
+
+### 待办：缺少 PRIVACY.md / TERMS.md 法律文档
+
+`docs/ja/security.md`（第 114-115 行）的页脚链接了 `PRIVACY.md`（隐私政策）和 `TERMS.md`（利用规约），但这两个文件在仓库中任何位置都不存在。英文版 `docs/en/security.md` 没有这些链接（ja 是唯一引用它们的语言）。
+
+这是一个内容缺口：需要撰写实际的隐私政策和服务条款文本，并决定是否需要多语言版本（目前只有 ja 引用）。在此之前，这两个链接会 404。
+
+#### 建议
+
+1. 如果 tairitsu 项目确实需要隐私政策/服务条款：撰写 `PRIVACY.md` 和 `TERMS.md`（放仓库根目录），并让其他语言的 security.md 也引用。
+2. 如果不需要：删除 `docs/ja/security.md` 第 114-115 行的两个链接。
+
+### 本次维护已完成
+
+- 修正各语言 README 的 SySL 许可证链接（`./LICENSE.txt` → `./LICENSE`）。
+- 修正 5 个 package README 中 `docs/en-US/` → `docs/en/`。
+- 将未翻译指南的链接（getting-started、vdom、dioxus 迁移、debug-agent、企业支持）改为指向英文原文。
+- 修正 zh-Hans quick-start 中 examples 链接指向实际存在的 examples 目录。
