@@ -84,3 +84,32 @@
 - 修正 5 个 package README 中 `docs/en-US/` → `docs/en/`。
 - 将未翻译指南的链接（getting-started、vdom、dioxus 迁移、debug-agent、企业支持）改为指向英文原文。
 - 修正 zh-Hans quick-start 中 examples 链接指向实际存在的 examples 目录。
+
+## 维护记录（2026-07-10，第二轮）
+
+### 待办：generator/config.py 有 30 个重复键冲突（真实 bug）
+
+`scripts/generator/config.py`（7788 行的浏览器绑定生成配置）中 ruff 报告 838 个 F601（multi-value-repeated-key-literal）。经分析：
+
+- **808 个是同值重复**（同一个键在多个章节中出现，值相同）—— 无害但冗余，可安全删除后者。
+- **30 个是异值冲突**（同一键被定义两次，值不同）—— 后者会静默覆盖前者，第一个映射丢失。这是真实 bug，例如：
+
+| 键 | 第一次值 | 第二次值（覆盖） |
+|----|---------|----------------|
+| `('service-worker-container','getController')` | `'any'` | `'service-worker'` |
+| `('service-worker-container','getReady')` | `'promise-any'` | `'service-worker-registration'` |
+| `('rtc-sctp-transport','getTransport')` | `'rtc-ice-transport'` | `'rtc-dtls-transport'` |
+| `('css-style-declaration','set-property','priority')` | `True` | `'string'` |
+| `('window','scroll','options')` | `'dictionary:ScrollToOptions | undefined'` | `'any'` |
+| `('document','write','text')` | `'string-from-array'` | `'string'` |
+| ...（共 30 个） | | |
+
+#### 为什么没有自动修复
+
+每个冲突需要熟悉浏览器绑定生成意图的维护者判断哪个值是正确的（第一次还是第二次）。盲目删除任一方都可能改变生成输出。建议：
+
+1. 由维护者逐个确认 30 个异值冲突的正确值。
+2. 删除 808 个同值重复（安全）。
+3. 修复后 ruff F601 计数将归零。
+
+可用 `python -c "import ast; ..."` 脚本（见本轮维护）重新检测冲突。
