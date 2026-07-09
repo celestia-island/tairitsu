@@ -394,10 +394,7 @@ def convert_type(type_str: str) -> str:
         "TextRectangle": "dom-rect",     # Legacy name for DOMRect
     }
 
-    # Also map dom-rect-read-only to dom-rect for now
-    RECORD_TYPE_READONLY_TO_MUTABLE = {
-        "dom-rect-read-only": "dom-rect",
-    }
+    # dom-rect-read-only is mapped to dom-rect inline below.
 
     if type_str in RECORD_TYPE_OVERRIDES:
         result = RECORD_TYPE_OVERRIDES[type_str]

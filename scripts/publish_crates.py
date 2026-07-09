@@ -126,7 +126,6 @@ def wait_for_crate(name, version):
 def publish_package(name, version):
     print(f"\n{'=' * 60}")
     print(f"  Publishing {name} v{version}")
-    deps_str = ""
     print(f"{'=' * 60}")
     sys.stdout.flush()
 

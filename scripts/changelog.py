@@ -205,7 +205,6 @@ def generate_changelog(since_tag=None):
         for commit in section["commits"]:
             hash_short = commit["hash"]
             message = commit["message"]
-            author = commit["author"]
 
             md.append(f"- {message} (`{hash_short}`)")
             if commit["breaking"]:

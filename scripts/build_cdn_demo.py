@@ -165,10 +165,7 @@ def generate_per_specifier_modules(dist_dir: Path) -> dict[str, str]:
         # Create a safe filename from the specifier
         safe_name = specifier.replace("@tairitsu-glue/", "").replace("/", "-")
         module_file = shims_dir / f"{safe_name}.js"
-        
-        # Read the source to inline the actual function implementations
-        pkg_src_file = NPM_DIR / pkg_name / "src" / "index.ts"
-        
+
         # Instead of trying to parse TS, we'll build the shim to import from
         # a local copy of the glue package
         pkg_local_dir = shims_dir / pkg_name
@@ -176,8 +173,7 @@ def generate_per_specifier_modules(dist_dir: Path) -> dict[str, str]:
         
         # Build the re-export module
         # For local mode: import from relative local package
-        re_exports = ", ".join(functions)
-        
+
         # We need to generate a module that exports the individual functions.
         # Strategy: import the _exports object and destructure it.
         module_code = (
@@ -316,10 +312,9 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
     
     head_part = html[:replace_start]
     # tail_part starts after </body> tag
-    
+
     # Build CDN boot script
-    v = int(__import__('time').time())
-    
+
     # Read the existing module script to extract post-boot utilities
     # (fixSvgNamespaces, waitForDomSettle, glow effect, scrollbar, etc.)
     existing_module_start = html.find('<script type="module">\n        import { instantiateWithWrapper }', glue_start)
