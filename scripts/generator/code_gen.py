@@ -638,7 +638,7 @@ class CodeGenerator:
                     value_expr = f"{value_param} as any"
                 elif isinstance(conversion_type, str) and conversion_type.startswith("string"):
                     value_expr = f"{value_param} as any"
-                elif conversion_type == True:
+                elif conversion_type is True:
                     value_expr = f"Number({value_param})"
                 elif isinstance(conversion_type, str) and conversion_type.startswith("handle-array:"):
                     target_type = conversion_type[13:]

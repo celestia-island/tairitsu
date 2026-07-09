@@ -732,7 +732,7 @@ def parse_wit_file(path: Path) -> WitPackage:
 def parse_wit_text(text: str, source_file: str = "") -> WitPackage:
     """Parse WIT source text and return the package AST."""
     # Extract doc comments first
-    doc_map = extract_doc_comments(text)
+    doc_map = extract_doc_comments(text)  # noqa: F841  (TODO: map docs to constructs)
 
     # Tokenize
     tokens = tokenize(text)

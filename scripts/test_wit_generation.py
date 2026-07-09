@@ -18,7 +18,7 @@ import pytest
 scripts_dir = Path(__file__).parent
 sys.path.insert(0, str(scripts_dir))
 
-from generate_browser_wit import (
+from generate_browser_wit import (  # noqa: E402  (imports scripts/ via sys.path above)
     convert_type,
     camel_to_kebab,
     sanitize_wit_ident,
@@ -751,7 +751,7 @@ class TestTypedefResolution:
             CustomID getID();
         };
         """
-        interfaces = parse_webidl_file(webidl, "test")
+        interfaces = parse_webidl_file(webidl, "test")  # noqa: F841  (registers types into globals the asserts below check)
 
         # Typedefs should be registered
         assert "BinaryType" in TYPE_ALIASES
