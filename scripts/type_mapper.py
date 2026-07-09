@@ -24,7 +24,7 @@ handle types      → bigint
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, Optional, List
 
 # Import from wit_parser
 from wit_parser import (

@@ -434,7 +434,7 @@ class CodeGenerator:
                 target_var, target_pascal = self._get_handle_info(target_iface)
                 lines.append(f"  const _callResult = {obj_ref_with_assertion}.{method_name}({args});")
                 if func.return_is_optional:
-                    lines.append(f"  if (_callResult === null) return undefined;")
+                    lines.append("  if (_callResult === null) return undefined;")
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
@@ -443,13 +443,13 @@ class CodeGenerator:
                 if element_type in SYNTHETIC_HANDLE_TYPES:
                     elem_ts_type, elem_var, elem_pascal = SYNTHETIC_HANDLE_TYPES[element_type]
                     lines.append(f"  const _arr = {obj_ref_with_assertion}.{method_name}({args});")
-                    lines.append(f"  const _handles: bigint[] = [];")
-                    lines.append(f"  for (const item of _arr) {{")
+                    lines.append("  const _handles: bigint[] = [];")
+                    lines.append("  for (const item of _arr) {")
                     lines.append(f"    const handle = _next{elem_pascal}++;")
                     lines.append(f"    _{elem_var}.set(handle, item);")
-                    lines.append(f"    _handles.push(handle);")
-                    lines.append(f"  }}")
-                    lines.append(f"  return _handles;")
+                    lines.append("    _handles.push(handle);")
+                    lines.append("  }")
+                    lines.append("  return _handles;")
                 else:
                     lines.append(f"  return [...{obj_ref_with_assertion}.{method_name}({args})];")
             elif enum_key in ENUM_PROPERTIES:
@@ -461,18 +461,18 @@ class CodeGenerator:
                 lines.append(f"  switch ({switch_expr}) {{")
                 for enum_str, enum_int in enum_values.items():
                     lines.append(f"    case '{enum_str}': return {enum_int}n;")
-                lines.append(f"    default: return 0n;")
-                lines.append(f"  }}")
+                lines.append("    default: return 0n;")
+                lines.append("  }")
             elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
                 if func.return_is_optional:
                     lines.append(f"  const _callResult = {obj_ref_with_assertion}.{method_name}({args});")
-                    lines.append(f"  return _callResult !== null ? BigInt(_callResult) : undefined;")
+                    lines.append("  return _callResult !== null ? BigInt(_callResult) : undefined;")
                 else:
                     lines.append(f"  return BigInt({obj_ref_with_assertion}.{method_name}({args}));")
             elif (iface.wit_name, func.wit_name) in BOOLEAN_TO_BIGINT_PROPERTIES:
                 if func.return_is_optional:
                     lines.append(f"  const _callResult = {obj_ref_with_assertion}.{method_name}({args});")
-                    lines.append(f"  return _callResult != null ? (_callResult ? 1n : 0n) : undefined;")
+                    lines.append("  return _callResult != null ? (_callResult ? 1n : 0n) : undefined;")
                 else:
                     lines.append(f"  return {obj_ref_with_assertion}.{method_name}({args}) ? 1n : 0n;")
             elif func.return_is_optional:
@@ -490,7 +490,7 @@ class CodeGenerator:
             else:
                 lines.append(f"  const _callResult = {obj_ref_with_assertion}.{func.browser_attr};")
             if func.return_is_optional:
-                lines.append(f"  if (_callResult === null) return undefined;")
+                lines.append("  if (_callResult === null) return undefined;")
             lines.append(f"  const handle = _next{target_pascal}++;")
             non_null_key = (iface.wit_name, func.wit_name)
             if non_null_key in GETTER_HANDLE_NON_NULL_ASSERTION:
@@ -512,20 +512,20 @@ class CodeGenerator:
                 lines.append(f"  switch ({switch_expr}) {{")
                 for enum_str, enum_int in enum_values.items():
                     lines.append(f"    case '{enum_str}': return {enum_int}n;")
-                lines.append(f"    default: return 0n;")
-                lines.append(f"  }}")
+                lines.append("    default: return 0n;")
+                lines.append("  }")
             elif handle_array_key in HANDLE_RETURNING_ARRAY_PROPERTIES:
                 target_list_type, element_type = HANDLE_RETURNING_ARRAY_PROPERTIES[handle_array_key]
                 if element_type in SYNTHETIC_HANDLE_TYPES:
                     elem_ts_type, elem_var, elem_pascal = SYNTHETIC_HANDLE_TYPES[element_type]
                     lines.append(f"  const _arr = {obj_ref_with_assertion}.{func.browser_attr};")
-                    lines.append(f"  const _handles: bigint[] = [];")
-                    lines.append(f"  for (const item of _arr) {{")
+                    lines.append("  const _handles: bigint[] = [];")
+                    lines.append("  for (const item of _arr) {")
                     lines.append(f"    const handle = _next{elem_pascal}++;")
                     lines.append(f"    _{elem_var}.set(handle, item);")
-                    lines.append(f"    _handles.push(handle);")
-                    lines.append(f"  }}")
-                    lines.append(f"  return _handles;")
+                    lines.append("    _handles.push(handle);")
+                    lines.append("  }")
+                    lines.append("  return _handles;")
                 else:
                     lines.append(f"  return [...{obj_ref_with_assertion}.{func.browser_attr}];")
             elif readonly_array_key in READONLY_ARRAY_PROPERTIES:
@@ -533,21 +533,21 @@ class CodeGenerator:
             elif enum_key in NUMBER_TO_BIGINT_PROPERTIES:
                 if func.return_is_optional:
                     lines.append(f"  const value = {obj_ref_with_assertion}.{func.browser_attr};")
-                    lines.append(f"  return value != null ? BigInt(value) : undefined;")
+                    lines.append("  return value != null ? BigInt(value) : undefined;")
                 else:
                     lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_attr});")
             elif bool_key in BOOLEAN_TO_BIGINT_PROPERTIES:
                 if func.return_is_optional:
                     lines.append(f"  const value = {obj_ref_with_assertion}.{func.browser_attr};")
-                    lines.append(f"  return value != null ? (value ? 1n : 0n) : undefined;")
+                    lines.append("  return value != null ? (value ? 1n : 0n) : undefined;")
                 else:
                     lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ? 1n : 0n;")
             elif enum_key in EVENT_HANDLER_PROPERTIES:
                 lines.append(f"  const handler = {obj_ref_with_assertion}.{func.browser_attr};")
-                lines.append(f"  if (handler == null) return 0n;")
-                lines.append(f"  const handle = _nextEventHandler++;")
-                lines.append(f"  _eventHandlerHandles.set(handle, handler);")
-                lines.append(f"  return handle;")
+                lines.append("  if (handler == null) return 0n;")
+                lines.append("  const handle = _nextEventHandler++;")
+                lines.append("  _eventHandlerHandles.set(handle, handler);")
+                lines.append("  return handle;")
             elif func.return_is_optional:
                 lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ?? undefined;")
             else:
@@ -588,7 +588,7 @@ class CodeGenerator:
                     target_iface = HANDLE_RETURNING_FUNCTIONS[key]
                     target_var, target_pascal = self._get_handle_info(target_iface)
                     lines.append(f"  const _callResult = {_result_expr};")
-                    lines.append(f"  if (_callResult === null) return undefined;")
+                    lines.append("  if (_callResult === null) return undefined;")
                     lines.append(f"  const handle = _next{target_pascal}++;")
                     lines.append(f"  _{target_var}.set(handle, _callResult);")
                     lines.append("  return handle;")
@@ -692,7 +692,7 @@ class CodeGenerator:
                 target_var, target_pascal = self._get_handle_info(target_iface)
                 lines.append(f"  const _callResult = {class_ref}.{func.browser_method}({args});")
                 if func.return_is_optional:
-                    lines.append(f"  if (_callResult === null) return undefined;")
+                    lines.append("  if (_callResult === null) return undefined;")
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
@@ -730,8 +730,8 @@ class CodeGenerator:
             lines.append(f"  switch ({switch_expr}) {{")
             for enum_str, enum_int in enum_values.items():
                 lines.append(f"    case '{enum_str}': return {enum_int}n;")
-            lines.append(f"    default: return 0n;")
-            lines.append(f"  }}")
+            lines.append("    default: return 0n;")
+            lines.append("  }")
         elif (iface.wit_name, func.wit_name) in BOOLEAN_TO_BIGINT_PROPERTIES:
             lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ? 1n : 0n;")
         elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
@@ -743,13 +743,13 @@ class CodeGenerator:
                 if element_type in SYNTHETIC_HANDLE_TYPES:
                     elem_ts_type, elem_var, elem_pascal = SYNTHETIC_HANDLE_TYPES[element_type]
                     lines.append(f"  const _arr = {obj_ref_with_assertion}.{func.browser_method}({args});")
-                    lines.append(f"  const _handles: bigint[] = [];")
-                    lines.append(f"  for (const item of _arr) {{")
+                    lines.append("  const _handles: bigint[] = [];")
+                    lines.append("  for (const item of _arr) {")
                     lines.append(f"    const handle = _next{elem_pascal}++;")
                     lines.append(f"    _{elem_var}.set(handle, item);")
-                    lines.append(f"    _handles.push(handle);")
-                    lines.append(f"  }}")
-                    lines.append(f"  return _handles;")
+                    lines.append("    _handles.push(handle);")
+                    lines.append("  }")
+                    lines.append("  return _handles;")
                 else:
                     lines.append(f"  return [...{obj_ref_with_assertion}.{func.browser_method}({args})];")
             elif key in HANDLE_RETURNING_FUNCTIONS:
@@ -757,7 +757,7 @@ class CodeGenerator:
                 target_var, target_pascal = self._get_handle_info(target_iface)
                 lines.append(f"  const _callResult = {obj_ref_with_assertion}.{func.browser_method}({args});")
                 if func.return_is_optional:
-                    lines.append(f"  if (_callResult === null) return undefined;")
+                    lines.append("  if (_callResult === null) return undefined;")
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
@@ -847,7 +847,7 @@ class CodeGenerator:
 
         lines.append("")
         lines.append("// Statistics")
-        lines.append(f"export const GLUE_STATS = {{")
+        lines.append("export const GLUE_STATS = {")
         lines.append(f"  totalDomains: {len(domains)},")
         lines.append(f"  totalInterfaces: {total_interfaces},")
         lines.append(f"  totalFunctions: {total_functions},")

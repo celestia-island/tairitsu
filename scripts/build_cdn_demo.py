@@ -11,7 +11,6 @@ Usage:
 
 import argparse
 import json
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -607,14 +606,14 @@ def main():
     output = generate_cdn_html(dist_dir, import_map, args.cdn_mode)
 
     # Summary
-    print(f"\n[cdn-demo] Done!")
+    print("\n[cdn-demo] Done!")
     print(f"  Output: {output}")
     print(f"  CDN shims: {dist_dir / CDN_SHIMS_DIR}")
     print(f"  Modular components: {dist_dir / CDN_MODULES_DIR}")
-    print(f"\n  To test:")
+    print("\n  To test:")
     print(f"    cd {dist_dir}")
-    print(f"    python -m http.server 3002")
-    print(f"    Open http://localhost:3002/cdn-index.html")
+    print("    python -m http.server 3002")
+    print("    Open http://localhost:3002/cdn-index.html")
 
 
 if __name__ == "__main__":

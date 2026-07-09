@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from generator import (
-    log_info, log_ok, log_warn, log_error,
+    log_info, log_ok, log_error,
     WitParser, CodeGenerator,
     GeneratedDomain,
 )

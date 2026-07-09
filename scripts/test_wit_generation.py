@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Dict, List
 
 import pytest
 
@@ -20,9 +19,6 @@ scripts_dir = Path(__file__).parent
 sys.path.insert(0, str(scripts_dir))
 
 from generate_browser_wit import (
-    WebIDLInterface,
-    WebIDLMember,
-    WebIDLParam,
     convert_type,
     camel_to_kebab,
     sanitize_wit_ident,
@@ -31,7 +27,6 @@ from generate_browser_wit import (
     _parse_member,
     TYPE_ALIASES,
     WIT_KEYWORDS,
-    WEBIDL_TO_WIT,
 )
 
 # =============================================================================

@@ -323,7 +323,7 @@ def convert_type(type_str: str) -> str:
         # Handle empty or null-only unions
         if not real:
             log_warn(f"Empty or null-only union type '{type_str}', using string fallback")
-            return f"option<string>" if nullable else "string"
+            return "option<string>" if nullable else "string"
 
         # Priority order for union types:
         # 1. Boolean types (for properties like hidden that can be boolean or string)
@@ -340,17 +340,17 @@ def convert_type(type_str: str) -> str:
         # Check for boolean types first
         for p in real:
             if p in boolean_types:
-                return f"option<bool>" if nullable else "bool"
+                return "option<bool>" if nullable else "bool"
 
         # Then check for string types
         for p in real:
             if p in string_types:
-                return f"option<string>" if nullable else "string"
+                return "option<string>" if nullable else "string"
 
         # For numeric types, use f64 as a universal numeric type
         for p in real:
             if p in numeric_types:
-                return f"option<f64>" if nullable else "f64"
+                return "option<f64>" if nullable else "f64"
 
         # Otherwise, use first type (with recursion protection)
         try:
@@ -360,7 +360,7 @@ def convert_type(type_str: str) -> str:
             return f"option<{converted}>" if nullable else converted
         except Exception as e:
             log_warn(f"Error converting union member '{real[0]}': {e}, using string fallback")
-            return f"option<string>" if nullable else "string"
+            return "option<string>" if nullable else "string"
 
     # sequence<T> / FrozenArray<T> / ObservableArray<T>
     m = re.match(r"(?:sequence|FrozenArray|ObservableArray)<(.+)>$", type_str)
@@ -799,7 +799,7 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
     if iface.inheritance:
         lines.append(f"/// Inherits: `{iface.inheritance}`")
     if is_singleton:
-        lines.append(f"/// Note: Global singleton - no self parameter needed")
+        lines.append("/// Note: Global singleton - no self parameter needed")
     lines.append(
         f"/// Source: https://github.com/w3c/webref/tree/main/ed/idl/{iface.source_spec}.idl"
     )

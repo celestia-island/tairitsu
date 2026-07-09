@@ -9,7 +9,6 @@ Usage:
     python scripts/build_wasm_packages.py --list           # List compilable crates
 """
 
-import json
 import os
 import shutil
 import subprocess
@@ -80,7 +79,7 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
     dist_dir.mkdir(parents=True, exist_ok=True)
 
     # Step 1: cargo build --target wasm32-wasip2 --release
-    print(f"    [1/3] cargo build --target wasm32-wasip2 --release ...")
+    print("    [1/3] cargo build --target wasm32-wasip2 --release ...")
     result = subprocess.run(
         ["cargo", "build", "--target", "wasm32-wasip2", "--release", "--lib", "-p", crate_name],
         cwd=str(WORKSPACE_ROOT),
@@ -88,12 +87,12 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
         timeout=600,
     )
     if result.returncode != 0:
-        print(f"    FAIL: cargo build failed")
+        print("    FAIL: cargo build failed")
         stderr = result.stderr
         if len(stderr) > 3000:
-            print(f"    ... (truncated) ...")
+            print("    ... (truncated) ...")
             print(f"    {stderr[:1500]}")
-            print(f"    ...")
+            print("    ...")
             print(f"    {stderr[-1500:]}")
         else:
             print(f"    {stderr}")
@@ -112,7 +111,7 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
         wasm_opt = find_tool("wasm-opt")
         if wasm_opt:
             optimized = dist_dir / f"{wasm_stem}.wasm"
-            print(f"    [2/3] wasm-opt -Oz ...")
+            print("    [2/3] wasm-opt -Oz ...")
             result = subprocess.run(
                 [wasm_opt, "-Oz", "-o", str(optimized), str(wasm_path)],
                 capture_output=True, text=True, encoding="utf-8", errors="replace",
@@ -124,10 +123,10 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
                 print(f"    Optimized: {wasm_size:,} -> {opt_size:,} bytes ({reduction:.1f}% reduction)")
                 wasm_path = optimized
             else:
-                print(f"    wasm-opt failed, using unoptimized")
+                print("    wasm-opt failed, using unoptimized")
                 shutil.copy2(wasm_path, dist_dir / f"{wasm_stem}.wasm")
         else:
-            print(f"    [2/3] wasm-opt not found, skipping optimization")
+            print("    [2/3] wasm-opt not found, skipping optimization")
             shutil.copy2(wasm_path, dist_dir / f"{wasm_stem}.wasm")
     else:
         shutil.copy2(wasm_path, dist_dir / f"{wasm_stem}.wasm")

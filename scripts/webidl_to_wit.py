@@ -937,7 +937,7 @@ def generate_wit(
             w.comment(f"NOTE: interface {iface_name} not found in IDL source")
             w.line(f"interface {iface_wit} {{")
             if handle_type:
-                w.comment(f"Opaque handle (IDL not available in this spec).")
+                w.comment("Opaque handle (IDL not available in this spec).")
                 w.line(f"{_INDENT}type {handle_type} = u64;")
             w.line("}")
             w.blank()

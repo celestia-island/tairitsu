@@ -8,7 +8,6 @@ Usage:
     python3 scripts/init_browser_glue.py [--force]
 """
 
-import os
 import shutil
 import subprocess
 import sys

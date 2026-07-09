@@ -188,7 +188,7 @@ def main() -> int:
     unknown = [n for n in names if n not in SPECS]
     if unknown:
         print(f"[ERROR] Unknown spec name(s): {', '.join(unknown)}", file=sys.stderr)
-        print(f"Run with --list to see all configured specs.", file=sys.stderr)
+        print("Run with --list to see all configured specs.", file=sys.stderr)
         return 1
 
     print(f"Cache directory: {cache_dir}")

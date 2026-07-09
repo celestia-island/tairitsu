@@ -13,7 +13,6 @@ Usage:
     python scripts/build_npm_glue_packages.py --build   # Build only (must generate first)
 """
 
-import json
 import os
 import shutil
 import subprocess

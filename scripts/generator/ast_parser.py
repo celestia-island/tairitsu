@@ -6,9 +6,8 @@ from pathlib import Path
 from typing import List, Optional
 
 from wit_parser import (
-    parse_wit_file, WitPackage, WitInterface, WitFunction,
-    WitParam, WitType, WitHandle, WitOption, WitTypeAlias,
-    kebab_to_camel, kebab_to_pascal, wit_type_to_string
+    parse_wit_file, WitInterface, WitFunction,
+    WitHandle, WitOption, kebab_to_camel, kebab_to_pascal, wit_type_to_string
 )
 from type_mapper import TypeScriptTypeMapper
 
@@ -20,7 +19,6 @@ from .config import (
     PARAMETER_HANDLE_MAPPING,
     DICTIONARY_PARAMETER_TYPES,
     STATIC_METHOD_RETURN_OVERRIDES,
-    STATIC_METHOD_NEEDS_TYPE_ASSERTION,
     HANDLE_RETURNING_FUNCTIONS,
     HANDLE_RETURNING_ARRAY_PROPERTIES,
     JS_RESERVED_WORDS,
