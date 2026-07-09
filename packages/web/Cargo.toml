@@ -31,7 +31,10 @@ tracing = { workspace = true }
 wit-bindgen = { workspace = true, optional = true }
 
 [features]
-default = ["vdom", "hooks", "macros", "style", "ssr"]
+# Default: browser-capable subset (vdom + hooks + macros + style). SSR/wasmtime
+# is opt-in via the `ssr` or `server` feature — most consumers (especially
+# WASM component builds) never need the wasmtime runtime.
+default = ["vdom", "hooks", "macros", "style"]
 vdom = ["dep:tairitsu-vdom"]
 hooks = ["dep:tairitsu-hooks"]
 macros = ["dep:tairitsu-macros"]
