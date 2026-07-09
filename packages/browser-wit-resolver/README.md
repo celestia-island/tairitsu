@@ -162,6 +162,6 @@ tairitu wit clean
 
 ## See Also
 
-- [WIT Pipeline](../../docs/en-US/system/wit-pipeline.md): WIT generation process
+- [WIT Pipeline](../../docs/en/system/wit-pipeline.md): WIT generation process
 - [tairitsu-browser-worlds](../browser-worlds): WIT definitions
 - [Registry](https://registry.tairitsu.dev): Package registry

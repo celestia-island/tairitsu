@@ -176,6 +176,6 @@ tairitsu build
 
 ## See Also
 
-- [Build Guide](../../docs/en-US/guides/build-test-release.md): Detailed build instructions
-- [WIT Pipeline](../../docs/en-US/system/wit-pipeline.md): WIT generation process
-- [Deployment](../../docs/en-US/guides/deployment.md): Deploying your app
+- [Build Guide](../../docs/en/guides/build-test-release.md): Detailed build instructions
+- [WIT Pipeline](../../docs/en/system/wit-pipeline.md): WIT generation process
+- [Deployment](../../docs/en/guides/deployment.md): Deploying your app

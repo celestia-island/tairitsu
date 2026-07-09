@@ -122,4 +122,4 @@ The packager automatically injects styles into the document head.
 
 - [tairitsu-vdom](../vdom/): Virtual DOM integration
 - [tairitsu-web](../web/): Platform styling support
-- [CSS Guide](../../docs/en-US/guides/styling.md): Styling patterns
+- [CSS Guide](../../docs/en/guides/styling.md): Styling patterns

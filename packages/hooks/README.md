@@ -200,4 +200,4 @@ pub fn ThemeButton() -> VNode {
 
 - [tairitsu-vdom](../vdom/): Virtual DOM integration
 - [tairitsu-web](../web/): Platform implementations
-- [Reactivity Guide](../../docs/en-US/guides/reactivity.md): Detailed patterns
+- [Reactivity Guide](../../docs/en/guides/reactivity.md): Detailed patterns

@@ -119,6 +119,6 @@ div {
 
 ## See Also
 
-- [SSR Guide](../../docs/en-US/guides/ssr.md): Detailed SSR documentation
-- [Hydration](../../docs/en-US/guides/hydration.md): Hydration patterns
+- [SSR Guide](../../docs/en/guides/ssr.md): Detailed SSR documentation
+- [Hydration](../../docs/en/guides/hydration.md): Hydration patterns
 - [tairitsu-web](../web): Client-side platforms
