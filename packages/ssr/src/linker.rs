@@ -407,5 +407,134 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
          -> Result<(i32,), wasmtime::Error> { Ok((caller.data().config.viewport_height,)) },
     )?;
 
+    // ── Stubs for interfaces the component uses but SSR doesn't fully implement.
+    // These return no-op/default values so the component can mount its UI without
+    // trapping on missing browser APIs.
+
+    // non-element-parent-node: get-element-by-id
+    {
+        let mut nepn = linker.instance("tairitsu-browser:full/non-element-parent-node@0.2.0")?;
+        nepn.func_wrap(
+            "get-element-by-id",
+            |caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, element_id): (u64, String)|
+             -> Result<(Option<u64>,), wasmtime::Error> {
+                // Look up in the SSR DOM
+                let handle = caller.data().dom.get_element_by_id(&element_id);
+                Ok((handle,))
+            },
+        )?;
+    }
+
+    // parent-node: get-children, append, prepend, etc. (no-ops)
+    {
+        let mut pn = linker.instance("tairitsu-browser:full/parent-node@0.2.0")?;
+        pn.func_wrap(
+            "get-children",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+             -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+        )?;
+        pn.func_wrap(
+            "get-first-element-child",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+             -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+        )?;
+        pn.func_wrap(
+            "get-last-element-child",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+             -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+        )?;
+        pn.func_wrap(
+            "get-child-element-count",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+             -> Result<(u32,), wasmtime::Error> { Ok((0,)) },
+        )?;
+        pn.func_wrap(
+            "prepend",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _nodes): (u64, Vec<String>)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+        pn.func_wrap(
+            "append",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _nodes): (u64, Vec<String>)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+    }
+
+    // dom-token-list: add/remove/toggle/contains (no-ops)
+    {
+        let mut dtl = linker.instance("tairitsu-browser:full/dom-token-list@0.2.0")?;
+        dtl.func_wrap(
+            "add",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _tokens): (u64, Vec<String>)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+        dtl.func_wrap(
+            "remove",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _tokens): (u64, Vec<String>)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+        dtl.func_wrap(
+            "contains",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _token): (u64, String)|
+             -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+        )?;
+        dtl.func_wrap(
+            "toggle",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _token, _force): (u64, String, Option<bool>)|
+             -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+        )?;
+    }
+
+    // node-list: get-length, item (no-op)
+    {
+        let mut nl = linker.instance("tairitsu-browser:full/node-list@0.2.0")?;
+        nl.func_wrap(
+            "get-length",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+             -> Result<(u32,), wasmtime::Error> { Ok((0,)) },
+        )?;
+        nl.func_wrap(
+            "item",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _index): (u64, u32)|
+             -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+        )?;
+    }
+
+    // history: back/forward/push-state (no-ops)
+    {
+        let mut hist = linker.instance("tairitsu-browser:full/history@0.2.0")?;
+        hist.func_wrap(
+            "back",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+        hist.func_wrap(
+            "forward",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+        hist.func_wrap(
+            "push-state",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _data, _title, _url): (u64, String, String, Option<String>)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+    }
+
+    // location: href, pathname, etc.
+    {
+        let mut loc = linker.instance("tairitsu-browser:full/location@0.2.0")?;
+        loc.func_wrap(
+            "get-href",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+             -> Result<(String,), wasmtime::Error> { Ok(("/".to_string(),)) },
+        )?;
+        loc.func_wrap(
+            "get-pathname",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+             -> Result<(String,), wasmtime::Error> { Ok(("/".to_string(),)) },
+        )?;
+    }
+
     Ok(())
 }

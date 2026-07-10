@@ -100,20 +100,29 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
     // the component's actual UI into the host DOM.
     let pre_html_len = store.data().dom.render_body_html().len();
     if pre_html_len < 50 {
-        tracing::info!(
-            "lifecycle produced only {} bytes, trying tairitsu_component_bootstrap",
-            pre_html_len
-        );
-        if let Some(func) = instance.get_func(&mut store, "tairitsu_component_bootstrap") {
-            match func.call(&mut store, &[], &mut []) {
-                Ok(_) => tracing::info!("tairitsu_component_bootstrap called OK"),
-                Err(e) => tracing::warn!("bootstrap call failed: {}", e),
+        eprintln!("[ssr] lifecycle produced only {} bytes, trying bootstrap", pre_html_len);
+        // Try common entry point names for tairitsu/hikari components
+        let entry_names = ["tairitsu_component_bootstrap", "run", "_start", "start"];
+        let mut called = false;
+        for name in &entry_names {
+            if let Some(func) = instance.get_func(&mut store, name) {
+                eprintln!("[ssr] calling export '{}'", name);
+                match func.call(&mut store, &[], &mut []) {
+                    Ok(_) => {
+                        let post_len = store.data().dom.render_body_html().len();
+                        eprintln!("[ssr] '{}' OK, DOM now {} bytes", name, post_len);
+                    }
+                    Err(e) => {
+                        let post_len = store.data().dom.render_body_html().len();
+                        eprintln!("[ssr] '{}' trapped: {} (DOM {} bytes after)", name, e, post_len);
+                    }
+                }
+                called = true;
+                break;
             }
-        } else if let Some(func) = instance.get_func(&mut store, "run") {
-            match func.call(&mut store, &[], &mut []) {
-                Ok(_) => tracing::info!("run() called OK"),
-                Err(e) => tracing::warn!("run() failed: {}", e),
-            }
+        }
+        if !called {
+            eprintln!("[ssr] none of {:?} found as exports", entry_names);
         }
     }
 
