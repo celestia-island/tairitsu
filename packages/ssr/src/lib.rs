@@ -87,12 +87,37 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
     // traps if called, but SSR rendering typically doesn't invoke timers.
     linker.define_unknown_imports_as_traps(&component)?;
 
-    // Instantiate the component using the bindgen-generated bindings
-    // This gives us type-safe access to all exports including lifecycle::start
-    let browser_full = BrowserFull::instantiate(&mut store, &component, &linker)?;
+    // Instantiate: get the raw instance first (for C exports), then wrap in
+    // the bindgen BrowserFull for typed WIT access.
+    let instance = linker.instantiate(&mut store, &component)?;
+    let browser_full = BrowserFull::new(&mut store, &instance)?;
 
-    // Call lifecycle::start using the generated bindings
+    // Call lifecycle::start using the generated bindings (tolerates absence)
     call_lifecycle_start(&mut store, &browser_full)?;
+
+    // Also try the raw C entry point that tairitsu/hikari components export.
+    // Many components use `tairitsu_component_bootstrap()` (a #[no_mangle] C
+    // export) rather than the WIT `lifecycle::start` to mount their UI. If the
+    // lifecycle call produced no content, calling the bootstrap entry mounts
+    // the component's actual UI into the host DOM.
+    let pre_html_len = store.data().dom.render_body_html().len();
+    if pre_html_len < 50 {
+        tracing::info!(
+            "lifecycle produced only {} bytes, trying tairitsu_component_bootstrap",
+            pre_html_len
+        );
+        if let Some(func) = instance.get_func(&mut store, "tairitsu_component_bootstrap") {
+            match func.call(&mut store, &[], &mut []) {
+                Ok(_) => tracing::info!("tairitsu_component_bootstrap called OK"),
+                Err(e) => tracing::warn!("bootstrap call failed: {}", e),
+            }
+        } else if let Some(func) = instance.get_func(&mut store, "run") {
+            match func.call(&mut store, &[], &mut []) {
+                Ok(_) => tracing::info!("run() called OK"),
+                Err(e) => tracing::warn!("run() failed: {}", e),
+            }
+        }
+    }
 
     // Extract HTML from the DOM
     let html = store.data().dom.render_body_html();
