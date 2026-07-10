@@ -5,6 +5,36 @@ use syn::{
     Expr, ExprLit, Ident, Lit, LitStr, Pat, Token,
 };
 
+/// Try to parse the next token as a Rust keyword that should be treated as an
+/// HTML attribute name (e.g. `type: "text"`). Rust keywords like `type`, `as`,
+/// `for`, `loop` cannot be parsed as `Ident`, so the normal attribute parser
+/// chokes on them. This helper peeks the most common HTML-relevant keywords
+/// and, if one is found, consumes it and returns its string form.
+///
+/// Returns `None` if the next token is not one of the recognised keywords.
+fn try_parse_keyword_attr_name(input: ParseStream) -> Option<String> {
+    /// Helper macro: peek + parse a single keyword token, return its string.
+    macro_rules! try_kw {
+        ($($kw:ident),*) => {$(
+            if input.peek(Token![$kw]) {
+                let _: Token![$kw] = input.parse().ok()?;
+                return Some(stringify!($kw).to_string());
+            }
+        )*};
+    }
+    try_kw!(
+        // Keywords commonly used as HTML attribute names. Only actual Rust
+        // keyword tokens (not literals like `true`/`false`) can be peeked via
+        // `Token![]`. `Self`, `crate`, `super` are parsed as idents by syn.
+        type, as, for, in, ref, self, dyn, fn, mod, mut,
+        pub, static, struct, trait, use, where, abstract, async, await,
+        become, box, const, continue, do, else, enum, extern, final,
+        if, impl, let, loop, match, move, override, priv, return, try,
+        typeof, unsafe, unsized, virtual, while, yield, macro
+    );
+    None
+}
+
 pub struct RsxElement {
     pub tag: Ident,
     pub attrs: Vec<RsxAttr>,
@@ -90,7 +120,13 @@ impl Parse for RsxElement {
                     fork.parse::<Ident>().is_ok()
                         && (fork.peek(Token![:]) || fork.peek(Token![,]) || fork.is_empty())
                 } else {
-                    false
+                    // Rust keywords (type, as, for, …) cannot be parsed as
+                    // `Ident`, so check them separately. A keyword followed by
+                    // `:` or `,` is treated as an attribute name.
+                    let fork2 = content.fork();
+                    let kw_name = try_parse_keyword_attr_name(&fork2);
+                    kw_name.is_some()
+                        && (fork2.peek(Token![:]) || fork2.peek(Token![,]) || fork2.is_empty())
                 };
 
                 if is_attr {
@@ -104,9 +140,18 @@ impl Parse for RsxElement {
                     let name = if content.peek(LitStr) {
                         let lit: LitStr = content.parse()?;
                         lit.value()
-                    } else {
+                    } else if content.peek(Ident) {
                         let name: Ident = content.parse()?;
                         name.to_string()
+                    } else {
+                        // Rust keyword attribute name (e.g. `type`, `as`).
+                        try_parse_keyword_attr_name(&content)
+                            .ok_or_else(|| {
+                                syn::Error::new(
+                                    content.span(),
+                                    "expected attribute name",
+                                )
+                            })?
                     };
 
                     // For non-shorthand, consume the colon
