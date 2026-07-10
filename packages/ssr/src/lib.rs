@@ -72,19 +72,12 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
     // Create store
     let mut store = Store::new(&engine, host_state);
 
-    // Create linker and register imports
+    // Create linker with allow_shadowing so duplicate func_wrap calls
+    // (existing real impls + auto-generated stubs) don't conflict.
     let mut linker = wasmtime::component::Linker::new(&engine);
     linker.allow_shadowing(true);
     wasmtime_wasi::p2::add_to_linker_sync(&mut linker)?;
-
-    // Register SSR-specific imports
     register_ssr_imports(&mut linker)?;
-
-    // Note: define_unknown_imports_as_traps is NOT used because it conflicts
-    // with allow_shadowing and overwrites real implementations. Instead, we
-    // rely on register_ssr_imports + register_core_imports to provide all
-    // needed interfaces. If a missing import causes instantiation to fail,
-    // the error message names the specific interface to stub.
 
     // Instantiate: get the raw instance first (for C exports), then wrap in
     // the bindgen BrowserFull for typed WIT access.
