@@ -329,6 +329,18 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
              -> Result<(), wasmtime::Error> { Ok(()) },
         )?;
         ph.func_wrap(
+            "request-animation-frame",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_callback_id,): (u64,)|
+             -> Result<(u32,), wasmtime::Error> { Ok((1,)) },
+        )?;
+        ph.func_wrap(
+            "cancel-animation-frame",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_id,): (u32,)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+        ph.func_wrap(
             "set-interval",
             |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
              (_callback_id, _ms): (u64, i32)|
