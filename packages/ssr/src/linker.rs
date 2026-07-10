@@ -309,6 +309,38 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
 
     // Platform helpers interface - now using bindgen-generated Host trait
     // The implementation is in host_state.rs (PlatformHelpersHost trait)
+    // NOTE: wit-bindgen may not generate set_interval/clear_interval in the
+    // Host trait even though they're in the WIT. Register them manually as
+    // no-op stubs so components that import them can instantiate.
+    {
+        let mut ph = linker.instance("tairitsu-browser:full/platform-helpers@0.2.0")?;
+        // wit-bindgen doesn't generate these in the Host trait despite being in
+        // the WIT. Register them manually as no-op stubs.
+        ph.func_wrap(
+            "set-timeout",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_callback_id, _ms): (u64, i32)|
+             -> Result<(i32,), wasmtime::Error> { Ok((1,)) },
+        )?;
+        ph.func_wrap(
+            "clear-timeout",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_id,): (i32,)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+        ph.func_wrap(
+            "set-interval",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_callback_id, _ms): (u64, i32)|
+             -> Result<(i32,), wasmtime::Error> { Ok((1,)) },
+        )?;
+        ph.func_wrap(
+            "clear-interval",
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_id,): (i32,)|
+             -> Result<(), wasmtime::Error> { Ok(()) },
+        )?;
+    }
 
     // Event target interface
     let mut event_target = linker.instance("tairitsu-browser:full/event-target@0.2.0")?;

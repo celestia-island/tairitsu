@@ -82,9 +82,7 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
     // Register SSR-specific imports
     register_ssr_imports(&mut linker)?;
 
-    // Tolerate imports the host doesn't implement (e.g. set-interval if the
-    // component's WIT version has functions the host's WIT lacks). These become
-    // traps if called, but SSR rendering typically doesn't invoke timers.
+    // Tolerate imports the host doesn't implement. These become traps if called.
     linker.define_unknown_imports_as_traps(&component)?;
 
     // Instantiate: get the raw instance first (for C exports), then wrap in
