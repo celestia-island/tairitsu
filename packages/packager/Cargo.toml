@@ -29,7 +29,7 @@ clap = { workspace = true, optional = true }
 indicatif = { workspace = true }
 webbrowser = "^1"
 walkdir = "^2"
-notify = { version = "^6", optional = true }
+notify = { version = "^8", optional = true }
 axum = { workspace = true, optional = true }
 tower-http = { workspace = true, features = ["fs", "cors", "compression-gzip"], optional = true }
 tokio-stream = { workspace = true, features = ["sync"], optional = true }
@@ -84,7 +84,7 @@ vtty = ["vte", "portable-pty"]
  libc = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "^0.59", features = [
+windows-sys = { version = "0.61", features = [
   "Win32_Foundation",
   "Win32_Security",
   "Win32_Storage_FileSystem",

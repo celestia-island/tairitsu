@@ -65,7 +65,7 @@ tokio = { version = "^1", default-features = false, features = [
     "signal",
 ] }
 wasmtime = { version = "^43", features = ["component-model"] }
-wasmtime-wasi = "^43"
+wasmtime-wasi = "^45"
 reqwest = { version = "^0.13", default-features = false, features = ["json", "blocking"] }
 tairitsu = { version = "^0.5.14", path = "packages/runtime" }
 tairitsu-macros = { version = "^0.5.14", path = "packages/macros" }
@@ -84,10 +84,10 @@ hex = "^0.4"
 futures = "^0.3"
 tracing-subscriber = "^0.3"
 regex = "^1"
-toml = "^0.9"
+toml = "^1.1"
 grass = "^0.13"
-wit-parser = "^0.245"
-wit-component = "^0.245"
+wit-parser = "^0.252"
+wit-component = "^0.252"
 wit-bindgen = { version = "^0.57", features = ["macros"] }
 tempfile = "^3"
 vte = "^0.15"
@@ -97,8 +97,8 @@ base64 = "^0.22"
 crossterm = "^0.28"
 chrono = { version = "^0.4", default-features = false, features = ["clock", "serde"] }
 libc = "^0.2"
-indicatif = "^0.17"
-zip = { version = "^2", default-features = false, features = ["deflate"] }
+indicatif = "^0.18"
+zip = { version = "^8", default-features = false, features = ["deflate"] }
 async-trait = "^0.1"
 axum = "^0.8"
 tower-http = "^0.6"
@@ -107,6 +107,6 @@ dirs = "^6"
 which = "^8"
 uuid = { version = "^1.11", features = ["v4"] }
 rand = "^0.8"
-windows-sys = { version = "^0.59", default-features = false }
+windows-sys = { version = "0.61", default-features = false }
 env_logger = "^0.11"
 log = "^0.4"
