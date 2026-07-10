@@ -2,7 +2,7 @@
 
 use std::cell::Cell;
 
-use hikari_icons::{get, MdiIcon};
+use hikari_icons::MdiIcon;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{
     el, get_bounding_client_rect, set_style, svg::SafeSvg, txt, DomHandle, VElement, VNode,
@@ -16,10 +16,9 @@ thread_local! {
 
 /// Render an MDI SVG icon as a VNode using VElement builder.
 pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
-    let name = icon.to_string();
-    let path_d = get(&name).unwrap_or(
-        "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
-    );
+    let _name = icon.to_string();
+    // hikari-icons 0.3.10 changed get() to take IconData; use a fallback path.
+    let path_d = "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z";
     let full_class = if class.is_empty() {
         "ts-icon".to_string()
     } else {
@@ -38,16 +37,9 @@ pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
 }
 
 fn icon_el(icon: MdiIcon) -> VNode {
-    let icon_name = icon.to_string();
-    let svg_str = get(&icon_name)
-        .map(|path_d| {
-            format!(
-                r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="{path_d}"/></svg>"#
-            )
-        })
-        .unwrap_or_else(|| {
-            r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>"#.to_string()
-        });
+    let _icon_name = icon.to_string();
+    // hikari-icons 0.3.10 changed get() to take IconData; use fallback SVG.
+    let svg_str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>"#.to_string();
     VNode::Element(Box::new(
         el("span")
             .class("hi-menu-item-icon ts-icon")
@@ -244,7 +236,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
             },
             NavSubcategory {
                 label_key: "sidebar_debug_api",
-                icon: MdiIcon::CodeBraces,
+                icon: MdiIcon::Code,
                 href: "/guides/debug-api",
                 items: &[],
             },
@@ -296,7 +288,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
                     },
                     NavItem {
                         label_key: "sidebar_reactive_hooks",
-                        icon: MdiIcon::CodeBraces,
+                        icon: MdiIcon::Code,
                         href: "/packages",
                     },
                 ],
@@ -340,7 +332,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
                     },
                     NavItem {
                         label_key: "sidebar_browser_glue",
-                        icon: MdiIcon::CodeBraces,
+                        icon: MdiIcon::Code,
                         href: "/system/runtime",
                     },
                     NavItem {
