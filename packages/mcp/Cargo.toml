@@ -1,0 +1,29 @@
+[package]
+name = "tairitsu-mcp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license-file.workspace = true
+repository.workspace = true
+description = "Tairitsu MCP server — vision analysis + browser automation tools"
+
+[lib]
+name = "tairitsu_mcp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tairitsu-mcp"
+path = "src/main.rs"
+
+[dependencies]
+rmcp = { version = "^1", features = ["server", "transport-io", "macros", "schemars"] }
+schemars = "^1"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+tokio = { version = "^1", features = ["full"] }
+reqwest = { version = "^0.12", features = ["json"] }
+anyhow = "^1"
+tracing = "^0.1"
+tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
+toml = "^0.8"
+base64 = "^0.22"
