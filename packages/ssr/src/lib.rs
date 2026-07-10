@@ -74,17 +74,17 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
 
     // Create linker and register imports
     let mut linker = wasmtime::component::Linker::new(&engine);
-    // Allow shadowing so register_ssr_imports (manual) + BrowserFull::instantiate
-    // (bindgen auto) don't conflict on interfaces like event-target.
     linker.allow_shadowing(true);
     wasmtime_wasi::p2::add_to_linker_sync(&mut linker)?;
 
     // Register SSR-specific imports
     register_ssr_imports(&mut linker)?;
 
-    // Tolerate imports the host doesn't implement. These become traps if called.
-    // Tolerate imports the host doesn't implement. These become traps if called.
-    linker.define_unknown_imports_as_traps(&component)?;
+    // Note: define_unknown_imports_as_traps is NOT used because it conflicts
+    // with allow_shadowing and overwrites real implementations. Instead, we
+    // rely on register_ssr_imports + register_core_imports to provide all
+    // needed interfaces. If a missing import causes instantiation to fail,
+    // the error message names the specific interface to stub.
 
     // Instantiate: get the raw instance first (for C exports), then wrap in
     // the bindgen BrowserFull for typed WIT access.
@@ -196,7 +196,14 @@ fn call_lifecycle_start(store: &mut Store<SsrHostState>, browser_full: &BrowserF
             Ok(())
         }
         Err(e) => {
-            eprintln!("[ssr] lifecycle::start() trapped: {}", e);
+            // Print the full error chain to find which import trapped
+            let mut chain = vec![format!("{}", e)];
+            let mut src = e.source();
+            while let Some(s) = src {
+                chain.push(format!("{}", s));
+                src = s.source();
+            }
+            eprintln!("[ssr] lifecycle::start() trapped:\n  {}", chain.join("\n  "));
             Ok(())
         }
     }

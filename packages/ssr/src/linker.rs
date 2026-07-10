@@ -26,10 +26,14 @@ pub fn register_ssr_imports_direct(linker: &mut Linker<SsrHostState>) -> Result<
         HasSelf<SsrHostState>,
     >(linker, |state| -> &mut SsrHostState { state })?;
 
-    crate::bindings::tairitsu_browser::full::platform_helpers::add_to_linker::<
-        SsrHostState,
-        HasSelf<SsrHostState>,
-    >(linker, |state| -> &mut SsrHostState { state })?;
+    // Skip bindgen platform_helpers::add_to_linker — it registers functions
+    // with types that don't match the component's WIT version (e.g.
+    // set-timeout, request-animation-frame). Manual stubs in register_core_imports
+    // provide the correct signatures.
+    // crate::bindings::tairitsu_browser::full::platform_helpers::add_to_linker::<
+    //     SsrHostState,
+    //     HasSelf<SsrHostState>,
+    // >(linker, |state| -> &mut SsrHostState { state })?;
 
     stubs::register_all_stubs(linker)?;
     register_core_imports(linker)?;
@@ -238,6 +242,74 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         },
     )?;
 
+    // Additional element methods that bindgen doesn't generate correctly.
+    // These are needed by hikari components for layout/measurement during SSR.
+    element.func_wrap(
+        "get-bounding-client-rect",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<((f64, f64, f64, f64),), wasmtime::Error> { Ok(((0.0, 0.0, 0.0, 0.0),)) },
+    )?;
+    element.func_wrap(
+        "get-client-rects",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(Vec<((f64, f64, f64, f64),)>,), wasmtime::Error> { Ok((vec![],)) },
+    )?;
+    element.func_wrap(
+        "scroll-to",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _x, _y): (u64, f64, f64)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "focus",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "blur",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "get-scroll-top",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "get-scroll-left",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "get-scroll-width",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "get-scroll-height",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "get-offset-width",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "get-offset-height",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "get-client-width",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "get-client-height",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+
     // W3C CSSOM interfaces - ElementCSSInlineStyle and CSSStyleDeclaration
 
     // ElementCSSInlineStyle: get-style
@@ -417,6 +489,20 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         |caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (): ()|
          -> Result<(i32,), wasmtime::Error> { Ok((caller.data().config.viewport_height,)) },
+    )?;
+
+    // Additional window methods that bindgen doesn't generate correctly
+    window.func_wrap(
+        "get-computed-style",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_elt, _pseudo): (u64, Option<String>)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    window.func_wrap(
+        "get-device-pixel-ratio",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (): ()|
+         -> Result<(f64,), wasmtime::Error> { Ok((1.0,)) },
     )?;
 
     // ── Stubs for interfaces the component uses but SSR doesn't fully implement.
