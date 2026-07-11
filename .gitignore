@@ -66,3 +66,7 @@ HIKARI_BROWSER_ISSUE.md
 Cargo.lock
 package-lock.json
 pnpm-lock.yaml
+
+# celestia-devtools: staged-on-demand shared justfile recipes (just fetch)
+/.just/
+/celestia-devtools.just
