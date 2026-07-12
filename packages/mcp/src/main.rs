@@ -4,9 +4,8 @@
 //! Requires a running shirabe debug server for screenshot capture.
 
 use rmcp::{
-    ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
-    handler::server::wrapper::Parameters, model::*, service::RequestContext,
-    tool, tool_handler, tool_router,
+    handler::server::wrapper::Parameters, model::*, service::RequestContext, tool, tool_handler,
+    tool_router, ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
 };
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -59,13 +58,8 @@ impl VisionServer {
         Parameters(args): Parameters<AnalyzeArgs>,
         _ctx: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        match tairitsu_mcp::do_analyze(
-            args.prompt,
-            args.shirabe_url,
-            args.model,
-            args.full_page,
-        )
-        .await
+        match tairitsu_mcp::do_analyze(args.prompt, args.shirabe_url, args.model, args.full_page)
+            .await
         {
             Ok(report) => Ok(CallToolResult::success(vec![Content::text(report)])),
             Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(

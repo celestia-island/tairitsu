@@ -11,7 +11,10 @@ overlapping elements, unreadable text)\n\
 Be concise and specific. Reference CSS classes or element types where relevant.";
 
 /// Capture a screenshot from a running shirabe debug server, or return an error.
-async fn capture_screenshot(shirabe_url: &str, full_page: bool) -> anyhow::Result<(String, String)> {
+async fn capture_screenshot(
+    shirabe_url: &str,
+    full_page: bool,
+) -> anyhow::Result<(String, String)> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .build()?;
@@ -65,8 +68,7 @@ pub async fn do_analyze(
     full_page: Option<bool>,
 ) -> anyhow::Result<String> {
     let prompt = prompt.unwrap_or_else(|| DEFAULT_PROMPT.to_string());
-    let shirabe_url = shirabe_url
-        .unwrap_or_else(|| "http://127.0.0.1:3001".to_string());
+    let shirabe_url = shirabe_url.unwrap_or_else(|| "http://127.0.0.1:3001".to_string());
     let full_page = full_page.unwrap_or(false);
 
     // 1. Capture screenshot.
@@ -75,10 +77,9 @@ pub async fn do_analyze(
     tracing::info!("screenshot captured ({} bytes base64)", image_b64.len());
 
     // 2. Load vision models from registry.
-    let registry_path = find_registry()
-        .ok_or_else(|| anyhow::anyhow!(
-            "provider-registry not found. Expected at celestia/provider-registry/"
-        ))?;
+    let registry_path = find_registry().ok_or_else(|| {
+        anyhow::anyhow!("provider-registry not found. Expected at celestia/provider-registry/")
+    })?;
     let models = crate::registry::load_vision_models(&registry_path);
     if models.is_empty() {
         anyhow::bail!("no vision models found in provider-registry");
@@ -112,10 +113,9 @@ pub async fn do_analyze(
 
 /// Execute list_vision_models.
 pub fn do_list_models() -> anyhow::Result<Vec<ModelInfo>> {
-    let registry_path = find_registry()
-        .ok_or_else(|| anyhow::anyhow!(
-            "provider-registry not found. Expected at celestia/provider-registry/"
-        ))?;
+    let registry_path = find_registry().ok_or_else(|| {
+        anyhow::anyhow!("provider-registry not found. Expected at celestia/provider-registry/")
+    })?;
     let models = crate::registry::load_vision_models(&registry_path);
     Ok(models
         .iter()

@@ -203,32 +203,162 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
     )?;
 
     // Additional node stubs for functions bindgen doesn't generate correctly
-    node.func_wrap("get-child-nodes", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    node.func_wrap("get-first-child", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("get-last-child", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("get-parent-node", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("get-parent-element", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("get-previous-sibling", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("get-next-sibling", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("has-child-nodes", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    node.func_wrap("insert-before", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _node, _child): (u64, u64, Option<u64>)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    node.func_wrap("replace-child", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _node, _child): (u64, u64, u64)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    node.func_wrap("clone-node", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _subtree): (u64, Option<bool>)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    node.func_wrap("normalize", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    node.func_wrap("get-node-name", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    node.func_wrap("get-node-type", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(u16,), wasmtime::Error> { Ok((0,)) })?;
-    node.func_wrap("get-owner-document", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("get-base-uri", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    node.func_wrap("get-is-connected", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    node.func_wrap("get-root-node", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _options): (u64, Option<u64>)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    node.func_wrap("get-node-value", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)| -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("set-node-value", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _value): (u64, Option<String>)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    node.func_wrap("is-equal-node", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _other): (u64, Option<u64>)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    node.func_wrap("is-same-node", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _other): (u64, Option<u64>)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    node.func_wrap("contains", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _other): (u64, Option<u64>)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    node.func_wrap("lookup-prefix", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _ns): (u64, Option<String>)| -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("lookup-namespace-uri", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _prefix): (u64, Option<String>)| -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) })?;
-    node.func_wrap("is-default-namespace", |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _ns): (u64, Option<String>)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
+    node.func_wrap(
+        "get-child-nodes",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    node.func_wrap(
+        "get-first-child",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "get-last-child",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "get-parent-node",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "get-parent-element",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "get-previous-sibling",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "get-next-sibling",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "has-child-nodes",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    node.func_wrap(
+        "insert-before",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _node, _child): (u64, u64, Option<u64>)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    node.func_wrap(
+        "replace-child",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _node, _child): (u64, u64, u64)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    node.func_wrap(
+        "clone-node",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _subtree): (u64, Option<bool>)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    node.func_wrap(
+        "normalize",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    node.func_wrap(
+        "get-node-name",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    node.func_wrap(
+        "get-node-type",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(u16,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    node.func_wrap(
+        "get-owner-document",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "get-base-uri",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    node.func_wrap(
+        "get-is-connected",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    node.func_wrap(
+        "get-root-node",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _options): (u64, Option<u64>)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    node.func_wrap(
+        "get-node-value",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "set-node-value",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _value): (u64, Option<String>)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    node.func_wrap(
+        "is-equal-node",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _other): (u64, Option<u64>)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    node.func_wrap(
+        "is-same-node",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _other): (u64, Option<u64>)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    node.func_wrap(
+        "contains",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _other): (u64, Option<u64>)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    node.func_wrap(
+        "lookup-prefix",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _ns): (u64, Option<String>)|
+         -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "lookup-namespace-uri",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _prefix): (u64, Option<String>)|
+         -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    node.func_wrap(
+        "is-default-namespace",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self, _ns): (u64, Option<String>)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
 
     // Element interface
     let mut element = linker.instance("tairitsu-browser:full/element@0.2.0")?;
@@ -271,79 +401,451 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
     )?;
 
     // Auto-generated element stubs from WIT (all element interface functions)
-element.func_wrap("get-client-rects", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-bounding-client-rect", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(crate::bindings::DomRect,), wasmtime::Error> { Ok((crate::bindings::DomRect{x:0.0,y:0.0,width:0.0,height:0.0},)) })?;
-    element.func_wrap("check-visibility", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<u64>)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    element.func_wrap("scroll-into-view", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<bool>)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("scroll", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<u64>)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("scroll-to", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<u64>)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("scroll-by", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<u64>)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-scroll-top", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) })?;
-    element.func_wrap("set-scroll-top", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, f64)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("get-scroll-left", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) })?;
-    element.func_wrap("set-scroll-left", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, f64)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("get-scroll-width", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(i32,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-scroll-height", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(i32,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-client-top", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(i32,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-client-left", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(i32,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-client-width", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(i32,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-client-height", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(i32,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-current-css-zoom", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) })?;
-    element.func_wrap("get-namespace-uri", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("get-prefix", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("get-local-name", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    element.func_wrap("get-tag-name", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    element.func_wrap("get-id", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    element.func_wrap("set-id", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("get-class-name", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    element.func_wrap("set-class-name", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("get-class-list", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-slot", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    element.func_wrap("set-slot", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("has-attributes", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    element.func_wrap("get-attributes", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-attribute-names", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(Vec<String>,), wasmtime::Error> { Ok((vec![],)) })?;
-    element.func_wrap("get-attribute", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("get-attribute-ns", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<String>, String)| -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("set-attribute", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("set-attribute-ns", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<String>, String, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("remove-attribute", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("remove-attribute-ns", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<String>, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("toggle-attribute", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String, Option<bool>)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    element.func_wrap("has-attribute", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    element.func_wrap("has-attribute-ns", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<String>, String)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    element.func_wrap("get-attribute-node", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("get-attribute-node-ns", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<String>, String)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("set-attribute-node", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, u64)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("set-attribute-node-ns", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, u64)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("remove-attribute-node", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, u64)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("attach-shadow", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, u64)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-shadow-root", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("get-custom-element-registry", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("closest", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("matches", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    element.func_wrap("webkit-matches-selector", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    element.func_wrap("get-elements-by-tag-name", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-elements-by-tag-name-ns", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<String>, String)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-elements-by-class-name", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("insert-adjacent-element", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String, u64)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    element.func_wrap("insert-adjacent-text", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("request-fullscreen", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<u64>)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("get-onfullscreenchange", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("set-onfullscreenchange", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, u64)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("get-onfullscreenerror", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(u64,), wasmtime::Error> { Ok((0,)) })?;
-    element.func_wrap("set-onfullscreenerror", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, u64)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("set-html", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String, Option<u64>)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("set-html-unsafe", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String, Option<u64>)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("get-html", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, Option<u64>)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    element.func_wrap("get-inner-html", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    element.func_wrap("set-inner-html", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("get-outer-html", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    element.func_wrap("set-outer-html", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("insert-adjacent-html", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String, String)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("set-pointer-capture", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, i32)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("release-pointer-capture", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, i32)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    element.func_wrap("has-pointer-capture", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, i32)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
+    element.func_wrap(
+        "get-client-rects",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-bounding-client-rect",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(crate::bindings::DomRect,), wasmtime::Error> {
+            Ok((crate::bindings::DomRect {
+                x: 0.0,
+                y: 0.0,
+                width: 0.0,
+                height: 0.0,
+            },))
+        },
+    )?;
+    element.func_wrap(
+        "check-visibility",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<u64>)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    element.func_wrap(
+        "scroll-into-view",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<bool>)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "scroll",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<u64>)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "scroll-to",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<u64>)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "scroll-by",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<u64>)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-scroll-top",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "set-scroll-top",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, f64)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "get-scroll-left",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "set-scroll-left",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, f64)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "get-scroll-width",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(i32,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-scroll-height",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(i32,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-client-top",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(i32,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-client-left",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(i32,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-client-width",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(i32,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-client-height",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(i32,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-current-css-zoom",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    element.func_wrap(
+        "get-namespace-uri",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "get-prefix",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "get-local-name",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    element.func_wrap(
+        "get-tag-name",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    element.func_wrap(
+        "get-id",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    element.func_wrap(
+        "set-id",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "get-class-name",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    element.func_wrap(
+        "set-class-name",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "get-class-list",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-slot",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    element.func_wrap(
+        "set-slot",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "has-attributes",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    element.func_wrap(
+        "get-attributes",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-attribute-names",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(Vec<String>,), wasmtime::Error> { Ok((vec![],)) },
+    )?;
+    element.func_wrap(
+        "get-attribute",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "get-attribute-ns",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<String>, String)|
+         -> Result<(Option<String>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "set-attribute",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "set-attribute-ns",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<String>, String, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "remove-attribute",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "remove-attribute-ns",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<String>, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "toggle-attribute",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String, Option<bool>)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    element.func_wrap(
+        "has-attribute",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    element.func_wrap(
+        "has-attribute-ns",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<String>, String)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    element.func_wrap(
+        "get-attribute-node",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "get-attribute-node-ns",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<String>, String)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "set-attribute-node",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, u64)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "set-attribute-node-ns",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, u64)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "remove-attribute-node",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, u64)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "attach-shadow",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, u64)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-shadow-root",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "get-custom-element-registry",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "closest",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "matches",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    element.func_wrap(
+        "webkit-matches-selector",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    element.func_wrap(
+        "get-elements-by-tag-name",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-elements-by-tag-name-ns",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<String>, String)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-elements-by-class-name",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "insert-adjacent-element",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String, u64)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    element.func_wrap(
+        "insert-adjacent-text",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "request-fullscreen",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<u64>)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "get-onfullscreenchange",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "set-onfullscreenchange",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, u64)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "get-onfullscreenerror",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    element.func_wrap(
+        "set-onfullscreenerror",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, u64)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "set-html",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String, Option<u64>)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "set-html-unsafe",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String, Option<u64>)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "get-html",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, Option<u64>)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    element.func_wrap(
+        "get-inner-html",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    element.func_wrap(
+        "set-inner-html",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "get-outer-html",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    element.func_wrap(
+        "set-outer-html",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "insert-adjacent-html",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String, String)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "set-pointer-capture",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, i32)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "release-pointer-capture",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, i32)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    element.func_wrap(
+        "has-pointer-capture",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, i32)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
 
     // W3C CSSOM interfaces - ElementCSSInlineStyle and CSSStyleDeclaration
 
@@ -495,26 +997,126 @@ element.func_wrap("get-client-rects", |_: wasmtime::StoreContextMut<'_, SsrHostS
 
     // Auto-generated event stubs from WIT
     let mut event = linker.instance("tairitsu-browser:full/event@0.2.0")?;
-event.func_wrap("get-type", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) })?;
-    event.func_wrap("get-target", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    event.func_wrap("get-src-element", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    event.func_wrap("get-current-target", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) })?;
-    event.func_wrap("composed-path", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(Vec<u64>,), wasmtime::Error> { Ok((vec![],)) })?;
-    event.func_wrap("get-event-phase", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(u16,), wasmtime::Error> { Ok((0,)) })?;
-    event.func_wrap("stop-propagation", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    event.func_wrap("get-cancel-bubble", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    event.func_wrap("set-cancel-bubble", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, bool)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    event.func_wrap("stop-immediate-propagation", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    event.func_wrap("get-bubbles", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    event.func_wrap("get-cancelable", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    event.func_wrap("get-return-value", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    event.func_wrap("set-return-value", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, bool)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    event.func_wrap("prevent-default", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(), wasmtime::Error> { Ok(()) })?;
-    event.func_wrap("get-default-prevented", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    event.func_wrap("get-composed", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    event.func_wrap("get-is-trusted", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(bool,), wasmtime::Error> { Ok((false,)) })?;
-    event.func_wrap("get-time-stamp", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64,)| -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) })?;
-    event.func_wrap("init-event", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: (u64, String, Option<bool>, Option<bool>)| -> Result<(), wasmtime::Error> { Ok(()) })?;
+    event.func_wrap(
+        "get-type",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(String,), wasmtime::Error> { Ok((String::new(),)) },
+    )?;
+    event.func_wrap(
+        "get-target",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    event.func_wrap(
+        "get-src-element",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    event.func_wrap(
+        "get-current-target",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
+    )?;
+    event.func_wrap(
+        "composed-path",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(Vec<u64>,), wasmtime::Error> { Ok((vec![],)) },
+    )?;
+    event.func_wrap(
+        "get-event-phase",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(u16,), wasmtime::Error> { Ok((0,)) },
+    )?;
+    event.func_wrap(
+        "stop-propagation",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    event.func_wrap(
+        "get-cancel-bubble",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    event.func_wrap(
+        "set-cancel-bubble",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, bool)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    event.func_wrap(
+        "stop-immediate-propagation",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    event.func_wrap(
+        "get-bubbles",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    event.func_wrap(
+        "get-cancelable",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    event.func_wrap(
+        "get-return-value",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    event.func_wrap(
+        "set-return-value",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, bool)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    event.func_wrap(
+        "prevent-default",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+    event.func_wrap(
+        "get-default-prevented",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    event.func_wrap(
+        "get-composed",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    event.func_wrap(
+        "get-is-trusted",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
+    )?;
+    event.func_wrap(
+        "get-time-stamp",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+    event.func_wrap(
+        "init-event",
+        |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+         _: (u64, String, Option<bool>, Option<bool>)|
+         -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
 
     // Window
     let mut window = linker.instance("tairitsu-browser:full/window@0.2.0")?;
@@ -570,42 +1172,50 @@ event.func_wrap("get-type", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: 
         let mut pn = linker.instance("tairitsu-browser:full/parent-node@0.2.0")?;
         pn.func_wrap(
             "get-children",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self,): (u64,)|
              -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
         )?;
         pn.func_wrap(
             "get-first-element-child",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self,): (u64,)|
              -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
         )?;
         pn.func_wrap(
             "get-last-element-child",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self,): (u64,)|
              -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
         )?;
         pn.func_wrap(
             "get-child-element-count",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self,): (u64,)|
              -> Result<(u32,), wasmtime::Error> { Ok((0,)) },
         )?;
         pn.func_wrap(
             "query-selector",
-            |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _s): (u64, String)|
+            |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _s): (u64, String)|
              -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
         )?;
         pn.func_wrap(
             "query-selector-all",
-            |_: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _s): (u64, String)|
+            |_: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _s): (u64, String)|
              -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
         )?;
         pn.func_wrap(
             "prepend",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _nodes): (u64, Vec<String>)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _nodes): (u64, Vec<String>)|
              -> Result<(), wasmtime::Error> { Ok(()) },
         )?;
         pn.func_wrap(
             "append",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _nodes): (u64, Vec<String>)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _nodes): (u64, Vec<String>)|
              -> Result<(), wasmtime::Error> { Ok(()) },
         )?;
     }
@@ -615,22 +1225,26 @@ event.func_wrap("get-type", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: 
         let mut dtl = linker.instance("tairitsu-browser:full/dom-token-list@0.2.0")?;
         dtl.func_wrap(
             "add",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _tokens): (u64, Vec<String>)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _tokens): (u64, Vec<String>)|
              -> Result<(), wasmtime::Error> { Ok(()) },
         )?;
         dtl.func_wrap(
             "remove",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _tokens): (u64, Vec<String>)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _tokens): (u64, Vec<String>)|
              -> Result<(), wasmtime::Error> { Ok(()) },
         )?;
         dtl.func_wrap(
             "contains",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _token): (u64, String)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _token): (u64, String)|
              -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
         )?;
         dtl.func_wrap(
             "toggle",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _token, _force): (u64, String, Option<bool>)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _token, _force): (u64, String, Option<bool>)|
              -> Result<(bool,), wasmtime::Error> { Ok((false,)) },
         )?;
     }
@@ -640,12 +1254,14 @@ event.func_wrap("get-type", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: 
         let mut nl = linker.instance("tairitsu-browser:full/node-list@0.2.0")?;
         nl.func_wrap(
             "get-length",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self,): (u64,)|
              -> Result<(u32,), wasmtime::Error> { Ok((0,)) },
         )?;
         nl.func_wrap(
             "item",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _index): (u64, u32)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _index): (u64, u32)|
              -> Result<(Option<u64>,), wasmtime::Error> { Ok((None,)) },
         )?;
     }
@@ -655,17 +1271,20 @@ event.func_wrap("get-type", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: 
         let mut hist = linker.instance("tairitsu-browser:full/history@0.2.0")?;
         hist.func_wrap(
             "back",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self,): (u64,)|
              -> Result<(), wasmtime::Error> { Ok(()) },
         )?;
         hist.func_wrap(
             "forward",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self,): (u64,)|
              -> Result<(), wasmtime::Error> { Ok(()) },
         )?;
         hist.func_wrap(
             "push-state",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self, _data, _title, _url): (u64, String, String, Option<String>)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self, _data, _title, _url): (u64, String, String, Option<String>)|
              -> Result<(), wasmtime::Error> { Ok(()) },
         )?;
     }
@@ -675,12 +1294,14 @@ event.func_wrap("get-type", |_: wasmtime::StoreContextMut<'_, SsrHostState>, _: 
         let mut loc = linker.instance("tairitsu-browser:full/location@0.2.0")?;
         loc.func_wrap(
             "get-href",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self,): (u64,)|
              -> Result<(String,), wasmtime::Error> { Ok(("/".to_string(),)) },
         )?;
         loc.func_wrap(
             "get-pathname",
-            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_self,): (u64,)|
+            |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+             (_self,): (u64,)|
              -> Result<(String,), wasmtime::Error> { Ok(("/".to_string(),)) },
         )?;
     }

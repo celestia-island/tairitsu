@@ -15,12 +15,12 @@ pub async fn analyze_image(
     image_base64: &str,
     image_mime: &str,
 ) -> anyhow::Result<String> {
-    let api_key = model
-        .api_key()
-        .ok_or_else(|| anyhow::anyhow!(
+    let api_key = model.api_key().ok_or_else(|| {
+        anyhow::anyhow!(
             "no API key found. Set {} or LAGRANGE_VISION_API_KEY",
             model.env_var
-        ))?;
+        )
+    })?;
 
     let data_url = format!("data:{image_mime};base64,{image_base64}");
     let body = serde_json::json!({
@@ -52,12 +52,20 @@ pub async fn analyze_image(
     let text = resp.text().await?;
 
     if !status.is_success() {
-        let snippet = if text.len() > 500 { &text[..500] } else { &text };
+        let snippet = if text.len() > 500 {
+            &text[..500]
+        } else {
+            &text
+        };
         anyhow::bail!("API error {status}: {snippet}");
     }
 
-    let chat_resp: ChatResponse = serde_json::from_str(&text)
-        .map_err(|e| anyhow::anyhow!("failed to parse response: {e}\nraw: {}", &text[..text.len().min(500)]))?;
+    let chat_resp: ChatResponse = serde_json::from_str(&text).map_err(|e| {
+        anyhow::anyhow!(
+            "failed to parse response: {e}\nraw: {}",
+            &text[..text.len().min(500)]
+        )
+    })?;
 
     chat_resp
         .choices

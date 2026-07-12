@@ -94,7 +94,10 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
     // the component's actual UI into the host DOM.
     let pre_html_len = store.data().dom.render_body_html().len();
     if pre_html_len < 50 {
-        eprintln!("[ssr] lifecycle produced only {} bytes, trying bootstrap", pre_html_len);
+        eprintln!(
+            "[ssr] lifecycle produced only {} bytes, trying bootstrap",
+            pre_html_len
+        );
         // Enumerate the component's top-level exports to find the entry point.
         let comp_ty = component.component_type();
         let exports = comp_ty.exports(&engine);
@@ -196,7 +199,10 @@ fn call_lifecycle_start(store: &mut Store<SsrHostState>, browser_full: &BrowserF
                 chain.push(format!("{}", s));
                 src = s.source();
             }
-            eprintln!("[ssr] lifecycle::start() trapped:\n  {}", chain.join("\n  "));
+            eprintln!(
+                "[ssr] lifecycle::start() trapped:\n  {}",
+                chain.join("\n  ")
+            );
             Ok(())
         }
     }

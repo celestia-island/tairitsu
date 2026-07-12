@@ -97,7 +97,11 @@ impl ResolvedModel {
             }
         }
         // Generic fallbacks.
-        for var in &["LAGRANGE_VISION_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY"] {
+        for var in &[
+            "LAGRANGE_VISION_API_KEY",
+            "OPENAI_API_KEY",
+            "OPENROUTER_API_KEY",
+        ] {
             if let Ok(key) = std::env::var(var) {
                 if !key.is_empty() {
                     return Some(key);
@@ -137,14 +141,16 @@ pub fn load_vision_models(registry_path: &std::path::Path) -> Vec<ResolvedModel>
     let entrypoint_dir = registry_path.join("entrypoint");
 
     // Load all entrypoints into a map: provider_id → ApiConfig.
-    let mut entrypoints: std::collections::HashMap<String, ApiConfig> = std::collections::HashMap::new();
+    let mut entrypoints: std::collections::HashMap<String, ApiConfig> =
+        std::collections::HashMap::new();
     if entrypoint_dir.is_dir() {
         if let Ok(entries) = std::fs::read_dir(&entrypoint_dir) {
             for entry in entries.flatten() {
                 let toml_path = entry.path().join("default.toml");
                 if toml_path.is_file() {
                     if let Ok(content) = std::fs::read_to_string(&toml_path) {
-                        if let Ok(ProviderEntry { inner }) = toml::from_str::<ProviderEntry>(&content)
+                        if let Ok(ProviderEntry { inner }) =
+                            toml::from_str::<ProviderEntry>(&content)
                         {
                             entrypoints.insert(inner.provider_id.clone(), inner.api);
                         }
@@ -217,7 +223,10 @@ pub fn pick_model(models: &[ResolvedModel]) -> Option<&ResolvedModel> {
         }
     }
     // 2. Cheapest with an available API key.
-    models.iter().find(|m| m.api_key().is_some()).or_else(|| models.first())
+    models
+        .iter()
+        .find(|m| m.api_key().is_some())
+        .or_else(|| models.first())
 }
 
 #[cfg(test)]

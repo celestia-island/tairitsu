@@ -26,11 +26,10 @@ fn try_parse_keyword_attr_name(input: ParseStream) -> Option<String> {
         // Keywords commonly used as HTML attribute names. Only actual Rust
         // keyword tokens (not literals like `true`/`false`) can be peeked via
         // `Token![]`. `Self`, `crate`, `super` are parsed as idents by syn.
-        type, as, for, in, ref, self, dyn, fn, mod, mut,
-        pub, static, struct, trait, use, where, abstract, async, await,
-        become, box, const, continue, do, else, enum, extern, final,
-        if, impl, let, loop, match, move, override, priv, return, try,
-        typeof, unsafe, unsized, virtual, while, yield, macro
+        type, as, for, in, ref, self, dyn, fn, mod, mut, pub, static, struct, trait, use, where,
+        abstract, async, await, become, box, const, continue, do, else, enum, extern, final, if,
+        impl, let, loop, match, move, override, priv, return, try, typeof, unsafe, unsized,
+        virtual, while, yield, macro
     );
     None
 }
@@ -145,13 +144,9 @@ impl Parse for RsxElement {
                         name.to_string()
                     } else {
                         // Rust keyword attribute name (e.g. `type`, `as`).
-                        try_parse_keyword_attr_name(&content)
-                            .ok_or_else(|| {
-                                syn::Error::new(
-                                    content.span(),
-                                    "expected attribute name",
-                                )
-                            })?
+                        try_parse_keyword_attr_name(&content).ok_or_else(|| {
+                            syn::Error::new(content.span(), "expected attribute name")
+                        })?
                     };
 
                     // For non-shorthand, consume the colon
