@@ -7,7 +7,6 @@ members = [
     "packages/web",
     "packages/hooks",
     "packages/packager",
-    "packages/e2e",
     "packages/style",
     "packages/browser-wit-resolver",
     "packages/browser-worlds",

@@ -112,7 +112,11 @@ impl syn::parse::Parse for ScssInput {
             }
         };
 
-        Ok(ScssInput { source: source.unwrap(), scope, no_hash })
+        Ok(ScssInput {
+            source: source.unwrap(),
+            scope,
+            no_hash,
+        })
     }
 }
 
@@ -145,8 +149,12 @@ pub fn expand_scss(input: TokenStream) -> TokenStream {
     let scss_input = syn::parse_macro_input!(input as ScssInput);
 
     let expanded = match scss_input.source {
-        ScssSource::Inline(content) => expand_inline_scss(&content, scss_input.scope.as_deref(), scss_input.no_hash),
-        ScssSource::File(path) => expand_file_scss(&path, scss_input.scope.as_deref(), scss_input.no_hash),
+        ScssSource::Inline(content) => {
+            expand_inline_scss(&content, scss_input.scope.as_deref(), scss_input.no_hash)
+        }
+        ScssSource::File(path) => {
+            expand_file_scss(&path, scss_input.scope.as_deref(), scss_input.no_hash)
+        }
     };
 
     TokenStream::from(expanded)
@@ -206,7 +214,11 @@ fn generate_output(css: String, class_map: HashMap<String, String>) -> TokenStre
     }
 }
 
-fn compile_scss_with_hashing(scss: &str, scope: Option<&str>, no_hash: bool) -> (String, HashMap<String, String>) {
+fn compile_scss_with_hashing(
+    scss: &str,
+    scope: Option<&str>,
+    no_hash: bool,
+) -> (String, HashMap<String, String>) {
     let mut class_map = HashMap::new();
 
     let processed_scss = if no_hash {
