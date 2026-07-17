@@ -202,7 +202,23 @@ fn expand_file_scss(path: &str, scope: Option<&str>, no_hash: bool) -> TokenStre
 
     let (css, class_map) =
         compile_scss_inner(&content, scope, no_hash, &load_paths, Some(&full_path));
-    generate_output(css, class_map)
+    wrap_with_dep_tracking(&full_path, generate_output(css, class_map))
+}
+
+/// Re-emit the entry file through `include_str!` so rustc lists it in the
+/// crate's dep-info: editing the SCSS then re-triggers macro expansion.
+/// Without this, cargo's fingerprint sees no `.rs` change and silently
+/// reuses stale CSS from a previous compile. (Partials pulled in via
+/// `@use`/`@import` are still only re-read when the entry file changes.)
+fn wrap_with_dep_tracking(full_path: &std::path::Path, output: TokenStream2) -> TokenStream2 {
+    // Forward slashes: valid on every platform, no backslash escaping.
+    let tracking_path = full_path.to_string_lossy().replace('\\', "/");
+    quote! {
+        {
+            const _: &'static str = include_str!(#tracking_path);
+            #output
+        }
+    }
 }
 
 /// Generate the output token stream
@@ -674,5 +690,23 @@ mod tests {
             assert!(css.contains(&format!(".{hashed}")), "got: {css}");
         }
         assert!(css.contains(":hover"), "got: {css}");
+    }
+
+    #[test]
+    fn test_file_source_emits_include_str_for_dep_tracking() {
+        // Regression: file-based scss! used to expand without referencing
+        // the source file, so cargo never rebuilt on SCSS-only edits and
+        // shipped stale CSS. The expansion must route the path through
+        // include_str! — rustc then lists it in dep-info.
+        let output = wrap_with_dep_tracking(
+            std::path::Path::new("C:\\crate\\styles\\layout.scss"),
+            quote! { 1 },
+        )
+        .to_string();
+        assert!(output.contains("include_str !"), "got: {output}");
+        assert!(
+            output.contains("\"C:/crate/styles/layout.scss\""),
+            "backslashes normalized to forward slashes, got: {output}"
+        );
     }
 }

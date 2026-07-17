@@ -139,12 +139,22 @@ pub fn expand_include_scss(input: TokenStream) -> TokenStream {
         return quote! { compile_error!(#msg) }.into();
     }
 
-    generate_enum(
+    let output = generate_enum(
         &classes,
         &input.path.value(),
         input.prefix.as_deref(),
         input.enum_name.as_ref(),
-    )
+    );
+
+    // Same dep-tracking trick as scss!: route the source path through
+    // include_str! so rustc lists the SCSS file in dep-info and SCSS-only
+    // edits re-trigger expansion. Emitted as a sibling *item* because this
+    // macro expands in item position (an enum definition).
+    let tracking_path = full_path.to_string_lossy().replace('\\', "/");
+    quote! {
+        const _: &'static str = include_str!(#tracking_path);
+        #output
+    }
     .into()
 }
 
