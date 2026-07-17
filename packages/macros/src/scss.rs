@@ -55,76 +55,75 @@ pub struct ScssInput {
     source: ScssSource,
     /// Optional scope for class name isolation
     scope: Option<String>,
+    /// Skip CSS Modules hashing (for global CSS like site layouts).
+    no_hash: bool,
 }
 
 impl syn::parse::Parse for ScssInput {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        // Check if it starts with a keyword or a string literal
         let lookahead = input.lookahead1();
 
-        let (source, scope) = if lookahead.peek(syn::Ident) {
+        let mut source = None;
+        let mut scope = None;
+        let mut no_hash = false;
+
+        if lookahead.peek(syn::Ident) {
             let ident: syn::Ident = input.parse()?;
 
             if ident == "file" {
-                // file: "path/to/file.scss"
                 input.parse::<syn::Token![:]>()?;
                 let path: syn::LitStr = input.parse()?;
-                let scope = parse_scope(input)?;
-                (ScssSource::File(path.value()), scope)
+                let (s, nh) = parse_scope(input)?;
+                scope = s;
+                no_hash = nh;
+                source = Some(ScssSource::File(path.value()));
             } else if ident == "scope" {
-                // Backward compatible: starting with scope
                 input.parse::<syn::Token![:]>()?;
                 let scope_lit: syn::LitStr = input.parse()?;
-                let scope = Some(scope_lit.value());
-
-                // Then expect the content
+                scope = Some(scope_lit.value());
                 input.parse::<syn::Token![,]>()?;
                 let lit: syn::LitStr = input.parse()?;
-                (ScssSource::Inline(lit.value()), scope)
+                source = Some(ScssSource::Inline(lit.value()));
             } else {
-                return Err(syn::Error::new(
-                    ident.span(),
-                    "expected `file:`, `scope:`, or SCSS content starting with a class selector",
-                ));
+                return Err(syn::Error::new(ident.span(), "expected `file:`, `scope:`"));
             }
         } else if lookahead.peek(syn::LitStr) {
-            // String literal - could be inline SCSS or file path
             let lit: syn::LitStr = input.parse()?;
             let content = lit.value();
-
-            // Check if this looks like inline SCSS (contains { or .)
             let is_inline_scss = content.contains('{') || content.contains('.');
-
-            if is_inline_scss {
-                let scope = parse_scope(input)?;
-                (ScssSource::Inline(content), scope)
+            let (s, nh) = parse_scope(input)?;
+            scope = s;
+            no_hash = nh;
+            source = Some(if is_inline_scss {
+                ScssSource::Inline(content)
             } else {
-                // Treat as file path
-                let scope = parse_scope(input)?;
-                (ScssSource::File(content), scope)
-            }
+                ScssSource::File(content)
+            });
         } else {
-            // Try to parse as raw SCSS (class selectors like .button)
-            // This handles the case where the input starts with `.`
             let tts: proc_macro2::TokenStream = input.parse()?;
             let scss_content = tts.to_string();
-
-            // Simple heuristic: if it looks like SCSS, treat it as inline
             if scss_content.contains('{') || scss_content.starts_with('.') {
-                let scope = parse_scope(input)?;
-                (ScssSource::Inline(scss_content), scope)
+                let (s, nh) = parse_scope(input)?;
+                scope = s;
+                no_hash = nh;
+                source = Some(ScssSource::Inline(scss_content));
             } else {
                 return Err(lookahead.error());
             }
         };
 
-        Ok(ScssInput { source, scope })
+        Ok(ScssInput {
+            source: source.unwrap(),
+            scope,
+            no_hash,
+        })
     }
 }
 
-/// Parse optional scope parameter
-fn parse_scope(input: syn::parse::ParseStream) -> syn::Result<Option<String>> {
+/// Parse optional trailing `, scope: "..."` and `, no_hash`.
+fn parse_scope(input: syn::parse::ParseStream) -> syn::Result<(Option<String>, bool)> {
     let mut scope = None;
+    let mut no_hash = false;
 
     while !input.is_empty() {
         input.parse::<syn::Token![,]>()?;
@@ -137,10 +136,12 @@ fn parse_scope(input: syn::parse::ParseStream) -> syn::Result<Option<String>> {
             input.parse::<syn::Token![:]>()?;
             let scope_lit: syn::LitStr = input.parse()?;
             scope = Some(scope_lit.value());
+        } else if ident == "no_hash" {
+            no_hash = true;
         }
     }
 
-    Ok(scope)
+    Ok((scope, no_hash))
 }
 
 /// Expands the scss! macro
@@ -148,21 +149,25 @@ pub fn expand_scss(input: TokenStream) -> TokenStream {
     let scss_input = syn::parse_macro_input!(input as ScssInput);
 
     let expanded = match scss_input.source {
-        ScssSource::Inline(content) => expand_inline_scss(&content, scss_input.scope.as_deref()),
-        ScssSource::File(path) => expand_file_scss(&path, scss_input.scope.as_deref()),
+        ScssSource::Inline(content) => {
+            expand_inline_scss(&content, scss_input.scope.as_deref(), scss_input.no_hash)
+        }
+        ScssSource::File(path) => {
+            expand_file_scss(&path, scss_input.scope.as_deref(), scss_input.no_hash)
+        }
     };
 
     TokenStream::from(expanded)
 }
 
 /// Expand inline SCSS content
-fn expand_inline_scss(content: &str, scope: Option<&str>) -> TokenStream2 {
-    let (css, class_map) = compile_scss_with_hashing(content, scope);
+fn expand_inline_scss(content: &str, scope: Option<&str>, no_hash: bool) -> TokenStream2 {
+    let (css, class_map) = compile_scss_with_hashing(content, scope, no_hash);
     generate_output(css, class_map)
 }
 
 /// Expand file-based SCSS
-fn expand_file_scss(path: &str, scope: Option<&str>) -> TokenStream2 {
+fn expand_file_scss(path: &str, scope: Option<&str>, no_hash: bool) -> TokenStream2 {
     let crate_root = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(v) => v,
         Err(_) => {
@@ -183,7 +188,7 @@ fn expand_file_scss(path: &str, scope: Option<&str>) -> TokenStream2 {
         }
     };
 
-    let (css, class_map) = compile_scss_with_hashing(&content, scope);
+    let (css, class_map) = compile_scss_with_hashing(&content, scope, no_hash);
     generate_output(css, class_map)
 }
 
@@ -209,20 +214,28 @@ fn generate_output(css: String, class_map: HashMap<String, String>) -> TokenStre
     }
 }
 
-fn compile_scss_with_hashing(scss: &str, scope: Option<&str>) -> (String, HashMap<String, String>) {
+fn compile_scss_with_hashing(
+    scss: &str,
+    scope: Option<&str>,
+    no_hash: bool,
+) -> (String, HashMap<String, String>) {
     let mut class_map = HashMap::new();
 
-    let hash_input = match scope {
-        Some(s) => format!("{}:{}", s, scss),
-        None => scss.to_string(),
+    let processed_scss = if no_hash {
+        scss.to_string()
+    } else {
+        let hash_input = match scope {
+            Some(s) => format!("{}:{}", s, scss),
+            None => scss.to_string(),
+        };
+
+        let mut hasher = Sha256::new();
+        hasher.update(hash_input.as_bytes());
+        let hash = hasher.finalize();
+        let hash_str = hex::encode(&hash[..6]);
+
+        process_class_names(scss, &hash_str, &mut class_map)
     };
-
-    let mut hasher = Sha256::new();
-    hasher.update(hash_input.as_bytes());
-    let hash = hasher.finalize();
-    let hash_str = hex::encode(&hash[..6]);
-
-    let processed_scss = process_class_names(scss, &hash_str, &mut class_map);
 
     let css = match grass::from_string(&processed_scss, &grass::Options::default()) {
         Ok(css) => css,

@@ -7,7 +7,6 @@ members = [
     "packages/web",
     "packages/hooks",
     "packages/packager",
-    "packages/e2e",
     "packages/style",
     "packages/browser-wit-resolver",
     "packages/browser-worlds",
@@ -44,7 +43,7 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
-version = "0.5.17"
+version = "0.5.18"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 rust-version = "1.91"
