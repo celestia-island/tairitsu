@@ -22,9 +22,9 @@ tairitsu-web = { path = "../../packages/web", features = [
 ], default-features = false }
 
 # Hikari design system
-hikari-palette = { git = "https://github.com/celestia-island/hikari.git", branch = "dev" }
-hikari-components = { git = "https://github.com/celestia-island/hikari.git", branch = "dev" }
-hikari-icons = { git = "https://github.com/celestia-island/hikari.git", branch = "dev", features = ["tairitsu"] }
+hikari-palette = { git = "https://github.com/celestia-island/hikari.git", branch = "master" }
+hikari-components = { git = "https://github.com/celestia-island/hikari.git", branch = "master" }
+hikari-icons = { git = "https://github.com/celestia-island/hikari.git", branch = "master", features = ["tairitsu"] }
 
 # Markdown rendering
 pulldown-cmark = "^0.12"
