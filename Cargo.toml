@@ -43,7 +43,7 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
-version = "0.5.18"
+version = "0.5.19"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 rust-version = "1.91"
