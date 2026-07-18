@@ -168,6 +168,41 @@ fn expand_inline_scss(content: &str, scope: Option<&str>, no_hash: bool) -> Toke
     generate_output(css, class_map)
 }
 
+/// Walk up from a crate root looking for hikari-theme's `styles/` directory.
+///
+/// Covers two layouts:
+/// - Monorepo: `packages/theme/styles/` is a sibling of `packages/components/`.
+/// - crates.io registry: `hikari-theme-<ver>/styles/` is a sibling of
+///   `hikari-components-<ver>/` inside the same index directory.
+fn discover_theme_styles_paths(crate_root: &str) -> Vec<std::path::PathBuf> {
+    let root = std::path::Path::new(crate_root);
+    let mut paths = Vec::new();
+
+    // Monorepo: `../theme/styles` from `packages/components/`.
+    let parent = root.parent().unwrap_or(root);
+    let workspace_theme = parent.join("theme").join("styles");
+    if workspace_theme.is_dir() {
+        paths.push(workspace_theme);
+    }
+
+    // crates.io registry: both `hikari-theme-<ver>` and
+    // `hikari-components-<ver>` are siblings under the same index dir.
+    if let Ok(entries) = std::fs::read_dir(parent) {
+        for entry in entries.flatten() {
+            let name_str = entry.file_name().to_string_lossy().into_owned();
+            if name_str.starts_with("hikari-theme-") {
+                let styles = entry.path().join("styles");
+                if styles.is_dir() {
+                    paths.push(styles);
+                    break;
+                }
+            }
+        }
+    }
+
+    paths
+}
+
 /// Expand file-based SCSS
 fn expand_file_scss(path: &str, scope: Option<&str>, no_hash: bool) -> TokenStream2 {
     let crate_root = match std::env::var("CARGO_MANIFEST_DIR") {
@@ -199,6 +234,14 @@ fn expand_file_scss(path: &str, scope: Option<&str>, no_hash: bool) -> TokenStre
         load_paths.push(parent.to_path_buf());
     }
     load_paths.push(std::path::PathBuf::from(&crate_root));
+
+    // Discover hikari-theme's styles directory for cross-crate @use resolution.
+    // In a monorepo it lives at `../theme/styles/` relative to the workspace
+    // packages dir; from crates.io both are siblings under the same registry
+    // index. We walk up from the crate root looking for it.
+    for load_path in discover_theme_styles_paths(&crate_root) {
+        load_paths.push(load_path);
+    }
 
     let (css, class_map) =
         compile_scss_inner(&content, scope, no_hash, &load_paths, Some(&full_path));
