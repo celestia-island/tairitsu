@@ -5,7 +5,7 @@ edition = "2024"
 rust-version = "1.85"
 authors = ["langyo <langyo.china@gmail.com>"]
 license = "MIT"
-license-file = "LICENSE"
+license-file.workspace = true
 description = "Lightweight headless browser automation — CDP engine + HTTP debug API"
 repository = "https://github.com/celestia-island/tairitsu"
 
