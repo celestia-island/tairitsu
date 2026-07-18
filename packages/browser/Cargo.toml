@@ -1,6 +1,6 @@
 [package]
 name = "tairitsu-browser"
-version = "0.5.13"
+version.workspace = true
 edition = "2024"
 rust-version = "1.85"
 authors = ["langyo <langyo.china@gmail.com>"]
