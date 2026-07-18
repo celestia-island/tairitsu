@@ -70,3 +70,4 @@ pnpm-lock.yaml
 # celestia-devtools: staged-on-demand shared justfile recipes (just fetch)
 /.just/
 /celestia-devtools.just
+.cargo/config.toml
