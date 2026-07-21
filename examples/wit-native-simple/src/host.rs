@@ -10,9 +10,9 @@ use std::collections::HashMap;
 
 use tairitsu_web::{CompositeWitInterface, WitCommand, WitCommandHandler, WitInterface};
 
-// ============================================================================
+// ------
 // Define WIT-Compatible Command Types (Zero Serialization)
-// ============================================================================
+// ------
 
 /// File system commands - basic operations
 #[derive(Debug, Clone)]
@@ -62,9 +62,9 @@ impl WitCommand for NetworkCommands {
     }
 }
 
-// ============================================================================
+// ------
 // Handler Implementations
-// ============================================================================
+// ------
 
 /// File system handler with in-memory storage
 struct FileSystemHandler {
@@ -137,9 +137,9 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
     }
 }
 
-// ============================================================================
+// ------
 // WIT Interface Implementations
-// ============================================================================
+// ------
 
 struct FileSystemInterface;
 
@@ -171,9 +171,9 @@ impl WitInterface for NetworkInterface {
     }
 }
 
-// ============================================================================
+// ------
 // Main: Demonstrating Trait-Based WIT Integration
-// ============================================================================
+// ------
 
 fn main() -> Result<()> {
     env_logger::Builder::from_default_env()

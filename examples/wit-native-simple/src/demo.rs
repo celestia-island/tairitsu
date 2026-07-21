@@ -11,9 +11,9 @@ use tairitsu_web::{
     CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface,
 };
 
-// ============================================================================
+// ------
 // File System Interface - Basic Operations
-// ============================================================================
+// ------
 
 #[derive(Debug, Clone)]
 pub enum FileSystemBasicCommands {
@@ -76,9 +76,9 @@ impl WitCommandHandler<FileSystemBasicCommands> for FileSystemBasicHandler {
     }
 }
 
-// ============================================================================
+// ------
 // File System Interface - Advanced Operations
-// ============================================================================
+// ------
 
 #[derive(Debug, Clone)]
 pub enum FileSystemAdvancedCommands {
@@ -150,9 +150,9 @@ impl WitCommandHandler<FileSystemAdvancedCommands> for FileSystemAdvancedHandler
     }
 }
 
-// ============================================================================
+// ------
 // WIT Interface Implementations
-// ============================================================================
+// ------
 
 struct FileSystemBasicInterface;
 
@@ -179,9 +179,9 @@ impl WitInterface for FileSystemAdvancedInterface {
     }
 }
 
-// ============================================================================
+// ------
 // Demo Main
-// ============================================================================
+// ------
 
 fn main() -> anyhow::Result<()> {
     env_logger::Builder::from_default_env()

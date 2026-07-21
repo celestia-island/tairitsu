@@ -103,9 +103,9 @@ pub fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -
     ))
 }
 
-// ============================================================
+// ------
 // Top Navigation (Header)
-// ============================================================
+// ------
 
 pub fn top_nav() -> VNode {
     let t = crate::i18n::text(Language::default_lang());
@@ -152,9 +152,9 @@ pub fn top_nav() -> VNode {
     ))
 }
 
-// ============================================================
+// ------
 // Sidebar Navigation — mirrors hikari sidebar structure
-// ============================================================
+// ------
 
 struct NavItem {
     label_key: &'static str,
@@ -536,9 +536,9 @@ fn plain_menu_item(href: &str, label: &str, _level: u32, icon: MdiIcon) -> VNode
     )
 }
 
-// ============================================================
+// ------
 // Breadcrumb Navigation
-// ============================================================
+// ------
 
 pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
     let mut children: Vec<VNode> = Vec::new();
@@ -566,9 +566,9 @@ pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
     ))
 }
 
-// ============================================================
+// ------
 // Aside Footer
-// ============================================================
+// ------
 
 pub fn aside_footer() -> VNode {
     let t = i18n::text(Language::default_lang());

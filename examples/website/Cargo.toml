@@ -71,7 +71,7 @@ head = """
 (function() {
     'use strict';
 
-    /* ===== ROUTE TABLE ===== */
+    /* ------ ROUTE TABLE ------*/
     var ROUTES = {
         '/': 'home',
         '/guides': 'guides',
@@ -92,7 +92,7 @@ head = """
         '/packages/list': 'packages-list',
     };
 
-    /* ===== DRAWER STATE ===== */
+    /* ------ DRAWER STATE ------*/
     var drawerOpen = false;
 
     function openDrawer() {
@@ -111,7 +111,7 @@ head = """
         drawerOpen ? closeDrawer() : openDrawer();
     }
 
-    /* ===== THEME TOGGLE ===== */
+    /* ------ THEME TOGGLE ------*/
     var currentTheme = 'dark';
 
     function toggleTheme() {
@@ -131,7 +131,7 @@ head = """
         }
     }
 
-    /* ===== LANGUAGE SWITCHER ===== */
+    /* ------ LANGUAGE SWITCHER ------*/
     var currentLang = 'en';
     var LANGUAGES = [
         { code: 'en', label: 'English' },
@@ -181,7 +181,7 @@ head = """
         }, 10);
     }
 
-    /* ===== SIDEBAR SUBMENU TOGGLE ===== */
+    /* ------ SIDEBAR SUBMENU TOGGLE ------*/
     function initSidebarToggle() {
         document.querySelectorAll('.hi-menu-submenu-title').forEach(function(title) {
             title.addEventListener('click', function() {
@@ -212,7 +212,7 @@ head = """
         });
     }
 
-    /* ===== SPA ROUTING ===== */
+    /* ------ SPA ROUTING ------*/
     function getPageId(path) {
         var cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
         if (!cleanPath) cleanPath = '/';
@@ -289,7 +289,7 @@ head = """
         showPage(getPageId(window.location.pathname));
     }
 
-    /* ===== INITIALIZATION ===== */
+    /* ------ INITIALIZATION ------*/
     function initRouter() {
         showPage(getPageId(window.location.pathname));
         window.addEventListener('popstate', handlePopState);

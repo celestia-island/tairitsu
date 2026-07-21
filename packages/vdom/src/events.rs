@@ -981,9 +981,9 @@ impl Default for DragEvent {
 /// MouseData is the preferred type name in Dioxus for mouse event handlers.
 pub type MouseData = MouseEvent;
 
-// ============================================================================
+// ------
 // Wheel Event - Phase 4
-// ============================================================================
+// ------
 
 /// Wheel event for mouse wheel interactions (zooming, scrolling, etc.).
 ///
@@ -1148,9 +1148,9 @@ impl Default for WheelEvent {
     }
 }
 
-// ============================================================================
+// ------
 // Touch Event - Phase 4
-// ============================================================================
+// ------
 
 /// A single touch point.
 #[derive(Debug, Clone)]
@@ -1303,9 +1303,9 @@ impl Default for TouchEvent {
     }
 }
 
-// ============================================================================
+// ------
 // Pointer Event - Phase 4
-// ============================================================================
+// ------
 
 /// Pointer type for unified pointer events.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1621,9 +1621,9 @@ impl Default for PointerEvent {
     }
 }
 
-// ============================================================================
+// ------
 // Transition Event - Phase 4
-// ============================================================================
+// ------
 
 /// Transition event for CSS transition completion callbacks.
 ///
@@ -1720,9 +1720,9 @@ impl Default for TransitionEvent {
     }
 }
 
-// ============================================================================
+// ------
 // Animation Event - Phase 4
-// ============================================================================
+// ------
 
 /// Animation event for CSS animation lifecycle callbacks.
 ///

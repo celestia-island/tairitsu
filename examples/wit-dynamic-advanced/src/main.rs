@@ -13,9 +13,9 @@ use tairitsu_web::ron::{typed_ron_tool, RonBinding, RonToolRegistry};
 
 use tairitsu::dynamic::host_imports::HostImportRegistry;
 
-// ============================================================================
+// ------
 // Example Tool Implementations for Comparison
-// ============================================================================
+// ------
 
 #[derive(serde::Deserialize)]
 struct ReverseInput {
@@ -27,22 +27,22 @@ struct ReverseOutput {
     result: String,
 }
 
-// ============================================================================
+// ------
 // Main Demo
-// ============================================================================
+// ------
 
 fn main() -> Result<()> {
     env_logger::Builder::from_default_env()
         .filter_level(log::LevelFilter::Info)
         .init();
 
-    info!("==========================================================");
+    info!("------");
     info!("  Tairitsu 0.3.0 Dynamic Invocation Example               ");
-    info!("==========================================================");
+    info!("------");
 
-    // ========================================================================
+    // ------
     // Scenario 1: Load WASM Component
-    // ========================================================================
+    // ------
     info!("\n📦 Scenario 1: Loading WASM Component");
 
     // In a real scenario, you would load an actual WASM component file
@@ -53,9 +53,9 @@ fn main() -> Result<()> {
     info!("  2. Load the component binary");
     info!("  3. Create a Container with dynamic support");
 
-    // ========================================================================
+    // ------
     // Scenario 2: RON Serialization Demo
-    // ========================================================================
+    // ------
     info!("\n🔤 Scenario 2: RON Serialization");
 
     #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -71,9 +71,9 @@ fn main() -> Result<()> {
     let decoded: CalculatorRequest = RonBinding::ron_to_params(&ron)?;
     info!("RON deserialized: {:?}", decoded);
 
-    // ========================================================================
+    // ------
     // Scenario 3: RonTool Registry (Comparison with ToolRegistry)
-    // ========================================================================
+    // ------
     info!("\n🔧 Scenario 3: RonTool Registry");
 
     let reverse_tool = typed_ron_tool("reverse", |input: ReverseInput| -> ReverseOutput {
@@ -90,9 +90,9 @@ fn main() -> Result<()> {
     let result = ron_registry.invoke("reverse", r#"(text: "Hello, World!")"#)?;
     info!("RON tool result: {}", result);
 
-    // ========================================================================
+    // ------
     // Scenario 4: Host Import Registration
-    // ========================================================================
+    // ------
     info!("\n📥 Scenario 4: Host Import Registration");
 
     let mut host_registry = HostImportRegistry::new();
@@ -158,9 +158,9 @@ fn main() -> Result<()> {
         Err(e) => error!("host-add failed: {}", e),
     }
 
-    // ========================================================================
+    // ------
     // Scenario 5: Runtime Discovery API
-    // ========================================================================
+    // ------
     info!("\n🔍 Scenario 5: Runtime Discovery");
 
     let imports = host_registry.list_imports();
@@ -171,12 +171,12 @@ fn main() -> Result<()> {
         }
     }
 
-    // ========================================================================
+    // ------
     // Scenario 6: API Usage Patterns (Pseudo-code Examples)
-    // ========================================================================
-    // ========================================================================
+    // ------
+    // ------
     // Scenario 6: Complex Type Support Verification
-    // ========================================================================
+    // ------
     info!("\n🧪 Scenario 6: Complex Type Support Verification");
 
     use tairitsu::dynamic::{ron_to_val, val_to_ron};
@@ -260,9 +260,9 @@ fn main() -> Result<()> {
 
     info!("\n  ✅ All complex type serialization tests passed!");
 
-    // ========================================================================
+    // ------
     // Scenario 7: RON Deserialization Tests
-    // ========================================================================
+    // ------
     info!("\n🔄 Scenario 7: RON Deserialization");
 
     use wasmtime::component::Type;
@@ -295,9 +295,9 @@ fn main() -> Result<()> {
 
     info!("\n  ✅ All deserialization tests passed!");
 
-    // ========================================================================
+    // ------
     // Scenario 8: API Usage Patterns
-    // ========================================================================
+    // ------
 
     info!("\n--- Pattern 1: Guest Export with RON ---");
     info!("let result = container.call_guest_raw_desc(");
@@ -325,9 +325,9 @@ fn main() -> Result<()> {
     info!("    println!(\"Function: {{}}\", export.name);");
     info!("}}");
 
-    // ========================================================================
+    // ------
     // Scenario 9: Error Handling
-    // ========================================================================
+    // ------
     info!("\n⚠️  Scenario 9: Error Handling");
 
     // Test calling non-existent tool
@@ -342,9 +342,9 @@ fn main() -> Result<()> {
         Err(e) => debug!("Expected error: {}", e),
     }
 
-    // ========================================================================
+    // ------
     // Summary
-    // ========================================================================
+    // ------
     info!("\n✅ Summary: Dynamic Invocation API Features");
     info!("  ✓ RON serialization for Rust-friendly types");
     info!("  ✓ Binary canonical ABI for performance");

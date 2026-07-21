@@ -61,9 +61,9 @@ python := if os_family() == "windows" { "python" } else { "python3" }
 default:
     @just --list
 
-# ============================================================================
+# ------
 # Tool installation and initialization
-# ============================================================================
+# ------
 
 # Install required Rust toolchain components
 install-tools:
@@ -86,17 +86,17 @@ install-packager: (build-glue-runtime)
 setup: install-tools init
     cargo build --release --all
 
-# ============================================================================
+# ------
 # JS / Node dependency initialization
-# ============================================================================
+# ------
 
 # Install Node.js dependencies for packages/npm/celestia-tairitsu-web-glue (auto-detects pnpm/yarn/npm)
 init:
     {{python}} scripts/init_browser_glue.py
 
-# ============================================================================
+# ------
 # Cleanup tasks
-# ============================================================================
+# ------
 
 # Clean all build artifacts
 clean:
@@ -106,9 +106,9 @@ clean:
 clean-idl-cache:
     @{{python}} scripts/clean_idl_cache.py
 
-# ============================================================================
+# ------
 # Build tasks
-# ============================================================================
+# ------
 
 # Build everything (Debug mode)
 # Build everything. Release by default; `--dev` for debug, `--clean` to clean first.
@@ -126,9 +126,9 @@ build-macro-wasm:
     @echo "Building macro example WASM..."
     cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
 
-# ============================================================================
+# ------
 # Run examples
-# ============================================================================
+# ------
 
 # Run simple demo (trait-based composable WIT interfaces)
 run-simple-demo:
@@ -145,9 +145,9 @@ run-dynamic-advanced:
     @echo "Running dynamic advanced example..."
     cargo run --package tairitsu-example-wit-dynamic-advanced --bin dynamic-advanced-demo
 
-# ============================================================================
+# ------
 # Test tasks
-# ============================================================================
+# ------
 
 # Run all unit tests
 test-unit:
@@ -232,9 +232,9 @@ test:
     @echo "✅ All checks passed successfully!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# ============================================================================
+# ------
 # Code quality checks
-# ============================================================================
+# ------
 
 # Run Clippy linter (requires clippy component)
 clippy:
@@ -260,9 +260,9 @@ fmt:
 ci: fmt-check clippy test
     @echo "✅ CI checks passed"
 
-# ============================================================================
+# ------
 # Watch tasks (using cargo-watch)
-# ============================================================================
+# ------
 
 # Watch code changes and auto-check (using cargo-watch)
 watch:
@@ -272,9 +272,9 @@ watch:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @cargo watch -x check 2>/dev/null || echo "[HINT] Install cargo-watch: cargo install cargo-watch"
 
-# ============================================================================
+# ------
 # Web development
-# ============================================================================
+# ------
 
 # Development mode for website
 #   just dev                  - Blocking foreground with hot-reload
@@ -302,9 +302,9 @@ serve-web: build-web
     @echo "Serving production build..."
     @cd examples/website/dist && {{python}} -m http.server 3001 2>/dev/null || echo "[HINT] Python http.server not available; try: python -m http.server 3001"
 
-# ============================================================================
+# ------
 # WIT generation — W3C WebIDL → WIT interface pipeline
-# ============================================================================
+# ------
 
 # Fetch WebIDL specs from w3c/webref + generate WIT (full pipeline)
 # Requires internet access on the first run; subsequent runs use the cached files.
@@ -335,9 +335,9 @@ wit-fetch-force:
 wit-stats:
     {{python}} scripts/generate_browser_wit.py --stats
 
-# ============================================================================
+# ------
 # TypeScript Glue generation (WIT → TypeScript)
-# ============================================================================
+# ------
 
 # Generate TypeScript glue code from WIT files
 # Reads:  packages/browser-worlds/wit/generated/*.wit
@@ -379,9 +379,9 @@ wit-list-specs:
 wit-dry-run:
     {{python}} scripts/gen_wit_from_webidl.py --dry-run
 
-# ============================================================================
+# ------
 # Browser testing tasks
-# ============================================================================
+# ------
 
 # Download and cache Chromium browser
 browser-install:
@@ -413,9 +413,9 @@ test-browser-ci: browser-install test-browser
     @echo "✅ Browser tests completed!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# ============================================================================
+# ------
 # Documentation tasks
-# ============================================================================
+# ------
 
 # Build documentation
 doc:
@@ -427,9 +427,9 @@ doc-open: doc
     @echo "Opening documentation in browser..."
     cargo doc --no-deps --all-features --open
 
-# ============================================================================
+# ------
 # NPM publishing
-# ============================================================================
+# ------
 
 # Generate and build all per-domain npm glue packages
 npm-build-glue:
@@ -475,9 +475,9 @@ cdn-demo-prod:
     @echo "Building CDN demo (esm.sh mode)..."
     {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist --cdn-mode esm-sh
 
-# ============================================================================
+# ------
 # WIT sync (packages/web embedded copy)
-# ============================================================================
+# ------
 
 # Sync composed WIT files from browser-worlds into packages/web
 sync-wit:
@@ -490,9 +490,9 @@ sync-wit-check:
       || (echo "WIT files out of sync! Run: just sync-wit" && exit 1)
     @echo "WIT files are in sync"
 
-# ============================================================================
+# ------
 # Utilities
-# ============================================================================
+# ------
 
 # Update all dependencies
 update:
@@ -537,9 +537,9 @@ info:
     @echo "  just visual-diff    - Compare screenshots against baseline"
     @echo "  just visual-update  - Update baseline from actual screenshots"
 
-# ============================================================================
+# ------
 # Visual Regression Testing (Phase 3: pixel comparison + HTML report)
-# ============================================================================
+# ------
 
 # Capture screenshots via debug API server (requires running dev --debug)
 visual-capture:

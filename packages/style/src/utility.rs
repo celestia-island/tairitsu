@@ -344,9 +344,9 @@ impl Default for UtilityRegistry {
     }
 }
 
-// ============================================================================
+// ------
 // Spacing Utilities
-// ============================================================================
+// ------
 
 /// Padding utility class (p-{n}, px-{n}, py-{n}, pt-{n}, pr-{n}, pb-{n}, pl-{n})
 #[derive(Debug, Clone, Copy)]
@@ -521,9 +521,9 @@ impl UtilityClass for MarginUtility {
     }
 }
 
-// ============================================================================
+// ------
 // Layout Utilities
-// ============================================================================
+// ------
 
 /// Display utility class (flex, grid, block, inline-block, etc.)
 #[derive(Debug, Clone, Copy)]
@@ -764,9 +764,9 @@ impl UtilityClass for AlignItemsUtility {
     }
 }
 
-// ============================================================================
+// ------
 // Typography Utilities
-// ============================================================================
+// ------
 
 /// Text align utility
 #[derive(Debug, Clone, Copy)]
@@ -899,9 +899,9 @@ impl UtilityClass for FontWeightUtility {
     }
 }
 
-// ============================================================================
+// ------
 // Position Utilities
-// ============================================================================
+// ------
 
 /// Position utility
 #[derive(Debug, Clone, Copy)]
@@ -944,9 +944,9 @@ impl UtilityClass for PositionUtility {
     }
 }
 
-// ============================================================================
+// ------
 // Color Utilities (basic)
-// ============================================================================
+// ------
 
 /// Text color utility
 #[derive(Debug, Clone, Copy)]
@@ -1044,9 +1044,9 @@ impl UtilityClass for BgColorUtility {
     }
 }
 
-// ============================================================================
+// ------
 // Default Registry
-// ============================================================================
+// ------
 
 /// Create a default utility registry with common Tailwind-like utilities
 pub fn create_default_registry() -> UtilityRegistry {

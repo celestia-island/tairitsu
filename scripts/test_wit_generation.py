@@ -29,9 +29,9 @@ from generate_browser_wit import (  # noqa: E402  (imports scripts/ via sys.path
     WIT_KEYWORDS,
 )
 
-# =============================================================================
+# ------
 # Fixtures
-# =============================================================================
+# ------
 
 
 @pytest.fixture(autouse=True)
@@ -96,9 +96,9 @@ def sample_webidl_with_params() -> str:
     """
 
 
-# =============================================================================
+# ------
 # Type Conversion Tests (convert_type function)
-# =============================================================================
+# ------
 
 
 class TestTypeConversion:
@@ -300,9 +300,9 @@ class TestTypeConversion:
         assert convert_type("[Clamp] unsigned long") == "u32"
 
 
-# =============================================================================
+# ------
 # Identifier Conversion Tests
-# =============================================================================
+# ------
 
 
 class TestCamelToKebab:
@@ -398,9 +398,9 @@ class TestSanitizeWitIdent:
             assert result == f"%{keyword}", f"Keyword '{keyword}' should be escaped"
 
 
-# =============================================================================
+# ------
 # WebIDL Parsing Tests
-# =============================================================================
+# ------
 
 
 class TestWebIDLParsing:
@@ -685,9 +685,9 @@ class TestMemberParsing:
         assert member.name == "href"
 
 
-# =============================================================================
+# ------
 # Typedef Resolution Tests
-# =============================================================================
+# ------
 
 
 class TestTypedefResolution:
@@ -764,9 +764,9 @@ class TestTypedefResolution:
         assert convert_type("CustomID") == "u32"
 
 
-# =============================================================================
+# ------
 # Integration Tests
-# =============================================================================
+# ------
 
 
 class TestIntegration:
