@@ -18,10 +18,10 @@ crate-type = ["rlib"]
 default = []
 
 [dependencies]
-tairitsu-vdom = { workspace = true }
-anyhow = { workspace = true }
-tracing = { workspace = true }
 
+anyhow = { workspace = true }
+tairitsu-vdom = { workspace = true }
+tracing = { workspace = true }
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 tokio = { workspace = true, default-features = false, features = [
   "sync",
@@ -35,6 +35,8 @@ tokio = { workspace = true, default-features = false, features = [
 wit-bindgen = { workspace = true }
 
 [dev-dependencies]
+
+tairitsu-macros = { workspace = true }
 tokio = { workspace = true, default-features = false, features = [
   "sync",
   "macros",
@@ -42,4 +44,3 @@ tokio = { workspace = true, default-features = false, features = [
   "rt",
   "time",
 ] }
-tairitsu-macros = { workspace = true }

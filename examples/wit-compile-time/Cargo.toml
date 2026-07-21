@@ -7,20 +7,18 @@ publish = false
 authors = ["langyo <langyo.china@gmail.com>"]
 
 [dependencies]
+
 # Workspace dependencies
 tairitsu = { path = "../../packages/runtime" }
 tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # Basic language and tools
 anyhow = { workspace = true }
-
-# Data and serialization
-rand = "^0.8"
-
 # Logging and tracing
 env_logger = "^0.11"
 log = { version = "^0.4", features = ["std"] }
-
+# Data and serialization
+rand = "^0.8"
 [[bin]]
 name = "compile-time-demo"
 path = "src/main.rs"

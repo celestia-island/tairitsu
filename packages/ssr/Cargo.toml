@@ -9,27 +9,27 @@ repository.workspace = true
 description = "Server-Side Rendering engine for Tairitsu WASM components"
 
 [dependencies]
-tairitsu = { workspace = true }
-tairitsu-vdom = { workspace = true }
-tairitsu-hooks = { workspace = true, optional = true }
-tairitsu-browser-worlds = { workspace = true }
+
 anyhow = { workspace = true }
-thiserror = { workspace = true }
-wasmtime = { workspace = true }
-wasmtime-wasi = { workspace = true }
-tracing = { workspace = true }
+async-stream = { version = "^0.3", optional = true }
+async-trait = { workspace = true }
 bytes = { workspace = true }
+futures = { workspace = true, optional = true }
+regex = { workspace = true }
+reqwest = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-uuid = { version = "^1.11", features = ["v4"] }
-regex = { workspace = true }
-async-trait = { workspace = true }
-reqwest = { workspace = true, optional = true }
-futures = { workspace = true, optional = true }
-async-stream = { version = "^0.3", optional = true }
+tairitsu = { workspace = true }
+tairitsu-browser-worlds = { workspace = true }
+tairitsu-hooks = { workspace = true, optional = true }
+tairitsu-vdom = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"], optional = true }
 tokio-stream = { workspace = true, optional = true, default-features = false }
-
+tracing = { workspace = true }
+uuid = { version = "^1.11", features = ["v4"] }
+wasmtime = { workspace = true }
+wasmtime-wasi = { workspace = true }
 [features]
 default = []
 streaming = ["tokio", "tokio-stream", "futures", "async-stream"]

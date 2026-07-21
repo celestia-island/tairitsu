@@ -16,20 +16,20 @@ default = []
 dynamic = []
 
 [dependencies]
-tairitsu-macros = { workspace = true }
+
 anyhow = { workspace = true }
 bytes = { workspace = true }
+ron = "^0.8"
 serde = { workspace = true }
 serde_json = { workspace = true }
-ron = "^0.8"
+tairitsu-macros = { workspace = true }
 wasmtime = { workspace = true }
 wasmtime-wasi = { workspace = true }
 wit-component = { workspace = true }
 wit-parser = { workspace = true }
-
 [build-dependencies]
-wit-parser = { workspace = true }
 
+wit-parser = { workspace = true }
 [package.metadata.docs.rs]
 all-features = true
 targets = [

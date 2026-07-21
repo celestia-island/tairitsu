@@ -52,12 +52,45 @@ license-file = "LICENSE"
 repository = "https://github.com/celestia-island/tairitsu"
 
 [workspace.dependencies]
+
+tairitsu = { version = "^0.5.14", path = "packages/runtime" }
+tairitsu-browser-fetch = { version = "^0.5.14", path = "packages/browser-fetch" }
+tairitsu-browser-wit-resolver = { version = "^0.5.14", path = "packages/browser-wit-resolver" }
+tairitsu-browser-worlds = { version = "^0.5.14", path = "packages/browser-worlds" }
+tairitsu-hooks = { version = "^0.5.14", path = "packages/hooks" }
+tairitsu-macros = { version = "^0.5.14", path = "packages/macros" }
+tairitsu-packager = { version = "^0.5.14", path = "packages/packager" }
+tairitsu-ssr = { version = "^0.5.14", path = "packages/ssr" }
+tairitsu-style = { version = "^0.5.14", path = "packages/style" }
+tairitsu-vdom = { version = "^0.5.14", path = "packages/vdom" }
+tairitsu-web = { version = "^0.5.14", path = "packages/web" }
+
+anyhow = "^1"
+async-trait = "^0.1"
+axum = "^0.8"
+base64 = "^0.22"
+bytes = "^1"
+chrono = { version = "^0.4", default-features = false, features = ["clock", "serde"] }
+clap = { version = "^4", features = ["derive"] }
+crossterm = "^0.28"
+dirs = "^6"
+env_logger = "^0.11"
+futures = "^0.3"
+grass = "^0.13"
+hex = "^0.4"
+image = "^0.25"
+indicatif = "^0.18"
+libc = "^0.2"
+log = "^0.4"
+portable-pty = "^0.8"
+rand = "^0.8"
+regex = "^1"
+reqwest = { version = "^0.13", default-features = false, features = ["json", "blocking", "rustls"] }
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
-anyhow = "^1"
-tracing = "^0.1"
+sha2 = "^0.10"
+tempfile = "^3"
 thiserror = "^2"
-clap = { version = "^4", features = ["derive"] }
 tokio = { version = "^1", default-features = false, features = [
     "sync",
     "macros",
@@ -66,58 +99,21 @@ tokio = { version = "^1", default-features = false, features = [
     "time",
     "signal",
 ] }
+tokio-stream = { version = "^0.1", default-features = false }
+toml = "^1.1"
+tower-http = "^0.6"
+tracing = "^0.1"
+tracing-subscriber = "^0.3"
+uuid = { version = "^1.11", features = ["v4"] }
+vte = "^0.15"
 wasmtime = { version = "^45", features = ["component-model", "winch"] }
 wasmtime-wasi = "^45"
-reqwest = { version = "^0.13", default-features = false, features = ["json", "blocking", "rustls"] }
-tairitsu = { version = "^0.5.14", path = "packages/runtime" }
-tairitsu-macros = { version = "^0.5.14", path = "packages/macros" }
-tairitsu-vdom = { version = "^0.5.14", path = "packages/vdom" }
-tairitsu-hooks = { version = "^0.5.14", path = "packages/hooks" }
-tairitsu-style = { version = "^0.5.14", path = "packages/style" }
-tairitsu-ssr = { version = "^0.5.14", path = "packages/ssr" }
-tairitsu-web = { version = "^0.5.14", path = "packages/web" }
-tairitsu-browser-worlds = { version = "^0.5.14", path = "packages/browser-worlds" }
-tairitsu-browser-wit-resolver = { version = "^0.5.14", path = "packages/browser-wit-resolver" }
-tairitsu-browser-fetch = { version = "^0.5.14", path = "packages/browser-fetch" }
-tairitsu-packager = { version = "^0.5.14", path = "packages/packager" }
-bytes = "^1"
-sha2 = "^0.10"
-hex = "^0.4"
-futures = "^0.3"
-tracing-subscriber = "^0.3"
-regex = "^1"
-toml = "^1.1"
-grass = "^0.13"
-wit-parser = "^0.252"
-wit-component = "^0.252"
-wit-bindgen = { version = "^0.57", features = ["macros"] }
-tempfile = "^3"
-vte = "^0.15"
-portable-pty = "^0.8"
-image = "^0.25"
-base64 = "^0.22"
-crossterm = "^0.28"
-chrono = { version = "^0.4", default-features = false, features = ["clock", "serde"] }
-libc = "^0.2"
-indicatif = "^0.18"
-zip = { version = "^8", default-features = false, features = ["deflate"] }
-async-trait = "^0.1"
-axum = "^0.8"
-tower-http = "^0.6"
-tokio-stream = { version = "^0.1", default-features = false }
-dirs = "^6"
 which = "^8"
-uuid = { version = "^1.11", features = ["v4"] }
-rand = "^0.8"
 windows-sys = { version = "0.61", default-features = false }
-env_logger = "^0.11"
-log = "^0.4"
-
-# ── Local patches ────────────────────────────────────────────
-# Redirect hikari git deps + crates.io tairitsu-* to local source trees so
-# the whole graph uses one copy of tairitsu-browser-worlds (avoiding the
-# `links` conflict) and consistent versions.
-
+wit-bindgen = { version = "^0.57", features = ["macros"] }
+wit-component = "^0.252"
+wit-parser = "^0.252"
+zip = { version = "^8", default-features = false, features = ["deflate"] }
 [patch.crates-io]
 tairitsu = { path = "packages/runtime" }
 tairitsu-vdom = { path = "packages/vdom" }

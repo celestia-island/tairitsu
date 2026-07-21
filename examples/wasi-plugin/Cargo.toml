@@ -6,9 +6,9 @@ edition.workspace = true
 publish = false
 
 [dependencies]
+
 anyhow = { workspace = true }
 bytes = { workspace = true }
-
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 tairitsu = { path = "../../packages/runtime", features = ["dynamic"] }
 

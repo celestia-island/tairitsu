@@ -16,21 +16,21 @@ include = [
 ]
 
 [dependencies]
-tairitsu = { workspace = true, optional = true }
-tairitsu-vdom = { workspace = true, optional = true }
-tairitsu-hooks = { workspace = true, optional = true }
-tairitsu-macros = { workspace = true, optional = true }
-tairitsu-style = { workspace = true, optional = true }
-tairitsu-ssr = { workspace = true, optional = true }
-tairitsu-packager = { workspace = true, optional = true }
+
 anyhow = { workspace = true }
-thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+tairitsu = { workspace = true, optional = true }
+tairitsu-hooks = { workspace = true, optional = true }
+tairitsu-macros = { workspace = true, optional = true }
+tairitsu-packager = { workspace = true, optional = true }
+tairitsu-ssr = { workspace = true, optional = true }
+tairitsu-style = { workspace = true, optional = true }
+tairitsu-vdom = { workspace = true, optional = true }
+thiserror = { workspace = true }
 toml = { workspace = true }
 tracing = { workspace = true }
 wit-bindgen = { workspace = true, optional = true }
-
 [features]
 # Default: browser-capable subset (vdom + hooks + macros + style). SSR/wasmtime
 # is opt-in via the `ssr` or `server` feature — most consumers (especially
@@ -65,6 +65,7 @@ wit-bindings = ["dep:wit-bindgen"]
 runtime = ["dep:tairitsu"]
 
 [dev-dependencies]
+
 tokio = { workspace = true, default-features = false, features = [
   "sync",
   "macros",
@@ -72,10 +73,9 @@ tokio = { workspace = true, default-features = false, features = [
   "rt",
   "time",
 ] }
-
 [build-dependencies]
-toml = { workspace = true }
-tairitsu-browser-worlds = { workspace = true }
 
+tairitsu-browser-worlds = { workspace = true }
+toml = { workspace = true }
 [package.metadata.docs.rs]
 features = ["full"]

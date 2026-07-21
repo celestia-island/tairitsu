@@ -12,14 +12,16 @@ repository.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+
 anyhow = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }
-
 [target.'cfg(target_family = "wasm")'.dependencies]
 wit-bindgen = { workspace = true }
 
 [dev-dependencies]
+
+tairitsu-macros = { workspace = true }
 tokio = { workspace = true, default-features = false, features = [
   "sync",
   "macros",
@@ -27,4 +29,3 @@ tokio = { workspace = true, default-features = false, features = [
   "rt",
   "time",
 ] }
-tairitsu-macros = { workspace = true }

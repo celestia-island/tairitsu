@@ -11,19 +11,16 @@ authors = ["langyo <langyo.china@gmail.com>"]
 # Includes both standalone demos and full WASM bidirectional communication
 
 [dependencies]
+
 # Basic language and tools
 anyhow = { workspace = true }
-
+# Logging and tracing
+env_logger = "^0.11"
+log = { version = "^0.4", features = ["std"] }
 # Data and serialization
 rand = "^0.8"
 serde = { workspace = true }
 serde_json = { workspace = true }
-
-# Logging and tracing
-env_logger = "^0.11"
-log = { version = "^0.4", features = ["std"] }
-
-# For native builds (host and native testing)
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Workspace dependencies
 tairitsu = { path = "../../packages/runtime" }

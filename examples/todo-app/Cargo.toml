@@ -6,9 +6,9 @@ edition.workspace = true
 publish = false
 
 [dependencies]
-tairitsu-vdom = { path = "../../packages/vdom" }
-tairitsu-macros = { path = "../../packages/macros" }
-tairitsu-hooks = { path = "../../packages/hooks" }
 
+tairitsu-hooks = { path = "../../packages/hooks" }
+tairitsu-macros = { path = "../../packages/macros" }
+tairitsu-vdom = { path = "../../packages/vdom" }
 [lib]
 crate-type = ["rlib"]

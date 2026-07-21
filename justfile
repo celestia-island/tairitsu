@@ -252,6 +252,7 @@ fmt-check:
 # Format all code
 # (no `--all`: see fmt-check — avoids traversing path deps like ../kou)
 fmt:
+    just fmt-toml
     cargo fmt
     python3 scripts/enforce_use_groups.py
 

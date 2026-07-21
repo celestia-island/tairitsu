@@ -12,7 +12,8 @@ links = "tairitsu-browser-worlds"
 include = ["src/**/*", "wit/**/*", "Cargo.toml", "README.md", "build.rs"]
 
 [dependencies]
-anyhow = { workspace = true }
 
+anyhow = { workspace = true }
 [dev-dependencies]
+
 wit-parser = { workspace = true }

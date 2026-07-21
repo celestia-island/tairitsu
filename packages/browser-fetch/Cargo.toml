@@ -19,23 +19,19 @@ path = "src/lib.rs"
 # install the `ring` provider at runtime (in build.rs and lib.rs). ring needs
 # only a C compiler — no cmake — so this stays zero-system-dep and fast.
 [dependencies]
+
 anyhow = { workspace = true }
 reqwest = { workspace = true, features = ["blocking", "rustls-no-provider"], optional = true }
 rustls = { version = "^0.23", default-features = false, features = ["ring", "std", "tls12", "logging"], optional = true }
 sha2 = { workspace = true, optional = true }
 zip = { workspace = true, optional = true }
-
-# Build-script deps are non-optional: a build script can't see package features
-# at compile time (only via `CARGO_FEATURE_*` env at runtime), so the download
-# crates are always available and behavior is gated in build.rs. These are only
-# compiled for the build script target, not linked into the final library.
 [build-dependencies]
+
 anyhow = { workspace = true }
 reqwest = { workspace = true, features = ["blocking", "rustls-no-provider"] }
 rustls = { version = "^0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 sha2 = { workspace = true }
 zip = { workspace = true }
-
 [features]
 default = ["auto-fetch", "runtime-fetch"]
 

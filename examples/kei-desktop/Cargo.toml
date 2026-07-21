@@ -11,9 +11,10 @@ authors = ["langyo <langyo.china@gmail.com>"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+
+tairitsu-macros = { path = "../../packages/macros" }
 # Tairitsu framework packages
 tairitsu-vdom = { path = "../../packages/vdom" }
-tairitsu-macros = { path = "../../packages/macros" }
 tairitsu-web = { path = "../../packages/web", features = [
     "browser",
     "vdom",
@@ -21,4 +22,5 @@ tairitsu-web = { path = "../../packages/web", features = [
 ], default-features = false }
 
 # Logging and error handling
+
 anyhow = { workspace = true }

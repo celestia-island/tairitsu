@@ -14,29 +14,30 @@ name = "tairitsu-browser-test"
 path = "src/main.rs"
 
 [dependencies]
-tokio = { workspace = true, features = ["full"] }
-tokio-tungstenite = { version = "^0.27", default-features = false, features = ["connect"] }
+
+anyhow = { workspace = true }
+axum = { workspace = true }
+clap = { workspace = true, features = ["env"] }
+dirs = { workspace = true }
 futures = { workspace = true }
+hex = { workspace = true }
+indicatif = { workspace = true }
 reqwest = { workspace = true, default-features = false, features = [
   "rustls-no-provider",
   "stream",
 ] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
-zip = { workspace = true }
-clap = { workspace = true, features = ["env"] }
-indicatif = { workspace = true }
-axum = { workspace = true }
-tower-http = { workspace = true, features = ["fs"] }
-anyhow = { workspace = true }
+semver = "^1"
 serde = { workspace = true }
 serde_json = { workspace = true }
-dirs = { workspace = true }
 sha2 = { workspace = true }
-hex = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tokio-tungstenite = { version = "^0.27", default-features = false, features = ["connect"] }
+tower-http = { workspace = true, features = ["fs"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 which = { workspace = true }
-semver = "^1"
-
+zip = { workspace = true }
 [dev-dependencies]
+
 tempfile = { workspace = true }

@@ -7,25 +7,22 @@ publish = false
 authors = ["langyo <langyo.china@gmail.com>"]
 
 [dependencies]
+
 # Workspace dependencies
 tairitsu = { path = "../../packages/runtime", features = ["dynamic"] }
 tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # Basic language and tools
 anyhow = { workspace = true }
-
 # Data and serialization
 bytes = { workspace = true }
-serde = { workspace = true }
-
-# WASM dependencies (re-exported by tairitsu, but needed for direct use)
-wasmtime = { workspace = true }
-wasmtime-wasi = { workspace = true }
-
 # Logging
 env_logger = "^0.11"
 log = { version = "^0.4", features = ["std"] }
-
+serde = { workspace = true }
+# WASM dependencies (re-exported by tairitsu, but needed for direct use)
+wasmtime = { workspace = true }
+wasmtime-wasi = { workspace = true }
 [[bin]]
 name = "dynamic-advanced-demo"
 path = "src/main.rs"

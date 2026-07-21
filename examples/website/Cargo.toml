@@ -11,10 +11,11 @@ authors = ["langyo <langyo.china@gmail.com>"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# Tairitsu framework packages
-tairitsu-vdom = { path = "../../packages/vdom" }
+
 tairitsu-hooks = { path = "../../packages/hooks" }
 tairitsu-macros = { path = "../../packages/macros" }
+# Tairitsu framework packages
+tairitsu-vdom = { path = "../../packages/vdom" }
 # For wasm builds, use only browser features (not server-side features like ssr/packager)
 tairitsu-web = { path = "../../packages/web", features = [
     "browser",
@@ -23,20 +24,18 @@ tairitsu-web = { path = "../../packages/web", features = [
 ], default-features = false }
 
 # Hikari design system
-hikari-palette = { git = "https://github.com/celestia-island/hikari.git", branch = "master" }
+
 hikari-components = { git = "https://github.com/celestia-island/hikari.git", branch = "master" }
 hikari-icons = { git = "https://github.com/celestia-island/hikari.git", branch = "master", features = ["tairitsu"] }
+hikari-palette = { git = "https://github.com/celestia-island/hikari.git", branch = "master" }
 
-# Markdown rendering
-pulldown-cmark = "^0.12"
-
-# Logging and error handling
-tracing = { workspace = true }
 # tracing-wasm uses wasm-bindgen which is incompatible with wasm32-wasip2 component model
 # Use basic console logging instead for WASI components
 anyhow = { workspace = true }
-
-# Tairitsu Package configuration (replaces HTML template)
+# Markdown rendering
+pulldown-cmark = "^0.12"
+# Logging and error handling
+tracing = { workspace = true }
 [package.metadata.tairitsu]
 app-name = "Tairitsu Framework"
 title = "Tairitsu - WASM Component Runtime Engine"

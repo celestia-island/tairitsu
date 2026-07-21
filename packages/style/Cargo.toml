@@ -12,16 +12,16 @@ repository.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-tairitsu-vdom = { workspace = true }
-thiserror = { workspace = true }
-serde = { workspace = true, optional = true }
+
 pest = "^2.7"
 pest_derive = "^2.7"
-
+serde = { workspace = true, optional = true }
+tairitsu-vdom = { workspace = true }
+thiserror = { workspace = true }
 [build-dependencies]
+
 serde = { workspace = true }
 serde_json = { workspace = true }
-
 [target.'cfg(target_family = "wasm")'.dependencies]
 wit-bindgen = { workspace = true }
 

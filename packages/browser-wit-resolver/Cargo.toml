@@ -9,21 +9,22 @@ license-file.workspace = true
 repository.workspace = true
 
 [dependencies]
-tairitsu-browser-worlds = { workspace = true, optional = true }
+
 anyhow = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-tracing = { workspace = true }
+hex = { workspace = true }
 reqwest = { workspace = true, features = [
   "blocking",
 ], optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 sha2 = { workspace = true }
-hex = { workspace = true }
-
+tairitsu-browser-worlds = { workspace = true, optional = true }
+tracing = { workspace = true }
 [features]
 default = ["embedded"]
 fetch = ["reqwest"]
 embedded = ["tairitsu-browser-worlds"]
 
 [dev-dependencies]
+
 tempfile = { workspace = true }
