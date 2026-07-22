@@ -1,4 +1,4 @@
-<div align="center"><img src="https://raw.githubusercontent.com/celestia-island/docs.celestia.world/dev/res/logo/tairitsu.png" width="120" /></div>
+<div align="center"><img src="https://raw.githubusercontent.com/celestia-island/docs.celestia.world/master/res/logo/tairitsu.png" width="120" /></div>
 <h1 align="center">Tairitsu</h1>
 <div align="center">
  <strong>Full-stack framework powered by the WASM Component Model</strong>
