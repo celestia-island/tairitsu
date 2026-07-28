@@ -47,7 +47,7 @@ graph TD
 ## 其他语言
 
 - [English](../en/index.md)
-- [繁體中文](../zht/index.md)
+- [繁體中文](../zh-Hant/index.md)
 - [日本語](../ja/index.md)
 - [한국어](../ko/index.md)
 - [Español](../es/index.md)
