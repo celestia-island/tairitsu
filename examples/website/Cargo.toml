@@ -53,7 +53,7 @@ hot-reload = true
 open-browser = false
 
 [package.metadata.tairitsu.html]
-lang = "zhs"
+lang = "zh-Hans"
 charset = "UTF-8"
 viewport = "width=device-width, initial-scale=1.0"
 favicon = "public/favicon.ico"
@@ -135,8 +135,8 @@ head = """
     var currentLang = 'en';
     var LANGUAGES = [
         { code: 'en', label: 'English' },
-        { code: 'zhs', label: '中文' },
-        { code: 'zht', label: '繁體中文' },
+        { code: 'zh-Hans', label: '中文' },
+        { code: 'zh-Hant', label: '繁體中文' },
         { code: 'ja', label: '日本語' },
         { code: 'ko', label: '한국어' },
         { code: 'fr', label: 'Français' },

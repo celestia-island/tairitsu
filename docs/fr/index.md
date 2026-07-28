@@ -43,8 +43,8 @@ graph TD
 ## Autres langues
 
 - [English](../en/index.md)
-- [简体中文](../zhs/index.md)
-- [繁體中文](../zht/index.md)
+- [简体中文](../zh-Hans/index.md)
+- [繁體中文](../zh-Hant/index.md)
 - [日本語](../ja/index.md)
 - [한국어](../ko/index.md)
 - [Español](../es/index.md)
