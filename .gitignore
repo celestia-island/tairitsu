@@ -62,10 +62,12 @@ HIKARI_BROWSER_ISSUE.md
 # Run `just sync-wit` to populate it from browser-worlds.
 # packages/web/wit/
 
-# Package manager lock files (not tracked per project convention)
+# Package manager lock files
+# pnpm-lock.yaml under packages/ is tracked as the resolution source of truth.
+# Root pnpm-lock.yaml (coordinator, no deps), Cargo.lock and package-lock.json stay untracked.
+/pnpm-lock.yaml
 Cargo.lock
 package-lock.json
-pnpm-lock.yaml
 
 # celestia-devtools: staged-on-demand shared justfile recipes (just fetch)
 /.just/
