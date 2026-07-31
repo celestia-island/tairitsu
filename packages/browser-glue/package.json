@@ -1,6 +1,6 @@
 {
   "name": "@celestia/tairitsu-browser-glue",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Auto-generated TypeScript glue for Tairitsu browser WIT interfaces (W3C WebIDL specs)",
   "license": "MIT OR Apache-2.0",
   "type": "module",
@@ -106,14 +106,14 @@
     "clean": "rimraf dist"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@swc/cli": "^0.8.1",
-    "@swc/core": "^1.7.0",
-    "esbuild": "^0.28.1",
-    "eslint": "^10.6.0",
-    "prettier": "^3.4.0",
-    "rimraf": "^6.1.3",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.20.0"
+    "@eslint/js": "^*",
+    "@swc/cli": "^0.*",
+    "@swc/core": "^*",
+    "esbuild": "^0.*",
+    "eslint": "^*",
+    "prettier": "^*",
+    "rimraf": "^*",
+    "typescript": "^*",
+    "typescript-eslint": "^*"
   }
 }
