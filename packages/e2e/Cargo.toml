@@ -11,7 +11,7 @@ publish = false
 
 [dependencies]
 
-shirabe = { path = "../../../shirabe" }
+shirabe = { git = "https://github.com/celestia-island/shirabe.git", branch = "master" }
 
 anyhow = { workspace = true }
 async-trait = { workspace = true }
