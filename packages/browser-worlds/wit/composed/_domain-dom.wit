@@ -548,6 +548,27 @@ interface processing-instruction {
 
     /// `target` attribute — getter.
     get-target: func(self: processing-instruction-handle) -> string;
+
+    /// `hasAttributes()` operation.
+    has-attributes: func(self: processing-instruction-handle) -> bool;
+
+    /// `getAttributeNames()` operation.
+    get-attribute-names: func(self: processing-instruction-handle) -> list<string>;
+
+    /// `getAttribute()` operation.
+    get-attribute: func(self: processing-instruction-handle, name: string) -> option<string>;
+
+    /// `setAttribute()` operation.
+    set-attribute: func(self: processing-instruction-handle, name: string, value: string);
+
+    /// `removeAttribute()` operation.
+    remove-attribute: func(self: processing-instruction-handle, name: string);
+
+    /// `toggleAttribute()` operation.
+    toggle-attribute: func(self: processing-instruction-handle, name: string, force: option<bool>) -> bool;
+
+    /// `hasAttribute()` operation.
+    has-attribute: func(self: processing-instruction-handle, name: string) -> bool;
 }
 
 interface abstract-range {

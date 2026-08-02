@@ -5,35 +5,13 @@
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
 /// Version: 0.2.0
-/// Generated: 2026-05-31 03:52:06 UTC
+/// Generated: 2026-08-02 02:44:00 UTC
 ///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
 ///
 /// Status: auto-generated (Phase A) — review before use in production
 package tairitsu-browser:svg@0.2.0;
-
-/// Common DOM rectangle type used by multiple interfaces
-
-interface types {
-
-    /// DOMRect values - x, y, width, height
-
-    record dom-rect {
-
-        x: f64,
-
-        y: f64,
-
-        width: f64,
-
-        height: f64,
-
-    }
-
-}
-
-
 
 /// WebIDL interface: `SVGElement`
 /// Inherits: `Element`
@@ -57,16 +35,13 @@ interface svg-element {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/SVG.idl
 interface svg-graphics-element {
     /// Opaque handle to a host-side `SVGGraphicsElement` instance.
-
-    use types.{dom-rect};
-
     type svg-graphics-element-handle = u64;
 
     /// `transform` attribute — getter.
     get-transform: func(self: svg-graphics-element-handle) -> u64;
 
     /// `getBBox()` operation.
-    get-b-box: func(self: svg-graphics-element-handle, options: option<u64>) -> dom-rect;
+    get-b-box: func(self: svg-graphics-element-handle, options: option<u64>) -> u64;
 
     /// `getCTM()` operation.
     get-ctm: func(self: svg-graphics-element-handle) -> option<u64>;
@@ -388,16 +363,13 @@ interface svg-animated-string {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/SVG.idl
 interface svg-animated-rect {
     /// Opaque handle to a host-side `SVGAnimatedRect` instance.
-
-    use types.{dom-rect};
-
     type svg-animated-rect-handle = u64;
 
     /// `baseVal` attribute — getter.
-    get-base-val: func(self: svg-animated-rect-handle) -> dom-rect;
+    get-base-val: func(self: svg-animated-rect-handle) -> u64;
 
     /// `animVal` attribute — getter.
-    get-anim-val: func(self: svg-animated-rect-handle) -> dom-rect;
+    get-anim-val: func(self: svg-animated-rect-handle) -> u64;
 }
 
 /// WebIDL interface: `SVGAnimatedNumberList`
@@ -769,9 +741,6 @@ interface document {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/SVG.idl
 interface svgsvg-element {
     /// Opaque handle to a host-side `SVGSVGElement` instance.
-
-    use types.{dom-rect};
-
     type svgsvg-element-handle = u64;
 
     /// `x` attribute — getter.
@@ -795,16 +764,16 @@ interface svgsvg-element {
     get-current-translate: func(self: svgsvg-element-handle) -> u64;
 
     /// `getIntersectionList()` operation.
-    get-intersection-list: func(self: svgsvg-element-handle, rect: dom-rect, reference-element: option<u64>) -> u64;
+    get-intersection-list: func(self: svgsvg-element-handle, rect: u64, reference-element: option<u64>) -> u64;
 
     /// `getEnclosureList()` operation.
-    get-enclosure-list: func(self: svgsvg-element-handle, rect: dom-rect, reference-element: option<u64>) -> u64;
+    get-enclosure-list: func(self: svgsvg-element-handle, rect: u64, reference-element: option<u64>) -> u64;
 
     /// `checkIntersection()` operation.
-    check-intersection: func(self: svgsvg-element-handle, element: u64, rect: dom-rect) -> bool;
+    check-intersection: func(self: svgsvg-element-handle, element: u64, rect: u64) -> bool;
 
     /// `checkEnclosure()` operation.
-    check-enclosure: func(self: svgsvg-element-handle, element: u64, rect: dom-rect) -> bool;
+    check-enclosure: func(self: svgsvg-element-handle, element: u64, rect: u64) -> bool;
 
     /// `deselectAll()` operation.
     deselect-all: func(self: svgsvg-element-handle);
@@ -825,7 +794,7 @@ interface svgsvg-element {
     create-svg-matrix: func(self: svgsvg-element-handle) -> u64;
 
     /// `createSVGRect()` operation.
-    create-svg-rect: func(self: svgsvg-element-handle) -> dom-rect;
+    create-svg-rect: func(self: svgsvg-element-handle) -> u64;
 
     /// `createSVGTransform()` operation.
     create-svg-transform: func(self: svgsvg-element-handle) -> u64;
@@ -867,12 +836,6 @@ interface svg-use-element {
 
     /// `height` attribute — getter.
     get-height: func(self: svg-use-element-handle) -> u64;
-
-    /// `instanceRoot` attribute — getter.
-    get-instance-root: func(self: svg-use-element-handle) -> option<u64>;
-
-    /// `animatedInstanceRoot` attribute — getter.
-    get-animated-instance-root: func(self: svg-use-element-handle) -> option<u64>;
 }
 
 /// WebIDL interface: `ShadowAnimation`
@@ -1182,9 +1145,6 @@ interface svg-point-list {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/SVG.idl
 interface svg-text-content-element {
     /// Opaque handle to a host-side `SVGTextContentElement` instance.
-
-    use types.{dom-rect};
-
     type svg-text-content-element-handle = u64;
 
     /// `textLength` attribute — getter.
@@ -1209,7 +1169,7 @@ interface svg-text-content-element {
     get-end-position-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> u64;
 
     /// `getExtentOfChar()` operation.
-    get-extent-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> dom-rect;
+    get-extent-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> u64;
 
     /// `getRotationOfChar()` operation.
     get-rotation-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> f32;

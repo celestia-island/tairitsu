@@ -5,7 +5,7 @@
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
 /// Version: 0.2.0
-/// Generated: 2026-05-31 03:52:06 UTC
+/// Generated: 2026-08-02 02:43:59 UTC
 ///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
@@ -626,6 +626,27 @@ interface processing-instruction {
 
     /// `target` attribute — getter.
     get-target: func(self: processing-instruction-handle) -> string;
+
+    /// `hasAttributes()` operation.
+    has-attributes: func(self: processing-instruction-handle) -> bool;
+
+    /// `getAttributeNames()` operation.
+    get-attribute-names: func(self: processing-instruction-handle) -> list<string>;
+
+    /// `getAttribute()` operation.
+    get-attribute: func(self: processing-instruction-handle, name: string) -> option<string>;
+
+    /// `setAttribute()` operation.
+    set-attribute: func(self: processing-instruction-handle, name: string, value: string);
+
+    /// `removeAttribute()` operation.
+    remove-attribute: func(self: processing-instruction-handle, name: string);
+
+    /// `toggleAttribute()` operation.
+    toggle-attribute: func(self: processing-instruction-handle, name: string, force: option<bool>) -> bool;
+
+    /// `hasAttribute()` operation.
+    has-attribute: func(self: processing-instruction-handle, name: string) -> bool;
 }
 
 /// WebIDL interface: `AbstractRange`

@@ -5,7 +5,7 @@
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
 /// Version: 0.2.0
-/// Generated: 2026-05-31 03:52:06 UTC
+/// Generated: 2026-08-02 02:44:00 UTC
 ///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
@@ -36,6 +36,9 @@ interface blob {
 
     /// `arrayBuffer()` operation.
     array-buffer: func(self: blob-handle) -> u64;
+
+    /// `textStream()` operation.
+    text-stream: func(self: blob-handle) -> u64;
 
     /// `bytes()` operation.
     bytes: func(self: blob-handle) -> u64;
@@ -281,6 +284,9 @@ interface body {
 
     /// `text()` operation.
     text: func(self: body-handle) -> u64;
+
+    /// `textStream()` operation.
+    text-stream: func(self: body-handle) -> u64;
 }
 
 /// WebIDL interface: `Request`
@@ -398,7 +404,7 @@ interface readable-stream {
     type readable-stream-handle = u64;
 
     /// `from()` operation.
-    %from: func(async-iterable: string) -> u64;
+    %from: func(async-iterable: u64) -> u64;
 
     /// `locked` attribute — getter.
     get-locked: func(self: readable-stream-handle) -> bool;
