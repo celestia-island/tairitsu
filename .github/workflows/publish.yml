@@ -9,7 +9,7 @@ jobs:
     name: Verify versions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Extract tag version
         id: tag
         run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
@@ -69,7 +69,7 @@ jobs:
     timeout-minutes: 45
     needs: verify
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Ensure tag is on master
         run: |
@@ -120,7 +120,7 @@ jobs:
     needs: verify
     if: false  # Disabled until @celestia-island/tairitsu-web-glue is registered on npm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
