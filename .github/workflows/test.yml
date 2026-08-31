@@ -24,7 +24,7 @@ jobs:
           - nightly
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Remove e2e/website from workspace and local patches
         run: |
