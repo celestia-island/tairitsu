@@ -1,39 +1,13 @@
-# PR Title Check — validates PR titles against noa message rules.
-# Installed by: noa hook install-action
-# Requires: noa binary available in PATH (downloaded from GitHub Releases)
-#
-# The NOA_VERSION env var controls which release to fetch.
-# Defaults to "latest".
-
 name: PR Title Check
 
 on:
   pull_request:
     types: [opened, edited, reopened, ready_for_review]
 
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install noa
-        id: install
-        run: |
-          set -euo pipefail
-          VERSION="${NOA_VERSION:-latest}"
-          if [ "$VERSION" = "latest" ]; then
-            URL="https://github.com/celestia-island/noa/releases/latest/download/noa-linux-x86_64.tar.gz"
-          else
-            URL="https://github.com/celestia-island/noa/releases/download/${VERSION}/noa-linux-x86_64.tar.gz"
-          fi
-          if curl -fsSL "$URL" -o /tmp/noa.tar.gz; then
-            tar -xzf /tmp/noa.tar.gz -C /usr/local/bin noa
-            chmod +x /usr/local/bin/noa
-            echo "installed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "noa release not found, skipping PR title check"
-            echo "installed=false" >> "$GITHUB_OUTPUT"
-          fi
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
-      - name: Check PR title
-        if: steps.install.outputs.installed == 'true'
-        run: noa hook validate-msg -m "${{ github.event.pull_request.title }}" -p celestia
+jobs:
+  pr-title-check:
+    uses: celestia-island/celestia-devtools/.github/workflows/pr-title-check.yml@master
