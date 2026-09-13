@@ -501,7 +501,7 @@ interface speech-recognition-result {
     get-length: func(self: speech-recognition-result-handle) -> u32;
 
     /// `item()` operation.
-    item: func(self: speech-recognition-result-handle, index: u32) -> u64;
+    item: func(self: speech-recognition-result-handle, index: u32) -> option<u64>;
 
     /// `isFinal` attribute — getter.
     get-is-final: func(self: speech-recognition-result-handle) -> bool;
@@ -515,7 +515,7 @@ interface speech-recognition-result-list {
     get-length: func(self: speech-recognition-result-list-handle) -> u32;
 
     /// `item()` operation.
-    item: func(self: speech-recognition-result-list-handle, index: u32) -> u64;
+    item: func(self: speech-recognition-result-list-handle, index: u32) -> option<u64>;
 }
 
 interface speech-recognition-event {
@@ -552,7 +552,7 @@ interface speech-grammar-list {
     get-length: func(self: speech-grammar-list-handle) -> u32;
 
     /// `item()` operation.
-    item: func(self: speech-grammar-list-handle, index: u32) -> u64;
+    item: func(self: speech-grammar-list-handle, index: u32) -> option<u64>;
 
     /// `addFromURI()` operation.
     add-from-uri: func(self: speech-grammar-list-handle, src: string, weight: option<f32>);
@@ -879,7 +879,7 @@ interface offline-audio-context {
     type offline-audio-context-handle = u64;
 
     /// `startRendering()` operation.
-    start-rendering: func(self: offline-audio-context-handle) -> u64;
+    start-rendering: func(self: offline-audio-context-handle, chunk-size: option<u32>) -> u64;
 
     /// `resume()` operation.
     resume: func(self: offline-audio-context-handle) -> u64;
@@ -887,8 +887,11 @@ interface offline-audio-context {
     /// `suspend()` operation.
     suspend: func(self: offline-audio-context-handle, suspend-time: f64) -> u64;
 
+    /// `close()` operation.
+    close: func(self: offline-audio-context-handle) -> u64;
+
     /// `length` attribute — getter.
-    get-length: func(self: offline-audio-context-handle) -> u32;
+    get-length: func(self: offline-audio-context-handle) -> option<u32>;
 
     /// `oncomplete` attribute — getter.
     get-oncomplete: func(self: offline-audio-context-handle) -> u64;

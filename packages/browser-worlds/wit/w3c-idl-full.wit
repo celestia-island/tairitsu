@@ -4221,14 +4221,14 @@ interface shadow-root {
     /// `delegatesFocus` attribute — getter.
     get-delegates-focus: func(self: shadow-root-handle) -> bool;
 
+    /// `serializable` attribute — getter.
+    get-serializable: func(self: shadow-root-handle) -> bool;
+
     /// `slotAssignment` attribute — getter.
     get-slot-assignment: func(self: shadow-root-handle) -> u64;
 
     /// `clonable` attribute — getter.
     get-clonable: func(self: shadow-root-handle) -> bool;
-
-    /// `serializable` attribute — getter.
-    get-serializable: func(self: shadow-root-handle) -> bool;
 
     /// `host` attribute — getter.
     get-host: func(self: shadow-root-handle) -> u64;
@@ -4355,6 +4355,27 @@ interface processing-instruction {
 
     /// `target` attribute — getter.
     get-target: func(self: processing-instruction-handle) -> string;
+
+    /// `hasAttributes()` operation.
+    has-attributes: func(self: processing-instruction-handle) -> bool;
+
+    /// `getAttributeNames()` operation.
+    get-attribute-names: func(self: processing-instruction-handle) -> list<string>;
+
+    /// `getAttribute()` operation.
+    get-attribute: func(self: processing-instruction-handle, name: string) -> option<string>;
+
+    /// `setAttribute()` operation.
+    set-attribute: func(self: processing-instruction-handle, name: string, value: string);
+
+    /// `removeAttribute()` operation.
+    remove-attribute: func(self: processing-instruction-handle, name: string);
+
+    /// `toggleAttribute()` operation.
+    toggle-attribute: func(self: processing-instruction-handle, name: string, force: option<bool>) -> bool;
+
+    /// `hasAttribute()` operation.
+    has-attribute: func(self: processing-instruction-handle, name: string) -> bool;
 }
 
 interface abstract-range {
@@ -4996,6 +5017,9 @@ interface blob {
     /// `arrayBuffer()` operation.
     array-buffer: func(self: blob-handle) -> u64;
 
+    /// `textStream()` operation.
+    text-stream: func(self: blob-handle) -> u64;
+
     /// `bytes()` operation.
     bytes: func(self: blob-handle) -> u64;
 }
@@ -5224,6 +5248,9 @@ interface body {
 
     /// `text()` operation.
     text: func(self: body-handle) -> u64;
+
+    /// `textStream()` operation.
+    text-stream: func(self: body-handle) -> u64;
 }
 
 interface request {
@@ -5333,7 +5360,7 @@ interface readable-stream {
     type readable-stream-handle = u64;
 
     /// `from()` operation.
-    %from: func(async-iterable: string) -> u64;
+    %from: func(async-iterable: u64) -> u64;
 
     /// `locked` attribute — getter.
     get-locked: func(self: readable-stream-handle) -> bool;
@@ -8548,6 +8575,11 @@ interface html-template-element {
     /// `content` attribute — getter.
     get-content: func(self: html-template-element-handle) -> u64;
 
+    /// `htmlFor` attribute — getter.
+    get-html-for: func(self: html-template-element-handle) -> string;
+    /// `htmlFor` attribute — setter.
+    set-html-for: func(self: html-template-element-handle, value: string);
+
     /// `shadowRootMode` attribute — getter.
     get-shadow-root-mode: func(self: html-template-element-handle) -> string;
     /// `shadowRootMode` attribute — setter.
@@ -8558,6 +8590,11 @@ interface html-template-element {
     /// `shadowRootDelegatesFocus` attribute — setter.
     set-shadow-root-delegates-focus: func(self: html-template-element-handle, value: bool);
 
+    /// `shadowRootSerializable` attribute — getter.
+    get-shadow-root-serializable: func(self: html-template-element-handle) -> bool;
+    /// `shadowRootSerializable` attribute — setter.
+    set-shadow-root-serializable: func(self: html-template-element-handle, value: bool);
+
     /// `shadowRootSlotAssignment` attribute — getter.
     get-shadow-root-slot-assignment: func(self: html-template-element-handle) -> string;
     /// `shadowRootSlotAssignment` attribute — setter.
@@ -8567,11 +8604,6 @@ interface html-template-element {
     get-shadow-root-clonable: func(self: html-template-element-handle) -> bool;
     /// `shadowRootClonable` attribute — setter.
     set-shadow-root-clonable: func(self: html-template-element-handle, value: bool);
-
-    /// `shadowRootSerializable` attribute — getter.
-    get-shadow-root-serializable: func(self: html-template-element-handle) -> bool;
-    /// `shadowRootSerializable` attribute — setter.
-    set-shadow-root-serializable: func(self: html-template-element-handle, value: bool);
 
     /// `shadowRootCustomElementRegistry` attribute — getter.
     get-shadow-root-custom-element-registry: func(self: html-template-element-handle) -> string;
@@ -9864,6 +9896,9 @@ interface sanitizer {
 
     /// `setDataAttributes()` operation.
     set-data-attributes: func(self: sanitizer-handle, allow: bool) -> bool;
+
+    /// `setJavascriptURLs()` operation.
+    set-javascript-ur-ls: func(self: sanitizer-handle, allow: bool) -> bool;
 
     /// `removeUnsafe()` operation.
     remove-unsafe: func(self: sanitizer-handle) -> bool;
@@ -11218,7 +11253,7 @@ interface speech-recognition-result {
     get-length: func(self: speech-recognition-result-handle) -> u32;
 
     /// `item()` operation.
-    item: func(self: speech-recognition-result-handle, index: u32) -> u64;
+    item: func(self: speech-recognition-result-handle, index: u32) -> option<u64>;
 
     /// `isFinal` attribute — getter.
     get-is-final: func(self: speech-recognition-result-handle) -> bool;
@@ -11232,7 +11267,7 @@ interface speech-recognition-result-list {
     get-length: func(self: speech-recognition-result-list-handle) -> u32;
 
     /// `item()` operation.
-    item: func(self: speech-recognition-result-list-handle, index: u32) -> u64;
+    item: func(self: speech-recognition-result-list-handle, index: u32) -> option<u64>;
 }
 
 interface speech-recognition-event {
@@ -11269,7 +11304,7 @@ interface speech-grammar-list {
     get-length: func(self: speech-grammar-list-handle) -> u32;
 
     /// `item()` operation.
-    item: func(self: speech-grammar-list-handle, index: u32) -> u64;
+    item: func(self: speech-grammar-list-handle, index: u32) -> option<u64>;
 
     /// `addFromURI()` operation.
     add-from-uri: func(self: speech-grammar-list-handle, src: string, weight: option<f32>);
@@ -11596,7 +11631,7 @@ interface offline-audio-context {
     type offline-audio-context-handle = u64;
 
     /// `startRendering()` operation.
-    start-rendering: func(self: offline-audio-context-handle) -> u64;
+    start-rendering: func(self: offline-audio-context-handle, chunk-size: option<u32>) -> u64;
 
     /// `resume()` operation.
     resume: func(self: offline-audio-context-handle) -> u64;
@@ -11604,8 +11639,11 @@ interface offline-audio-context {
     /// `suspend()` operation.
     suspend: func(self: offline-audio-context-handle, suspend-time: f64) -> u64;
 
+    /// `close()` operation.
+    close: func(self: offline-audio-context-handle) -> u64;
+
     /// `length` attribute — getter.
-    get-length: func(self: offline-audio-context-handle) -> u32;
+    get-length: func(self: offline-audio-context-handle) -> option<u32>;
 
     /// `oncomplete` attribute — getter.
     get-oncomplete: func(self: offline-audio-context-handle) -> u64;
@@ -13218,16 +13256,13 @@ interface svg-element {
 
 interface svg-graphics-element {
     /// Opaque handle to a host-side `SVGGraphicsElement` instance.
-
-    use types.{dom-rect};
-
     type svg-graphics-element-handle = u64;
 
     /// `transform` attribute — getter.
     get-transform: func(self: svg-graphics-element-handle) -> u64;
 
     /// `getBBox()` operation.
-    get-b-box: func(self: svg-graphics-element-handle, options: option<u64>) -> dom-rect;
+    get-b-box: func(self: svg-graphics-element-handle, options: option<u64>) -> u64;
 
     /// `getCTM()` operation.
     get-ctm: func(self: svg-graphics-element-handle) -> option<u64>;
@@ -13518,16 +13553,13 @@ interface svg-animated-string {
 
 interface svg-animated-rect {
     /// Opaque handle to a host-side `SVGAnimatedRect` instance.
-
-    use types.{dom-rect};
-
     type svg-animated-rect-handle = u64;
 
     /// `baseVal` attribute — getter.
-    get-base-val: func(self: svg-animated-rect-handle) -> dom-rect;
+    get-base-val: func(self: svg-animated-rect-handle) -> u64;
 
     /// `animVal` attribute — getter.
-    get-anim-val: func(self: svg-animated-rect-handle) -> dom-rect;
+    get-anim-val: func(self: svg-animated-rect-handle) -> u64;
 }
 
 interface svg-animated-number-list {
@@ -13883,9 +13915,6 @@ interface document {
 
 interface svgsvg-element {
     /// Opaque handle to a host-side `SVGSVGElement` instance.
-
-    use types.{dom-rect};
-
     type svgsvg-element-handle = u64;
 
     /// `x` attribute — getter.
@@ -13909,16 +13938,16 @@ interface svgsvg-element {
     get-current-translate: func(self: svgsvg-element-handle) -> u64;
 
     /// `getIntersectionList()` operation.
-    get-intersection-list: func(self: svgsvg-element-handle, rect: dom-rect, reference-element: option<u64>) -> u64;
+    get-intersection-list: func(self: svgsvg-element-handle, rect: u64, reference-element: option<u64>) -> u64;
 
     /// `getEnclosureList()` operation.
-    get-enclosure-list: func(self: svgsvg-element-handle, rect: dom-rect, reference-element: option<u64>) -> u64;
+    get-enclosure-list: func(self: svgsvg-element-handle, rect: u64, reference-element: option<u64>) -> u64;
 
     /// `checkIntersection()` operation.
-    check-intersection: func(self: svgsvg-element-handle, element: u64, rect: dom-rect) -> bool;
+    check-intersection: func(self: svgsvg-element-handle, element: u64, rect: u64) -> bool;
 
     /// `checkEnclosure()` operation.
-    check-enclosure: func(self: svgsvg-element-handle, element: u64, rect: dom-rect) -> bool;
+    check-enclosure: func(self: svgsvg-element-handle, element: u64, rect: u64) -> bool;
 
     /// `deselectAll()` operation.
     deselect-all: func(self: svgsvg-element-handle);
@@ -13939,7 +13968,7 @@ interface svgsvg-element {
     create-svg-matrix: func(self: svgsvg-element-handle) -> u64;
 
     /// `createSVGRect()` operation.
-    create-svg-rect: func(self: svgsvg-element-handle) -> dom-rect;
+    create-svg-rect: func(self: svgsvg-element-handle) -> u64;
 
     /// `createSVGTransform()` operation.
     create-svg-transform: func(self: svgsvg-element-handle) -> u64;
@@ -13978,12 +14007,6 @@ interface svg-use-element {
 
     /// `height` attribute — getter.
     get-height: func(self: svg-use-element-handle) -> u64;
-
-    /// `instanceRoot` attribute — getter.
-    get-instance-root: func(self: svg-use-element-handle) -> option<u64>;
-
-    /// `animatedInstanceRoot` attribute — getter.
-    get-animated-instance-root: func(self: svg-use-element-handle) -> option<u64>;
 }
 
 interface shadow-animation {
@@ -14256,9 +14279,6 @@ interface svg-point-list {
 
 interface svg-text-content-element {
     /// Opaque handle to a host-side `SVGTextContentElement` instance.
-
-    use types.{dom-rect};
-
     type svg-text-content-element-handle = u64;
 
     /// `textLength` attribute — getter.
@@ -14283,7 +14303,7 @@ interface svg-text-content-element {
     get-end-position-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> u64;
 
     /// `getExtentOfChar()` operation.
-    get-extent-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> dom-rect;
+    get-extent-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> u64;
 
     /// `getRotationOfChar()` operation.
     get-rotation-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> f32;
