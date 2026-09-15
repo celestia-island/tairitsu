@@ -9,7 +9,7 @@ on:
       - 'examples/**/*'
       - 'Cargo.toml'
   push:
-    branches: [master, dev]
+    branches: [master]
 
 jobs:
   clippy:
