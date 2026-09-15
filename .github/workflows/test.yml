@@ -10,7 +10,7 @@ on:
       - 'Cargo.toml'
       - 'justfile'
   push:
-    branches: [master, dev]
+    branches: [master]
 
 jobs:
   test:
