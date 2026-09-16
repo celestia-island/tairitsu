@@ -5,4 +5,4 @@ description = "Core WASM Component Model runtime — Container, Registry, WIT bi
 cname = "tairitsu.docs.celestia.world"
 [languages]
 default = "en"
-order = ["en", "zhs", "zht", "ja", "ko", "fr", "es", "ru", "ar"]
+order = ["en", "zh-Hans", "zh-Hant", "ja", "ko", "fr", "es", "ru", "ar"]
