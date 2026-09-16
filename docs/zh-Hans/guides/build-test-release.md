@@ -47,4 +47,4 @@ just gen-wit-all
 
 - 拆分 Rust 与 TypeScript 作业
 - 对 `wit/generated` 变更启用额外审查
-- 对 `docs/zh-CHS` 变更执行链接与路径检查
+- 对 `docs/zh-Hans` 变更执行链接与路径检查
