@@ -22,7 +22,11 @@
 #   just gen-wit-all     - Alternative pipeline (simpler, fewer specs, idl-cache/)
 
 set shell := ["bash", "-c"]
-set windows-shell := ["bash.exe", "-c"]
+# Windows: PowerShell (the 5.1 floor ships with every Windows; pwsh 7 is
+# NOT assumed). Linewise recipes must stay PS-5.1-safe: no `&&` chains,
+# `cd X; cmd` instead of `cd X && cmd`. Bash-only recipes use
+# [script('bash')] and need Git Bash (or WSL) when actually run.
+set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command", "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; $PSDefaultParameterValues['*:Encoding']='utf8';"]
 set unstable
 set lists
 
@@ -287,7 +291,7 @@ dev *FLAGS="":
 
 # Dev server with debug/inspection API for agent automation
 dev-debug *FLAGS="":
-    cd examples/website && tairitsu --manifest-path Cargo.toml dev --port 3000 --watch --daemon --debug {{FLAGS}}
+    cd examples/website; tairitsu --manifest-path Cargo.toml dev --port 3000 --watch --daemon --debug {{FLAGS}}
 
 # Build web demo for production (using tairitsu-packager + CDN demo)
 build-web: init
@@ -300,7 +304,7 @@ build-web: init
 # Serve web demo (production build)
 serve-web: build-web
     @echo "Serving production build..."
-    @cd examples/website/dist && {{python}} -m http.server 3001 2>/dev/null || echo "[HINT] Python http.server not available; try: python -m http.server 3001"
+    @cd examples/website/dist; {{python}} -m http.server 3001 2>/dev/null || echo "[HINT] Python http.server not available; try: python -m http.server 3001"
 
 # ------
 # WIT generation — W3C WebIDL → WIT interface pipeline
@@ -447,7 +451,7 @@ npm-list-wasm:
 
 # Build all npm packages (glue + runtime + wasm)
 npm-build-all: npm-build-glue
-    cd packages/npm/celestia-tairitsu-web-glue && npm run build
+    cd packages/npm/celestia-tairitsu-web-glue; npm run build
     {{python}} scripts/build_wasm_packages.py
 
 # Publish all npm packages to @celestia scope (requires NPM_TOKEN env var)
