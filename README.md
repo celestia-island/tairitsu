@@ -133,7 +133,7 @@ Same component, two execution paths:
 - [Quick Start Guide](docs/en/guides/quick-start.md)
 - [Getting Started Tutorial](docs/en/guides/getting-started.md)
 - [Migration Guide](docs/en/guides/migration.md)
-- Multilingual docs under `docs/` (en, zhs, zht, ja, ko, es, fr, ru, ar)
+- Multilingual docs under `docs/` (en, zh-Hans, zh-Hant, ja, ko, es, fr, ru, ar)
 
 ## License
 

@@ -15,6 +15,7 @@ jobs:
   audit:
     name: Cargo Audit
     runs-on: [self-hosted, linux, x64, local]
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v7
 
@@ -35,6 +36,7 @@ jobs:
   deny:
     name: Cargo Deny
     runs-on: [self-hosted, linux, x64, local]
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v7
 
@@ -55,6 +57,7 @@ jobs:
   npm-audit:
     name: NPM Audit
     runs-on: [self-hosted, linux, x64, local]
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v7
 

@@ -10,12 +10,13 @@ on:
       - 'Cargo.toml'
       - 'justfile'
   push:
-    branches: [master, dev]
+    branches: [master]
 
 jobs:
   test:
     name: Test
     runs-on: [self-hosted, linux, x64, local]
+    timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:

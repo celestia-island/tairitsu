@@ -10,7 +10,7 @@ on:
       - 'packages/vdom/**'
       - '.github/workflows/visual-regression.yml'
   push:
-    branches: [master, dev]
+    branches: [master]
 
 concurrency:
   group: visual-regression-${{ github.ref }}
@@ -20,6 +20,7 @@ jobs:
   visual-diff:
     name: Visual Diff
     runs-on: [self-hosted, linux, x64, local]
+    timeout-minutes: 300
 
     steps:
       - uses: actions/checkout@v7
