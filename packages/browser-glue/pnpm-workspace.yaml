@@ -1,5 +1,0 @@
-allowBuilds:
-  '@swc/core': true
-  esbuild: true
-overrides:
-  typescript: ~6.0
