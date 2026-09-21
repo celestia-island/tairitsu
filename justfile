@@ -30,6 +30,10 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command", "[C
 set unstable
 set lists
 
+# Repo definitions override the shared template's (imported above).
+set allow-duplicate-recipes
+set allow-duplicate-variables
+
 # Shared celestia-devtools recipes — NOT in git. Stage with: just fetch.
 # `import?` silently skips when absent, so this justfile parses pre-fetch.
 import? "./.just/git-bash-interop.just"
@@ -38,25 +42,9 @@ import? "./.just/celestia-devtools.just"
 # Stage shared celestia-devtools recipes into .just/ (gitignored).
 # Source order: explicit URL arg → local pip bundle (offline) → GitHub raw.
 # curl honors HTTP_PROXY/HTTPS_PROXY/ALL_PROXY env vars automatically.
-[script('bash')]
 fetch URL='':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    out=.just/celestia-devtools.just
-    mkdir -p .just
-    if [ -n "{{URL}}" ]; then
-      echo "[fetch] {{URL}} -> $out"
-      curl -fsSL "{{URL}}" -o "$out"
-    elif command -v celestia-devtools >/dev/null 2>&1; then
-      src=$(celestia-devtools include-path)
-      echo "[fetch] local bundle ($src) -> $out"
-      cp "$src" "$out"
-    else
-      echo "[fetch] github raw -> $out"
-      curl -fsSL "https://raw.githubusercontent.com/celestia-island/celestia-devtools/dev/src/celestia_devtools/common.just" -o "$out"
-    fi
-    echo "[fetch] wrote $out"
-
+    {{ if os_family() == "windows" { "python" } else { "python3" } }} -c "import os; os.makedirs('.just', exist_ok=True)"
+    {{ if URL != "" { "curl -fsSL " + URL + " -o .just/celestia-devtools.just" } else if which("celestia-devtools") != "" { "celestia-devtools fetch-just" } else { "curl -fsSL https://raw.githubusercontent.com/celestia-island/celestia-devtools/dev/src/celestia_devtools/common.just -o .just/celestia-devtools.just" } }}
 # Python interpreter — Windows ships as 'python', Unix as 'python3'
 python := if os_family() == "windows" { "python" } else { "python3" }
 
@@ -274,7 +262,7 @@ watch:
     @echo "Watching for changes..."
     @echo "Press Ctrl+C to stop"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @cargo watch -x check 2>/dev/null || echo "[HINT] Install cargo-watch: cargo install cargo-watch"
+    @{{ if which("cargo-watch") != "" { "cargo watch -x check" } else { "echo '[HINT] Install cargo-watch: cargo install cargo-watch'" } }}
 
 # ------
 # Web development
@@ -285,26 +273,50 @@ watch:
 #   just dev --daemon         - Start/restart daemon (non-blocking)
 #   just dev --daemon --debug - Start daemon + debug API server (port 3001)
 #   just dev --daemon stop    - Stop daemon
+[script('python')]
 dev *FLAGS="":
-    @tairitsu --help > /dev/null 2>&1 || (echo "  Building tairitsu CLI..." && cargo build --release --package tairitsu-packager > /dev/null 2>&1)
-    cd examples/website && tairitsu --manifest-path Cargo.toml dev --port 3000 --watch {{FLAGS}}
+    import shutil, subprocess, sys
+
+    def run(cmd):
+        rc = subprocess.run(cmd).returncode
+        if rc != 0:
+            sys.exit(rc)
+
+    flags = "{{FLAGS}}".split()
+    if not shutil.which("tairitsu"):
+        print("  Building tairitsu CLI...")
+        subprocess.run(["cargo", "build", "--release", "--package", "tairitsu-packager"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    proc = subprocess.run(["tairitsu", "--manifest-path", "Cargo.toml", "dev", "--port", "3000", "--watch"] + flags,
+                          cwd="examples/website")
+    sys.exit(proc.returncode)
 
 # Dev server with debug/inspection API for agent automation
 dev-debug *FLAGS="":
     cd examples/website; tairitsu --manifest-path Cargo.toml dev --port 3000 --watch --daemon --debug {{FLAGS}}
 
 # Build web demo for production (using tairitsu-packager + CDN demo)
+[script('python')]
 build-web: init
-    @echo "Building website demo with tairitsu-packager..."
-    @tairitsu --help > /dev/null 2>&1 || (cargo build --release --package tairitsu-packager && {{python}} scripts/install_packager.py)
-    tairitsu --manifest-path examples/website build --release
-    @echo "Building CDN modular demo..."
-    {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist
+    import shutil, subprocess, sys
+
+    def run(cmd):
+        rc = subprocess.run(cmd).returncode
+        if rc != 0:
+            sys.exit(rc)
+
+    print("Building website demo with tairitsu-packager...")
+    if not shutil.which("tairitsu"):
+        run(["cargo", "build", "--release", "--package", "tairitsu-packager"])
+        run(["{{python}}", "scripts/install_packager.py"])
+    run(["tairitsu", "--manifest-path", "examples/website", "build", "--release"])
+    print("Building CDN modular demo...")
+    run(["{{python}}", "scripts/build_cdn_demo.py", "--dist", "target/tairitsu-dist"])
 
 # Serve web demo (production build)
 serve-web: build-web
     @echo "Serving production build..."
-    @cd examples/website/dist; {{python}} -m http.server 3001 2>/dev/null || echo "[HINT] Python http.server not available; try: python -m http.server 3001"
+    @{{python}} -m http.server 3001 --directory examples/website/dist
 
 # ------
 # WIT generation — W3C WebIDL → WIT interface pipeline
@@ -470,9 +482,20 @@ publish-live:
     @{{python}} scripts/publish_live.py
 
 # Build all npm packages locally
+[script('python')]
 npm-build:
-    npm run build -w @celestia/tairitsu-browser-glue || (cd packages/npm/celestia-tairitsu-web-glue && npm run build)
-    npm run build -w @celestia/tairitsu-runtime || (cd packages/npm/celestia-tairitsu-runtime && npm run build)
+    import subprocess, sys
+
+    def npm_build(*fallback_dir):
+        # Try workspace build first, fall back to a per-directory build.
+        ws = subprocess.run(["npm", "run", "build", "-w", fallback_dir[0]])
+        if ws.returncode != 0:
+            d = fallback_dir[1]
+            fb = subprocess.run(["npm", "run", "build"], cwd=d)
+            sys.exit(fb.returncode)
+
+    npm_build("@celestia/tairitsu-browser-glue", "packages/npm/celestia-tairitsu-web-glue")
+    npm_build("@celestia/tairitsu-runtime", "packages/npm/celestia-tairitsu-runtime")
 
 # Build CDN demo with esm.sh CDN URLs (for production deployment)
 cdn-demo-prod:
@@ -488,11 +511,30 @@ sync-wit:
     @{{python}} scripts/sync_wit.py
 
 # Check that embedded WIT files are in sync with browser-worlds
+[script('python')]
 sync-wit-check:
-    @if [ ! -d packages/web/wit/composed ]; then echo "packages/web/wit/composed does not exist, run: just sync-wit" && exit 1; fi
-    @diff -r packages/browser-worlds/wit/composed packages/web/wit/composed \
-      || (echo "WIT files out of sync! Run: just sync-wit" && exit 1)
-    @echo "WIT files are in sync"
+    import filecmp, os, sys
+
+    src = "packages/browser-worlds/wit/composed"
+    dst = "packages/web/wit/composed"
+    if not os.path.isdir(dst):
+        print(f"{dst} does not exist, run: just sync-wit")
+        sys.exit(1)
+
+    # Recursive comparison (filecmp only compares shallowly by default).
+    def trees_differ(a, b):
+        cmp = filecmp.dircmp(a, b)
+        if cmp.left_only or cmp.right_only or cmp.funny_files:
+            return True
+        _, mismatch, errors = filecmp.cmpfiles(a, b, cmp.common_files, shallow=False)
+        if mismatch or errors:
+            return True
+        return any(trees_differ(os.path.join(a, sub), os.path.join(b, sub)) for sub in cmp.subdirs)
+
+    if trees_differ(src, dst):
+        print("WIT files out of sync! Run: just sync-wit")
+        sys.exit(1)
+    print("WIT files are in sync")
 
 # ------
 # Utilities
@@ -551,15 +593,11 @@ visual-capture:
 
 # Run visual diff comparison against baseline
 visual-diff tolerance="0.01":
-    cargo run --package tairitsu-packager --features visual-diff -- \
-        visual-diff \
-        --tolerance {{tolerance}}
+    cargo run --package tairitsu-packager --features visual-diff -- visual-diff --tolerance {{tolerance}}
 
 # Update baseline images from actual screenshots
 visual-update:
-    cargo run --package tairitsu-packager --features visual-diff -- \
-        visual-diff \
-        --update-baseline
+    cargo run --package tairitsu-packager --features visual-diff -- visual-diff --update-baseline
 
 # Full visual regression pipeline: capture + diff + report
 visual-regression: visual-capture
