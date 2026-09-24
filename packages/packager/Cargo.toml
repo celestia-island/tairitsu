@@ -41,12 +41,12 @@ sys-locale = "^0.3"
 tairitsu-browser-fetch = { workspace = true, optional = true }
 tairitsu-browser-wit-resolver = { workspace = true }
 tairitsu-browser-worlds = { workspace = true }
+tairitsu-debug-core = { workspace = true, optional = true }
 tairitsu-ssr = { workspace = true, optional = true }
 tera = "^1"
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "net", "process"], optional = true }
 tokio-stream = { workspace = true, features = ["sync"], optional = true }
-tokio-tungstenite = { version = "^0.27", default-features = false, features = ["connect"], optional = true }
 toml = { workspace = true }
 tower-http = { workspace = true, features = ["fs", "cors", "compression-gzip"], optional = true }
 tracing = { workspace = true }
@@ -69,8 +69,16 @@ dev-server = [
   "tairitsu-ssr",
   "tokio",
   "tokio-stream",
+  "tairitsu-debug-core",
 ]
-debug-browser = ["dev-server", "reqwest", "tokio-tungstenite", "base64", "tairitsu-browser-fetch"]
+debug-browser = [
+  "dev-server",
+  # `reqwest` stays listed: `mcp` (cli-gated) uses it and relied on this
+  # feature enabling it before the debug impl moved to tairitsu-debug-core.
+  "reqwest",
+  "tairitsu-browser-fetch",
+  "tairitsu-debug-core/debug-browser",
+]
 debug-api = ["dev-server"]
 ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]
