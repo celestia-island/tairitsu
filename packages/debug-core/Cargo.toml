@@ -5,7 +5,6 @@ edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
-license-file.workspace = true
 description = "Single shared implementation of the Tairitsu HTTP debug API + CDP browser engine"
 repository.workspace = true
 
