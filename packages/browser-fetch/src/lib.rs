@@ -299,7 +299,7 @@ fn download_to_cache(flavor: Flavor, ver: &str, plat: Platform) -> anyhow::Resul
     let dest = version_dir(flavor, ver, plat);
     let parent = dest.parent().unwrap_or(Path::new("."));
     // Best-effort: reap stale temp dirs left by a previous crashed run (>1h old).
-    sweep_stale_temps(parent, std::time::Duration::from_secs(3600));
+    sweep::sweep_stale_temps(parent, std::time::Duration::from_secs(3600));
     // Unique per (platform, process, call): the PID + a process-local counter,
     // so two concurrent ensure() calls in the SAME process can't collide.
     let nonce = TMP_NONCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -568,33 +568,10 @@ fn install_ring_provider() {
 #[cfg(feature = "runtime-fetch")]
 static TMP_NONCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-/// Best-effort sweep of stale temp dirs (from crashed runs) under `parent`,
-/// older than `max_age`. Live downloads have fresh mtimes and are left alone.
+/// Stale-temp sweeper shared verbatim with `build.rs` (same file, two
+/// include sites — see `src/sweep.rs`).
 #[cfg(feature = "runtime-fetch")]
-fn sweep_stale_temps(parent: &Path, max_age: std::time::Duration) {
-    let Ok(entries) = std::fs::read_dir(parent) else {
-        return;
-    };
-    let cutoff = std::time::SystemTime::now() - max_age;
-    for entry in entries.flatten() {
-        let fname = entry.file_name();
-        let Some(name) = fname.to_str() else {
-            continue;
-        };
-        if !name.starts_with('.') || !name.ends_with(".tmp") {
-            continue;
-        }
-        if let Ok(meta) = entry.metadata() {
-            if meta.is_dir() {
-                if let Ok(mtime) = meta.modified() {
-                    if mtime < cutoff {
-                        let _ = std::fs::remove_dir_all(entry.path());
-                    }
-                }
-            }
-        }
-    }
-}
+mod sweep;
 
 #[cfg(test)]
 mod tests {

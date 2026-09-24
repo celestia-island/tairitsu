@@ -7,6 +7,11 @@
 
 use std::path::{Path, PathBuf};
 
+// Stale-temp sweeper shared verbatim with the lib (same file, two include
+// sites — see `src/sweep.rs`).
+#[path = "src/sweep.rs"]
+mod sweep;
+
 const CHROME_VERSION: &str = "150.0.7871.46";
 const DEFAULT_MIRROR: &str = "https://storage.googleapis.com/chrome-for-testing-public";
 
@@ -180,7 +185,7 @@ fn download(flavor: &str, ver: &str, id: &str) -> anyhow::Result<PathBuf> {
     // the temp path unique per call within a process.
     let parent = dest.parent().unwrap_or(Path::new("."));
     // Best-effort: reap stale temp dirs left by a previous crashed run (>1h old).
-    sweep_stale_temps(parent, std::time::Duration::from_secs(3600));
+    sweep::sweep_stale_temps(parent, std::time::Duration::from_secs(3600));
     let nonce = TMP_NONCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let tmp = parent.join(format!(".{id}-{}-{nonce}.tmp", std::process::id()));
     let _ = std::fs::remove_dir_all(&tmp);
@@ -277,32 +282,6 @@ fn verify_checksum(bytes: &[u8]) -> anyhow::Result<()> {
     }
     eprintln!("[tairitsu-browser-fetch] checksum verified");
     Ok(())
-}
-
-/// Best-effort sweep of stale temp dirs (from crashed runs) under `parent`,
-/// older than `max_age`. Ignores errors. Live downloads have fresh mtimes.
-#[allow(dead_code)]
-fn sweep_stale_temps(parent: &Path, max_age: std::time::Duration) {
-    let Ok(entries) = std::fs::read_dir(parent) else {
-        return;
-    };
-    let cutoff = std::time::SystemTime::now() - max_age;
-    for entry in entries.flatten() {
-        let name = entry.file_name();
-        let Some(name) = name.to_str() else { continue };
-        if !name.starts_with('.') || !name.ends_with(".tmp") {
-            continue;
-        }
-        if let Ok(meta) = entry.metadata() {
-            if meta.is_dir() {
-                if let Ok(mtime) = meta.modified() {
-                    if mtime < cutoff {
-                        let _ = std::fs::remove_dir_all(entry.path());
-                    }
-                }
-            }
-        }
-    }
 }
 
 /// Per-call nonce making each download's temp dir unique.

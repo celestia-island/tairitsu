@@ -1,0 +1,28 @@
+[package]
+name = "tairitsu-debug-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Single shared implementation of the Tairitsu HTTP debug API + CDP browser engine"
+repository.workspace = true
+
+[features]
+# Compile in the raw-CDP Chromium engine (pulls the WebSocket/HTTP deps).
+# Consuming crates forward their own `debug-browser` feature to this one.
+debug-browser = ["dep:reqwest", "dep:rustls", "dep:tokio-tungstenite"]
+
+[dependencies]
+
+anyhow = "^1"
+axum = "^0.8"
+chrono = "^0.4"
+futures = "^0.3"
+reqwest = { version = "^0.13", features = ["json", "rustls-no-provider"], default-features = false, optional = true }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"], optional = true }
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+tokio = { version = "^1", features = ["rt-multi-thread", "net", "process", "macros", "time", "sync"] }
+tokio-tungstenite = { version = "^0.27", default-features = false, features = ["connect"], optional = true }
+tower-http = { version = "^0.6", features = ["cors", "compression-gzip"] }
