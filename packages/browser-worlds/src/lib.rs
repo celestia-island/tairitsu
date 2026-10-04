@@ -7,7 +7,7 @@
 /// Version metadata for each embedded WIT package.
 #[derive(Debug, Clone)]
 pub struct EmbeddedPackage {
-    /// Package identifier (e.g. `tairitsu-browser:dom@0.1.0`).
+    /// Package identifier (e.g. `tairitsu-browser:dom@0.2.0`).
     pub id: &'static str,
     /// Namespace component.
     pub namespace: &'static str,
@@ -19,14 +19,17 @@ pub struct EmbeddedPackage {
     pub files: &'static [(&'static str, &'static [u8])],
 }
 
-// Helper macro to define an embedded package from generated WIT files
+// Helper macro to define an embedded package from generated WIT files.
+// The version literal must stay in lockstep with `WIT_VERSION` in
+// `scripts/generate_browser_wit.py` and the files in `wit/generated/`
+// (enforced by the `registry_matches_package_declarations` test).
 macro_rules! wit_pkg {
     ($name:literal, $file:literal) => {
         EmbeddedPackage {
-            id: concat!("tairitsu-browser:", $name, "@0.1.0"),
+            id: concat!("tairitsu-browser:", $name, "@0.2.0"),
             namespace: "tairitsu-browser",
             name: $name,
-            version: "0.1.0",
+            version: "0.2.0",
             files: &[($file, include_bytes!(concat!("../wit/generated/", $file)))],
         }
     };
@@ -34,9 +37,13 @@ macro_rules! wit_pkg {
 
 /// All WIT packages embedded in this crate.
 ///
-/// 26 individual Phase A domains (auto-generated from W3C WebIDL)
+/// One entry per file in `wit/generated/`, all aligned on the same version
+/// series — the registry must never drift from the embedded files' own
+/// `package tairitsu-browser:<name>@<version>;` declarations (enforced by the
+/// `registry_matches_package_declarations` test).
 pub static EMBEDDED_PACKAGES: &[EmbeddedPackage] = &[
-    // Phase A - Auto-generated from W3C WebIDL (26 domains)
+    // Phase A - auto-generated from W3C WebIDL (30 domains)
+    wit_pkg!("auth", "auth.wit"),
     wit_pkg!("canvas", "canvas.wit"),
     wit_pkg!("crypto", "crypto.wit"),
     wit_pkg!("css", "css.wit"),
@@ -48,20 +55,23 @@ pub static EMBEDDED_PACKAGES: &[EmbeddedPackage] = &[
     wit_pkg!("geolocation", "geolocation.wit"),
     wit_pkg!("html", "html.wit"),
     wit_pkg!("indexed-db", "indexed-db.wit"),
+    wit_pkg!("intersection-observer", "intersection-observer.wit"),
     wit_pkg!("media", "media.wit"),
+    wit_pkg!("misc", "misc.wit"),
     wit_pkg!("notifications", "notifications.wit"),
     wit_pkg!("observers", "observers.wit"),
+    wit_pkg!("payments", "payments.wit"),
     wit_pkg!("performance", "performance.wit"),
     wit_pkg!("permissions", "permissions.wit"),
     wit_pkg!("resize-observer", "resize-observer.wit"),
-    wit_pkg!("service-workers", "service-workers.wit"),
     wit_pkg!("storage", "storage.wit"),
     wit_pkg!("streams", "streams.wit"),
+    wit_pkg!("svg", "svg.wit"),
     wit_pkg!("url", "url.wit"),
+    wit_pkg!("wasm", "wasm.wit"),
     wit_pkg!("web-animations", "web-animations.wit"),
     wit_pkg!("webrtc", "webrtc.wit"),
     wit_pkg!("websocket", "websocket.wit"),
-    wit_pkg!("websockets", "websockets.wit"),
     wit_pkg!("workers", "workers.wit"),
 ];
 
@@ -93,32 +103,36 @@ mod tests {
     #[test]
     fn all_embedded_packages_present() {
         let expected = [
-            "tairitsu-browser:canvas@0.1.0",
-            "tairitsu-browser:crypto@0.1.0",
-            "tairitsu-browser:css@0.1.0",
-            "tairitsu-browser:device@0.1.0",
-            "tairitsu-browser:dom@0.1.0",
-            "tairitsu-browser:events@0.1.0",
-            "tairitsu-browser:fetch@0.1.0",
-            "tairitsu-browser:file-api@0.1.0",
-            "tairitsu-browser:geolocation@0.1.0",
-            "tairitsu-browser:html@0.1.0",
-            "tairitsu-browser:indexed-db@0.1.0",
-            "tairitsu-browser:media@0.1.0",
-            "tairitsu-browser:notifications@0.1.0",
-            "tairitsu-browser:observers@0.1.0",
-            "tairitsu-browser:performance@0.1.0",
-            "tairitsu-browser:permissions@0.1.0",
-            "tairitsu-browser:resize-observer@0.1.0",
-            "tairitsu-browser:service-workers@0.1.0",
-            "tairitsu-browser:storage@0.1.0",
-            "tairitsu-browser:streams@0.1.0",
-            "tairitsu-browser:url@0.1.0",
-            "tairitsu-browser:web-animations@0.1.0",
-            "tairitsu-browser:webrtc@0.1.0",
-            "tairitsu-browser:websocket@0.1.0",
-            "tairitsu-browser:websockets@0.1.0",
-            "tairitsu-browser:workers@0.1.0",
+            "tairitsu-browser:auth@0.2.0",
+            "tairitsu-browser:canvas@0.2.0",
+            "tairitsu-browser:crypto@0.2.0",
+            "tairitsu-browser:css@0.2.0",
+            "tairitsu-browser:device@0.2.0",
+            "tairitsu-browser:dom@0.2.0",
+            "tairitsu-browser:events@0.2.0",
+            "tairitsu-browser:fetch@0.2.0",
+            "tairitsu-browser:file-api@0.2.0",
+            "tairitsu-browser:geolocation@0.2.0",
+            "tairitsu-browser:html@0.2.0",
+            "tairitsu-browser:indexed-db@0.2.0",
+            "tairitsu-browser:intersection-observer@0.2.0",
+            "tairitsu-browser:media@0.2.0",
+            "tairitsu-browser:misc@0.2.0",
+            "tairitsu-browser:notifications@0.2.0",
+            "tairitsu-browser:observers@0.2.0",
+            "tairitsu-browser:payments@0.2.0",
+            "tairitsu-browser:performance@0.2.0",
+            "tairitsu-browser:permissions@0.2.0",
+            "tairitsu-browser:resize-observer@0.2.0",
+            "tairitsu-browser:storage@0.2.0",
+            "tairitsu-browser:streams@0.2.0",
+            "tairitsu-browser:svg@0.2.0",
+            "tairitsu-browser:url@0.2.0",
+            "tairitsu-browser:wasm@0.2.0",
+            "tairitsu-browser:web-animations@0.2.0",
+            "tairitsu-browser:webrtc@0.2.0",
+            "tairitsu-browser:websocket@0.2.0",
+            "tairitsu-browser:workers@0.2.0",
         ];
         for id in &expected {
             assert!(
@@ -126,6 +140,37 @@ mod tests {
                 "Missing embedded package: {id}"
             );
         }
+        assert_eq!(EMBEDDED_PACKAGES.len(), expected.len());
+    }
+
+    /// The registry entry (namespace/name/version) must match the `package`
+    /// declaration actually written inside the embedded file. Guards against
+    /// the registry drifting from the generated WIT corpus again (e.g. an
+    /// entry claiming `@0.1.0` while the file declares `@0.2.0`).
+    #[test]
+    fn registry_matches_package_declarations() {
+        let mut drift = Vec::new();
+        for pkg in EMBEDDED_PACKAGES {
+            for (filename, bytes) in pkg.files {
+                let content = std::str::from_utf8(bytes).expect("WIT file should be valid UTF-8");
+                let decls: Vec<&str> = content
+                    .lines()
+                    .filter(|l| l.trim_start().starts_with("package "))
+                    .collect();
+                let expected = format!("package {}:{}@{};", pkg.namespace, pkg.name, pkg.version);
+                if decls.len() != 1 || decls[0].trim() != expected {
+                    drift.push(format!(
+                        "{} ({filename}): registry says `{expected}`, file declares {decls:?}",
+                        pkg.id
+                    ));
+                }
+            }
+        }
+        assert!(
+            drift.is_empty(),
+            "registry/WIT version drift:\n{}",
+            drift.join("\n")
+        );
     }
 
     #[test]
@@ -143,9 +188,9 @@ mod tests {
 
     #[test]
     fn find_by_parts() {
-        let pkg = find_embedded_by_parts("tairitsu-browser", "dom", "0.1.0");
+        let pkg = find_embedded_by_parts("tairitsu-browser", "dom", "0.2.0");
         assert!(pkg.is_some());
-        assert_eq!(pkg.unwrap().id, "tairitsu-browser:dom@0.1.0");
+        assert_eq!(pkg.unwrap().id, "tairitsu-browser:dom@0.2.0");
     }
 
     #[test]
@@ -180,7 +225,7 @@ mod tests {
 
     #[test]
     fn count_embedded_packages() {
-        // Should have 26 packages (all Phase A generated)
-        assert_eq!(EMBEDDED_PACKAGES.len(), 26);
+        // One entry per file in wit/generated/ (all Phase A domains).
+        assert_eq!(EMBEDDED_PACKAGES.len(), 30);
     }
 }

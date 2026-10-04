@@ -332,7 +332,7 @@ enum CheckCommands {
 enum WitCommands {
     /// Fetch WIT packages from the registry and store in target/tairitsu-wit
     Fetch {
-        /// Package specs to fetch, e.g. `tairitsu-browser:dom@0.1.0`.
+        /// Package specs to fetch, e.g. `tairitsu-browser:dom@0.2.0`.
         /// Omit to fetch all default browser-world packages.
         specs: Vec<String>,
 
@@ -460,9 +460,10 @@ fn run_check(
             let path = crate::wasm::resolve_hikari_icons(&manifest_path, offline, verbose > 0)?;
             crate::log_ok!("hikari-icons resolved → {}", path.display());
         }
-        CheckCommands::Wit { offline: _ } => {
+        CheckCommands::Wit { offline } => {
             crate::log_progress!("Checking WIT packages...");
-            crate::log_info!("(WIT check not yet implemented)");
+            crate::wit_cmd::cmd_check(&manifest_path, offline)?;
+            crate::log_ok!("WIT packages verified.");
         }
         CheckCommands::All { offline } => {
             let mut ok = true;
@@ -477,7 +478,13 @@ fn run_check(
             }
 
             crate::log_progress!("[2/2] Checking WIT packages...");
-            crate::log_info!("[2/2] (WIT check not yet implemented)");
+            match crate::wit_cmd::cmd_check(&manifest_path, offline) {
+                Ok(()) => crate::log_ok!("[2/2] WIT packages verified."),
+                Err(e) => {
+                    crate::log_fail!("[2/2] WIT check: {e}");
+                    ok = false;
+                }
+            }
 
             if !ok {
                 return Err(crate::TairitsuPackagerError::DoctorError(
