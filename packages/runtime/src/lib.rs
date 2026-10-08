@@ -62,8 +62,8 @@ pub mod wit_registry;
 pub mod dynamic;
 
 pub use container::{
-    Container, ContainerState, ExportInfo, GuestHandlerContext, GuestInstance, HostState,
-    HostStateImpl, ImportInfo,
+    AsyncContainer, Container, ContainerState, ExportInfo, GuestHandlerContext, GuestInstance,
+    HostState, HostStateImpl, ImportInfo,
 };
 // Dynamic invocation exports (requires 'dynamic' feature)
 #[cfg(feature = "dynamic")]

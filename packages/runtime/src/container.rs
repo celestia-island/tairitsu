@@ -402,7 +402,9 @@ pub enum ContainerState {
 /// # Async usage
 ///
 /// All guest-call methods are synchronous. To call them from an async context
-/// (e.g. a tokio web-handler), wrap the container in `Arc<Mutex<…>>` and use
+/// (e.g. a tokio web-handler), prefer the native-async sibling
+/// [`AsyncContainer`] (via [`ContainerBuilder::build_async`]) — or, for a
+/// sync container, wrap it in `Arc<Mutex<…>>` and use
 /// [`tokio::task::spawn_blocking`]:
 ///
 /// ```ignore
@@ -957,6 +959,333 @@ pub struct ImportInfo {
     pub results: Vec<wasmtime::component::Type>,
 }
 
+impl<T: HostStateImpl> ContainerBuilder<T> {
+    /// Build an [`AsyncContainer`] — the native-async sibling of
+    /// [`ContainerBuilder::build`].
+    ///
+    /// Any [`Image`](crate::Image) works: wasmtime's async support is a
+    /// crate feature, not an engine configuration, so the same image can
+    /// back sync and async containers alike. WASI is linked with
+    /// [`add_to_linker_async`](wasmtime_wasi::p2::add_to_linker_async) so
+    /// host functions may themselves be async
+    /// (`Linker::func_wrap_async`) — the retired block-on-sync bridge
+    /// pattern is exactly what this type exists to make unnecessary.
+    ///
+    /// Unlike the sync build, the guest initializer is **optional**: when
+    /// omitted, the component is instantiated via
+    /// [`Linker::instantiate_async`] and wrapped as a dynamic instance
+    /// (the `call_guest_*_async` surface works out of the box). When you
+    /// do pass [`ContainerBuilder::with_guest_initializer`], use the
+    /// `_async` instantiation variants inside it — wasmtime refuses
+    /// (errors) when an async store is driven through a sync path.
+    pub async fn build_async(self) -> Result<AsyncContainer<T>> {
+        let mut store = Store::new(self.image.engine(), self.host_state);
+
+        if let Some(fuel) = self.fuel_limit {
+            store
+                .set_fuel(fuel)
+                .context("Failed to set fuel limit (ensure Image was created with consume_fuel(true) in Config)")?;
+        }
+        if let Some(deadline) = self.epoch_deadline {
+            store.set_epoch_deadline(deadline);
+        }
+
+        let mut linker = Linker::new(self.image.engine());
+        wasmtime_wasi::p2::add_to_linker_async(&mut linker)
+            .context("Failed to add WASI to linker (async)")?;
+
+        if let Some(linker_init) = self.host_linker_init {
+            linker_init(&mut linker).context("Failed to configure host linker")?;
+        }
+
+        let component = self.image.component().clone();
+
+        #[cfg(feature = "dynamic")]
+        let guest_instance = if let Some(initializer) = self.guest_initializer {
+            let ctx = GuestHandlerContext::new(&mut linker, &mut store, &component);
+            initializer(ctx)?
+        } else {
+            let instance = linker
+                .instantiate_async(&mut store, &component)
+                .await
+                .context("Failed to instantiate component (async)")?;
+            GuestInstance::new_dynamic(instance)
+        };
+        #[cfg(not(feature = "dynamic"))]
+        let guest_instance = if let Some(initializer) = self.guest_initializer {
+            let ctx = GuestHandlerContext::new(&mut linker, &mut store, &component);
+            initializer(ctx)?
+        } else {
+            return Err(anyhow::anyhow!(
+                "Guest initializer is required without the `dynamic` feature. \
+                 Use with_guest_initializer() (with the _async instantiate \
+                 variants) to set it."
+            ));
+        };
+
+        #[cfg(feature = "dynamic")]
+        let dynamic_instance = guest_instance.get_dynamic_instance_ref().cloned();
+
+        Ok(AsyncContainer {
+            store,
+            guest: guest_instance,
+            state: ContainerState::Created,
+            #[cfg(feature = "dynamic")]
+            dynamic_instance,
+        })
+    }
+}
+
+/// The native-async [`Container`] — built by
+/// [`ContainerBuilder::build_async`](ContainerBuilder::build_async) from
+/// an async-configured [`Image`](crate::Image).
+///
+/// Every guest call goes through wasmtime's `call_async`: the calling
+/// task is never blocked by guest execution, host imports may be async
+/// (`func_wrap_async`), and epoch/fuel interruption stays cooperative.
+/// This is the container type async hosts (tokio services, axum handlers)
+/// should hold — `Arc<Mutex<AsyncContainer>>` plus `.await` replaces the
+/// old `spawn_blocking` workaround called out in [`Container`]'s docs.
+///
+/// The lifecycle state machine mirrors [`Container`]: a successful call
+/// moves [`ContainerState::Created`] to [`ContainerState::Running`], a
+/// wasm trap moves it to [`ContainerState::Error`], and calls on stopped
+/// or errored containers are refused.
+pub struct AsyncContainer<T: HostStateImpl = HostState> {
+    store: Store<T>,
+    guest: GuestInstance,
+    state: ContainerState,
+
+    #[cfg(feature = "dynamic")]
+    dynamic_instance: Option<wasmtime::component::Instance>,
+}
+
+impl<T: HostStateImpl> AsyncContainer<T> {
+    /// Get mutable reference to Store
+    pub fn store_mut(&mut self) -> &mut Store<T> {
+        &mut self.store
+    }
+
+    /// Get immutable reference to Store
+    pub fn store(&self) -> &Store<T> {
+        &self.store
+    }
+
+    /// Get reference to the guest instance
+    pub fn guest(&self) -> &GuestInstance {
+        &self.guest
+    }
+
+    /// Get mutable reference to the guest instance
+    pub fn guest_mut(&mut self) -> &mut GuestInstance {
+        &mut self.guest
+    }
+
+    /// Get mutable reference to the host state
+    pub fn host_state_mut(&mut self) -> &mut T {
+        self.store.data_mut()
+    }
+
+    /// Get immutable reference to the host state
+    pub fn host_state(&self) -> &T {
+        self.store.data()
+    }
+
+    /// Return the current lifecycle state.
+    pub fn state(&self) -> &ContainerState {
+        &self.state
+    }
+
+    /// Stop the container: further calls are refused.
+    pub fn stop(&mut self) {
+        self.state = ContainerState::Stopped;
+    }
+
+    fn guard_callable(&self) -> Result<()> {
+        match &self.state {
+            ContainerState::Stopped => anyhow::bail!("Container is stopped"),
+            ContainerState::Error(e) => {
+                anyhow::bail!("Container is in error state: {}", e);
+            }
+            _ => Ok(()),
+        }
+    }
+
+    fn record_outcome(&mut self, result: &Result<String>) {
+        match result {
+            Ok(_) => self.state = ContainerState::Running,
+            Err(e) => {
+                let is_wasm_fatal = e.downcast_ref::<wasmtime::Trap>().is_some();
+                if is_wasm_fatal {
+                    self.state = ContainerState::Error(e.to_string());
+                }
+            }
+        }
+    }
+
+    /// Call a guest function by name with a raw descriptor (RON) payload —
+    /// the async sibling of [`Container::call_guest_raw_desc`].
+    ///
+    /// Requires the `dynamic` feature. Error hygiene matches the sync
+    /// path: a malformed payload is reported without echoing the payload.
+    #[cfg(feature = "dynamic")]
+    pub async fn call_guest_raw_desc_async(
+        &mut self,
+        function_name: &str,
+        raw_desc_payload: &str,
+    ) -> Result<String> {
+        self.guard_callable()?;
+        let result = self
+            .call_guest_raw_desc_inner_async(function_name, raw_desc_payload)
+            .await;
+        self.record_outcome(&result);
+        result
+    }
+
+    #[cfg(feature = "dynamic")]
+    async fn call_guest_raw_desc_inner_async(
+        &mut self,
+        function_name: &str,
+        raw_desc_payload: &str,
+    ) -> Result<String> {
+        use wasmtime::component::Val;
+
+        use crate::dynamic::{ron_to_val, val_to_ron};
+
+        let instance = self
+            .dynamic_instance
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Dynamic instance not available"))?;
+
+        let func = instance
+            .get_func(&mut self.store, function_name)
+            .ok_or_else(|| anyhow::anyhow!("Export function not found: {}", function_name))?;
+
+        let func_ty = func.ty(&self.store);
+        let param_types: Vec<_> = func_ty.params().collect();
+        let result_types: Vec<_> = func_ty.results().collect();
+
+        let mut args = Vec::new();
+        if param_types.len() == 1 {
+            let param_type = &param_types[0].1;
+            args.push(ron_to_val(raw_desc_payload, param_type)?);
+        } else {
+            let ron_array = if raw_desc_payload.trim().starts_with('[')
+                || raw_desc_payload.trim().starts_with('(')
+            {
+                raw_desc_payload.to_string()
+            } else {
+                format!("[{}]", raw_desc_payload)
+            };
+
+            use ron::Value as RonValue;
+            let ron_value: RonValue = ron::from_str(&ron_array)?;
+
+            if let RonValue::Seq(items) = ron_value {
+                if items.len() != param_types.len() {
+                    anyhow::bail!(
+                        "Parameter count mismatch: expected {}, got {}",
+                        param_types.len(),
+                        items.len()
+                    );
+                }
+                for (ron_val, (_param_name, param_type)) in
+                    items.into_iter().zip(param_types.iter())
+                {
+                    args.push(ron_value_to_val(ron_val, param_type)?);
+                }
+            } else {
+                anyhow::bail!(
+                    "Invalid raw descriptor payload for function with multiple parameters"
+                );
+            }
+        }
+
+        let mut results = vec![Val::Bool(false); result_types.len()];
+        func.call_async(&mut self.store, &args, &mut results)
+            .await
+            .context("Function call failed")?;
+
+        let output_ron: Result<Vec<_>> = results.iter().map(val_to_ron).collect();
+        let output_ron = output_ron.context("Failed to convert result to RON")?;
+
+        let output = match output_ron.len() {
+            0 => "()".to_string(),
+            1 => output_ron[0].clone(),
+            _ => format!("({})", output_ron.join(", ")),
+        };
+
+        Ok(output)
+    }
+
+    /// Call a guest function by name with typed arguments — the async
+    /// sibling of [`Container::call_guest_binary`].
+    ///
+    /// Requires the `dynamic` feature.
+    #[cfg(feature = "dynamic")]
+    pub async fn call_guest_binary_async(
+        &mut self,
+        function_name: &str,
+        args: &[wasmtime::component::Val],
+    ) -> Result<Vec<wasmtime::component::Val>> {
+        self.guard_callable()?;
+        let result = self
+            .call_guest_binary_inner_async(function_name, args)
+            .await;
+        match &result {
+            Ok(_) => self.state = ContainerState::Running,
+            Err(e) => {
+                let msg = e.to_string();
+                let is_wasm_fatal = msg.contains("trap")
+                    || msg.contains("out of memory")
+                    || msg.contains("fuel")
+                    || e.downcast_ref::<wasmtime::Error>().is_some()
+                    || e.downcast_ref::<wasmtime::Trap>().is_some();
+                if is_wasm_fatal {
+                    self.state = ContainerState::Error(msg);
+                }
+            }
+        }
+        result
+    }
+
+    #[cfg(feature = "dynamic")]
+    async fn call_guest_binary_inner_async(
+        &mut self,
+        function_name: &str,
+        args: &[wasmtime::component::Val],
+    ) -> Result<Vec<wasmtime::component::Val>> {
+        use wasmtime::component::Val;
+
+        let instance = self
+            .dynamic_instance
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Dynamic instance not available"))?;
+
+        let func = instance
+            .get_func(&mut self.store, function_name)
+            .ok_or_else(|| anyhow::anyhow!("Export function not found: {}", function_name))?;
+
+        let func_ty = func.ty(&self.store);
+        let num_results = func_ty.results().count();
+
+        let mut results = vec![Val::Bool(false); num_results];
+        func.call_async(&mut self.store, args, &mut results)
+            .await
+            .context("Function call failed")?;
+
+        Ok(results)
+    }
+}
+
+impl<T: HostStateImpl> std::fmt::Debug for AsyncContainer<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AsyncContainer")
+            .field("state", &self.state)
+            .finish()
+    }
+}
+
 /// Helper: RON Value to Val (for use in Container)
 #[cfg(feature = "dynamic")]
 fn ron_value_to_val(
@@ -1107,6 +1436,209 @@ mod tests {
             !err_msg.contains("SECRET_API_KEY_12345"),
             "Error message should not contain the payload, but got: {}",
             err_msg
+        );
+    }
+
+    // ── AsyncContainer (native async call path) ──────────────────────
+
+    /// A tiny component with an `add` export, encoded from WAT in-process
+    /// (no cross-compiled fixture needed).
+    fn add_component_wasm() -> bytes::Bytes {
+        let wat = r#"
+            (component
+              (core module $m
+                (func (export "add") (param i32 i32) (result i32)
+                  local.get 0
+                  local.get 1
+                  i32.add))
+              (core instance $i (instantiate $m))
+              (func (export "add") (param "a" s32) (param "b" s32) (result s32)
+                (canon lift (core func $i "add"))))
+        "#;
+        bytes::Bytes::from(wat::parse_str(wat).expect("WAT must parse"))
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "dynamic")]
+    async fn async_container_binary_call_round_trips() {
+        let image =
+            crate::Image::from_component(add_component_wasm()).expect("async image must build");
+        let mut container = Container::builder(image)
+            .build_async()
+            .await
+            .expect("async build must succeed (default dynamic initializer)");
+
+        assert_eq!(*container.state(), ContainerState::Created);
+        let results = container
+            .call_guest_binary_async(
+                "add",
+                &[
+                    wasmtime::component::Val::S32(3),
+                    wasmtime::component::Val::S32(4),
+                ],
+            )
+            .await
+            .expect("async add must succeed");
+        assert_eq!(results[0], wasmtime::component::Val::S32(7));
+        assert_eq!(*container.state(), ContainerState::Running);
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "dynamic")]
+    async fn async_container_raw_desc_round_trips() {
+        let image =
+            crate::Image::from_component(add_component_wasm()).expect("async image must build");
+        let mut container = Container::builder(image)
+            .build_async()
+            .await
+            .expect("async build must succeed");
+
+        let out = container
+            .call_guest_raw_desc_async("add", "(3, 4)")
+            .await
+            .expect("raw desc async call must succeed");
+        assert!(out.contains('7'), "add(3,4) should be 7, got {out}");
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "dynamic")]
+    async fn async_container_refuses_calls_when_stopped() {
+        let image =
+            crate::Image::from_component(add_component_wasm()).expect("async image must build");
+        let mut container = Container::builder(image)
+            .build_async()
+            .await
+            .expect("async build must succeed");
+        container.stop();
+        let err = container
+            .call_guest_binary_async("add", &[])
+            .await
+            .expect_err("stopped containers refuse calls");
+        assert!(err.to_string().contains("stopped"), "{err}");
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "dynamic")]
+    async fn async_container_missing_export_errors_without_leaking_payload() {
+        let image =
+            crate::Image::from_component(add_component_wasm()).expect("async image must build");
+        let mut container = Container::builder(image)
+            .build_async()
+            .await
+            .expect("async build must succeed");
+
+        let sensitive = r#"("SECRET_API_KEY_12345",)"#;
+        let err = container
+            .call_guest_raw_desc_async("test_fn", sensitive)
+            .await
+            .expect_err("missing export must fail");
+        let msg = err.to_string();
+        assert!(
+            !msg.contains("SECRET_API_KEY_12345"),
+            "error must not echo the payload, got: {msg}"
+        );
+    }
+
+    /// A bounded guest (sum 1..=200 by loop) so the fuel BUDGET is
+    /// observable: enough fuel succeeds, a tiny budget traps — killing
+    /// the variant where `with_fuel_limit`'s value stops mattering.
+    fn sum_loop_component_wasm() -> bytes::Bytes {
+        let wat = r#"
+            (component
+              (core module $m
+                (func (export "sum") (param i32) (result i32)
+                  (local $acc i32)
+                  (local $i i32)
+                  (local.set $acc (i32.const 0))
+                  (local.set $i (i32.const 0))
+                  (loop $l
+                    (local.set $i (i32.add (local.get $i) (i32.const 1)))
+                    (local.set $acc (i32.add (local.get $acc) (local.get $i)))
+                    (br_if $l (i32.lt_u (local.get $i) (local.get 0))))
+                  (local.get $acc)))
+              (core instance $i (instantiate $m))
+              (func (export "sum") (param "n" s32) (result s32)
+                (canon lift (core func $i "sum"))))
+        "#;
+        bytes::Bytes::from(wat::parse_str(wat).expect("WAT must parse"))
+    }
+
+    fn fuel_image() -> crate::Image {
+        let mut config = wasmtime::Config::new();
+        config.consume_fuel(true);
+        crate::Image::from_component_with_config(sum_loop_component_wasm(), config)
+            .expect("image must build")
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "dynamic")]
+    async fn async_container_fuel_budget_discriminates() {
+        // Enough fuel: the bounded loop completes and the state stays Running.
+        let mut container = Container::builder(fuel_image())
+            .with_fuel_limit(2_000_000)
+            .build_async()
+            .await
+            .expect("async build must succeed");
+        let out = container
+            .call_guest_raw_desc_async("sum", "200")
+            .await
+            .expect("the bounded loop must complete under a generous budget");
+        assert!(out.contains("20100"), "sum(1..=200) = 20100, got {out}");
+        assert!(*container.state() == ContainerState::Running);
+
+        // A tiny budget on a fresh container: the same loop traps and
+        // poisons the container — the budget VALUE is load-bearing.
+        let mut starved = Container::builder(fuel_image())
+            .with_fuel_limit(1_000)
+            .build_async()
+            .await
+            .expect("async build must succeed");
+        let err = starved
+            .call_guest_raw_desc_async("sum", "200")
+            .await
+            .expect_err("the starved loop must trap");
+        let _ = err;
+        assert!(
+            matches!(starved.state(), ContainerState::Error(_)),
+            "fuel trap must poison the container, state: {:?}",
+            starved.state()
+        );
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "dynamic")]
+    async fn async_container_fuel_is_enforced() {
+        // A spinning guest under a tiny fuel budget must trap through the
+        // async path and move the container into the error state.
+        let wat = r#"
+            (component
+              (core module $m
+                (func (export "spin")
+                  (loop $l br $l)))
+              (core instance $i (instantiate $m))
+              (func (export "spin")
+                (canon lift (core func $i "spin"))))
+        "#;
+        let wasm = bytes::Bytes::from(wat::parse_str(wat).expect("WAT must parse"));
+        let mut config = wasmtime::Config::new();
+        config.consume_fuel(true);
+        let image =
+            crate::Image::from_component_with_config(wasm, config).expect("image must build");
+
+        let mut container = Container::builder(image)
+            .with_fuel_limit(1_000)
+            .build_async()
+            .await
+            .expect("async build must succeed");
+
+        let err = container
+            .call_guest_binary_async("spin", &[])
+            .await
+            .expect_err("the spin must run out of fuel");
+        assert!(
+            matches!(container.state(), ContainerState::Error(_)),
+            "fuel trap must poison the container, state: {:?}",
+            container.state()
         );
     }
 }
