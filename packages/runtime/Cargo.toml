@@ -39,3 +39,7 @@ targets = [
     "aarch64-apple-darwin",
     "x86_64-pc-windows-msvc",
 ]
+
+[dev-dependencies]
+tokio = { version = "^1", features = ["rt", "macros", "rt-multi-thread"] }
+wat = "^1"
