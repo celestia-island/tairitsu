@@ -402,7 +402,9 @@ pub enum ContainerState {
 /// # Async usage
 ///
 /// All guest-call methods are synchronous. To call them from an async context
-/// (e.g. a tokio web-handler), wrap the container in `Arc<Mutex<…>>` and use
+/// (e.g. a tokio web-handler), prefer the native-async sibling
+/// [`AsyncContainer`] (via [`ContainerBuilder::build_async`]) — or, for a
+/// sync container, wrap it in `Arc<Mutex<…>>` and use
 /// [`tokio::task::spawn_blocking`]:
 ///
 /// ```ignore
@@ -974,8 +976,8 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
     /// [`Linker::instantiate_async`] and wrapped as a dynamic instance
     /// (the `call_guest_*_async` surface works out of the box). When you
     /// do pass [`ContainerBuilder::with_guest_initializer`], use the
-    /// `_async` instantiation variants inside it — sync instantiation on
-    /// an async store panics.
+    /// `_async` instantiation variants inside it — wasmtime refuses
+    /// (errors) when an async store is driven through a sync path.
     pub async fn build_async(self) -> Result<AsyncContainer<T>> {
         let mut store = Store::new(self.image.engine(), self.host_state);
 
@@ -1457,6 +1459,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "dynamic")]
     async fn async_container_binary_call_round_trips() {
         let image =
             crate::Image::from_component(add_component_wasm()).expect("async image must build");
@@ -1481,6 +1484,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "dynamic")]
     async fn async_container_raw_desc_round_trips() {
         let image =
             crate::Image::from_component(add_component_wasm()).expect("async image must build");
@@ -1497,6 +1501,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "dynamic")]
     async fn async_container_refuses_calls_when_stopped() {
         let image =
             crate::Image::from_component(add_component_wasm()).expect("async image must build");
@@ -1513,6 +1518,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "dynamic")]
     async fn async_container_missing_export_errors_without_leaking_payload() {
         let image =
             crate::Image::from_component(add_component_wasm()).expect("async image must build");
@@ -1533,7 +1539,74 @@ mod tests {
         );
     }
 
+    /// A bounded guest (sum 1..=200 by loop) so the fuel BUDGET is
+    /// observable: enough fuel succeeds, a tiny budget traps — killing
+    /// the variant where `with_fuel_limit`'s value stops mattering.
+    fn sum_loop_component_wasm() -> bytes::Bytes {
+        let wat = r#"
+            (component
+              (core module $m
+                (func (export "sum") (param i32) (result i32)
+                  (local $acc i32)
+                  (local $i i32)
+                  (local.set $acc (i32.const 0))
+                  (local.set $i (i32.const 0))
+                  (loop $l
+                    (local.set $i (i32.add (local.get $i) (i32.const 1)))
+                    (local.set $acc (i32.add (local.get $acc) (local.get $i)))
+                    (br_if $l (i32.lt_u (local.get $i) (local.get 0))))
+                  (local.get $acc)))
+              (core instance $i (instantiate $m))
+              (func (export "sum") (param "n" s32) (result s32)
+                (canon lift (core func $i "sum"))))
+        "#;
+        bytes::Bytes::from(wat::parse_str(wat).expect("WAT must parse"))
+    }
+
+    fn fuel_image() -> crate::Image {
+        let mut config = wasmtime::Config::new();
+        config.consume_fuel(true);
+        crate::Image::from_component_with_config(sum_loop_component_wasm(), config)
+            .expect("image must build")
+    }
+
     #[tokio::test]
+    #[cfg(feature = "dynamic")]
+    async fn async_container_fuel_budget_discriminates() {
+        // Enough fuel: the bounded loop completes and the state stays Running.
+        let mut container = Container::builder(fuel_image())
+            .with_fuel_limit(2_000_000)
+            .build_async()
+            .await
+            .expect("async build must succeed");
+        let out = container
+            .call_guest_raw_desc_async("sum", "200")
+            .await
+            .expect("the bounded loop must complete under a generous budget");
+        assert!(out.contains("20100"), "sum(1..=200) = 20100, got {out}");
+        assert!(*container.state() == ContainerState::Running);
+
+        // A tiny budget on a fresh container: the same loop traps and
+        // poisons the container — the budget VALUE is load-bearing.
+        let mut starved = Container::builder(fuel_image())
+            .with_fuel_limit(1_000)
+            .build_async()
+            .await
+            .expect("async build must succeed");
+        let err = starved
+            .call_guest_raw_desc_async("sum", "200")
+            .await
+            .expect_err("the starved loop must trap");
+        let _ = err;
+        assert!(
+            matches!(starved.state(), ContainerState::Error(_)),
+            "fuel trap must poison the container, state: {:?}",
+            starved.state()
+        );
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "dynamic")]
     async fn async_container_fuel_is_enforced() {
         // A spinning guest under a tiny fuel budget must trap through the
         // async path and move the container into the error state.
