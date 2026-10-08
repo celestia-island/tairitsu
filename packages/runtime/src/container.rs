@@ -1497,7 +1497,7 @@ mod tests {
             .call_guest_raw_desc_async("add", "(3, 4)")
             .await
             .expect("raw desc async call must succeed");
-        assert!(out.contains('7'), "add(3,4) should be 7, got {out}");
+        assert_eq!(out, "7", "add(3,4) should serialize to exactly 7");
     }
 
     #[tokio::test]
@@ -1631,7 +1631,7 @@ mod tests {
             .await
             .expect("async build must succeed");
 
-        let err = container
+        container
             .call_guest_binary_async("spin", &[])
             .await
             .expect_err("the spin must run out of fuel");
