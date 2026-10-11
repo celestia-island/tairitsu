@@ -6,6 +6,25 @@
 /// Source: wit/generated/workers.wit
 /// Regenerate with: just wit-gen
 
+interface service-worker {
+    /// Opaque handle to a host-side `ServiceWorker` instance.
+    type service-worker-handle = u64;
+
+    /// `scriptURL` attribute — getter.
+    get-script-url: func(self: service-worker-handle) -> string;
+
+    /// `state` attribute — getter.
+    get-state: func(self: service-worker-handle) -> u64;
+
+    /// `postMessage()` operation.
+    post-message: func(self: service-worker-handle, message: string, transfer: list<u64>);
+
+    /// `onstatechange` attribute — getter.
+    get-onstatechange: func(self: service-worker-handle) -> u64;
+    /// `onstatechange` attribute — setter.
+    set-onstatechange: func(self: service-worker-handle, value: u64);
+}
+
 interface service-worker-container {
     /// Opaque handle to a host-side `ServiceWorkerContainer` instance.
     type service-worker-container-handle = u64;

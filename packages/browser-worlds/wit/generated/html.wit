@@ -5,7 +5,7 @@
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
 /// Version: 0.2.0
-/// Generated: 2026-05-31 03:52:06 UTC
+/// Generated: 2026-10-11 04:16:13 UTC
 ///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
@@ -3049,6 +3049,16 @@ interface html-script-element {
     /// `fetchPriority` attribute — setter.
     set-fetch-priority: func(self: html-script-element-handle, value: string);
 
+    /// `innerText` attribute — getter.
+    get-inner-text: func(self: html-script-element-handle) -> string;
+    /// `innerText` attribute — setter.
+    set-inner-text: func(self: html-script-element-handle, value: string);
+
+    /// `textContent` attribute — getter.
+    get-text-content: func(self: html-script-element-handle) -> option<string>;
+    /// `textContent` attribute — setter.
+    set-text-content: func(self: html-script-element-handle, value: option<string>);
+
     /// `text` attribute — getter.
     get-text: func(self: html-script-element-handle) -> string;
     /// `text` attribute — setter.
@@ -3083,6 +3093,11 @@ interface html-template-element {
     /// `content` attribute — getter.
     get-content: func(self: html-template-element-handle) -> u64;
 
+    /// `htmlFor` attribute — getter.
+    get-html-for: func(self: html-template-element-handle) -> string;
+    /// `htmlFor` attribute — setter.
+    set-html-for: func(self: html-template-element-handle, value: string);
+
     /// `shadowRootMode` attribute — getter.
     get-shadow-root-mode: func(self: html-template-element-handle) -> string;
     /// `shadowRootMode` attribute — setter.
@@ -3093,6 +3108,11 @@ interface html-template-element {
     /// `shadowRootDelegatesFocus` attribute — setter.
     set-shadow-root-delegates-focus: func(self: html-template-element-handle, value: bool);
 
+    /// `shadowRootSerializable` attribute — getter.
+    get-shadow-root-serializable: func(self: html-template-element-handle) -> bool;
+    /// `shadowRootSerializable` attribute — setter.
+    set-shadow-root-serializable: func(self: html-template-element-handle, value: bool);
+
     /// `shadowRootSlotAssignment` attribute — getter.
     get-shadow-root-slot-assignment: func(self: html-template-element-handle) -> string;
     /// `shadowRootSlotAssignment` attribute — setter.
@@ -3102,11 +3122,6 @@ interface html-template-element {
     get-shadow-root-clonable: func(self: html-template-element-handle) -> bool;
     /// `shadowRootClonable` attribute — setter.
     set-shadow-root-clonable: func(self: html-template-element-handle, value: bool);
-
-    /// `shadowRootSerializable` attribute — getter.
-    get-shadow-root-serializable: func(self: html-template-element-handle) -> bool;
-    /// `shadowRootSerializable` attribute — setter.
-    set-shadow-root-serializable: func(self: html-template-element-handle, value: bool);
 
     /// `shadowRootCustomElementRegistry` attribute — getter.
     get-shadow-root-custom-element-registry: func(self: html-template-element-handle) -> string;
@@ -4552,6 +4567,9 @@ interface sanitizer {
     /// `setDataAttributes()` operation.
     set-data-attributes: func(self: sanitizer-handle, allow: bool) -> bool;
 
+    /// `setJavascriptURLs()` operation.
+    set-javascript-ur-ls: func(self: sanitizer-handle, allow: bool) -> bool;
+
     /// `removeUnsafe()` operation.
     remove-unsafe: func(self: sanitizer-handle) -> bool;
 }
@@ -4897,11 +4915,6 @@ interface message-port {
 
     /// `close()` operation.
     close: func(self: message-port-handle);
-
-    /// `onclose` attribute — getter.
-    get-onclose: func(self: message-port-handle) -> u64;
-    /// `onclose` attribute — setter.
-    set-onclose: func(self: message-port-handle, value: u64);
 }
 
 /// WebIDL interface: `BroadcastChannel`
