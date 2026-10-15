@@ -127,12 +127,141 @@ fn sanitize_svg(content: &str) -> String {
     // Remove script tags and their contents
     result = remove_script_tags(&result);
 
-    // Remove event handlers
+    // Remove event handlers (enumerated list)
     result = remove_event_handlers(&result);
+
+    // Audit tairitsu-R1-1: catch-all pass — remove ANY attribute starting
+    // with "on" (case-insensitive) that survived the enumerated pass.
+    // Modern handlers (onauxclick, onanimationstart, onbeforetoggle, …)
+    // were missing from the hardcoded list.
+    result = remove_on_prefix_attributes(&result);
+
+    // Audit tairitsu-R1-1: strip SMIL animation elements entirely —
+    // <animate attributeName="href" values="javascript:…"> bypasses all
+    // attribute-level checks because the URL lives in `values`.
+    for tag in ["animate", "set", "animateTransform", "animateMotion"] {
+        result = remove_element_with_content(&result, tag);
+    }
+
+    // Remove foreignObject (embeds arbitrary HTML inside SVG).
+    result = remove_element_with_content(&result, "foreignObject");
 
     // Sanitize URLs (javascript:, external xlink:href, dangerous data:)
     result = sanitize_urls(&result);
 
+    result
+}
+
+/// Audit tairitsu-R1-1: removes any attribute starting with "on"
+/// (case-insensitive) that the enumerated list missed. Scans inside
+/// `<tag …>` contexts for `on<name>="…"` / `on<name>='…'` /
+/// `on<name>=value` patterns and strips them.
+fn remove_on_prefix_attributes(content: &str) -> String {
+    let mut result = String::with_capacity(content.len());
+    let mut remaining = content;
+    let mut in_tag = false;
+
+    while !remaining.is_empty() {
+        if let Some(after) = remaining.strip_prefix('<') {
+            in_tag = true;
+            result.push('<');
+            remaining = after;
+            continue;
+        }
+        if let Some(after) = remaining.strip_prefix('>') {
+            in_tag = false;
+            result.push('>');
+            remaining = after;
+            continue;
+        }
+        if in_tag {
+            // Check if an "on*" attribute starts here.
+            let trimmed = remaining.trim_start();
+            let ws_len = remaining.len() - trimmed.len();
+            let lower = trimmed.to_ascii_lowercase();
+            if lower.starts_with("on") {
+                // Skip the whole attribute (name + optional = value).
+                let skip_past = if let Some(eq) = trimmed.find('=') {
+                    let after_eq = &trimmed[eq + 1..];
+                    let vt = after_eq.trim_start();
+                    match vt.chars().next() {
+                        Some('"') => {
+                            let e = vt[1..]
+                                .find('"')
+                                .map(|i| eq + 1 + i + 2)
+                                .unwrap_or(trimmed.len());
+                            eq + 1 + (vt.len() - vt[e..].len())
+                        }
+                        Some('\'') => {
+                            let e = vt[1..]
+                                .find('\'')
+                                .map(|i| eq + 1 + i + 2)
+                                .unwrap_or(trimmed.len());
+                            eq + 1 + (vt.len() - vt[e..].len())
+                        }
+                        _ => {
+                            let e = vt
+                                .find(|c: char| c.is_whitespace() || c == '>')
+                                .map(|i| eq + 1 + i)
+                                .unwrap_or(trimmed.len());
+                            eq + 1 + e
+                        }
+                    }
+                } else {
+                    // Bare attribute (no =), just skip the name.
+                    trimmed.len()
+                };
+                // Also skip whitespace after the attribute.
+                let skip = ws_len + skip_past;
+                remaining = &remaining[skip..];
+                continue;
+            }
+        }
+        // Push one char.
+        let c_len = remaining.chars().next().map(|c| c.len_utf8()).unwrap_or(1);
+        result.push_str(&remaining[..c_len]);
+        remaining = &remaining[c_len..];
+    }
+    result
+}
+
+/// Audit tairitsu-R1-1: removes an element (open tag, content, close tag)
+/// for SMIL animation / foreignObject — these carry payloads inside
+/// attributes or content that attribute-level checks cannot reach.
+fn remove_element_with_content(content: &str, tag_name: &str) -> String {
+    let mut result = String::with_capacity(content.len());
+    let mut remaining = content;
+    let open_lower = format!("<{}", tag_name.to_lowercase());
+    let close_lower = format!("</{}>", tag_name.to_lowercase());
+
+    while !remaining.is_empty() {
+        let lower_remaining = remaining.to_lowercase();
+        match lower_remaining.find(&open_lower) {
+            Some(start) => {
+                result.push_str(&remaining[..start]);
+                // Skip to the matching close tag (or self-closing).
+                let after_open = &remaining[start..];
+                match after_open.find('>') {
+                    Some(gt) => {
+                        if after_open[..=gt].ends_with("/>") {
+                            // Self-closing.
+                            remaining = &after_open[gt + 1..];
+                        } else if let Some(close_pos) = lower_remaining[start..].find(&close_lower)
+                        {
+                            remaining = &after_open[close_pos + close_lower.len()..];
+                        } else {
+                            remaining = ""; // no close tag; drop the rest
+                        }
+                    }
+                    None => remaining = "",
+                }
+            }
+            None => {
+                result.push_str(remaining);
+                break;
+            }
+        }
+    }
     result
 }
 
@@ -914,5 +1043,64 @@ mod tests {
         assert!(element.inner_html.is_some());
         let inner = element.inner_html.unwrap();
         assert!(inner.contains("circle"));
+    }
+}
+
+#[cfg(test)]
+mod audit_r1_1_tests {
+    use super::*;
+
+    /// Audit tairitsu-R1-1: onauxclick (missing from the enumerated list)
+    /// must be removed by the on-prefix catch-all pass.
+    #[test]
+    fn onauxclick_is_removed() {
+        let input = r#"<svg><rect onauxclick="alert(1)" width="10"/></svg>"#;
+        let safe = sanitize_svg(input);
+        assert!(
+            !safe.contains("onauxclick"),
+            "onauxclick must be stripped: {safe}"
+        );
+    }
+
+    /// onanimationstart (CSS animation trigger, missing from list).
+    #[test]
+    fn onanimationstart_is_removed() {
+        let input = r#"<svg><rect onanimationstart="alert(1)" width="10"/></svg>"#;
+        let safe = sanitize_svg(input);
+        assert!(!safe.contains("onanimationstart"), ": {safe}");
+    }
+
+    /// onbeforetoggle (modern, missing from list).
+    #[test]
+    fn onbeforetoggle_is_removed() {
+        let input = r#"<svg><rect onbeforetoggle="alert(1)" width="10"/></svg>"#;
+        let safe = sanitize_svg(input);
+        assert!(!safe.contains("onbeforetoggle"), ": {safe}");
+    }
+
+    /// SMIL animation: <animate attributeName="href" values="javascript:…">
+    /// must be stripped entirely (the payload lives in `values`, not in
+    /// an attribute name the denylist scans).
+    #[test]
+    fn smil_animate_is_stripped() {
+        let input = r#"<svg><a><animate attributeName="href" values="javascript:alert(1)"/><text>click</text></a></svg>"#;
+        let safe = sanitize_svg(input);
+        assert!(
+            !safe.contains("animate"),
+            "SMIL animate must be stripped: {safe}"
+        );
+        assert!(
+            !safe.contains("javascript"),
+            "javascript: must not survive: {safe}"
+        );
+    }
+
+    /// foreignObject embeds arbitrary HTML — must be stripped with content.
+    #[test]
+    fn foreign_object_is_stripped() {
+        let input = r#"<svg><foreignObject><div onclick="alert(1)">x</div></foreignObject></svg>"#;
+        let safe = sanitize_svg(input);
+        assert!(!safe.contains("foreignObject"), ": {safe}");
+        assert!(!safe.contains("onclick"), ": {safe}");
     }
 }
