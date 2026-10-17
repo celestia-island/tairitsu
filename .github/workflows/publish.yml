@@ -114,25 +114,76 @@ jobs:
       - run: python3 scripts/publish_crates.py
 
   publish-npm:
-    name: Publish to npm
+    # npm packages carry their own version lines (transport 0.x,
+    # web-glue 0.5.x) independent of the workspace crate tag that
+    # triggers this pipeline; each package publishes its package.json
+    # version and skips cleanly when that version already exists on the
+    # registry, so a crate-only tag republishes nothing.
+    name: Publish npm packages
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     needs: verify
-    if: false  # Disabled until @celestia-island/tairitsu-web-glue is registered on npm
     steps:
       - uses: actions/checkout@v7
+      - name: Ensure tag is on master
+        run: |
+          git fetch origin master --depth=1
+          if ! git merge-base --is-ancestor HEAD origin/master; then
+            echo "::error::Tag must be on master branch to publish"
+            exit 1
+          fi
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
           registry-url: https://registry.npmjs.org/
 
+      # ── @celestia-island/tairitsu-transport ─────────────────────────
+      # Source package: install devDeps and let prepublishOnly build it.
+      - name: Skip transport if already published
+        id: transport-exists
+        run: |
+          PKG=packages/npm/tairitsu-transport
+          NAME=$(node -p "require('./${PKG}/package.json').name")
+          VERSION=$(node -p "require('./${PKG}/package.json').version")
+          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/${NAME}/${VERSION}" || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "::warning::${NAME}@${VERSION} already published — skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish transport
+        if: steps.transport-exists.outputs.skip != 'true'
+        run: |
+          cd packages/npm/tairitsu-transport
+          npm install --no-audit --no-fund
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # ── @celestia-island/tairitsu-web-glue ──────────────────────────
+      # Generated package: build with esbuild, then publish.
+      - name: Skip web-glue if already published
+        id: glue-exists
+        run: |
+          PKG=packages/npm/celestia-tairitsu-web-glue
+          NAME=$(node -p "require('./${PKG}/package.json').name")
+          VERSION=$(node -p "require('./${PKG}/package.json').version")
+          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/${NAME}/${VERSION}" || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "::warning::${NAME}@${VERSION} already published — skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install esbuild
+        if: steps.glue-exists.outputs.skip != 'true'
         run: npm install -g esbuild@0.25.4
 
       - name: Build glue packages
+        if: steps.glue-exists.outputs.skip != 'true'
         run: python3 scripts/build_npm_glue_packages.py
 
       - name: Verify dist contents
+        if: steps.glue-exists.outputs.skip != 'true'
         run: |
           cd packages/npm/celestia-tairitsu-web-glue
           if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
@@ -143,7 +194,8 @@ jobs:
           find dist -type f | head -40
           npm pack --dry-run 2>&1 | grep -E "npm notice (name|version|total files|package size)"
 
-      - name: Publish
+      - name: Publish web-glue
+        if: steps.glue-exists.outputs.skip != 'true'
         run: |
           cd packages/npm/celestia-tairitsu-web-glue
           npm publish --access public
