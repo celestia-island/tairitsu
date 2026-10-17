@@ -1,0 +1,15 @@
+[package]
+name = "tairitsu-transport-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Runtime host implementations for the tairitsu:transport WIT contract (http first)"
+
+[dependencies]
+wasmtime = { workspace = true }
+reqwest = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+wasmtime = { workspace = true, features = ["component-model"] }
