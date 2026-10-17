@@ -35,6 +35,9 @@ pub enum TairitsuPackagerError {
     #[error("Environment error: {0}")]
     EnvironmentError(String),
 
+    #[error("Debug server error: {0}")]
+    DebugError(String),
+
     #[error("Resource error: {0}")]
     ResourceError(String),
 

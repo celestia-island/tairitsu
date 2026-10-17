@@ -37,11 +37,12 @@ reqwest = { workspace = true, features = [
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
+# Browser backbone (2026-10-17 consolidation): debug server, CDP engine and
+# Chromium resolution all live in shirabe.
+shirabe = { version = "^0.1", git = "https://github.com/celestia-island/shirabe.git", branch = "master", optional = true }
 sys-locale = "^0.3"
-tairitsu-browser-fetch = { workspace = true, optional = true }
 tairitsu-browser-wit-resolver = { workspace = true }
 tairitsu-browser-worlds = { workspace = true }
-tairitsu-debug-core = { workspace = true, optional = true }
 tairitsu-ssr = { workspace = true, optional = true }
 tera = "^1"
 thiserror = { workspace = true }
@@ -69,24 +70,19 @@ dev-server = [
   "tairitsu-ssr",
   "tokio",
   "tokio-stream",
-  "tairitsu-debug-core",
+  "dep:shirabe",
 ]
 debug-browser = [
   "dev-server",
   # `reqwest` stays listed: `mcp` (cli-gated) uses it and relied on this
-  # feature enabling it before the debug impl moved to tairitsu-debug-core.
+  # feature enabling it before the debug impl moved to shirabe.
   "reqwest",
-  "tairitsu-browser-fetch",
-  "tairitsu-debug-core/debug-browser",
 ]
 debug-api = ["dev-server"]
 ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]
 icon-fetch = ["reqwest", "zip"]
 visual-diff = ["image", "base64"]
-# Use full Chrome for Testing (~300MB) instead of the default headless-shell
-# (~90MB). Forwarded to tairitsu-browser-fetch's additive `full` toggle.
-browser-full = ["tairitsu-browser-fetch/full"]
 test-runner = ["reqwest", "image", "base64"]
 vtty = ["vte", "portable-pty"]
 

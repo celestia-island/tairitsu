@@ -51,9 +51,8 @@ graph TD
 | Crate | Path | Description |
 |:--|:--|:--|
 | `tairitsu-packager` | `packages/packager` | CLI binary (`tairitsu`): dev server (axum + HMR), build pipeline (WASM optimization, CSS minification, sourcemaps), visual regression, desktop packaging, VTty terminal, debug API, test runner |
-| `tairitsu-mcp` | `packages/mcp` | MCP server for AI coding assistants: browser automation + terminal access |
-| `tairitsu-e2e` | `packages/e2e` | End-to-end testing: WebDriver + chromiumoxide, form validation, async ops, state management, events |
-| `tairitsu-browser-test` | `packages/browser-test` | Browser testing via headless Chromium |
+| `shirabe` (external) | — | Browser backbone: CDP engine, HTTP debug API, Chromium resolution/download, MCP browser tools (2026-10-17 consolidation) |
+| `scripts/browser_e2e.py` | `scripts/` | Browser-glue e2e orchestration driving shirabe's HTTP debug API |
 | `browser-glue` | `packages/browser-glue` | TypeScript runtime glue: bridges WIT canonical ABI ↔ DOM APIs. 39+ per-domain internal modules. |
 
 ## Layer 4: Examples & Demos

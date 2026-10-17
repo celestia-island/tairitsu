@@ -89,10 +89,10 @@ jobs:
           import tomlkit
           with open('Cargo.toml') as f: d = tomlkit.load(f)
           members = d['workspace']['members']
-          # Remove examples and packages with external path deps (mcp needs kou)
+          # Remove examples (only workspace packages are published)
           d['workspace']['members'] = [
               m for m in members
-              if not m.startswith('examples/') and m != 'packages/mcp'
+              if not m.startswith('examples/')
           ]
           with open('Cargo.toml', 'w') as f: tomlkit.dump(d, f)
           "

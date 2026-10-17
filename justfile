@@ -69,9 +69,9 @@ build-glue-runtime:
     mkdir -p packages/browser-glue/dist
     npx esbuild packages/browser-glue/src/runtime/index.ts --bundle --outfile=packages/browser-glue/dist/runtime.js --format=iife --platform=browser
 
-# Install tairitsu-packager CLI binary (tairitsu) + tairitsu-mcp
+# Install tairitsu-packager CLI binary (tairitsu)
 install-packager: (build-glue-runtime)
-    cargo build --release --package tairitsu-packager --package tairitsu-mcp
+    cargo build --release --package tairitsu-packager
     {{python}} scripts/install_packager.py
 
 # Development environment setup (install tools and build)
@@ -185,7 +185,7 @@ test:
     @echo "Running comprehensive checks..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Step 1/9: Checking code compilation..."
-    cargo check --workspace --all-targets --exclude tairitsu-e2e
+    cargo check --workspace --all-targets
     @echo "✅ Check passed"
     @echo ""
     @echo "Step 2/9: Running compile-time demo..."
@@ -399,32 +399,29 @@ wit-dry-run:
 # Browser testing tasks
 # ------
 
-# Download and cache Chromium browser
+# Browser testing moved to shirabe (2026-10-17 browser-backbone
+# consolidation): shirabe is the headless-browser backbone — it resolves
+# and downloads Chromium on demand and serves the debug HTTP API. This
+# repo drives it from a Python script (scripts/browser_e2e.py); these
+# recipes stay as pointers for muscle memory.
 browser-install:
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Installing Chromium for browser testing..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo run --package tairitsu-browser-test -- browser install
+    @echo "Chromium is resolved/downloaded by shirabe on demand."
+    @echo "Install shirabe (npm i -g @celestia-island/shirabe) or use npx."
 
-# List cached browser versions
 browser-list:
-    @echo "Listing cached browser versions..."
-    cargo run --package tairitsu-browser-test -- browser list
+    @echo "Browser cache is owned by shirabe; run: shirabe --help"
 
-# Clear browser cache
 browser-clear:
-    @echo "Clearing browser cache..."
-    cargo run --package tairitsu-browser-test -- browser clear
+    @echo "Browser cache is owned by shirabe; remove its cache dir as needed."
 
-# Run browser-glue tests
+# Run the browser-glue e2e suite through shirabe
 test-browser:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Running browser-glue tests..."
+    @echo "Running browser-glue e2e tests via shirabe..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo run --package tairitsu-browser-test -- test run --headless
+    python3 scripts/browser_e2e.py
 
-# CI: Install browser + run tests
-test-browser-ci: browser-install test-browser
+test-browser-ci: test-browser
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "✅ Browser tests completed!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

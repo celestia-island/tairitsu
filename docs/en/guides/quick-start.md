@@ -66,7 +66,7 @@ npm run typecheck
 ## Verify E2E Tests
 
 ```bash
-cargo test -p tairitsu-e2e
+python3 scripts/browser_e2e.py
 ```
 
 ## Next Steps

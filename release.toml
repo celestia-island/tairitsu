@@ -31,21 +31,11 @@ name = "tairitsu-hooks"
 name = "tairitsu-browser-wit-resolver"
 
 [[package]]
-name = "tairitsu-browser-test"
-publish = false
-
-[[package]]
 name = "tairitsu-ssr"
 
 [[package]]
 name = "tairitsu-web"
 
 [[package]]
-name = "tairitsu-e2e"
-publish = false
-
-[[package]]
 name = "tairitsu-packager"
 
-[[package]]
-name = "tairitsu-mcp"
