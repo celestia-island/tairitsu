@@ -71,12 +71,13 @@ class FakeWebSocket extends EventTarget {
 }
 
 class FakeEventSource extends EventTarget {
+  static openTargets = new Set();
   static CONNECTING = 0;
   static OPEN = 1;
   static CLOSED = 2;
   static instances = [];
 
-  readyState = FakeEventSource.OPEN;
+  readyState = FakeEventSource.CONNECTING;
   url;
   closed = false;
 
@@ -84,6 +85,11 @@ class FakeEventSource extends EventTarget {
     super();
     this.url = url;
     FakeEventSource.instances.push(this);
+  }
+
+  open() {
+    this.readyState = FakeEventSource.OPEN;
+    this.dispatchEvent(new Event("open"));
   }
 
   close() {
@@ -163,6 +169,26 @@ test("browser transport carries WS frames and close info through the channel", (
   assert.deepEqual(fake.sent, ["out"]);
   assert.deepEqual(closeInfo, { code: 1001, reason: "bye", wasClean: true });
   assert.equal(ws.readyState, "closed");
+});
+
+test("browser transport reports the SSE open edge", () => {
+  const { host } = fakeBrowserHost();
+  const transport = createBrowserTransport({}, host);
+  const sse = transport.openSse("https://example.test/sse");
+  const fake = FakeEventSource.instances.at(-1);
+  assert.ok(fake);
+
+  const opens = [];
+  sse.onOpen((cb) => {});
+  // subscribe properly:
+  const off = sse.onOpen(() => opens.push(1));
+  assert.equal(fake.readyState, FakeEventSource.CONNECTING);
+  fake.open();
+  assert.deepEqual(opens, [1]);
+  off();
+  fake.open();
+  assert.deepEqual(opens, [1]);
+  sse.close();
 });
 
 test("browser transport surfaces named SSE events", () => {

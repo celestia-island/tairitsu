@@ -94,6 +94,9 @@ export type SseReadyState = "connecting" | "open" | "closed";
 
 export interface SseChannel {
   readonly readyState: SseReadyState;
+  /** The stream's open edge (browsers fire it once the connection is
+   *  established; progressive-connect callers gate on it). */
+  onOpen?(cb: () => void): () => void;
   onEvent(cb: (ev: SseEvent) => void): () => void;
   onError(cb: (err: unknown) => void): () => void;
   close(): void;

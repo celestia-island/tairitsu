@@ -197,8 +197,13 @@ function makeWsChannel(ws: WebSocket): {
 }
 
 function makeSseChannel(es: EventSource, events: string[]): SseChannel {
+  const openHandlers = new Set<() => void>();
   const eventHandlers = new Set<(ev: SseEvent) => void>();
   const errorHandlers = new Set<(err: unknown) => void>();
+
+  es.addEventListener("open", () => {
+    for (const cb of openHandlers) cb();
+  });
 
   const dispatch = (ev: MessageEvent) => {
     const out: SseEvent = {
@@ -221,6 +226,10 @@ function makeSseChannel(es: EventSource, events: string[]): SseChannel {
       if (es.readyState === 0) return "connecting";
       if (es.readyState === 1) return "open";
       return "closed";
+    },
+    onOpen(cb) {
+      openHandlers.add(cb);
+      return () => openHandlers.delete(cb);
     },
     onEvent(cb) {
       eventHandlers.add(cb);
