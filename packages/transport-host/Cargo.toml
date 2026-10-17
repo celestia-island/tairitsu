@@ -8,7 +8,10 @@ description = "Runtime host implementations for the tairitsu:transport WIT contr
 
 [dependencies]
 wasmtime = { workspace = true }
+futures-util = { workspace = true }
 reqwest = { workspace = true }
+tokio = { workspace = true, features = ["rt", "sync"] }
+tokio-tungstenite = { workspace = true }
 anyhow = { workspace = true }
 
 [dev-dependencies]

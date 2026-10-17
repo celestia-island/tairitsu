@@ -4,8 +4,14 @@
 //! The contract's single authority is the npm package's `wit/transport.wit`
 //! (mirrored by `packages/npm/tairitsu-transport`); this crate binds the
 //! same file at build time so the WIT can never drift between the TS and
-//! runtime sides. First surface: the `http` interface (host-side fetch for
-//! component imports). The poll-style websocket/sse bridges come later.
+//! runtime sides. All three interfaces are hosted: http rides the
+//! workspace reqwest; websocket and sse are poll-style bridges — each
+//! session owns a pump thread moving frames/events onto channels, and
+//! the WIT's synchronous recv/next surface them non-blockingly.
+
+mod bridge_types;
+mod sse_bridge;
+mod ws_bridge;
 
 use wasmtime::component::bindgen;
 
@@ -15,18 +21,26 @@ bindgen!({
 });
 
 pub use self::tairitsu::transport::http::Host as HttpHost;
+pub use self::tairitsu::transport::sse::Host as SseHost;
 pub use self::tairitsu::transport::types::{
-    CredentialsMode, RedirectMode, RequestOptions, TransportResponse,
+    CredentialsMode, RedirectMode, RequestOptions, SseEvent, TransportResponse, WsCloseInfo,
+    WsFrame,
 };
+pub use self::tairitsu::transport::websocket::Host as WebsocketHost;
+
+use bridge_types::WsFrameInternal;
+use sse_bridge::SseSessions;
+use ws_bridge::WsSessions;
 
 /// Host state backing the http import: one shared reqwest client.
 ///
 /// Components are untrusted: every request option is validated (method
 /// sanity, header count/size caps, body size cap) before it reaches the
 /// network, and redirects/credentials are applied per the contract.
-#[derive(Debug)]
 pub struct TransportHostState {
     client: reqwest::blocking::Client,
+    ws: WsSessions,
+    sse: SseSessions,
 }
 
 const MAX_HEADERS: usize = 64;
@@ -49,6 +63,8 @@ impl TransportHostState {
             client: reqwest::blocking::Client::builder()
                 .build()
                 .expect("static reqwest client config is valid"),
+            ws: WsSessions::default(),
+            sse: SseSessions::default(),
         }
     }
 }
@@ -199,48 +215,73 @@ impl RequestOptions {
     }
 }
 
-/// Placeholder host for the poll-style websocket bridge — the http
-/// surface ships first; calling into these from a component returns a
-/// clear "not yet bridged" error instead of a runtime trap.
+/// The poll-style websocket bridge: connect spawns a pump thread,
+/// send/recv move frames across channels, close surfaces a proper close
+/// frame and records the close info for later queries.
 impl self::tairitsu::transport::websocket::Host for TransportHostState {
-    fn connect(&mut self, _url: String, _protocols: Vec<String>) -> Result<u64, String> {
-        Err("transport-host: the websocket bridge is not implemented yet (http only)".into())
+    fn connect(&mut self, url: String, protocols: Vec<String>) -> Result<u64, String> {
+        self.ws.connect(url, protocols)
     }
+
     fn send(
         &mut self,
-        _handle: u64,
-        _frame: self::tairitsu::transport::types::WsFrame,
+        handle: u64,
+        frame: self::tairitsu::transport::types::WsFrame,
     ) -> Result<(), String> {
-        Err("transport-host: the websocket bridge is not implemented yet (http only)".into())
+        let internal = match frame {
+            self::tairitsu::transport::types::WsFrame::Text(t) => WsFrameInternal::Text(t),
+            self::tairitsu::transport::types::WsFrame::Binary(b) => WsFrameInternal::Binary(b),
+        };
+        self.ws.send(handle, internal)
     }
-    fn recv(&mut self, _handle: u64) -> Option<self::tairitsu::transport::types::WsFrame> {
-        // Unreachable for well-behaved components: connect() refuses first.
-        None
+
+    fn recv(&mut self, handle: u64) -> Option<self::tairitsu::transport::types::WsFrame> {
+        self.ws.recv(handle).map(|internal| match internal {
+            WsFrameInternal::Text(t) => self::tairitsu::transport::types::WsFrame::Text(t),
+            WsFrameInternal::Binary(b) => self::tairitsu::transport::types::WsFrame::Binary(b),
+        })
     }
-    fn close_info(
-        &mut self,
-        _handle: u64,
-    ) -> Option<self::tairitsu::transport::types::WsCloseInfo> {
-        None
+
+    fn close_info(&mut self, handle: u64) -> Option<self::tairitsu::transport::types::WsCloseInfo> {
+        self.ws
+            .close_info(handle)
+            .map(|info| self::tairitsu::transport::types::WsCloseInfo {
+                code: info.code,
+                reason: info.reason,
+                clean: info.clean,
+            })
     }
-    fn close(&mut self, _handle: u64, _code: u16, _reason: String) {}
+
+    fn close(&mut self, handle: u64, code: u16, reason: String) {
+        self.ws.close(handle, code, reason);
+    }
 }
 
-/// Placeholder host for the poll-style sse bridge (same staging as ws).
+/// The poll-style sse bridge: subscribe performs the GET and spawns a
+/// reader thread; next drains queued events; close flags the reader.
 impl self::tairitsu::transport::sse::Host for TransportHostState {
     fn subscribe(
         &mut self,
-        _url: String,
-        _headers: Vec<(String, String)>,
-        _events: Vec<String>,
+        url: String,
+        headers: Vec<(String, String)>,
+        events: Vec<String>,
     ) -> Result<u64, String> {
-        Err("transport-host: the sse bridge is not implemented yet (http only)".into())
+        self.sse.subscribe(url, headers, events)
     }
-    fn next(&mut self, _handle: u64) -> Option<self::tairitsu::transport::types::SseEvent> {
-        // Unreachable for well-behaved components: subscribe() refuses first.
-        None
+
+    fn next(&mut self, handle: u64) -> Option<self::tairitsu::transport::types::SseEvent> {
+        self.sse
+            .next(handle)
+            .map(|internal| self::tairitsu::transport::types::SseEvent {
+                event: internal.event,
+                data: internal.data,
+                id: internal.id,
+            })
     }
-    fn close(&mut self, _handle: u64) {}
+
+    fn close(&mut self, handle: u64) {
+        self.sse.close(handle);
+    }
 }
 
 /// Register the whole `tairitsu:transport` world onto a linker whose
