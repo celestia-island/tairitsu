@@ -1,0 +1,110 @@
+/// tairitsu-transport — the request-transport contract, in WIT.
+///
+/// One capability, two kinds of host:
+/// - browser: window.fetch / WebSocket / EventSource (optionally mediated
+///   by a service worker)
+/// - desktop: a host-invoked local client (Tauri command bridge, etc.)
+///
+/// This file is hand-written and intentionally independent of the
+/// W3C-WebIDL-generated `browser-full` world (see packages/browser-worlds):
+/// that world describes browser APIs to components; this one describes the
+/// host *transport* a component (or plain JS caller) rides on.
+///
+/// Mirrored TypeScript: packages/npm/tairitsu-transport (contract.ts).
+package tairitsu:transport@0.1.0;
+
+/// Shared transport data types.
+interface types {
+  /// Shared subset of fetch init.
+  record request-options {
+    method: string,
+    headers: list<tuple<string, string>>,
+    body: option<list<u8>>,
+    credentials: option<credentials-mode>,
+    redirect: option<redirect-mode>,
+    timeout-ms: option<u64>,
+  }
+
+  enum credentials-mode {
+    omit,
+    same-origin,
+    %include,
+  }
+
+  enum redirect-mode {
+    follow,
+    error,
+    manual,
+  }
+
+  record transport-response {
+    status: u16,
+    status-text: string,
+    headers: list<tuple<string, string>>,
+    body: list<u8>,
+  }
+
+  variant ws-frame {
+    text(string),
+    binary(list<u8>),
+  }
+
+  record ws-close-info {
+    code: u16,
+    reason: string,
+    clean: bool,
+  }
+
+  record sse-event {
+    event: option<string>,
+    data: string,
+    id: option<string>,
+  }
+}
+
+/// HTTP requests (fetch-shaped) — the desktop host routes them through its
+/// local client; the browser through the window's own fetch.
+interface http {
+  use types.{ request-options, transport-response };
+
+  request: func(url: string, options: request-options) -> result<transport-response, string>;
+}
+
+/// Bidirectional channel (JSON-RPC rides this).
+interface websocket {
+  use types.{ ws-frame, ws-close-info };
+
+  /// Opaque host-side connection handle.
+  type ws-handle = u64;
+
+  connect: func(url: string, protocols: list<string>) -> result<ws-handle, string>;
+  send: func(handle: ws-handle, frame: ws-frame) -> result<_, string>;
+  recv: func(handle: ws-handle) -> option<ws-frame>;
+  close-info: func(handle: ws-handle) -> option<ws-close-info>;
+  close: func(handle: ws-handle, code: u16, reason: string);
+}
+
+/// Server-sent event stream.
+interface sse {
+  use types.{ sse-event };
+
+  type sse-handle = u64;
+
+  subscribe: func(
+    url: string,
+    headers: list<tuple<string, string>>,
+    events: list<string>,
+  ) -> result<sse-handle, string>;
+  next: func(handle: sse-handle) -> option<sse-event>;
+  close: func(handle: sse-handle);
+}
+
+/// The transport world: a host implements all three interfaces; a caller
+/// imports them. JSON-RPC framing itself lives in the TS/embedded side
+/// (`rpc.ts`) — the wire frames are standard JSON-RPC 2.0 over the
+/// websocket interface above.
+world transport {
+  import http;
+  import websocket;
+  import sse;
+}

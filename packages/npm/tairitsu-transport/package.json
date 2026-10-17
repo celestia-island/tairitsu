@@ -1,0 +1,53 @@
+{
+  "name": "@celestia-island/tairitsu-transport",
+  "version": "0.1.0",
+  "description": "One request-transport contract for every tairitsu host \u2014 HTTP, WebSocket, SSE and JSON-RPC channels over browser APIs or a desktop host client",
+  "license": "MIT OR Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "wit",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./contract": {
+      "types": "./dist/contract.d.ts",
+      "import": "./dist/contract.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js"
+    },
+    "./desktop": {
+      "types": "./dist/desktop.d.ts",
+      "import": "./dist/desktop.js"
+    },
+    "./rpc": {
+      "types": "./dist/rpc.d.ts",
+      "import": "./dist/rpc.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celestia-island/tairitsu.git",
+    "directory": "packages/npm/tairitsu-transport"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test tests/transport.test.mjs",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run build",
+    "pretest": "npm run build"
+  },
+  "devDependencies": {
+    "rimraf": "^*",
+    "typescript": "^*"
+  }
+}
