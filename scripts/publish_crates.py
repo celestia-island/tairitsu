@@ -11,7 +11,7 @@ import urllib.error
 PUBLISHABLE_PREFIX = "tairitsu"
 MAX_WAIT_SECONDS = 300
 POLL_INTERVAL = 5
-EXCLUDE_PACKAGES = {"tairitsu-e2e", "tairitsu-browser-test", "tairitsu-mcp"}
+EXCLUDE_PACKAGES = set()
 
 
 def run_captured(cmd):

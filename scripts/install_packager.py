@@ -69,12 +69,6 @@ def main():
     else:
         print(f"[WARN] tairitsu not found: {tairitsu_src}")
 
-    mcp_src = release / f"tairitsu-mcp{exe}"
-    if mcp_src.exists():
-        install_binary(mcp_src, cargo_bin_dir() / f"tairitsu-mcp{exe}", "tairitsu-mcp")
-    else:
-        print(f"[WARN] tairitsu-mcp not found: {mcp_src}")
-
     stamp = project_root / "target" / ".tairitsu-install-stamp"
     stamp.write_text(str(release.resolve()))
 

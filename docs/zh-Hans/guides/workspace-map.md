@@ -20,7 +20,7 @@ tests/        端到端相关资产
 - `packages/browser-wit-resolver`：WIT 解析、缓存、拉取
 - `packages/packager`：CLI 打包与 `wit` 子命令
 - `packages/hooks`、`packages/style`：UI 运行时辅助层
-- `packages/e2e`：端到端校验入口
+- `scripts/browser_e2e.py`：端到端校验入口（经 shirabe）
 
 ## 示例工程建议阅读顺序
 

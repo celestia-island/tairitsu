@@ -56,7 +56,8 @@ Tairitsu unifies two worlds that are typically separate:
 - **Dual backends**: `WitPlatform` (WIT bindings) and `WebPlatform` (web-sys) side by side
 - **W3C coverage**: 50+ WebIDL specs → generated WIT interfaces → TypeScript glue
 - **Visual regression**: Pixel diff testing with Chromium automation
-- **MCP server**: AI agent integration via Model Context Protocol
+- **Browser backbone**: [shirabe](https://github.com/celestia-island/shirabe) — CDP engine, HTTP debug API, zero-config Chromium resolution; `tairitsu dev` embeds it, and browser e2e is `scripts/browser_e2e.py`
+- **MCP server**: AI agent integration via Model Context Protocol (browser tools come from shirabe; the packager bridge adds terminal/vtty tools)
 - **Desktop packaging**: Bundle as native app (Wry/Tao)
 
 ## Quick Start
@@ -124,8 +125,6 @@ Same component, two execution paths:
 | `tairitsu-browser-worlds` | WIT world definitions from W3C WebIDL (DOM, Events, Fetch, Canvas, etc.) |
 | `tairitsu-browser-wit-resolver` | WIT package resolution: version resolution, cloud fetching, caching |
 | `tairitsu-packager` | CLI binary: dev server, build pipeline, visual regression, desktop packaging |
-| `tairitsu-mcp` | MCP server for AI coding assistants |
-| `tairitsu-e2e` | End-to-end testing: WebDriver + chromiumoxide |
 
 ## Documentation
 

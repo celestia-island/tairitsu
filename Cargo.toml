@@ -1,7 +1,5 @@
 [workspace]
 members = [
-    "packages/browser",
-    "packages/debug-core",
     "packages/runtime",
     "packages/macros",
     "packages/vdom",
@@ -11,10 +9,7 @@ members = [
     "packages/style",
     "packages/browser-wit-resolver",
     "packages/browser-worlds",
-    "packages/browser-test",
-    "packages/browser-fetch",
     "packages/ssr",
-    "packages/mcp",
 
     "examples/wit-compile-time",
     "examples/wit-runtime",
@@ -55,10 +50,8 @@ repository = "https://github.com/celestia-island/tairitsu"
 [workspace.dependencies]
 
 tairitsu = { version = "^0.5.14", path = "packages/runtime" }
-tairitsu-browser-fetch = { version = "^0.5.14", path = "packages/browser-fetch" }
 tairitsu-browser-wit-resolver = { version = "^0.5.14", path = "packages/browser-wit-resolver" }
 tairitsu-browser-worlds = { version = "^0.5.14", path = "packages/browser-worlds" }
-tairitsu-debug-core = { version = "^0.5.14", path = "packages/debug-core" }
 tairitsu-hooks = { version = "^0.5.14", path = "packages/hooks" }
 tairitsu-macros = { version = "^0.5.14", path = "packages/macros" }
 tairitsu-packager = { version = "^0.5.14", path = "packages/packager" }

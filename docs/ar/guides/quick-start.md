@@ -31,6 +31,6 @@ npm run typecheck
 
 ```bash
 cd ../..
-cargo test -p tairitsu-e2e
+python3 scripts/browser_e2e.py
 ```
 
