@@ -1252,8 +1252,20 @@ interface element {
     /// `setHTML()` operation.
     set-html: func(self: element-handle, html: string, options: option<u64>);
 
+    /// `appendHTML()` operation.
+    append-html: func(self: element-handle, html: string, options: option<u64>);
+
+    /// `prependHTML()` operation.
+    prepend-html: func(self: element-handle, html: string, options: option<u64>);
+
     /// `setHTMLUnsafe()` operation.
     set-html-unsafe: func(self: element-handle, html: string, options: option<u64>);
+
+    /// `appendHTMLUnsafe()` operation.
+    append-html-unsafe: func(self: element-handle, html: string, options: option<u64>);
+
+    /// `prependHTMLUnsafe()` operation.
+    prepend-html-unsafe: func(self: element-handle, html: string, options: option<u64>);
 
     /// `getHTML()` operation.
     get-html: func(self: element-handle, options: option<u64>) -> string;
