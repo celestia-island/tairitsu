@@ -120,7 +120,3 @@ tairitsu-macros = { path = "packages/macros" }
 tairitsu-style = { path = "packages/style" }
 tairitsu-browser-worlds = { path = "packages/browser-worlds" }
 
-[patch."https://github.com/celestia-island/hikari.git"]
-hikari-palette = { path = "../hikari/packages/palette" }
-hikari-components = { path = "../hikari/packages/components" }
-hikari-icons = { path = "../hikari/packages/icons" }

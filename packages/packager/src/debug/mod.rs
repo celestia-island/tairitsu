@@ -12,7 +12,7 @@
 
 use crate::utils::error::TairitsuPackagerError;
 
-pub use shirabe::{DebugServerConfig, start_debug_server as shirabe_start_debug_server};
+pub use shirabe::{start_debug_server as shirabe_start_debug_server, DebugServerConfig};
 
 /// Launch the standalone debug API (+ CDP browser engine).
 ///
