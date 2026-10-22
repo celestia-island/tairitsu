@@ -43,3 +43,17 @@ export {
   type JsonRpcId,
   type JsonRpcRequestOptions,
 } from "./rpc.js";
+
+export {
+  ApiError,
+  configureErrorHandler,
+  download,
+  navigatorLanguage,
+  requestJson,
+  upload,
+  type PanelTransport,
+  type RawFetchOptions,
+  type RequestOptions,
+  type ResolveAcceptLanguage,
+  type UploadOptions,
+} from "./panel.js";
