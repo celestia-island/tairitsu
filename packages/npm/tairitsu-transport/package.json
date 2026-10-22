@@ -1,6 +1,6 @@
 {
   "name": "@celestia-island/tairitsu-transport",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "One request-transport contract for every tairitsu host \u2014 HTTP, WebSocket, SSE and JSON-RPC channels over browser APIs or a desktop host client",
   "license": "MIT OR Apache-2.0",
   "publishConfig": {
@@ -32,6 +32,10 @@
     "./rpc": {
       "types": "./dist/rpc.d.ts",
       "import": "./dist/rpc.js"
+    },
+    "./panel": {
+      "types": "./dist/panel.d.ts",
+      "import": "./dist/panel.js"
     }
   },
   "repository": {
