@@ -71,6 +71,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Decode OIDC claims (debug, no secrets in claims)
+        run: |
+          TOKEN=$(curl -sS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm_registry" \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['value'])")
+          echo "$TOKEN" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null \
+            | python3 -m json.tool
+
       - name: Ensure tag is on master
         run: |
           git fetch origin master --depth=1
@@ -134,6 +142,14 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v7
+      - name: Decode OIDC claims (debug, no secrets in claims)
+        run: |
+          TOKEN=$(curl -sS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm_registry" \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['value'])")
+          echo "$TOKEN" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null \
+            | python3 -m json.tool
+
       - name: Ensure tag is on master
         run: |
           git fetch origin master --depth=1
