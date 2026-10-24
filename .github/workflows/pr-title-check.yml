@@ -2,11 +2,9 @@ name: PR Title Check
 
 on:
   pull_request:
-    types: [opened, edited, reopened, ready_for_review]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    types: [opened, edited, reopened, ready_for_review, synchronize]
+  merge_group:
+    types: [checks_requested]
 
 jobs:
   pr-title-check:
