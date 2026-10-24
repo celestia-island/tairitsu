@@ -15,7 +15,11 @@ target/
 .pytest_cache/
 
 # Node.js
+# Both forms on purpose: `node_modules/` only matches directories, while a
+# `node_modules` entry that is a *symlink* is a file to git and needs the
+# bare pattern (the workspace cache links are symlinks).
 node_modules/
+node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error-log*
