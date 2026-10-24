@@ -70,6 +70,14 @@ jobs:
     needs: verify
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history: the "tag must be on master" guard below uses
+          # `git merge-base --is-ancestor`, which cannot see past a shallow
+          # boundary — a depth-1 checkout at an older tag reports FALSE even
+          # when the tag is a direct ancestor of master (probed 2026-10-24 on a
+          # fixture clone), so the guard would block every legitimate release
+          # except one tagged on the master tip.
+          fetch-depth: 0
 
       - name: Decode OIDC claims (debug, no secrets in claims)
         run: |
@@ -81,9 +89,14 @@ jobs:
 
       - name: Ensure tag is on master
         run: |
-          git fetch origin master --depth=1
+          # A tag is only a release coordinate if it points at a commit that
+          # actually landed (AGENTS §4: master moves by squash merge only).
+          # Fetch the branch in full — `--depth=1` leaves the history needed by
+          # the ancestor walk grafted away, and the check then fails on every
+          # non-tip tag.
+          git fetch origin master
           if ! git merge-base --is-ancestor HEAD origin/master; then
-            echo "::error::Tag must be on master branch to publish"
+            echo "::error::tag ${GITHUB_REF_NAME} is not an ancestor of master — tag the squash-merged master commit, not the PR branch"
             exit 1
           fi
 
@@ -142,6 +155,10 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history for the "tag must be on master" guard below — see the
+          # note on the publish-crates checkout.
+          fetch-depth: 0
       - name: Decode OIDC claims (debug, no secrets in claims)
         run: |
           TOKEN=$(curl -sS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm_registry" \
@@ -152,9 +169,14 @@ jobs:
 
       - name: Ensure tag is on master
         run: |
-          git fetch origin master --depth=1
+          # A tag is only a release coordinate if it points at a commit that
+          # actually landed (AGENTS §4: master moves by squash merge only).
+          # Fetch the branch in full — `--depth=1` leaves the history needed by
+          # the ancestor walk grafted away, and the check then fails on every
+          # non-tip tag.
+          git fetch origin master
           if ! git merge-base --is-ancestor HEAD origin/master; then
-            echo "::error::Tag must be on master branch to publish"
+            echo "::error::tag ${GITHUB_REF_NAME} is not an ancestor of master — tag the squash-merged master commit, not the PR branch"
             exit 1
           fi
       - uses: actions/setup-node@v7
