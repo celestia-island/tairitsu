@@ -5,7 +5,7 @@ pre-release-commit-message = "chore: release v{{version}}"
 post-release-commit-message = "chore: start next development cycle"
 tag-message = "Release v{{version}}"
 tag-prefix = "v"
-allow-branch = ["dev", "master"]
+allow-branch = ["master"]  # `dev` is retired workspace-wide (AGENTS.md [[change]])
 publish = true
 verify = true
 
