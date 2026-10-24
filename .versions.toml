@@ -1,0 +1,31 @@
+# Version-track configuration for `celestia-devtools verify-versions`.
+#
+# tairitsu carries three version identities and only one of them is the
+# npm baseline this gate should defend:
+#
+#   cargo   [workspace.package].version          — the runtime line (0.5.x).
+#   npm     @celestia-island/tairitsu-web-glue   — the npm face of that same
+#           runtime line (0.5.x). It moves when the runtime moves, so a
+#           manifest bump that forgets this file is exactly the drift the gate
+#           exists to catch: pin it as the npm baseline.
+#   npm     @celestia-island/tairitsu-transport  — the family transport
+#           contract, published on its own wave (0.1.0 -> 0.2.0 -> 0.3.0;
+#           roadmap 2026-10-22). `npm-release.yml` documents that each npm
+#           package "carries its own version line independent of the
+#           workspace crate tag", so treating 0.3.x as a drift against 0.5.2
+#           would invent a defect; it is exempt as an independent line.
+#   npm     root package.json                    — private workspace holder,
+#           never published; exempt so it cannot vote on the track.
+#
+# The baseline is pinned instead of resolved: with the root manifest private
+# and the two published packages on different lines, the "majority among
+# publishable packages" fallback ties and would resolve by filesystem walk
+# order (the failure mode plana's `.versions.toml` documents). A pinned value
+# fails closed on any bump that does not update this file in the same commit.
+
+[track]
+npm = "0.5.2"
+
+[exempt.npm]
+"." = "private root workspace manifest; no published line"
+"packages/npm/tairitsu-transport" = "independent transport-contract line (0.3.x, published on its own wave)"
