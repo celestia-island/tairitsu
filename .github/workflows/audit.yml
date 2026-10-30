@@ -39,9 +39,14 @@ jobs:
           sed -i '/path = "\.\.\/hikari/d' Cargo.toml
           rm -f .cargo/config.toml Cargo.lock
 
+      - uses: dtolnay/rust-toolchain@stable
+
       - name: Install cargo-audit
-        uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-audit --locked
+        # Self-hosted runners persist between jobs, so a plain `cargo install`
+        # fails with "binary `cargo-audit` already exists in destination" once
+        # it has run once — the audit lane then goes red for a reason that has
+        # nothing to do with the tree (known-live-issues H9).
+        run: command -v cargo-audit >/dev/null 2>&1 || cargo install cargo-audit --locked
 
       - name: Run audit
         run: cargo audit
@@ -66,9 +71,11 @@ jobs:
           sed -i '/path = "\.\.\/hikari/d' Cargo.toml
           rm -f .cargo/config.toml Cargo.lock
 
+      - uses: dtolnay/rust-toolchain@stable
+
       - name: Install cargo-deny
-        uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-deny --locked
+        # Same idempotence guard as cargo-audit above.
+        run: command -v cargo-deny >/dev/null 2>&1 || cargo install cargo-deny --locked
 
       - name: Run deny check
         run: cargo deny check
