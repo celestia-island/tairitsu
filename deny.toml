@@ -24,12 +24,11 @@ allow = [
 confidence-threshold = 0.8
 
 [bans]
-
-# TLS policy: rustls with the pure-Rust ring provider only. aws-lc-sys needs
-# NASM (and a C toolchain) installed to build at all — a build-host burden the
-# family removed by pinning every TLS path to ring. Keep it out permanently.
-[[bans.deny]]
-name = "aws-lc-sys"
+# These three belong to the `[bans]` table itself, not to the `[[bans.deny]]`
+# entry below: cargo-deny 0.20 rejects them there with
+# `error[unexpected-keys]: found 3 unexpected keys, expected:
+# ["wrappers","deny-multiple-versions","reason","use-instead"]` and then fails
+# to deserialize the whole config (#72 moved them down by mistake).
 multiple-versions = "warn"
 skip = [
     { name = "base64", version = "0.21" },
@@ -45,3 +44,9 @@ skip-tree = [
     { name = "chromiumoxide", version = "0.9" },
     { name = "wasmtime", version = "43" },
 ]
+
+# TLS policy: rustls with the pure-Rust ring provider only. aws-lc-sys needs
+# NASM (and a C toolchain) installed to build at all — a build-host burden the
+# family removed by pinning every TLS path to ring. Keep it out permanently.
+[[bans.deny]]
+name = "aws-lc-sys"

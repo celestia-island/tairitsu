@@ -39,9 +39,18 @@ jobs:
           sed -i '/path = "\.\.\/hikari/d' Cargo.toml
           rm -f .cargo/config.toml Cargo.lock
 
+      - uses: dtolnay/rust-toolchain@stable
+
       - name: Install cargo-audit
-        uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-audit --locked
+        # Self-hosted runners persist between jobs, so a plain `cargo install`
+        # fails with "binary `cargo-audit` already exists in destination" on
+        # every run after the first (known-live-issues H9). Reinstall only when
+        # the installed version is not the pinned one: `--force` alone would
+        # rebuild every run, and a bare `command -v` would silently keep an
+        # unknown older binary that judges the tree differently per machine.
+        run: |
+          cargo audit --version 2>/dev/null | grep -q ' 0\.22\.2' \
+            || cargo install cargo-audit --version 0.22.2 --locked --force
 
       - name: Run audit
         run: cargo audit
@@ -66,9 +75,14 @@ jobs:
           sed -i '/path = "\.\.\/hikari/d' Cargo.toml
           rm -f .cargo/config.toml Cargo.lock
 
+      - uses: dtolnay/rust-toolchain@stable
+
       - name: Install cargo-deny
-        uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-deny --locked
+        # Same version-pinned guard as cargo-audit above: an unknown older
+        # cargo-deny on a warm runner would otherwise be reused forever.
+        run: |
+          cargo deny --version 2>/dev/null | grep -q ' 0\.20\.2' \
+            || cargo install cargo-deny --version 0.20.2 --locked --force
 
       - name: Run deny check
         run: cargo deny check
