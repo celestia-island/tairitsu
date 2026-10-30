@@ -1,25 +1,13 @@
 name: Verify Versions
 
-# Version-consistency gate for this repository's cargo + npm tracks.
-#
-# The check itself lives in celestia-devtools (`verify-versions.yml@master`);
-# this file only wires the events, matching the family callers: the PR review
-# events (a push to a PR head is `synchronize`), the merge queue, master
-# itself, and a manual entry point. `.versions.toml` carries the baselines and
-# the registered independent publish lines.
 on:
   pull_request:
-    types: [opened, edited, reopened, ready_for_review, synchronize]
+    types: [opened, reopened, ready_for_review, synchronize]
   merge_group:
     types: [checks_requested]
-  push:
-    branches: [master]
-  workflow_dispatch:
-
-permissions:
-  contents: read
 
 jobs:
   verify-versions:
-    name: Verify version consistency
-    uses: celestia-island/celestia-devtools/.github/workflows/verify-versions.yml@master
+    uses: celestia-island/celestia-devtools/.github/workflows/verify-versions.yml@v2026.10
+    with:
+      devtools-ref: v2026.10
