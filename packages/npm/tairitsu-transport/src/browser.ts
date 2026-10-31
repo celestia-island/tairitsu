@@ -175,8 +175,10 @@ function makeWsChannel(ws: WebSocket): {
       return () => openHandlers.delete(cb);
     },
     send(frame: WsFrame): void {
-      // ArrayBufferView is valid at runtime; the DOM lib types are narrower.
-      ws.send(frame as unknown as string | Blob | ArrayBuffer);
+      // WsFrame is exactly the DOM's accepted union (BufferSource | Blob |
+      // string); the old double cast was for a lib.dom generation whose
+      // WebSocket.send overloads predated the unified signature.
+      ws.send(frame);
     },
     close(code?: number, reason?: string): void {
       ws.close(code, reason);

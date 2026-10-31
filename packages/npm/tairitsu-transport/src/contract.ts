@@ -47,7 +47,14 @@ export interface TransportResponse {
   json<T = unknown>(): Promise<T>;
 }
 
-export type WsFrame = string | ArrayBuffer | ArrayBufferView | Blob;
+/**
+ * What a transport frame may carry. `ArrayBufferView` is narrowed to an
+ * `ArrayBuffer`-backed view on purpose: the DOM's `BufferSource` (what
+ * `WebSocket.send` accepts) excludes `SharedArrayBuffer`-backed views, and
+ * the old bare `ArrayBufferView` (=`ArrayBufferView<ArrayBufferLike>`) needed
+ * a double cast at every send site to bridge exactly this gap.
+ */
+export type WsFrame = string | ArrayBuffer | ArrayBufferView<ArrayBuffer> | Blob;
 
 export interface WsCloseInfo {
   code: number;
