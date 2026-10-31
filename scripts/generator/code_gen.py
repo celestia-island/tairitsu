@@ -55,11 +55,11 @@ class CodeGenerator:
     def _auto_generated_header() -> List[str]:
         """Standard header for all auto-generated TypeScript files."""
         return [
-            "// ts-escape-allow-file: generated WASM-browser glue. The generator does",
-            "// not yet produce signature-faithful output (measured 1066 strict errors",
-            "// once ts-nocheck is lifted — the handle-return plumbing is the L40",
-            "// regeneration project), so the blanket stays; member names and the",
-            "// per-call `as any` family are already fixed/typed via projections.",
+            "// ts-escape-allow-file: auto-generated WASM-browser glue. The generator",
+            "// does not yet produce signature-faithful output (measured 931 strict",
+            "// errors once ts-nocheck is lifted — the handle-return plumbing is the",
+            "// L40 regeneration project), so the blanket stays; member names and the",
+            "// per-call `as any` family are already fixed/typed via projections. ledger=L40",
             "// @ts-nocheck",
             "/* eslint-disable */",
             "// prettier-ignore",
