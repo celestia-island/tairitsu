@@ -1,3 +1,8 @@
+// ts-escape-allow-file: generated WASM-browser glue, pervasively mismatched with its
+// own WIT signatures (measured 931 errors once ts-nocheck is lifted — see the
+// regeneration project, known-live-issues L40). The wrong DOM member names the
+// casts were hiding have been fixed by hand; the remaining `as any` sites are
+// generator-curated and retire with the regeneration.
 // @ts-nocheck
 // Auto-generated stub — delegates to browser-glue glue module
 
@@ -913,7 +918,7 @@ export function FileReaderReadAsText(self: bigint, blob: bigint, encoding: strin
  */
 export function FileReaderReadAsDataUrl(self: bigint, blob: bigint): void {
   const obj = lookupFileReader(self);
-  obj.readAsDataUrl(blob);
+  obj.readAsDataURL(blob);
 }
 
 /**
@@ -1107,7 +1112,7 @@ export function FileReaderSyncReadAsText(self: bigint, blob: bigint, encoding: s
  */
 export function FileReaderSyncReadAsDataUrl(self: bigint, blob: bigint): string {
   const obj = lookupFileReaderSync(self);
-  return obj.readAsDataUrl(blob);
+  return obj.readAsDataURL(blob);
 }
 
 // ---------------------------------------------------------------------------
@@ -1147,14 +1152,14 @@ function lookupOptionURL(handle: bigint | undefined): URL | null {
  * `create-object-url()` operation.
  */
 export function createObjectUrl(obj: bigint): string {
-  return URL.createObjectUrl(obj);
+  return URL.createObjectURL(obj);
 }
 
 /**
  * `revoke-object-url()` operation.
  */
 export function revokeObjectUrl(url: string): void {
-  return URL.revokeObjectUrl(url);
+  return URL.revokeObjectURL(url);
 }
 
 /**

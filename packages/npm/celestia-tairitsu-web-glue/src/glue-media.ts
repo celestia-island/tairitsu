@@ -1,3 +1,8 @@
+// ts-escape-allow-file: generated WASM-browser glue, pervasively mismatched with its
+// own WIT signatures (measured 931 errors once ts-nocheck is lifted — see the
+// regeneration project, known-live-issues L40). The wrong DOM member names the
+// casts were hiding have been fixed by hand; the remaining `as any` sites are
+// generator-curated and retire with the regeneration.
 // @ts-nocheck
 // Auto-generated stub — delegates to browser-glue glue module
 
@@ -1345,7 +1350,7 @@ function lookupOptionMediaSession(handle: bigint | undefined): MediaSession | nu
  */
 export function getMetadata(self: bigint): bigint | undefined {
   const obj = lookupMediaSession(self);
-  const _callResult = (obj as any).getMetadata();
+  const _callResult = obj.metadata;
   if (_callResult === null) return undefined;
   const handle = _nextAny++;
   _anyHandles.set(handle, _callResult);
@@ -3349,7 +3354,7 @@ export function createGain(self: bigint): bigint {
  */
 export function createIirFilter(self: bigint, feedforward: (number)[], feedback: (number)[]): bigint {
   const obj = lookupBaseAudioContext(self);
-  return obj.createIirFilter(feedforward, feedback);
+  return obj.createIIRFilter(feedforward, feedback);
 }
 
 /**
@@ -3786,7 +3791,7 @@ export function getNumberOfChannels(self: bigint): number {
  */
 export function getChannelData(self: bigint, channel: number): (number)[] {
   const obj = lookupAudioBuffer(self);
-  return obj.channelData;
+  return Array.from(obj.getChannelData(channel));
 }
 
 /**
@@ -4629,7 +4634,7 @@ export function BiquadFilterNodeGetDetune(self: bigint): bigint {
  */
 export function getQ(self: bigint): bigint {
   const obj = lookupBiquadFilterNode(self);
-  return obj.q;
+  return obj.Q;
 }
 
 /**
@@ -5600,7 +5605,7 @@ function lookupOptionAudioWorkletNode(handle: bigint | undefined): AudioWorkletN
  */
 export function getParameters(self: bigint): bigint {
   const obj = lookupAudioWorkletNode(self);
-  return obj.getParameters();
+  return obj.parameters;
 }
 
 /**

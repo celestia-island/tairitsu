@@ -277,6 +277,26 @@ HANDLE_GETTER_PATTERNS = [
 
 # Special browser API name mappings (WIT name -> browser API name)
 BROWSER_API_NAME_MAPPINGS = {
+    # --- DOM member spellings the kebab→camel default gets wrong (2026-10-31) ---
+    # Each of these shipped a wrong member name in the generated glue, hidden by
+    # `(obj as any)`; the committed artifacts were fixed by hand in the same wave.
+    "client-data-json": "clientDataJSON",
+    "read-as-data-url": "readAsDataURL",
+    "create-object-url": "createObjectURL",
+    "revoke-object-url": "revokeObjectURL",
+    "create-iir-filter": "createIIRFilter",
+    "get-client-capabilities": "getClientCapabilities",
+    "get-client-extension-results": "getClientExtensionResults",
+    "get-transports": "getTransports",
+    "get-authenticator-data": "getAuthenticatorData",
+    "get-public-key": "getPublicKey",
+    "get-public-key-algorithm": "getPublicKeyAlgorithm",
+    "parse-creation-options-from-json": "parseCreationOptionsFromJSON",
+    "parse-request-options-from-json": "parseRequestOptionsFromJSON",
+    # --- attribute spellings (setters/getters, applied via attr_name) ---
+    "ignore-bom": "ignoreBOM",
+    "indexed-db": "indexedDB",
+    "get-elements-by-tag-name-ns": "getElementsByTagNameNS",
     "get-random-values": "getRandomValues",
     "random-uuid": "randomUUID",
     "is-conditional-mediation-available": "isConditionalMediationAvailable",

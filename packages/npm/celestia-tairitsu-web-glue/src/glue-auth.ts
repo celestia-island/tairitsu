@@ -1,3 +1,8 @@
+// ts-escape-allow-file: generated WASM-browser glue, pervasively mismatched with its
+// own WIT signatures (measured 931 errors once ts-nocheck is lifted — see the
+// regeneration project, known-live-issues L40). The wrong DOM member names the
+// casts were hiding have been fixed by hand; the remaining `as any` sites are
+// generator-curated and retire with the regeneration.
 // @ts-nocheck
 // Auto-generated stub — delegates to browser-glue glue module
 
@@ -682,7 +687,7 @@ export function getAuthenticatorAttachment(self: bigint): string | undefined {
  */
 export function getClientExtensionResults(self: bigint): bigint {
   const obj = lookupPublicKeyCredential(self);
-  return obj.clientExtensionResults;
+  return obj.getClientExtensionResults();
 }
 
 /**
@@ -711,21 +716,21 @@ export function isUserVerifyingPlatformAuthenticatorAvailable(): bigint {
  * `get-client-capabilities()` operation.
  */
 export function getClientCapabilities(): bigint {
-  return PublicKeyCredential.clientCapabilities;
+  return PublicKeyCredential.getClientCapabilities();
 }
 
 /**
  * `parse-creation-options-from-json()` operation.
  */
 export function parseCreationOptionsFromJson(options: bigint): bigint {
-  return PublicKeyCredential.parseCreationOptionsFromJson(options);
+  return PublicKeyCredential.parseCreationOptionsFromJSON(options);
 }
 
 /**
  * `parse-request-options-from-json()` operation.
  */
 export function parseRequestOptionsFromJson(options: bigint): bigint {
-  return PublicKeyCredential.parseRequestOptionsFromJson(options);
+  return PublicKeyCredential.parseRequestOptionsFromJSON(options);
 }
 
 /**
@@ -781,7 +786,7 @@ function lookupOptionAuthenticatorResponse(handle: bigint | undefined): Authenti
  */
 export function getClientDataJson(self: bigint): Uint8Array {
   const obj = lookupAuthenticatorResponse(self);
-  return obj.clientDataJson;
+  return obj.clientDataJSON;
 }
 
 // ---------------------------------------------------------------------------
@@ -824,7 +829,7 @@ export function getAttestationObject(self: bigint): Uint8Array {
  */
 export function getTransports(self: bigint): (string)[] {
   const obj = lookupAuthenticatorAttestationResponse(self);
-  return obj.transports;
+  return obj.getTransports();
 }
 
 /**
@@ -832,7 +837,7 @@ export function getTransports(self: bigint): (string)[] {
  */
 export function AuthenticatorAttestationResponseGetAuthenticatorData(self: bigint): Uint8Array {
   const obj = lookupAuthenticatorAttestationResponse(self);
-  return obj.authenticatorData;
+  return new Uint8Array(obj.getAuthenticatorData());
 }
 
 /**
@@ -840,7 +845,8 @@ export function AuthenticatorAttestationResponseGetAuthenticatorData(self: bigin
  */
 export function getPublicKey(self: bigint): Uint8Array | undefined {
   const obj = lookupAuthenticatorAttestationResponse(self);
-  return obj.publicKey ?? undefined;
+  const pk = obj.getPublicKey();
+  return pk ? new Uint8Array(pk) : undefined;
 }
 
 /**
@@ -848,7 +854,7 @@ export function getPublicKey(self: bigint): Uint8Array | undefined {
  */
 export function getPublicKeyAlgorithm(self: bigint): bigint {
   const obj = lookupAuthenticatorAttestationResponse(self);
-  return obj.publicKeyAlgorithm;
+  return BigInt(obj.getPublicKeyAlgorithm());
 }
 
 // ---------------------------------------------------------------------------
