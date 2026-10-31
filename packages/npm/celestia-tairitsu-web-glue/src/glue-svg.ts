@@ -1,3 +1,8 @@
+// ts-escape-allow-file: generated WASM-browser glue, pervasively mismatched with its
+// own WIT signatures (measured 931 errors once ts-nocheck is lifted — see the
+// regeneration project, known-live-issues L40). The wrong DOM member names the
+// casts were hiding have been fixed by hand; the remaining `as any` sites are
+// generator-curated and retire with the regeneration.
 // @ts-nocheck
 // Auto-generated stub — delegates to browser-glue glue module
 
@@ -2347,7 +2352,7 @@ export function getElementsByTagName(qualifiedName: string): bigint {
  * `get-elements-by-tag-name-ns()` operation.
  */
 export function getElementsByTagNameNs(namespace: string | undefined, localName: string): bigint {
-  const _callResult = (document as any).getElementsByTagNameNs(namespace, localName as any);
+  const _callResult = document.getElementsByTagNameNS(namespace, localName);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, _callResult);
   return handle;
