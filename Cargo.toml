@@ -40,7 +40,11 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
-version = "0.5.22"
+# 0.5.23: master moved 15 commits past the published 0.5.22 (wasmtime ^48 +
+# zip ^9 for the advisory batch, glue DOM-name fixes, transport frame
+# narrowing). crates.io versions are immutable, so the drift needs this bump
+# before the next publish; consumers on ^0.5 pick it up semver-compatibly.
+version = "0.5.23"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 rust-version = "1.91"
