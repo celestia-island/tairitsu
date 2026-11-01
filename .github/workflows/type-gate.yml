@@ -1,0 +1,36 @@
+name: Type Gate
+
+# Pull-request-time type-escape coverage for the TypeScript half of this repo.
+#
+# The escape gate itself has been in celestia-devtools since 2026-10-31; this
+# repository was never wired to it, which left the 40k lines of generated WASM
+# glue (32 modules, all `@ts-nocheck`) with no pull-request-time record at all.
+# The files now carry a file-level exemption naming `ledger=L40` (the
+# regeneration project that retires them), so the debt is counted and traceable
+# instead of invisible.
+#
+# Pinned by SHA on purpose (org rule H14): a rule tightened on devtools master
+# judges nothing here until this anchor is bumped.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  type-gate:
+    uses: celestia-island/celestia-devtools/.github/workflows/ts-gate.yml@391c30ac43abe2f692538aaa2805ff1837ed687f
+    with:
+      devtools-ref: 391c30ac43abe2f692538aaa2805ff1837ed687f
+      paths: packages
+      ruleset: core
+      fail-on-dts: true
