@@ -1,0 +1,111 @@
+name: Publish crates
+
+# Publishes tairitsu-macros + tairitsu to crates.io. The token is an
+# *environment* secret on the `release` environment (CRATES_IO_API_TOKEN),
+# so only the job declaring that environment can read it. Trigger by pushing
+# a `v*` tag (the tag must match [workspace.package] version) or via
+# workflow_dispatch.
+#
+# Order inside CRATES is dependency order (macros <- tairitsu). The optional
+# `crates` dispatch input narrows the set for dependent-crate staging; the
+# default list publishes both.
+on:
+  push:
+    tags: [v*]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (must equal [workspace.package] version, e.g. 0.5.23)"
+        required: true
+        type: string
+      crates:
+        description: "Space-separated subset to publish this run (default: the full dependency-ordered list)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CRATES: ${{ inputs.crates || 'tairitsu-macros tairitsu' }}
+
+jobs:
+  # ── Refuse to publish anything but the version the tag (or input) names ──
+  verify-version:
+    name: Verify version matches tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Resolve the requested version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Compare with [workspace.package] version
+        run: |
+          WANT="${{ steps.version.outputs.version }}"
+          HAVE=$(grep -oP '^\s*version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
+          if [ "$HAVE" != "$WANT" ]; then
+            echo "::error::[workspace.package] version ($HAVE) != requested version ($WANT)"
+            exit 1
+          fi
+          echo "Publishing version $HAVE for: $CRATES"
+
+  # ── Package check: what exactly will be uploaded ────────────────────────-
+  package-check:
+    name: Package check
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: verify-version
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: List and package every crate without verification
+        run: |
+          for crate in $CRATES; do
+            cargo package -p "$crate" --list
+            cargo package -p "$crate" --no-verify
+          done
+
+  # ── Real publish, gated on the `release` environment token ──────────────-
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: [verify-version, package-check]
+    environment: release
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_API_TOKEN }}
+          CRATE_VERSION: ${{ needs.verify-version.outputs.version }}
+        run: |
+          # Resumable: a mid-batch failure (e.g. crate 2 of 3 loses network)
+          # is fixed by rerunning the workflow — crates already on crates.io
+          # are skipped instead of failing the rerun with "already uploaded".
+          #
+          # The probe hits the crates.io sparse index directly. `cargo info`
+          # is deliberately NOT used: inside this workspace it matches the
+          # LOCAL member first ("from ./packages/...") and reports success
+          # for crates that were never published (v0.2.23 lesson).
+          published() {
+            local name="$1" ver="$2"
+            curl -fsSL "https://index.crates.io/${name:0:2}/${name:2:2}/${name}" 2>/dev/null \
+              | grep -q "\"vers\":\"${ver}\""
+          }
+          for crate in $CRATES; do
+            if published "$crate" "$CRATE_VERSION"; then
+              echo "::notice::${crate}@${CRATE_VERSION} is already on crates.io — skipping"
+              continue
+            fi
+            cargo publish -p "$crate"
+          done
