@@ -179,6 +179,24 @@ interface non-document-type-child-node {
 
     /// `nextElementSibling` attribute — getter.
     get-next-element-sibling: func(self: non-document-type-child-node-handle) -> option<u64>;
+
+    /// `beforeHTML()` operation.
+    before-html: func(self: non-document-type-child-node-handle, html: string, options: option<u64>);
+
+    /// `afterHTML()` operation.
+    after-html: func(self: non-document-type-child-node-handle, html: string, options: option<u64>);
+
+    /// `replaceWithHTML()` operation.
+    replace-with-html: func(self: non-document-type-child-node-handle, html: string, options: option<u64>);
+
+    /// `beforeHTMLUnsafe()` operation.
+    before-html-unsafe: func(self: non-document-type-child-node-handle, html: string, options: option<u64>);
+
+    /// `afterHTMLUnsafe()` operation.
+    after-html-unsafe: func(self: non-document-type-child-node-handle, html: string, options: option<u64>);
+
+    /// `replaceWithHTMLUnsafe()` operation.
+    replace-with-html-unsafe: func(self: non-document-type-child-node-handle, html: string, options: option<u64>);
 }
 
 interface child-node {
@@ -414,14 +432,14 @@ interface shadow-root {
     /// `delegatesFocus` attribute — getter.
     get-delegates-focus: func(self: shadow-root-handle) -> bool;
 
+    /// `serializable` attribute — getter.
+    get-serializable: func(self: shadow-root-handle) -> bool;
+
     /// `slotAssignment` attribute — getter.
     get-slot-assignment: func(self: shadow-root-handle) -> u64;
 
     /// `clonable` attribute — getter.
     get-clonable: func(self: shadow-root-handle) -> bool;
-
-    /// `serializable` attribute — getter.
-    get-serializable: func(self: shadow-root-handle) -> bool;
 
     /// `host` attribute — getter.
     get-host: func(self: shadow-root-handle) -> u64;
@@ -434,8 +452,20 @@ interface shadow-root {
     /// `setHTML()` operation.
     set-html: func(self: shadow-root-handle, html: string, options: option<u64>);
 
+    /// `appendHTML()` operation.
+    append-html: func(self: shadow-root-handle, html: string, options: option<u64>);
+
+    /// `prependHTML()` operation.
+    prepend-html: func(self: shadow-root-handle, html: string, options: option<u64>);
+
     /// `setHTMLUnsafe()` operation.
     set-html-unsafe: func(self: shadow-root-handle, html: string, options: option<u64>);
+
+    /// `appendHTMLUnsafe()` operation.
+    append-html-unsafe: func(self: shadow-root-handle, html: string, options: option<u64>);
+
+    /// `prependHTMLUnsafe()` operation.
+    prepend-html-unsafe: func(self: shadow-root-handle, html: string, options: option<u64>);
 
     /// `getHTML()` operation.
     get-html: func(self: shadow-root-handle, options: option<u64>) -> string;
@@ -548,6 +578,27 @@ interface processing-instruction {
 
     /// `target` attribute — getter.
     get-target: func(self: processing-instruction-handle) -> string;
+
+    /// `hasAttributes()` operation.
+    has-attributes: func(self: processing-instruction-handle) -> bool;
+
+    /// `getAttributeNames()` operation.
+    get-attribute-names: func(self: processing-instruction-handle) -> list<string>;
+
+    /// `getAttribute()` operation.
+    get-attribute: func(self: processing-instruction-handle, name: string) -> option<string>;
+
+    /// `setAttribute()` operation.
+    set-attribute: func(self: processing-instruction-handle, name: string, value: string);
+
+    /// `removeAttribute()` operation.
+    remove-attribute: func(self: processing-instruction-handle, name: string);
+
+    /// `toggleAttribute()` operation.
+    toggle-attribute: func(self: processing-instruction-handle, name: string, force: option<bool>) -> bool;
+
+    /// `hasAttribute()` operation.
+    has-attribute: func(self: processing-instruction-handle, name: string) -> bool;
 }
 
 interface abstract-range {

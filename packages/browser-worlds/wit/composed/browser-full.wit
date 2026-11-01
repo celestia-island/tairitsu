@@ -479,7 +479,6 @@ world browser-full {
     import performance-measure;
     import permissions;
     import permission-status;
-    import service-worker;
     import idb-open-db-request;
     import idb-version-change-event;
     import window-or-worker-global-scope;
@@ -575,6 +574,7 @@ world browser-full {
     import rtc-error-event;
     import web-socket;
     import close-event;
+    import service-worker;
     import service-worker-container;
     import navigation-preload-manager;
     import client;
