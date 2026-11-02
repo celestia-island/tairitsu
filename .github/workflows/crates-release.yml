@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to publish (must equal [workspace.package] version, e.g. 0.5.23)"
+        description: "Version to publish (must equal [workspace.package] version, e.g. 0.5.24)"
         required: true
         type: string
       crates:

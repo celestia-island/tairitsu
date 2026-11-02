@@ -110,7 +110,7 @@ PACKAGE_TO_CDN_NAME = {
     "celestia-tairitsu-web-glue": "celestia-tairitsu-web-glue",
 }
 
-VERSION = "0.5.0"
+VERSION = "0.5.3"
 
 
 def build_glue_source_modules(glue_pkg_dir: Path) -> dict[str, str]:
