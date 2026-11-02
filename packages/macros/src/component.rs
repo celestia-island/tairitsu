@@ -276,10 +276,7 @@ fn has_props_attribute(attrs: &[Attribute], inner_name: &str) -> bool {
             }
         }
         // Also check for direct #[default] for backward compatibility
-        if attr.path().is_ident(inner_name) {
-            return true;
-        }
-        false
+        attr.path().is_ident(inner_name)
     })
 }
 

@@ -79,11 +79,14 @@ fn is_daemon() -> bool {
             return true;
         }
     }
-    if std::env::var("TAIRITSU_DAEMON").is_ok() {
-        return true;
-    }
+    // Read once: on Windows the environment decides before the cached child-process
+    // probe, everywhere else it is the whole answer.
+    let from_env = std::env::var("TAIRITSU_DAEMON").is_ok();
     #[cfg(windows)]
     {
+        if from_env {
+            return true;
+        }
         static CACHED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
         static INIT: std::sync::Once = std::sync::Once::new();
         INIT.call_once(|| {
@@ -96,7 +99,7 @@ fn is_daemon() -> bool {
     }
     #[cfg(not(windows))]
     {
-        false
+        from_env
     }
 }
 
