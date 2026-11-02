@@ -12,7 +12,7 @@
 #           contract, published on its own wave (0.1.0 -> 0.2.0 -> 0.3.0;
 #           roadmap 2026-10-22). `npm-release.yml` documents that each npm
 #           package "carries its own version line independent of the
-#           workspace crate tag", so treating 0.3.x as a drift against 0.5.2
+#           workspace crate tag", so treating 0.3.x as a drift against 0.5.3
 #           would invent a defect; it is exempt as an independent line.
 #   npm     root package.json                    — private workspace holder,
 #           never published; exempt so it cannot vote on the track.
@@ -24,7 +24,7 @@
 # fails closed on any bump that does not update this file in the same commit.
 
 [track]
-npm = "0.5.2"
+npm = "0.5.3"
 
 [exempt.npm]
 "." = "private root workspace manifest; no published line"

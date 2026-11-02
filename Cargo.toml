@@ -40,11 +40,14 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
-# 0.5.23: master moved 15 commits past the published 0.5.22 (wasmtime ^48 +
-# zip ^9 for the advisory batch, glue DOM-name fixes, transport frame
-# narrowing). crates.io versions are immutable, so the drift needs this bump
-# before the next publish; consumers on ^0.5 pick it up semver-compatibly.
-version = "0.5.23"
+# 0.5.24: the pointer-work release, and the first version whose *whole family*
+# ships together. 0.5.23 reached crates.io only as `tairitsu` + `tairitsu-macros`
+# (the lane that publishes the other eight crates was dead from #85 until its
+# OIDC probe was removed), so `tairitsu-web` / `-vdom` / `-style` / `-hooks` 0.5.23
+# never existed — consumers must pin ^0.5.24, not ^0.5.23. crates.io versions are
+# immutable, so the drift needs this bump before the next publish; consumers on
+# ^0.5 pick it up semver-compatibly.
+version = "0.5.24"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 rust-version = "1.91"
