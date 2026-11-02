@@ -104,6 +104,171 @@ export const event_exports = {
   },
 };
 
+// === mouse-event ===
+// The event objects stored in `__eventHandles` are the real DOM events, so every getter
+// here is a property read. The component reads these through the `mouse-event` /
+// `pointer-event` / `wheel-event` WIT imports when it builds a typed event for input the
+// glue forwards generically.
+const eventOf = (handle: bigint): any => globalThis.__eventHandles?.get(handle);
+
+/** Map a DOM node to its handle, the same way `getTarget` does. */
+const elementHandleOf = (node: any): bigint | undefined => {
+  if (!node) return undefined;
+  for (const [h, el] of globalThis.__elementHandles) {
+    if (el === node) return h;
+  }
+  return undefined;
+};
+
+export const mouseEvent_exports = {
+  getScreenX(h: bigint): number {
+    return eventOf(h)?.screenX || 0;
+  },
+  getScreenY(h: bigint): number {
+    return eventOf(h)?.screenY || 0;
+  },
+  getPageX(h: bigint): number {
+    return eventOf(h)?.pageX || 0;
+  },
+  getPageY(h: bigint): number {
+    return eventOf(h)?.pageY || 0;
+  },
+  getClientX(h: bigint): number {
+    return eventOf(h)?.clientX || 0;
+  },
+  getClientY(h: bigint): number {
+    return eventOf(h)?.clientY || 0;
+  },
+  getX(h: bigint): number {
+    const ev = eventOf(h);
+    return (ev && (ev.x ?? ev.clientX)) || 0;
+  },
+  getY(h: bigint): number {
+    const ev = eventOf(h);
+    return (ev && (ev.y ?? ev.clientY)) || 0;
+  },
+  getOffsetX(h: bigint): number {
+    return eventOf(h)?.offsetX || 0;
+  },
+  getOffsetY(h: bigint): number {
+    return eventOf(h)?.offsetY || 0;
+  },
+  getLayerX(h: bigint): number {
+    const ev = eventOf(h);
+    return (ev && (ev.layerX ?? ev.offsetX)) || 0;
+  },
+  getLayerY(h: bigint): number {
+    const ev = eventOf(h);
+    return (ev && (ev.layerY ?? ev.offsetY)) || 0;
+  },
+  getCtrlKey(h: bigint): boolean {
+    return eventOf(h)?.ctrlKey || false;
+  },
+  getShiftKey(h: bigint): boolean {
+    return eventOf(h)?.shiftKey || false;
+  },
+  getAltKey(h: bigint): boolean {
+    return eventOf(h)?.altKey || false;
+  },
+  getMetaKey(h: bigint): boolean {
+    return eventOf(h)?.metaKey || false;
+  },
+  getButton(h: bigint): number {
+    return eventOf(h)?.button || 0;
+  },
+  getButtons(h: bigint): number {
+    return eventOf(h)?.buttons || 0;
+  },
+  getRelatedTarget(h: bigint): bigint | undefined {
+    return elementHandleOf(eventOf(h)?.relatedTarget);
+  },
+  getModifierState(h: bigint, keyArg: string): boolean {
+    const ev = eventOf(h);
+    return ev && typeof ev.getModifierState === "function" ? ev.getModifierState(keyArg) : false;
+  },
+  // `initMouseEvent` is not implemented: it is the deprecated mutation API for events the
+  // page constructed itself, and every event in this table came from the browser.
+};
+
+// === pointer-event ===
+export const pointerEvent_exports = {
+  getPointerId(h: bigint): number {
+    return eventOf(h)?.pointerId || 0;
+  },
+  getWidth(h: bigint): number {
+    return eventOf(h)?.width || 0;
+  },
+  getHeight(h: bigint): number {
+    return eventOf(h)?.height || 0;
+  },
+  getPressure(h: bigint): number {
+    return eventOf(h)?.pressure || 0;
+  },
+  getTangentialPressure(h: bigint): number {
+    return eventOf(h)?.tangentialPressure || 0;
+  },
+  getTiltX(h: bigint): number {
+    return eventOf(h)?.tiltX || 0;
+  },
+  getTiltY(h: bigint): number {
+    return eventOf(h)?.tiltY || 0;
+  },
+  getTwist(h: bigint): number {
+    return eventOf(h)?.twist || 0;
+  },
+  getAltitudeAngle(h: bigint): number {
+    return eventOf(h)?.altitudeAngle || 0;
+  },
+  getAzimuthAngle(h: bigint): number {
+    return eventOf(h)?.azimuthAngle || 0;
+  },
+  // Empty when the host event is not a pointer event; a pointer type the component does
+  // not know is left for the component to fall back on.
+  getPointerType(h: bigint): string {
+    return eventOf(h)?.pointerType || "";
+  },
+  getIsPrimary(h: bigint): boolean {
+    return eventOf(h)?.isPrimary || false;
+  },
+  getPersistentDeviceId(h: bigint): number {
+    return eventOf(h)?.persistentDeviceId || 0;
+  },
+  getCoalescedEvents(h: bigint): bigint[] {
+    return registerEvents(eventOf(h)?.getCoalescedEvents?.());
+  },
+  getPredictedEvents(h: bigint): bigint[] {
+    return registerEvents(eventOf(h)?.getPredictedEvents?.());
+  },
+};
+
+/** Store a batch of host events in the handle table and return their handles. */
+function registerEvents(events: any): bigint[] {
+  if (!events || typeof events.length !== "number") return [];
+  const handles: bigint[] = [];
+  for (const ev of events) {
+    const handle = globalThis.__nextEventHandle++;
+    globalThis.__eventHandles.set(handle, ev);
+    handles.push(handle);
+  }
+  return handles;
+}
+
+// === wheel-event ===
+export const wheelEvent_exports = {
+  getDeltaX(h: bigint): number {
+    return eventOf(h)?.deltaX || 0;
+  },
+  getDeltaY(h: bigint): number {
+    return eventOf(h)?.deltaY || 0;
+  },
+  getDeltaZ(h: bigint): number {
+    return eventOf(h)?.deltaZ || 0;
+  },
+  getDeltaMode(h: bigint): number {
+    return eventOf(h)?.deltaMode || 0;
+  },
+};
+
 // === eventTarget ===
 // Initialize global handle tables for event listeners
 globalThis.__listenerHandles = globalThis.__listenerHandles || new Map();
@@ -156,7 +321,7 @@ export const eventTarget_exports = {
                   if (evtType === "mouseenter" || evtType === "mouseleave" || evtType === "mousemove" ||
                       evtType === "mousedown" || evtType === "mouseup" || evtType === "click" ||
                       evtType === "dblclick" || evtType === "mouseover" || evtType === "mouseout" ||
-                      evtType === "contextmenu" || evtType === "wheel") {
+                      evtType === "contextmenu") {
                     callbacks.onMouseEvent(listenerId, eventHandle, {
                       clientX: event.clientX,
                       clientY: event.clientY,
@@ -246,4 +411,7 @@ export const eventTarget_exports = {
 export const INTERFACES = {
   "@tairitsu-glue/event": event_exports,
   "@tairitsu-glue/event-target": eventTarget_exports,
+  "@tairitsu-glue/mouse-event": mouseEvent_exports,
+  "@tairitsu-glue/pointer-event": pointerEvent_exports,
+  "@tairitsu-glue/wheel-event": wheelEvent_exports,
 };
