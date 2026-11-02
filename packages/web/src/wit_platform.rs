@@ -283,8 +283,8 @@ pub(crate) mod event_callbacks {
     use std::str::FromStr;
 
     use tairitsu_vdom::{
-        ChangeEvent, EventData, EventWitHandle, GenericEvent, PointerEvent, PointerType,
-        SubmitEvent, WheelEvent,
+        ChangeEvent, EventData, EventWitHandle, GenericEvent, InputEvent, PointerEvent,
+        PointerType, SubmitEvent, WheelEvent,
     };
 
     /// A handler registered through
@@ -303,6 +303,77 @@ pub(crate) mod event_callbacks {
     /// Drop the handler for a listener id, if one is still registered.
     pub(crate) fn take_event_callback(listener_id: u64) {
         EVENT_CALLBACKS.with(|m| m.borrow_mut().remove(&listener_id));
+    }
+
+    thread_local! {
+        /// The event type each listener was registered under, keyed by listener id.
+        ///
+        /// The `input` and `change` DOM events share one callback
+        /// (`on-input-event`), and that callback's record carries no type field —
+        /// so the type recorded here at registration time is the only
+        /// discriminator the host has when the callback fires.
+        static EVENT_LISTENER_TYPES: RefCell<HashMap<u64, String>> = RefCell::new(HashMap::new());
+    }
+
+    /// Record the event type a listener was registered under.
+    ///
+    /// The WIT `event-target` interface returns only a listener id, so the type
+    /// has to be kept on the component side of that call.
+    pub(crate) fn set_event_listener_type(listener_id: u64, event_type: &str) {
+        EVENT_LISTENER_TYPES.with(|m| {
+            m.borrow_mut().insert(listener_id, event_type.to_string());
+        });
+    }
+
+    /// Drop the recorded event type for a listener id, if one is still registered.
+    pub(crate) fn take_event_listener_type(listener_id: u64) {
+        EVENT_LISTENER_TYPES.with(|m| m.borrow_mut().remove(&listener_id));
+    }
+
+    /// The event type a listener was registered under, if it is still live.
+    pub(crate) fn listener_event_type(listener_id: u64) -> Option<String> {
+        EVENT_LISTENER_TYPES.with(|m| m.borrow().get(&listener_id).cloned())
+    }
+
+    /// Build and dispatch the typed event for one input-family callback firing.
+    ///
+    /// The glue routes `input` **and** `change` into the same `on-input-event`
+    /// callback, so a listener registered for `change` cannot be told apart from
+    /// one registered for `input` by the callback record alone. The type the
+    /// listener registered under is the discriminator: a `change` listener must
+    /// receive a [`ChangeEvent`] — the rsx `onchange:` handlers downcast to it,
+    /// and a wrongly-typed event is silently skipped by the dispatch — while
+    /// every other registration keeps the [`InputEvent`] the record describes.
+    ///
+    /// `target` is read off the live event handle by the `wasm32` caller (a WIT
+    /// getter call the native tests cannot make); `data` is the callback record's
+    /// payload. A listener id with no recorded type — a dispatch for a listener
+    /// that was already removed — falls back to `InputEvent`, the type the
+    /// callback record was designed for.
+    pub(crate) fn dispatch_input_event(
+        listener_id: u64,
+        wit_handle: EventWitHandle,
+        target: Option<u64>,
+        data: Option<String>,
+    ) {
+        let registered = listener_event_type(listener_id);
+        let event: Box<dyn EventData> = if registered.as_deref() == Some("change") {
+            build_typed_event(
+                HostEvent {
+                    event_type: String::from("change"),
+                    target,
+                    ..HostEvent::default()
+                },
+                wit_handle,
+            )
+        } else {
+            Box::new(
+                InputEvent::new()
+                    .data(data.unwrap_or_default())
+                    .event_handle(wit_handle),
+            )
+        };
+        dispatch_event(listener_id, registered.as_deref().unwrap_or("input"), event);
     }
 
     /// Dispatch an event to the registered callback with error handling.
@@ -514,6 +585,12 @@ pub(crate) mod event_callbacks {
                 Box::new(evt)
             }
             "change" => {
+                // Reached from `dispatch_input_event`: the glue routes `change`
+                // into the same callback as `input`, so the typed construction
+                // happens there, keyed on the listener's registered type. The
+                // event carries no payload of its own, so `value` stays empty —
+                // the host has no getter for the target's value to fill it
+                // honestly.
                 let mut evt = ChangeEvent::new().with_event_handle(wit_handle);
                 evt.target = host.target;
                 Box::new(evt)
@@ -538,14 +615,15 @@ pub mod wasm_impl {
     use anyhow::Result;
     use tairitsu_vdom::{
         CanvasContext, CanvasOps, ClipboardOps, ContentEditableOps, DomOps, DomRect, EventData,
-        EventWitHandle, FileOps, FocusEvent, GenericEvent, GeoOps, IdbOps, InputEvent,
-        KeyboardEvent, LayoutOps, MediaOps, MediaQueryOps, MouseEvent, ObserverOps, QueryOps,
-        ScrollOps, TimerOps, VNode,
+        EventWitHandle, FileOps, FocusEvent, GenericEvent, GeoOps, IdbOps, KeyboardEvent,
+        LayoutOps, MediaOps, MediaQueryOps, MouseEvent, ObserverOps, QueryOps, ScrollOps, TimerOps,
+        VNode,
     };
 
     use super::event_callbacks::{
-        build_typed_event, dispatch_event, is_pointer_event_type, set_event_callback,
-        take_event_callback, HostEvent, MouseEventInput, PointerEventInput, WheelEventInput,
+        build_typed_event, dispatch_event, dispatch_input_event, is_pointer_event_type,
+        listener_event_type, set_event_callback, set_event_listener_type, take_event_callback,
+        take_event_listener_type, HostEvent, MouseEventInput, PointerEventInput, WheelEventInput,
     };
     use super::{WitElement, WitEvent, WitPlatform};
 
@@ -854,12 +932,17 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::InputEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let event: Box<dyn EventData> = Box::new(
-                InputEvent::new()
-                    .data(data.data.unwrap_or_default())
-                    .event_handle(wit_handle),
-            );
-            dispatch_event(listener_id, "input", event);
+            // The glue sends `input` and `change` down this one callback, so the
+            // listener's registered type decides what it receives. Only a `change`
+            // dispatch needs the target, and `ChangeEvent.target` is the only field
+            // it can take from the handle — read the getter just for that case.
+            let registered = listener_event_type(listener_id);
+            let target = if registered.as_deref() == Some("change") {
+                bindings::tairitsu_browser::full::event::get_target(event_handle)
+            } else {
+                None
+            };
+            dispatch_input_event(listener_id, wit_handle, target, data.data);
         }
 
         // NOTE: touch, transition, and animation events still arrive here as generic
@@ -1487,6 +1570,7 @@ pub mod wasm_impl {
             });
 
             set_event_callback(listener_id, handler);
+            set_event_listener_type(listener_id, event);
 
             ELEMENT_LISTENERS.with(|m| {
                 m.borrow_mut()
@@ -1508,6 +1592,7 @@ pub mod wasm_impl {
             if let Some(listener_id) = listener_id {
                 // Remove the callback handler
                 take_event_callback(listener_id);
+                take_event_listener_type(listener_id);
                 // Call the W3C remove-event-listener with the listener-id
                 let _ = bindings::tairitsu_browser::full::event_target::remove_event_listener(
                     element.as_raw(),
@@ -1544,6 +1629,7 @@ pub mod wasm_impl {
             });
 
             set_event_callback(listener_id, handler);
+            set_event_listener_type(listener_id, event);
 
             ELEMENT_LISTENERS.with(|m| {
                 m.borrow_mut()
@@ -3652,6 +3738,162 @@ mod tests {
             .downcast_ref::<PointerEvent>()
             .expect("pointermove should build a PointerEvent");
         assert_eq!(event.pointer_type, PointerType::Mouse);
+    }
+
+    /// A listener registered for `change` receives a typed [`ChangeEvent`] — not
+    /// the [`InputEvent`] the shared callback record describes, and not a
+    /// [`GenericEvent`] — carrying the target read off the live handle.
+    ///
+    /// `input` and `change` share the `on-input-event` callback, so this is the
+    /// dispatch path `rsx`'s `onchange:` handlers depend on: a wrongly-typed
+    /// event is silently skipped by the downcast in `VNode::on_change`.
+    #[test]
+    fn test_change_event_dispatch_is_typed() {
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
+        use tairitsu_vdom::{ChangeEvent, EventData, EventWitHandle, GenericEvent, InputEvent};
+
+        use super::event_callbacks::{
+            dispatch_input_event, set_event_callback, set_event_listener_type, take_event_callback,
+            take_event_listener_type,
+        };
+
+        const LISTENER_ID: u64 = 9_003;
+
+        let received: Rc<RefCell<Option<ChangeEvent>>> = Rc::new(RefCell::new(None));
+        let saw_input: Rc<RefCell<bool>> = Rc::new(RefCell::new(false));
+        let saw_generic: Rc<RefCell<bool>> = Rc::new(RefCell::new(false));
+        let received_sink = Rc::clone(&received);
+        let input_sink = Rc::clone(&saw_input);
+        let generic_sink = Rc::clone(&saw_generic);
+        set_event_callback(
+            LISTENER_ID,
+            Box::new(move |event: Box<dyn EventData>| {
+                *input_sink.borrow_mut() |= event.as_any().downcast_ref::<InputEvent>().is_some();
+                *generic_sink.borrow_mut() |=
+                    event.as_any().downcast_ref::<GenericEvent>().is_some();
+                *received_sink.borrow_mut() = event.as_any().downcast_ref::<ChangeEvent>().cloned();
+            }),
+        );
+        set_event_listener_type(LISTENER_ID, "change");
+
+        dispatch_input_event(LISTENER_ID, EventWitHandle::from_wit(9), Some(41), None);
+        take_event_callback(LISTENER_ID);
+        take_event_listener_type(LISTENER_ID);
+
+        assert!(
+            !*saw_input.borrow(),
+            "a change event must not arrive as an InputEvent"
+        );
+        assert!(
+            !*saw_generic.borrow(),
+            "a change event must not arrive as a GenericEvent"
+        );
+
+        let event = received
+            .borrow()
+            .clone()
+            .expect("the listener should receive a typed ChangeEvent");
+        assert_eq!(event.target, Some(41));
+        // The DOM `change` event carries no data payload and the host has no
+        // getter for the target's value, so `value` stays empty rather than
+        // being filled with invented data.
+        assert_eq!(event.value, "");
+    }
+
+    /// A listener registered for `input` keeps receiving the [`InputEvent`] the
+    /// callback record describes — the `change` discrimination must not leak
+    /// onto the neighbouring registration.
+    #[test]
+    fn test_input_event_dispatch_keeps_input() {
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
+        use tairitsu_vdom::{ChangeEvent, EventData, EventWitHandle, InputEvent};
+
+        use super::event_callbacks::{
+            dispatch_input_event, set_event_callback, set_event_listener_type, take_event_callback,
+            take_event_listener_type,
+        };
+
+        const LISTENER_ID: u64 = 9_004;
+
+        let received: Rc<RefCell<Option<InputEvent>>> = Rc::new(RefCell::new(None));
+        let saw_change: Rc<RefCell<bool>> = Rc::new(RefCell::new(false));
+        let received_sink = Rc::clone(&received);
+        let change_sink = Rc::clone(&saw_change);
+        set_event_callback(
+            LISTENER_ID,
+            Box::new(move |event: Box<dyn EventData>| {
+                *change_sink.borrow_mut() |= event.as_any().downcast_ref::<ChangeEvent>().is_some();
+                *received_sink.borrow_mut() = event.as_any().downcast_ref::<InputEvent>().cloned();
+            }),
+        );
+        set_event_listener_type(LISTENER_ID, "input");
+
+        dispatch_input_event(
+            LISTENER_ID,
+            EventWitHandle::from_wit(10),
+            None,
+            Some(String::from("typed x")),
+        );
+        take_event_callback(LISTENER_ID);
+        take_event_listener_type(LISTENER_ID);
+
+        assert!(
+            !*saw_change.borrow(),
+            "an input event must not arrive as a ChangeEvent"
+        );
+
+        let event = received
+            .borrow()
+            .clone()
+            .expect("the listener should receive an InputEvent");
+        assert_eq!(event.data, "typed x");
+    }
+
+    /// A dispatch for a listener id with no recorded type falls back to the
+    /// [`InputEvent`] the callback record was designed for.
+    #[test]
+    fn test_input_event_dispatch_without_recorded_type_falls_back() {
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
+        use tairitsu_vdom::{ChangeEvent, EventData, EventWitHandle, InputEvent};
+
+        use super::event_callbacks::{
+            dispatch_input_event, set_event_callback, take_event_callback,
+        };
+
+        const LISTENER_ID: u64 = 9_005;
+
+        let received: Rc<RefCell<Option<InputEvent>>> = Rc::new(RefCell::new(None));
+        let saw_change: Rc<RefCell<bool>> = Rc::new(RefCell::new(false));
+        let received_sink = Rc::clone(&received);
+        let change_sink = Rc::clone(&saw_change);
+        set_event_callback(
+            LISTENER_ID,
+            Box::new(move |event: Box<dyn EventData>| {
+                *change_sink.borrow_mut() |= event.as_any().downcast_ref::<ChangeEvent>().is_some();
+                *received_sink.borrow_mut() = event.as_any().downcast_ref::<InputEvent>().cloned();
+            }),
+        );
+        // No `set_event_listener_type` — the registry has no entry for this id.
+
+        dispatch_input_event(LISTENER_ID, EventWitHandle::from_wit(11), None, None);
+        take_event_callback(LISTENER_ID);
+
+        assert!(
+            !*saw_change.borrow(),
+            "an unknown registration must not produce a ChangeEvent"
+        );
+
+        let event = received
+            .borrow()
+            .clone()
+            .expect("the listener should receive an InputEvent");
+        assert_eq!(event.data, "");
     }
 
     // -- wasm_impl module tests ---------------------------------------------
