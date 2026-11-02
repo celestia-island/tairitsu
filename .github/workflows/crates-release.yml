@@ -1,25 +1,31 @@
 name: Publish crates
 
-# Publishes tairitsu-macros + tairitsu to crates.io. The token is an
-# *environment* secret on the `release` environment (CRATES_IO_API_TOKEN),
-# so only the job declaring that environment can read it. Trigger by pushing
-# a `v*` tag (the tag must match [workspace.package] version) or via
-# workflow_dispatch.
+# Release *preflight* for the crates track: it verifies that the tag matches
+# [workspace.package] version and that every publishable crate can actually be
+# packaged. It no longer publishes anything.
 #
-# Order inside CRATES is dependency order (macros <- tairitsu). The optional
-# `crates` dispatch input narrows the set for dependent-crate staging; the
-# default list publishes both.
+# Publishing moved to `npm-release.yml`, which is the single owner: it publishes
+# the whole `tairitsu*` family in dependency order, tolerates crates that are
+# already up, and re-checks the family before it starts. Two lanes racing on the
+# same tag was the problem — on `v0.5.24` this workflow's publish step probed for
+# `tairitsu-macros`, did not see it (the other lane uploaded it in between), ran
+# `cargo publish`, and lost the race with `400: crate version already uploaded`,
+# turning a successful release into a red check. Its `package-check` job is kept:
+# nothing else asks whether a crate can be packaged at all.
+#
+# Trigger by pushing a `v*` tag (the tag must match [workspace.package] version)
+# or via workflow_dispatch.
 on:
   push:
     tags: [v*]
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to publish (must equal [workspace.package] version, e.g. 0.5.24)"
+        description: "Version to check (must equal [workspace.package] version, e.g. 0.5.24)"
         required: true
         type: string
       crates:
-        description: "Space-separated subset to publish this run (default: the full dependency-ordered list)"
+        description: "Space-separated subset to check and package (default: the full dependency-ordered list)"
         required: false
         type: string
 
@@ -74,38 +80,18 @@ jobs:
             cargo package -p "$crate" --no-verify
           done
 
-  # ── Real publish, gated on the `release` environment token ──────────────-
+  # ── Publishing lives in `npm-release.yml` ───────────────────────────────
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 5
     needs: [verify-version, package-check]
-    environment: release
     steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Publish
+      - name: Point at the single crates publisher
         env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_API_TOKEN }}
           CRATE_VERSION: ${{ needs.verify-version.outputs.version }}
         run: |
-          # Resumable: a mid-batch failure (e.g. crate 2 of 3 loses network)
-          # is fixed by rerunning the workflow — crates already on crates.io
-          # are skipped instead of failing the rerun with "already uploaded".
-          #
-          # The probe hits the crates.io sparse index directly. `cargo info`
-          # is deliberately NOT used: inside this workspace it matches the
-          # LOCAL member first ("from ./packages/...") and reports success
-          # for crates that were never published (v0.2.23 lesson).
-          published() {
-            local name="$1" ver="$2"
-            curl -fsSL "https://index.crates.io/${name:0:2}/${name:2:2}/${name}" 2>/dev/null \
-              | grep -q "\"vers\":\"${ver}\""
-          }
-          for crate in $CRATES; do
-            if published "$crate" "$CRATE_VERSION"; then
-              echo "::notice::${crate}@${CRATE_VERSION} is already on crates.io — skipping"
-              continue
-            fi
-            cargo publish -p "$crate"
-          done
+          echo "::notice::Publishing moved to the \`Publish\` workflow (npm-release.yml)."
+          echo "it publishes the whole tairitsu* family at ${CRATE_VERSION} in dependency order,"
+          echo "skips what is already on crates.io, and can be rerun safely. This job only"
+          echo "guards the tag/version match and that every crate can be packaged."
