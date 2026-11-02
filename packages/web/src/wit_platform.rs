@@ -338,11 +338,13 @@ pub(crate) mod event_callbacks {
         });
     }
 
-    /// Event types that reach the generic callback but carry pointer identity.
+    /// Pointer event types delivered as typed [`PointerEvent`]s.
     ///
-    /// These are the `PointerEvent` types the DOM defines; the glue forwards them
-    /// through `on-generic-event` and the component reads them back through the
-    /// `pointer-event` getters.
+    /// This is **not** the set of pointer event types the DOM defines — it is the
+    /// set the glue routes, which is the set `rsx` maps to
+    /// `tairitsu_vdom::PointerEvent`. `pointerrawupdate` is a real DOM event and is
+    /// deliberately absent: there is no `rsx` mapping for it either, so it keeps
+    /// arriving as a `GenericEvent` until one is added in both places.
     ///
     /// Only `wasm_impl` asks about these, so a native library build — what
     /// `cargo clippy --all-targets` compiles without `--cfg test` — has no user.
@@ -495,11 +497,14 @@ pub(crate) mod event_callbacks {
         }
 
         if let Some(wheel) = host.wheel {
-            return Box::new(
-                WheelEvent::from(wheel)
-                    .target(host.target.unwrap_or(0))
-                    .event_handle(wit_handle),
-            );
+            let mut event = WheelEvent::from(wheel)
+                .target(host.target.unwrap_or(0))
+                .event_handle(wit_handle);
+            // `WheelEvent` has no `current_target` builder (its `PointerEvent`
+            // sibling does), so the field is assigned directly rather than left
+            // silently empty.
+            event.current_target = host.current_target;
+            return Box::new(event);
         }
 
         match host.event_type.as_str() {
@@ -3605,6 +3610,10 @@ mod tests {
         assert_eq!(event.client_x, 5);
         assert_eq!(event.client_y, 6);
         assert!(event.ctrl_key);
+        // `WheelEvent` had no `current_target` builder, so this field is easy to
+        // drop silently; the pointer sibling sets it, so this one must too.
+        assert_eq!(event.target, Some(41));
+        assert_eq!(event.current_target, Some(41));
     }
 
     /// An event type with no typed branch still arrives as a [`GenericEvent`], and a
