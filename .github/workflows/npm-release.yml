@@ -120,19 +120,64 @@ jobs:
 
       - run: echo "${{ secrets.CRATES_IO_API_TOKEN }}" | cargo login
 
-      - name: Skip if already published
+      - name: Work out which crates still need publishing
+        # `publish_crates.py` publishes the whole `tairitsu*` family, so this
+        # pre-check must look at the whole family. Two things were wrong with the
+        # previous single-crate guard:
+        #
+        #   1. it asked about `tairitsu-macros` alone, so it described the
+        #      macros-only era, not what this job does now;
+        #   2. it sent no User-Agent, and crates.io answers 403 without one — so
+        #      `curl -sf` failed, the status became `000`, and the guard could
+        #      never report "already published" at all.
+        #
+        # The list comes from `cargo metadata` under the same rule the script
+        # uses (name starts with `tairitsu`, not `publish = []`, not an example),
+        # so the two cannot drift. An empty resolution is an error, never a skip,
+        # and the publish step is gated on the output rather than on exit 78 so
+        # the decision is explicit and readable in the log.
         id: check-exists
         run: |
+          set -euo pipefail
           VERSION="${GITHUB_REF#refs/tags/v}"
-          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "https://crates.io/api/v1/crates/${CRATE}/${VERSION}" || echo "000")
-          if [ "$STATUS" = "200" ]; then
-            echo "::warning::Version ${VERSION} already published — skipping."
-            exit 78
+          python3 - > /tmp/publishable.txt <<'PY'
+          import json, subprocess
+          meta = json.loads(subprocess.run(
+              ["cargo", "metadata", "--format-version", "1", "--no-deps"],
+              capture_output=True, text=True, check=True).stdout)
+          for pkg in sorted(meta["packages"], key=lambda p: p["name"]):
+              if not pkg["name"].startswith("tairitsu"):
+                  continue
+              if pkg.get("publish") == []:
+                  continue
+              if "/examples/" in pkg.get("manifest_path", ""):
+                  continue
+              print(pkg["name"])
+          PY
+          mapfile -t CRATES < /tmp/publishable.txt
+          if [ "${#CRATES[@]}" -eq 0 ]; then
+            echo "::error::resolved zero publishable crates — refusing to read that as 'nothing to do'"
+            exit 1
           fi
-        env:
-          CRATE: tairitsu-macros
+          missing=()
+          for crate in "${CRATES[@]}"; do
+            status=$(curl -sf -o /dev/null -w "%{http_code}" \
+              -H "User-Agent: celestia-island/tairitsu-release-check" \
+              "https://crates.io/api/v1/crates/${crate}/${VERSION}" || echo "000")
+            if [ "$status" != "200" ]; then
+              missing+=("$crate")
+            fi
+          done
+          if [ "${#missing[@]}" -eq 0 ]; then
+            echo "any_missing=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::all ${#CRATES[@]} publishable crates already have ${VERSION} — nothing to publish."
+          else
+            echo "any_missing=true" >> "$GITHUB_OUTPUT"
+            echo "Publishing ${VERSION}; not yet on the registry (${#missing[@]}/${#CRATES[@]}): ${missing[*]}"
+          fi
 
-      - run: python3 scripts/publish_crates.py
+      - if: steps.check-exists.outputs.any_missing == 'true'
+        run: python3 scripts/publish_crates.py
 
   publish-npm:
     # npm packages carry their own version lines (transport 0.x,
