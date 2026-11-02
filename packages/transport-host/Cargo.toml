@@ -5,6 +5,10 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Runtime host implementations for the tairitsu:transport WIT contract (http first)"
+# Not a crates.io artifact: it binds `../npm/tairitsu-transport/wit` at build time,
+# a path that does not exist inside a packaged tarball, and nothing in the workspace
+# depends on it from outside. Publishing it could only ever fail late in a release.
+publish = false
 
 [dependencies]
 wasmtime = { workspace = true }
