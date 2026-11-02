@@ -47,10 +47,54 @@ interface event-callbacks {
         input-type: string,
     }
 
+    /// A pointer event (mouse, pen, or touch) as reported by `PointerEvent`.
+    ///
+    /// Carries the full pointer identity and contact geometry that
+    /// `mouse-event-data` cannot express: `pointer-id` / `pointer-type` /
+    /// `is-primary` identify which active pointer produced the event, and the
+    /// `width` / `height` / `pressure` / `tilt-*` / `twist` fields describe the
+    /// contact area for pen and touch input.
+    ///
+    /// `pointer-type` is a `string` rather than an enum so a host that reports a
+    /// pointer type this interface does not know yet still crosses the boundary
+    /// (the component falls back to `mouse`) instead of failing to construct the
+    /// record.
+    record pointer-event-data {
+        pointer-id: s32,
+        pointer-type: string,
+        is-primary: bool,
+        client-x: f64,
+        client-y: f64,
+        screen-x: f64,
+        screen-y: f64,
+        offset-x: f64,
+        offset-y: f64,
+        page-x: f64,
+        page-y: f64,
+        movement-x: f64,
+        movement-y: f64,
+        width: f32,
+        height: f32,
+        pressure: f32,
+        tangential-pressure: f32,
+        tilt-x: s32,
+        tilt-y: s32,
+        twist: s32,
+        /// Signed so `PointerEvent.button`'s `-1` ("no button changed") survives.
+        button: s16,
+        /// Bitmask: back/forward are bits 3 and 4, which a `u8` would truncate.
+        buttons: u16,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
     on-mouse-event: func(listener-id: listener-id, event: event-handle, data: mouse-event-data);
     on-keyboard-event: func(listener-id: listener-id, event: event-handle, data: keyboard-event-data);
     on-focus-event: func(listener-id: listener-id, event: event-handle, data: focus-event-data);
     on-input-event: func(listener-id: listener-id, event: event-handle, data: input-event-data);
+    on-pointer-event: func(listener-id: listener-id, event: event-handle, data: pointer-event-data);
     on-generic-event: func(listener-id: listener-id, event: event-handle, event-type: string);
 }
 
@@ -13295,14 +13339,6 @@ interface permission-status {
     set-onchange: func(self: permission-status-handle, value: u64);
 }
 
-interface service-worker {
-/// Opaque handle to a ServiceWorker instance.
-    type sw-handle = u64;
-
-    script-url: func(handle: sw-handle) -> string;
-    post-message: func(handle: sw-handle, message: string, transfer: list<list<u8>>);
-}
-
 interface idb-open-db-request {
     /// Opaque handle to a host-side `IDBOpenDBRequest` instance.
     type idb-open-db-request-handle = u64;
@@ -15658,6 +15694,25 @@ interface close-event {
     get-reason: func(self: close-event-handle) -> string;
 }
 
+interface service-worker {
+    /// Opaque handle to a host-side `ServiceWorker` instance.
+    type service-worker-handle = u64;
+
+    /// `scriptURL` attribute — getter.
+    get-script-url: func(self: service-worker-handle) -> string;
+
+    /// `state` attribute — getter.
+    get-state: func(self: service-worker-handle) -> u64;
+
+    /// `postMessage()` operation.
+    post-message: func(self: service-worker-handle, message: string, transfer: list<u64>);
+
+    /// `onstatechange` attribute — getter.
+    get-onstatechange: func(self: service-worker-handle) -> u64;
+    /// `onstatechange` attribute — setter.
+    set-onstatechange: func(self: service-worker-handle, value: u64);
+}
+
 interface service-worker-container {
     /// Opaque handle to a host-side `ServiceWorkerContainer` instance.
     type service-worker-container-handle = u64;
@@ -16337,7 +16392,6 @@ world browser-full {
     import performance-measure;
     import permissions;
     import permission-status;
-    import service-worker;
     import idb-open-db-request;
     import idb-version-change-event;
     import window-or-worker-global-scope;
@@ -16433,6 +16487,7 @@ world browser-full {
     import rtc-error-event;
     import web-socket;
     import close-event;
+    import service-worker;
     import service-worker-container;
     import navigation-preload-manager;
     import client;

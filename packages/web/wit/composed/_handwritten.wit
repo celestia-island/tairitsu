@@ -43,10 +43,54 @@ interface event-callbacks {
         input-type: string,
     }
 
+    /// A pointer event (mouse, pen, or touch) as reported by `PointerEvent`.
+    ///
+    /// Carries the full pointer identity and contact geometry that
+    /// `mouse-event-data` cannot express: `pointer-id` / `pointer-type` /
+    /// `is-primary` identify which active pointer produced the event, and the
+    /// `width` / `height` / `pressure` / `tilt-*` / `twist` fields describe the
+    /// contact area for pen and touch input.
+    ///
+    /// `pointer-type` is a `string` rather than an enum so a host that reports a
+    /// pointer type this interface does not know yet still crosses the boundary
+    /// (the component falls back to `mouse`) instead of failing to construct the
+    /// record.
+    record pointer-event-data {
+        pointer-id: s32,
+        pointer-type: string,
+        is-primary: bool,
+        client-x: f64,
+        client-y: f64,
+        screen-x: f64,
+        screen-y: f64,
+        offset-x: f64,
+        offset-y: f64,
+        page-x: f64,
+        page-y: f64,
+        movement-x: f64,
+        movement-y: f64,
+        width: f32,
+        height: f32,
+        pressure: f32,
+        tangential-pressure: f32,
+        tilt-x: s32,
+        tilt-y: s32,
+        twist: s32,
+        /// Signed so `PointerEvent.button`'s `-1` ("no button changed") survives.
+        button: s16,
+        /// Bitmask: back/forward are bits 3 and 4, which a `u8` would truncate.
+        buttons: u16,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
     on-mouse-event: func(listener-id: listener-id, event: event-handle, data: mouse-event-data);
     on-keyboard-event: func(listener-id: listener-id, event: event-handle, data: keyboard-event-data);
     on-focus-event: func(listener-id: listener-id, event: event-handle, data: focus-event-data);
     on-input-event: func(listener-id: listener-id, event: event-handle, data: input-event-data);
+    on-pointer-event: func(listener-id: listener-id, event: event-handle, data: pointer-event-data);
     on-generic-event: func(listener-id: listener-id, event: event-handle, event-type: string);
 }
 
@@ -135,13 +179,6 @@ interface idb-callbacks {
 interface file-reader-callbacks {
     on-file-reader-load: func(callback-id: u64, %result: string);
     on-file-reader-error: func(callback-id: u64, error: string);
-}
-
-interface web-socket-callbacks {
-    on-web-socket-open: func(callback-id: u64);
-    on-web-socket-message: func(callback-id: u64, data: string);
-    on-web-socket-close: func(callback-id: u64, code: u16, reason: string);
-    on-web-socket-error: func(callback-id: u64);
 }
 
 interface lifecycle {
@@ -293,4 +330,11 @@ interface component-types {
         editable: bool,
         focused: bool,
     }
+}
+
+interface web-socket-callbacks {
+    on-web-socket-open: func(callback-id: u64);
+    on-web-socket-message: func(callback-id: u64, data: string);
+    on-web-socket-close: func(callback-id: u64, code: u16, reason: string);
+    on-web-socket-error: func(callback-id: u64);
 }

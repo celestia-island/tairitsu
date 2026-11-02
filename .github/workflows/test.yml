@@ -68,3 +68,9 @@ jobs:
         run: |
           just test
 
+      - name: Test the WIT-bindings platform on the host
+        # `just test` never enables the `wit-bindings` feature, so nothing in
+        # `wit_platform.rs` — including the `event-callbacks` delivery path —
+        # had a lane. The listener registry and the callback data mapping avoid
+        # the WIT imports on purpose, which is what makes them host-testable.
+        run: cargo test -p tairitsu-web --features wit-bindings --lib
