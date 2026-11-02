@@ -79,13 +79,13 @@ jobs:
           # except one tagged on the master tip.
           fetch-depth: 0
 
-      - name: Decode OIDC claims (debug, no secrets in claims)
-        run: |
-          TOKEN=$(curl -sS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm_registry" \
-            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            | python3 -c "import json,sys; print(json.load(sys.stdin)['value'])")
-          echo "$TOKEN" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null \
-            | python3 -m json.tool
+      # No OIDC probe in this job: crates.io auth is the `release`
+      # environment's CRATES_IO_API_TOKEN, not an OIDC token, so
+      # ACTIONS_ID_TOKEN_REQUEST_URL is unset here. #85 added the
+      # trusted-publishing claims dump to both jobs; in this one it only
+      # produced `curl: (3) URL rejected: Bad hostname` and killed the lane
+      # before `cargo login` (v0.5.22 and v0.5.23 runs). It stays in the npm
+      # job, which does declare `id-token: write`.
 
       - name: Ensure tag is on master
         run: |
