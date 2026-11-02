@@ -116,6 +116,22 @@ globalThis.__nextEventHandle = globalThis.__nextEventHandle || 1n;
 // to WASM to prevent infinite recursion when a handler triggers the same event type.
 globalThis.__dispatchingEvents = globalThis.__dispatchingEvents || new Set<string>();
 
+// Event types delivered through `on-pointer-event`. They carry pointer identity and contact
+// geometry that `on-mouse-event` has no fields for, so they must not fall through to
+// `on-generic-event` (which carries no position and no pointer id at all).
+const POINTER_EVENT_TYPES = new Set<string>([
+  "pointerdown",
+  "pointermove",
+  "pointerup",
+  "pointercancel",
+  "pointerenter",
+  "pointerleave",
+  "pointerover",
+  "pointerout",
+  "gotpointercapture",
+  "lostpointercapture",
+]);
+
 export const eventTarget_exports = {
   /**
    * Add an event listener to an element.
@@ -169,6 +185,42 @@ export const eventTarget_exports = {
                       altKey: event.altKey || false,
                       metaKey: event.metaKey || false,
                     });
+                  } else if (POINTER_EVENT_TYPES.has(evtType)) {
+                    // A component built before `on-pointer-event` existed does not export it.
+                    // Degrade to the generic callback instead of throwing the listener away.
+                    if (typeof callbacks.onPointerEvent !== "function") {
+                      callbacks.onGenericEvent(listenerId, eventHandle, evtType);
+                    } else {
+                      const pointer = event as PointerEvent;
+                      callbacks.onPointerEvent(listenerId, eventHandle, {
+                        pointerId: pointer.pointerId || 0,
+                        pointerType: pointer.pointerType || "mouse",
+                        isPrimary: pointer.isPrimary || false,
+                        clientX: pointer.clientX || 0,
+                        clientY: pointer.clientY || 0,
+                        screenX: pointer.screenX || 0,
+                        screenY: pointer.screenY || 0,
+                        offsetX: pointer.offsetX || 0,
+                        offsetY: pointer.offsetY || 0,
+                        pageX: pointer.pageX || 0,
+                        pageY: pointer.pageY || 0,
+                        movementX: (pointer as any).movementX || 0,
+                        movementY: (pointer as any).movementY || 0,
+                        width: pointer.width || 0,
+                        height: pointer.height || 0,
+                        pressure: pointer.pressure || 0,
+                        tangentialPressure: pointer.tangentialPressure || 0,
+                        tiltX: pointer.tiltX || 0,
+                        tiltY: pointer.tiltY || 0,
+                        twist: (pointer as any).twist || 0,
+                        button: pointer.button || 0,
+                        buttons: pointer.buttons || 0,
+                        ctrlKey: pointer.ctrlKey || false,
+                        shiftKey: pointer.shiftKey || false,
+                        altKey: pointer.altKey || false,
+                        metaKey: pointer.metaKey || false,
+                      });
+                    }
                   } else if (evtType === "keydown" || evtType === "keyup" || evtType === "keypress") {
                     callbacks.onKeyboardEvent(listenerId, eventHandle, {
                       key: event.key || "",
