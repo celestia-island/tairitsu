@@ -193,6 +193,7 @@ impl Resolver {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Mutex, MutexGuard};
 
     #[test]
     fn package_spec_parse_valid() {
@@ -251,20 +252,56 @@ mod tests {
 
     // --- ResolveOptions tests ---
 
+    /// Serialise the tests that mutate the process environment.
+    ///
+    /// `std::env::set_var` / `remove_var` change state shared by every thread
+    /// of the test binary, and these tests run in parallel: without the lock, a
+    /// test that has just isolated the env can read a `TAIRITSU_WIT_OFFLINE` /
+    /// `TAIRITSU_WIT_REGISTRY` value a neighbouring test set between the
+    /// isolation and its `ResolveOptions::new` call — seen as
+    /// `assertion failed: !opts.offline` (and siblings) at roughly 1-in-20 on
+    /// an 8-thread loop, and rarer under workspace runs. One mutex, taken by
+    /// [`isolate_env`] and released by [`restore_env`], so an env-mutating
+    /// test cannot forget to take it.
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    /// Isolation for one env-mutating test: the mutex guard plus the two saved
+    /// variable values. The guard is held until [`restore_env`] consumes it (or
+    /// the test ends), so the isolate → read → restore window is exclusive.
+    struct IsolatedEnv {
+        _lock: MutexGuard<'static, ()>,
+        registry: Option<String>,
+        offline: Option<String>,
+    }
+
     /// Temporarily clear env vars that influence ResolveOptions so tests are
     /// isolated from the host environment (CI / dev machine may have
     /// TAIRITSU_WIT_REGISTRY or TAIRITSU_WIT_OFFLINE set).
-    fn isolate_env() -> (Option<String>, Option<String>) {
+    fn isolate_env() -> IsolatedEnv {
+        // A poisoned mutex only means a previous holder panicked; each test
+        // re-isolates the env for itself, so the next waiter can carry on with
+        // the inner guard instead of cascading the panic.
+        let lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let registry = std::env::var("TAIRITSU_WIT_REGISTRY").ok();
         let offline = std::env::var("TAIRITSU_WIT_OFFLINE").ok();
         unsafe {
             std::env::remove_var("TAIRITSU_WIT_REGISTRY");
             std::env::remove_var("TAIRITSU_WIT_OFFLINE");
         }
-        (registry, offline)
+        IsolatedEnv {
+            _lock: lock,
+            registry,
+            offline,
+        }
     }
 
-    fn restore_env(registry: Option<String>, offline: Option<String>) {
+    /// Restore the env vars saved by [`isolate_env`], then release its lock.
+    fn restore_env(isolated: IsolatedEnv) {
+        let IsolatedEnv {
+            _lock,
+            registry,
+            offline,
+        } = isolated;
         unsafe {
             match registry {
                 Some(v) => std::env::set_var("TAIRITSU_WIT_REGISTRY", v),
@@ -275,11 +312,13 @@ mod tests {
                 None => std::env::remove_var("TAIRITSU_WIT_OFFLINE"),
             }
         }
+        // `_lock` drops here — the environment is fully restored before the
+        // next isolated test may start.
     }
 
     #[test]
     fn resolve_options_default_values() {
-        let (_r, _o) = isolate_env();
+        let _isolated = isolate_env();
         let target_dir = PathBuf::from("/tmp/target");
         let opts = ResolveOptions::new(&target_dir);
         assert_eq!(opts.target_dir, target_dir);
@@ -311,7 +350,7 @@ mod tests {
 
     #[test]
     fn resolver_new() {
-        let (_r, _o) = isolate_env();
+        let _isolated = isolate_env();
         let opts = ResolveOptions::new("/tmp/target");
         let resolver = Resolver::new(opts);
         assert_eq!(resolver.opts.target_dir, PathBuf::from("/tmp/target"));
@@ -336,7 +375,7 @@ mod tests {
 
     #[test]
     fn resolve_options_registry_from_env() {
-        let (saved_registry, saved_offline) = isolate_env();
+        let isolated = isolate_env();
         unsafe {
             std::env::set_var(
                 "TAIRITSU_WIT_REGISTRY",
@@ -346,24 +385,24 @@ mod tests {
         let opts = ResolveOptions::new("/tmp/target");
         assert_eq!(opts.registry_url, "https://custom-registry.example.com");
         assert!(!opts.offline);
-        restore_env(saved_registry, saved_offline);
+        restore_env(isolated);
     }
 
     #[test]
     fn resolve_options_offline_from_env_true() {
-        let (saved_registry, saved_offline) = isolate_env();
+        let isolated = isolate_env();
         unsafe {
             std::env::set_var("TAIRITSU_WIT_OFFLINE", "1");
         }
         let opts = ResolveOptions::new("/tmp/target");
         assert_eq!(opts.registry_url, DEFAULT_REGISTRY);
         assert!(opts.offline);
-        restore_env(saved_registry, saved_offline);
+        restore_env(isolated);
     }
 
     #[test]
     fn resolve_options_offline_from_env_true_case_insensitive() {
-        let (saved_registry, saved_offline) = isolate_env();
+        let isolated = isolate_env();
 
         unsafe {
             std::env::set_var("TAIRITSU_WIT_OFFLINE", "TRUE");
@@ -377,12 +416,12 @@ mod tests {
         let opts2 = ResolveOptions::new("/tmp/target");
         assert!(opts2.offline);
 
-        restore_env(saved_registry, saved_offline);
+        restore_env(isolated);
     }
 
     #[test]
     fn resolve_options_offline_from_env_false() {
-        let (saved_registry, saved_offline) = isolate_env();
+        let isolated = isolate_env();
 
         unsafe {
             std::env::set_var("TAIRITSU_WIT_OFFLINE", "0");
@@ -396,12 +435,12 @@ mod tests {
         let opts2 = ResolveOptions::new("/tmp/target");
         assert!(!opts2.offline);
 
-        restore_env(saved_registry, saved_offline);
+        restore_env(isolated);
     }
 
     #[test]
     fn resolve_options_both_env_vars() {
-        let (saved_registry, saved_offline) = isolate_env();
+        let isolated = isolate_env();
 
         unsafe {
             std::env::set_var("TAIRITSU_WIT_REGISTRY", "https://my-registry.com");
@@ -411,6 +450,6 @@ mod tests {
         assert_eq!(opts.registry_url, "https://my-registry.com");
         assert!(opts.offline);
 
-        restore_env(saved_registry, saved_offline);
+        restore_env(isolated);
     }
 }
