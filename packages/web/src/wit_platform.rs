@@ -259,6 +259,269 @@ impl WitPlatform {
     }
 }
 
+// -- Typed event construction ----------------------------------------------
+
+/// Listener registry and typed-event construction for the exported
+/// `event-callbacks` interface.
+///
+/// The `wasm32` platform is the only real caller: `wasm_impl` stores the handler
+/// that
+/// [`WitPlatform::add_event_listener`](tairitsu_vdom::Platform::add_event_listener)
+/// registered under the host-assigned listener id, reads the host event through
+/// the `mouse-event` / `pointer-event` / `wheel-event` WIT getters, and hands the
+/// result to [`dispatch_event`].
+///
+/// Nothing in here touches the WIT imports, so it stays compilable — and
+/// therefore testable — on a native host. That matters: the WIT getter names and
+/// the vdom field names differ (`tangential-pressure` / `tangential_pressure`),
+/// and a dropped or swapped field would otherwise only show up as a silently
+/// wrong event in a browser.
+#[cfg(any(target_family = "wasm", test))]
+pub(crate) mod event_callbacks {
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+    use std::str::FromStr;
+
+    use tairitsu_vdom::{
+        ChangeEvent, EventData, EventWitHandle, GenericEvent, PointerEvent, PointerType,
+        SubmitEvent, WheelEvent,
+    };
+
+    /// A handler registered through
+    /// [`add_event_listener`](tairitsu_vdom::Platform::add_event_listener).
+    pub(crate) type EventCallback = Box<dyn FnMut(Box<dyn EventData>)>;
+
+    thread_local! {
+        static EVENT_CALLBACKS: RefCell<HashMap<u64, EventCallback>> = RefCell::new(HashMap::new());
+    }
+
+    /// Store the handler for a host-assigned listener id.
+    pub(crate) fn set_event_callback(listener_id: u64, callback: EventCallback) {
+        EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, callback));
+    }
+
+    /// Drop the handler for a listener id, if one is still registered.
+    pub(crate) fn take_event_callback(listener_id: u64) {
+        EVENT_CALLBACKS.with(|m| m.borrow_mut().remove(&listener_id));
+    }
+
+    /// Dispatch an event to the registered callback with error handling.
+    ///
+    /// The handler is taken out of the registry for the duration of the call so
+    /// that a listener is free to register further listeners (or remove itself)
+    /// without tripping the `RefCell` borrow. A panicking handler is logged and
+    /// re-registered instead of unwinding into the host.
+    pub(crate) fn dispatch_event(listener_id: u64, event_type: &str, event: Box<dyn EventData>) {
+        EVENT_CALLBACKS.with(|m| {
+            let mut handler_opt = m.borrow_mut().remove(&listener_id);
+            if let Some(handler) = &mut handler_opt {
+                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    handler(event);
+                }));
+                if let Err(e) = result {
+                    let msg = e
+                        .downcast_ref::<String>()
+                        .map(|s| s.as_str())
+                        .or_else(|| e.downcast_ref::<&str>().copied())
+                        .unwrap_or("unknown panic");
+                    tracing::error!(
+                        "Event handler for '{}' (listener {}) panicked: {}",
+                        event_type,
+                        listener_id,
+                        msg
+                    );
+                }
+            }
+            if let Some(handler) = handler_opt {
+                m.borrow_mut().insert(listener_id, handler);
+            }
+        });
+    }
+
+    /// Event types that reach the generic callback but carry pointer identity.
+    ///
+    /// These are the `PointerEvent` types the DOM defines; the glue forwards them
+    /// through `on-generic-event` and the component reads them back through the
+    /// `pointer-event` getters.
+    ///
+    /// Only `wasm_impl` asks about these, so a native library build — what
+    /// `cargo clippy --all-targets` compiles without `--cfg test` — has no user.
+    #[cfg_attr(not(target_family = "wasm"), allow(dead_code))]
+    pub(crate) const POINTER_EVENT_TYPES: &[&str] = &[
+        "pointerdown",
+        "pointermove",
+        "pointerup",
+        "pointercancel",
+        "pointerenter",
+        "pointerleave",
+        "pointerover",
+        "pointerout",
+        "gotpointercapture",
+        "lostpointercapture",
+    ];
+
+    /// Whether `event_type` is one of [`POINTER_EVENT_TYPES`].
+    #[cfg_attr(not(target_family = "wasm"), allow(dead_code))]
+    pub(crate) fn is_pointer_event_type(event_type: &str) -> bool {
+        POINTER_EVENT_TYPES.contains(&event_type)
+    }
+
+    /// The `MouseEvent` fields that `PointerEvent` and `WheelEvent` both inherit.
+    #[derive(Debug, Clone, Default, PartialEq)]
+    pub(crate) struct MouseEventInput {
+        pub client_x: f64,
+        pub client_y: f64,
+        pub screen_x: f64,
+        pub screen_y: f64,
+        pub offset_x: f64,
+        pub offset_y: f64,
+        pub page_x: f64,
+        pub page_y: f64,
+        pub button: i16,
+        pub buttons: u16,
+        pub ctrl_key: bool,
+        pub shift_key: bool,
+        pub alt_key: bool,
+        pub meta_key: bool,
+    }
+
+    /// The `mouse-event` / `pointer-event` getter values, mirrored into plain Rust.
+    #[derive(Debug, Clone, Default, PartialEq)]
+    pub(crate) struct PointerEventInput {
+        pub mouse: MouseEventInput,
+        pub pointer_id: i32,
+        pub pointer_type: String,
+        pub is_primary: bool,
+        pub width: f64,
+        pub height: f64,
+        pub pressure: f32,
+        pub tangential_pressure: f32,
+        pub tilt_x: i32,
+        pub tilt_y: i32,
+        pub twist: i32,
+    }
+
+    /// The `mouse-event` / `wheel-event` getter values, mirrored into plain Rust.
+    #[derive(Debug, Clone, Default, PartialEq)]
+    pub(crate) struct WheelEventInput {
+        pub mouse: MouseEventInput,
+        pub delta_x: f64,
+        pub delta_y: f64,
+        pub delta_z: f64,
+        pub delta_mode: u32,
+    }
+
+    /// Everything read off one host event through the getter interfaces.
+    #[derive(Debug, Clone, Default, PartialEq)]
+    pub(crate) struct HostEvent {
+        pub event_type: String,
+        pub target: Option<u64>,
+        pub current_target: Option<u64>,
+        pub pointer: Option<PointerEventInput>,
+        pub wheel: Option<WheelEventInput>,
+    }
+
+    impl From<PointerEventInput> for PointerEvent {
+        fn from(data: PointerEventInput) -> Self {
+            PointerEvent::new()
+                .pointer_id(data.pointer_id)
+                // `PointerType::from_str` is infallible and falls back to
+                // `Mouse`, so a pointer type this revision does not know yet
+                // still produces a usable event.
+                .pointer_type(
+                    PointerType::from_str(&data.pointer_type).unwrap_or(PointerType::Mouse),
+                )
+                .is_primary(data.is_primary)
+                .client_x(data.mouse.client_x as i32)
+                .client_y(data.mouse.client_y as i32)
+                .screen_x(data.mouse.screen_x as i32)
+                .screen_y(data.mouse.screen_y as i32)
+                .offset_x(data.mouse.offset_x as i32)
+                .offset_y(data.mouse.offset_y as i32)
+                .page_x(data.mouse.page_x as i32)
+                .page_y(data.mouse.page_y as i32)
+                // The corpus has no `movementX` / `movementY` getter, so these keep
+                // the vdom default.
+                .width(data.width as f32)
+                .height(data.height as f32)
+                .pressure(data.pressure)
+                .tangential_pressure(data.tangential_pressure)
+                .tilt_x(data.tilt_x)
+                .tilt_y(data.tilt_y)
+                .twist(data.twist)
+                .button(data.mouse.button)
+                .buttons(data.mouse.buttons)
+                .ctrl_key(data.mouse.ctrl_key)
+                .shift_key(data.mouse.shift_key)
+                .alt_key(data.mouse.alt_key)
+                .meta_key(data.mouse.meta_key)
+        }
+    }
+
+    impl From<WheelEventInput> for WheelEvent {
+        fn from(data: WheelEventInput) -> Self {
+            WheelEvent::new()
+                .delta_x(data.delta_x)
+                .delta_y(data.delta_y)
+                .delta_z(data.delta_z)
+                .delta_mode(data.delta_mode)
+                .client_x(data.mouse.client_x as i32)
+                .client_y(data.mouse.client_y as i32)
+                .screen_x(data.mouse.screen_x as i32)
+                .screen_y(data.mouse.screen_y as i32)
+                .ctrl_key(data.mouse.ctrl_key)
+                .shift_key(data.mouse.shift_key)
+                .alt_key(data.mouse.alt_key)
+                .meta_key(data.mouse.meta_key)
+        }
+    }
+
+    /// Turn the data read off one host event into the event a listener receives.
+    ///
+    /// The event-type dispatch lives here rather than in `wasm_impl` so the
+    /// routing — which types become typed events and which stay generic — is
+    /// exercised by the host tests.
+    pub(crate) fn build_typed_event(
+        host: HostEvent,
+        wit_handle: EventWitHandle,
+    ) -> Box<dyn EventData> {
+        if let Some(pointer) = host.pointer {
+            return Box::new(
+                PointerEvent::from(pointer)
+                    .target(host.target.unwrap_or(0))
+                    .current_target(host.current_target.unwrap_or(0))
+                    .event_handle(wit_handle),
+            );
+        }
+
+        if let Some(wheel) = host.wheel {
+            return Box::new(
+                WheelEvent::from(wheel)
+                    .target(host.target.unwrap_or(0))
+                    .event_handle(wit_handle),
+            );
+        }
+
+        match host.event_type.as_str() {
+            "submit" => {
+                let mut evt = SubmitEvent::new().with_event_handle(wit_handle);
+                evt.target = host.target;
+                Box::new(evt)
+            }
+            "change" => {
+                let mut evt = ChangeEvent::new().with_event_handle(wit_handle);
+                evt.target = host.target;
+                Box::new(evt)
+            }
+            _ => Box::new(
+                GenericEvent::new()
+                    .event_type(&host.event_type)
+                    .event_handle(wit_handle),
+            ),
+        }
+    }
+}
+
 // -- wasm32 Platform implementation ----------------------------------------
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
@@ -275,6 +538,10 @@ pub mod wasm_impl {
         ScrollOps, TimerOps, VNode,
     };
 
+    use super::event_callbacks::{
+        build_typed_event, dispatch_event, is_pointer_event_type, set_event_callback,
+        take_event_callback, HostEvent, MouseEventInput, PointerEventInput, WheelEventInput,
+    };
     use super::{WitElement, WitEvent, WitPlatform};
 
     thread_local! {
@@ -316,8 +583,6 @@ pub mod wasm_impl {
         fn tairitsu_component_bootstrap();
     }
 
-    type EventCallback = Box<dyn FnMut(Box<dyn EventData>)>;
-    type EventCallbackMap = HashMap<u64, EventCallback>;
     type TimeoutCallback = Option<Box<dyn FnOnce()>>;
     type AnimationCallback = Option<Box<dyn FnOnce(f64)>>;
     type ResizeObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>;
@@ -389,7 +654,6 @@ pub mod wasm_impl {
     }
 
     thread_local! {
-        static EVENT_CALLBACKS: RefCell<EventCallbackMap> = RefCell::new(HashMap::new());
         static ELEMENT_LISTENERS: RefCell<HashMap<(u64, String), u64>>
             = RefCell::new(HashMap::new());
         static TIMEOUT_CALLBACKS: RefCell<HashMap<u64, TimeoutCallback>> = RefCell::new(HashMap::new());
@@ -508,9 +772,9 @@ pub mod wasm_impl {
     ///
     /// The browser-glue host calls these functions when DOM events fire on
     /// nodes that have a listener registered via
-    /// [`WitPlatform::add_event_listener`].  Each callback looks up the
-    /// corresponding Rust closure in `EVENT_CALLBACKS` and dispatches the
-    /// appropriately typed [`EventData`].
+    /// [`WitPlatform::add_event_listener`].  Each callback maps the host event onto a
+    /// typed [`EventData`] and hands it to the matching closure through
+    /// [`super::event_callbacks::dispatch_event`].
     pub(super) struct BrowserComponent;
 
     impl bindings::exports::tairitsu_browser::full::event_callbacks::Guest for BrowserComponent {
@@ -593,65 +857,87 @@ pub mod wasm_impl {
             dispatch_event(listener_id, "input", event);
         }
 
-        // NOTE: wheel, touch, pointer, transition, and animation events are handled
-        // through on_generic_event since the WIT event-callbacks interface doesn't
-        // define specialized data structures for them. The event data can be
-        // queried via the respective WIT interfaces (wheel-event, touch-event, etc.)
-        // using the event_handle.
+        // NOTE: touch, transition, and animation events still arrive here as generic
+        // events — the WIT event-callbacks interface has no record for them. Pointer
+        // and wheel events also arrive here, but the component upgrades them: the
+        // `pointer-event` / `wheel-event` getter interfaces read the real DOM event
+        // behind the handle, so nothing has to be added to the callback contract.
 
         fn on_generic_event(listener_id: u64, event_handle: u64, event_type: String) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
-
-            let event: Box<dyn EventData> = match event_type.as_str() {
-                "submit" => {
-                    let evt = tairitsu_vdom::SubmitEvent::new().with_event_handle(wit_handle);
-                    let mut evt = evt;
-                    evt.target = target;
-                    Box::new(evt)
-                }
-                "change" => {
-                    let evt = tairitsu_vdom::ChangeEvent::new().with_event_handle(wit_handle);
-                    let mut evt = evt;
-                    evt.target = target;
-                    Box::new(evt)
-                }
-                _ => Box::new(
-                    GenericEvent::new()
-                        .event_type(&event_type)
-                        .event_handle(wit_handle),
-                ),
-            };
+            let host = read_host_event(event_handle, &event_type);
+            let event = build_typed_event(host, wit_handle);
             dispatch_event(listener_id, &event_type, event);
         }
     }
 
-    /// Dispatch an event to the registered callback with error handling.
-    fn dispatch_event(listener_id: u64, _event_type: &str, event: Box<dyn EventData>) {
-        EVENT_CALLBACKS.with(|m| {
-            let mut handler_opt = m.borrow_mut().remove(&listener_id);
-            if let Some(handler) = &mut handler_opt {
-                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    handler(event);
-                }));
-                if let Err(e) = result {
-                    let msg = e
-                        .downcast_ref::<String>()
-                        .map(|s| s.as_str())
-                        .or_else(|| e.downcast_ref::<&str>().copied())
-                        .unwrap_or("unknown panic");
-                    tracing::error!(
-                        "Event handler for '{}' (listener {}) panicked: {}",
-                        _event_type,
-                        listener_id,
-                        msg
-                    );
-                }
-            }
-            if let Some(handler) = handler_opt {
-                m.borrow_mut().insert(listener_id, handler);
-            }
+    /// Read the fields of one host event through the WIT getter interfaces.
+    ///
+    /// The `event` interface hands out an opaque handle for a real DOM event, and
+    /// `mouse-event` / `pointer-event` / `wheel-event` read that object's own
+    /// properties, so this costs the host no extra bookkeeping — it is the declared
+    /// contract, used for the first time here.
+    ///
+    /// `pointer` / `wheel` stay `None` for event types outside those families, so
+    /// their getters are not called at all.
+    fn read_host_event(event_handle: u64, event_type: &str) -> HostEvent {
+        let read_mouse = || MouseEventInput {
+            client_x: bindings::tairitsu_browser::full::mouse_event::get_client_x(event_handle),
+            client_y: bindings::tairitsu_browser::full::mouse_event::get_client_y(event_handle),
+            screen_x: bindings::tairitsu_browser::full::mouse_event::get_screen_x(event_handle),
+            screen_y: bindings::tairitsu_browser::full::mouse_event::get_screen_y(event_handle),
+            offset_x: bindings::tairitsu_browser::full::mouse_event::get_offset_x(event_handle),
+            offset_y: bindings::tairitsu_browser::full::mouse_event::get_offset_y(event_handle),
+            page_x: bindings::tairitsu_browser::full::mouse_event::get_page_x(event_handle),
+            page_y: bindings::tairitsu_browser::full::mouse_event::get_page_y(event_handle),
+            button: bindings::tairitsu_browser::full::mouse_event::get_button(event_handle),
+            buttons: bindings::tairitsu_browser::full::mouse_event::get_buttons(event_handle),
+            ctrl_key: bindings::tairitsu_browser::full::mouse_event::get_ctrl_key(event_handle),
+            shift_key: bindings::tairitsu_browser::full::mouse_event::get_shift_key(event_handle),
+            alt_key: bindings::tairitsu_browser::full::mouse_event::get_alt_key(event_handle),
+            meta_key: bindings::tairitsu_browser::full::mouse_event::get_meta_key(event_handle),
+        };
+
+        let pointer = is_pointer_event_type(event_type).then(|| PointerEventInput {
+            mouse: read_mouse(),
+            pointer_id: bindings::tairitsu_browser::full::pointer_event::get_pointer_id(
+                event_handle,
+            ),
+            pointer_type: bindings::tairitsu_browser::full::pointer_event::get_pointer_type(
+                event_handle,
+            ),
+            is_primary: bindings::tairitsu_browser::full::pointer_event::get_is_primary(
+                event_handle,
+            ),
+            width: bindings::tairitsu_browser::full::pointer_event::get_width(event_handle),
+            height: bindings::tairitsu_browser::full::pointer_event::get_height(event_handle),
+            pressure: bindings::tairitsu_browser::full::pointer_event::get_pressure(event_handle),
+            tangential_pressure:
+                bindings::tairitsu_browser::full::pointer_event::get_tangential_pressure(
+                    event_handle,
+                ),
+            tilt_x: bindings::tairitsu_browser::full::pointer_event::get_tilt_x(event_handle),
+            tilt_y: bindings::tairitsu_browser::full::pointer_event::get_tilt_y(event_handle),
+            twist: bindings::tairitsu_browser::full::pointer_event::get_twist(event_handle),
         });
+
+        let wheel = (event_type == "wheel").then(|| WheelEventInput {
+            mouse: read_mouse(),
+            delta_x: bindings::tairitsu_browser::full::wheel_event::get_delta_x(event_handle),
+            delta_y: bindings::tairitsu_browser::full::wheel_event::get_delta_y(event_handle),
+            delta_z: bindings::tairitsu_browser::full::wheel_event::get_delta_z(event_handle),
+            delta_mode: bindings::tairitsu_browser::full::wheel_event::get_delta_mode(event_handle),
+        });
+
+        HostEvent {
+            event_type: event_type.to_string(),
+            target: bindings::tairitsu_browser::full::event::get_target(event_handle),
+            current_target: bindings::tairitsu_browser::full::event::get_current_target(
+                event_handle,
+            ),
+            pointer,
+            wheel,
+        }
     }
 
     impl bindings::exports::tairitsu_browser::full::timer_callbacks::Guest for BrowserComponent {
@@ -1195,7 +1481,7 @@ pub mod wasm_impl {
                 0
             });
 
-            EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, handler));
+            set_event_callback(listener_id, handler);
 
             ELEMENT_LISTENERS.with(|m| {
                 m.borrow_mut()
@@ -1216,7 +1502,7 @@ pub mod wasm_impl {
 
             if let Some(listener_id) = listener_id {
                 // Remove the callback handler
-                EVENT_CALLBACKS.with(|m| m.borrow_mut().remove(&listener_id));
+                take_event_callback(listener_id);
                 // Call the W3C remove-event-listener with the listener-id
                 let _ = bindings::tairitsu_browser::full::event_target::remove_event_listener(
                     element.as_raw(),
@@ -1252,7 +1538,7 @@ pub mod wasm_impl {
                 0
             });
 
-            EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, handler));
+            set_event_callback(listener_id, handler);
 
             ELEMENT_LISTENERS.with(|m| {
                 m.borrow_mut()
@@ -3136,6 +3422,227 @@ mod tests {
         {
             assert!(result.is_ok(), "CSS variables should be handled");
         }
+    }
+
+    // -- event callback dispatch tests --------------------------------------
+
+    /// The listener for a `pointerdown` receives a typed [`PointerEvent`] — not a
+    /// `GenericEvent` — carrying the values read off the host event.
+    ///
+    /// The getter calls themselves are the `wasm32`-only half: the glue-side suite
+    /// asserts that each getter returns the real property of a fake host event, and
+    /// `super::wasm_impl::read_host_event` maps those values into the struct
+    /// field-for-field. This covers what the listener actually sees.
+    #[test]
+    fn test_pointer_event_dispatch_is_typed() {
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
+        use tairitsu_vdom::{EventData, EventWitHandle, GenericEvent, PointerEvent, PointerType};
+
+        use super::event_callbacks::{
+            build_typed_event, dispatch_event, set_event_callback, take_event_callback, HostEvent,
+            MouseEventInput, PointerEventInput,
+        };
+
+        const LISTENER_ID: u64 = 9_001;
+
+        let received: Rc<RefCell<Option<PointerEvent>>> = Rc::new(RefCell::new(None));
+        let saw_generic: Rc<RefCell<bool>> = Rc::new(RefCell::new(false));
+        let received_sink = Rc::clone(&received);
+        let generic_sink = Rc::clone(&saw_generic);
+
+        set_event_callback(
+            LISTENER_ID,
+            Box::new(move |event: Box<dyn EventData>| {
+                *generic_sink.borrow_mut() =
+                    event.as_any().downcast_ref::<GenericEvent>().is_some();
+                *received_sink.borrow_mut() =
+                    event.as_any().downcast_ref::<PointerEvent>().cloned();
+            }),
+        );
+
+        let host = HostEvent {
+            event_type: String::from("pointerdown"),
+            target: Some(41),
+            current_target: Some(42),
+            pointer: Some(PointerEventInput {
+                mouse: MouseEventInput {
+                    client_x: 11.9,
+                    client_y: 12.4,
+                    screen_x: 13.0,
+                    screen_y: 14.0,
+                    offset_x: 15.0,
+                    offset_y: 16.0,
+                    page_x: 17.0,
+                    page_y: 18.0,
+                    button: -1,
+                    buttons: 24,
+                    ctrl_key: false,
+                    shift_key: true,
+                    alt_key: false,
+                    meta_key: false,
+                },
+                pointer_id: 7,
+                pointer_type: String::from("pen"),
+                is_primary: true,
+                width: 21.5,
+                height: 22.5,
+                pressure: 0.5,
+                tangential_pressure: 0.25,
+                tilt_x: 30,
+                tilt_y: -15,
+                twist: 45,
+            }),
+            wheel: None,
+        };
+
+        dispatch_event(
+            LISTENER_ID,
+            "pointerdown",
+            build_typed_event(host, EventWitHandle::from_wit(5)),
+        );
+        take_event_callback(LISTENER_ID);
+
+        assert!(
+            !*saw_generic.borrow(),
+            "a pointer event must not arrive as a GenericEvent"
+        );
+
+        let event = received
+            .borrow()
+            .clone()
+            .expect("the listener should receive a typed PointerEvent");
+
+        assert_eq!(event.pointer_id, 7);
+        assert_eq!(event.pointer_type, PointerType::Pen);
+        assert!(event.is_primary);
+        // `f64` getter values are truncated to the vdom event's `i32`s.
+        assert_eq!(event.client_x, 11);
+        assert_eq!(event.client_y, 12);
+        assert_eq!(event.screen_x, 13);
+        assert_eq!(event.screen_y, 14);
+        assert_eq!(event.offset_x, 15);
+        assert_eq!(event.offset_y, 16);
+        assert_eq!(event.page_x, 17);
+        assert_eq!(event.page_y, 18);
+        assert_eq!(event.width, 21.5);
+        assert_eq!(event.height, 22.5);
+        assert_eq!(event.pressure, 0.5);
+        assert_eq!(event.tangential_pressure, 0.25);
+        assert_eq!(event.tilt_x, 30);
+        assert_eq!(event.tilt_y, -15);
+        assert_eq!(event.twist, 45);
+        // "-1" and the back/forward bits need the signed/wide types.
+        assert_eq!(event.button, -1);
+        assert_eq!(event.buttons, 24);
+        assert!(!event.ctrl_key);
+        assert!(event.shift_key);
+        assert!(!event.alt_key);
+        assert!(!event.meta_key);
+        assert_eq!(event.target, Some(41));
+        assert_eq!(event.current_target, Some(42));
+    }
+
+    /// A `wheel` listener receives a typed [`WheelEvent`] with the real delta.
+    #[test]
+    fn test_wheel_event_dispatch_carries_delta_y() {
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
+        use tairitsu_vdom::{EventData, EventWitHandle, WheelEvent};
+
+        use super::event_callbacks::{
+            build_typed_event, dispatch_event, set_event_callback, take_event_callback, HostEvent,
+            MouseEventInput, WheelEventInput,
+        };
+
+        const LISTENER_ID: u64 = 9_002;
+
+        let received: Rc<RefCell<Option<WheelEvent>>> = Rc::new(RefCell::new(None));
+        let sink = Rc::clone(&received);
+        set_event_callback(
+            LISTENER_ID,
+            Box::new(move |event: Box<dyn EventData>| {
+                *sink.borrow_mut() = event.as_any().downcast_ref::<WheelEvent>().cloned();
+            }),
+        );
+
+        let host = HostEvent {
+            event_type: String::from("wheel"),
+            target: Some(41),
+            current_target: Some(41),
+            pointer: None,
+            wheel: Some(WheelEventInput {
+                mouse: MouseEventInput {
+                    client_x: 5.0,
+                    client_y: 6.0,
+                    ctrl_key: true,
+                    ..MouseEventInput::default()
+                },
+                delta_x: -1.5,
+                delta_y: 120.0,
+                delta_z: 0.0,
+                delta_mode: 1,
+            }),
+        };
+
+        dispatch_event(
+            LISTENER_ID,
+            "wheel",
+            build_typed_event(host, EventWitHandle::from_wit(6)),
+        );
+        take_event_callback(LISTENER_ID);
+
+        let event = received
+            .borrow()
+            .clone()
+            .expect("the listener should receive a typed WheelEvent");
+
+        assert_eq!(event.delta_y, 120.0);
+        assert_eq!(event.delta_x, -1.5);
+        assert_eq!(event.delta_mode, 1);
+        assert_eq!(event.client_x, 5);
+        assert_eq!(event.client_y, 6);
+        assert!(event.ctrl_key);
+    }
+
+    /// An event type with no typed branch still arrives as a [`GenericEvent`], and a
+    /// pointer type the component does not know falls back to `Mouse`.
+    #[test]
+    fn test_untyped_and_unknown_pointer_events() {
+        use tairitsu_vdom::{EventWitHandle, GenericEvent, PointerEvent, PointerType};
+
+        use super::event_callbacks::{build_typed_event, HostEvent, PointerEventInput};
+
+        let generic = build_typed_event(
+            HostEvent {
+                event_type: String::from("transitionend"),
+                ..HostEvent::default()
+            },
+            EventWitHandle::from_wit(7),
+        );
+        assert!(
+            generic.as_any().downcast_ref::<GenericEvent>().is_some(),
+            "transitionend should stay a GenericEvent"
+        );
+
+        let unknown = build_typed_event(
+            HostEvent {
+                event_type: String::from("pointermove"),
+                pointer: Some(PointerEventInput {
+                    pointer_type: String::from("trackpad-with-six-axes"),
+                    ..PointerEventInput::default()
+                }),
+                ..HostEvent::default()
+            },
+            EventWitHandle::from_wit(8),
+        );
+        let event = unknown
+            .as_any()
+            .downcast_ref::<PointerEvent>()
+            .expect("pointermove should build a PointerEvent");
+        assert_eq!(event.pointer_type, PointerType::Mouse);
     }
 
     // -- wasm_impl module tests ---------------------------------------------
