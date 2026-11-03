@@ -80,9 +80,393 @@ export const history_exports = {
   },
 };
 
+// === html-input-element ===
+// The composed WIT declares 97 members on this interface and the glue implemented
+// none of them — a host call to any member bound to a missing function and trapped.
+// The handle is an element handle from the same `__elementHandles` table the `event`
+// interface resolves event targets through, so every member is a property read/write
+// or a method call on that element.
+//
+// Resolution is lenient, in the getter-family convention of `mouse-event` /
+// `pointer-event` / `wheel-event`: an unknown handle, or an element without the
+// property, reads as the DOM-absent default (`""`, `false`, `0`, `NaN`, none)
+// instead of trapping — a `change` dispatch whose target is not an input is normal
+// traffic, and the host keeps the event value empty the same way it does for a
+// target it cannot address at all. Mutating members on an unknown handle are the
+// same honest no-op rather than a half-applied write.
+//
+// Handles for non-element DOM objects (`FileList`, `NodeList`, `ValidityState`) come
+// from dedicated tables and are stable per object (reuse before store). `get-validity`
+// flattens the DOM's nullable ValidityState into a plain `u64`: `0n` when there is
+// none — handle numbering starts at 1, so 0 is never a real handle — otherwise a
+// `__validityStateHandles` handle; the `validity-state` interface that would read it
+// is itself declared but not yet implemented. `get-labels` hands back a node-list
+// handle (the same `__nodeListHandles` table `query-selector` uses). `valueAsDate`
+// maps `Date | null` to milliseconds-since-epoch or none.
+//
+// `alpha` and `colorSpace` have no counterpart on the DOM's HTMLInputElement: they
+// read as the default unless the page defined them, and writes become element
+// expandos. `maxLength` / `minLength` keep the DOM's own unset encoding (`-1`).
+const inputElementOf = (handle: bigint): any => globalThis.__elementHandles?.get(handle);
+
+const inputString = (el: any, prop: string): string => {
+  const v = el?.[prop];
+  return typeof v === "string" ? v : "";
+};
+
+const inputNumber = (el: any, prop: string, fallback: number): number => {
+  const v = el?.[prop];
+  return typeof v === "number" ? v : fallback;
+};
+
+const inputBool = (el: any, prop: string): boolean => !!el?.[prop];
+
+/** Map a DOM node to its element handle, the reverse of what `getTarget` does. */
+const elementHandleOfNode = (node: any): bigint | undefined => {
+  if (!node) return undefined;
+  for (const [h, el] of globalThis.__elementHandles) {
+    if (el === node) return h;
+  }
+  return undefined;
+};
+
+/** Reuse the handle `node` is stored under in the named table, or store it fresh. */
+const inputHandleIn = (tableKey: string, nextKey: string, node: any): bigint | undefined => {
+  if (!node) return undefined;
+  const table = (globalThis[tableKey] = globalThis[tableKey] || new Map());
+  for (const [h, stored] of table) {
+    if (stored === node) return h;
+  }
+  const next = (globalThis[nextKey] = globalThis[nextKey] || 1n);
+  globalThis[nextKey] = next + 1n;
+  table.set(next, node);
+  return next;
+};
+
+/** Assign only when the element exists; an unknown handle stays an honest no-op. */
+const setInput = (handle: bigint, assign: (el: any) => void): void => {
+  const el = inputElementOf(handle);
+  if (el) assign(el);
+};
+
+/** Call the element's method only when it exists; missing means the DOM says no. */
+const callInput = (handle: bigint, method: string, ...args: any[]): boolean => {
+  const fn = inputElementOf(handle)?.[method];
+  if (typeof fn !== "function") return false;
+  return !!fn.apply(undefined, args);
+};
+
+export const htmlInputElement_exports = {
+  getAccept(h: bigint): string {
+    return inputString(inputElementOf(h), "accept");
+  },
+  setAccept(h: bigint, value: string): void {
+    setInput(h, (el) => (el.accept = value));
+  },
+  getAlpha(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "alpha");
+  },
+  setAlpha(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.alpha = value));
+  },
+  getAlt(h: bigint): string {
+    return inputString(inputElementOf(h), "alt");
+  },
+  setAlt(h: bigint, value: string): void {
+    setInput(h, (el) => (el.alt = value));
+  },
+  getAutocomplete(h: bigint): string {
+    return inputString(inputElementOf(h), "autocomplete");
+  },
+  setAutocomplete(h: bigint, value: string): void {
+    setInput(h, (el) => (el.autocomplete = value));
+  },
+  getDefaultChecked(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "defaultChecked");
+  },
+  setDefaultChecked(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.defaultChecked = value));
+  },
+  getChecked(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "checked");
+  },
+  setChecked(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.checked = value));
+  },
+  getColorSpace(h: bigint): string {
+    return inputString(inputElementOf(h), "colorSpace");
+  },
+  setColorSpace(h: bigint, value: string): void {
+    setInput(h, (el) => (el.colorSpace = value));
+  },
+  getDirName(h: bigint): string {
+    return inputString(inputElementOf(h), "dirName");
+  },
+  setDirName(h: bigint, value: string): void {
+    setInput(h, (el) => (el.dirName = value));
+  },
+  getDisabled(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "disabled");
+  },
+  setDisabled(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.disabled = value));
+  },
+  getForm(h: bigint): bigint | undefined {
+    return elementHandleOfNode(inputElementOf(h)?.form);
+  },
+  getFiles(h: bigint): bigint | undefined {
+    return inputHandleIn("__fileListHandles", "__nextFileList", inputElementOf(h)?.files);
+  },
+  setFiles(h: bigint, value: bigint | undefined): void {
+    setInput(h, (el) => {
+      if (value === undefined) {
+        el.files = null;
+        return;
+      }
+      const list = globalThis.__fileListHandles?.get(value);
+      if (list) el.files = list;
+    });
+  },
+  getFormAction(h: bigint): string {
+    return inputString(inputElementOf(h), "formAction");
+  },
+  setFormAction(h: bigint, value: string): void {
+    setInput(h, (el) => (el.formAction = value));
+  },
+  getFormEnctype(h: bigint): string {
+    return inputString(inputElementOf(h), "formEnctype");
+  },
+  setFormEnctype(h: bigint, value: string): void {
+    setInput(h, (el) => (el.formEnctype = value));
+  },
+  getFormMethod(h: bigint): string {
+    return inputString(inputElementOf(h), "formMethod");
+  },
+  setFormMethod(h: bigint, value: string): void {
+    setInput(h, (el) => (el.formMethod = value));
+  },
+  getFormNoValidate(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "formNoValidate");
+  },
+  setFormNoValidate(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.formNoValidate = value));
+  },
+  getFormTarget(h: bigint): string {
+    return inputString(inputElementOf(h), "formTarget");
+  },
+  setFormTarget(h: bigint, value: string): void {
+    setInput(h, (el) => (el.formTarget = value));
+  },
+  getHeight(h: bigint): number {
+    return inputNumber(inputElementOf(h), "height", 0);
+  },
+  setHeight(h: bigint, value: number): void {
+    setInput(h, (el) => (el.height = value));
+  },
+  getIndeterminate(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "indeterminate");
+  },
+  setIndeterminate(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.indeterminate = value));
+  },
+  getList(h: bigint): bigint | undefined {
+    return elementHandleOfNode(inputElementOf(h)?.list);
+  },
+  getMax(h: bigint): string {
+    return inputString(inputElementOf(h), "max");
+  },
+  setMax(h: bigint, value: string): void {
+    setInput(h, (el) => (el.max = value));
+  },
+  getMaxLength(h: bigint): number {
+    return inputNumber(inputElementOf(h), "maxLength", 0);
+  },
+  setMaxLength(h: bigint, value: number): void {
+    setInput(h, (el) => (el.maxLength = value));
+  },
+  getMin(h: bigint): string {
+    return inputString(inputElementOf(h), "min");
+  },
+  setMin(h: bigint, value: string): void {
+    setInput(h, (el) => (el.min = value));
+  },
+  getMinLength(h: bigint): number {
+    return inputNumber(inputElementOf(h), "minLength", 0);
+  },
+  setMinLength(h: bigint, value: number): void {
+    setInput(h, (el) => (el.minLength = value));
+  },
+  getMultiple(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "multiple");
+  },
+  setMultiple(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.multiple = value));
+  },
+  getName(h: bigint): string {
+    return inputString(inputElementOf(h), "name");
+  },
+  setName(h: bigint, value: string): void {
+    setInput(h, (el) => (el.name = value));
+  },
+  getPattern(h: bigint): string {
+    return inputString(inputElementOf(h), "pattern");
+  },
+  setPattern(h: bigint, value: string): void {
+    setInput(h, (el) => (el.pattern = value));
+  },
+  getPlaceholder(h: bigint): string {
+    return inputString(inputElementOf(h), "placeholder");
+  },
+  setPlaceholder(h: bigint, value: string): void {
+    setInput(h, (el) => (el.placeholder = value));
+  },
+  getReadOnly(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "readOnly");
+  },
+  setReadOnly(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.readOnly = value));
+  },
+  getRequired(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "required");
+  },
+  setRequired(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.required = value));
+  },
+  getSize(h: bigint): number {
+    return inputNumber(inputElementOf(h), "size", 0);
+  },
+  setSize(h: bigint, value: number): void {
+    setInput(h, (el) => (el.size = value));
+  },
+  getSrc(h: bigint): string {
+    return inputString(inputElementOf(h), "src");
+  },
+  setSrc(h: bigint, value: string): void {
+    setInput(h, (el) => (el.src = value));
+  },
+  getStep(h: bigint): string {
+    return inputString(inputElementOf(h), "step");
+  },
+  setStep(h: bigint, value: string): void {
+    setInput(h, (el) => (el.step = value));
+  },
+  getType(h: bigint): string {
+    return inputString(inputElementOf(h), "type");
+  },
+  setType(h: bigint, value: string): void {
+    setInput(h, (el) => (el.type = value));
+  },
+  getDefaultValue(h: bigint): string {
+    return inputString(inputElementOf(h), "defaultValue");
+  },
+  setDefaultValue(h: bigint, value: string): void {
+    setInput(h, (el) => (el.defaultValue = value));
+  },
+  getValue(h: bigint): string {
+    return inputString(inputElementOf(h), "value");
+  },
+  setValue(h: bigint, value: string): void {
+    setInput(h, (el) => (el.value = value));
+  },
+  getValueAsDate(h: bigint): bigint | undefined {
+    const date = inputElementOf(h)?.valueAsDate;
+    return date && typeof date.getTime === "function" ? BigInt(date.getTime()) : undefined;
+  },
+  setValueAsDate(h: bigint, value: bigint | undefined): void {
+    setInput(h, (el) => (el.valueAsDate = value === undefined ? null : new Date(Number(value))));
+  },
+  getValueAsNumber(h: bigint): number {
+    // NaN is the DOM's own "not a number" answer for non-numeric inputs and must
+    // survive the read — `|| 0` would launder it into a real value.
+    return inputNumber(inputElementOf(h), "valueAsNumber", NaN);
+  },
+  setValueAsNumber(h: bigint, value: number): void {
+    setInput(h, (el) => (el.valueAsNumber = value));
+  },
+  getWidth(h: bigint): number {
+    return inputNumber(inputElementOf(h), "width", 0);
+  },
+  setWidth(h: bigint, value: number): void {
+    setInput(h, (el) => (el.width = value));
+  },
+  stepUp(h: bigint, n: number | undefined): void {
+    callInput(h, "stepUp", n === undefined ? 1 : n);
+  },
+  stepDown(h: bigint, n: number | undefined): void {
+    callInput(h, "stepDown", n === undefined ? 1 : n);
+  },
+  getWillValidate(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "willValidate");
+  },
+  getValidity(h: bigint): bigint {
+    return inputHandleIn("__validityStateHandles", "__nextValidityState", inputElementOf(h)?.validity) ?? 0n;
+  },
+  getValidationMessage(h: bigint): string {
+    return inputString(inputElementOf(h), "validationMessage");
+  },
+  checkValidity(h: bigint): boolean {
+    return callInput(h, "checkValidity");
+  },
+  reportValidity(h: bigint): boolean {
+    return callInput(h, "reportValidity");
+  },
+  setCustomValidity(h: bigint, error: string): void {
+    callInput(h, "setCustomValidity", error);
+  },
+  getLabels(h: bigint): bigint | undefined {
+    return inputHandleIn("__nodeListHandles", "__nextNodeList", inputElementOf(h)?.labels);
+  },
+  select(h: bigint): void {
+    callInput(h, "select");
+  },
+  getSelectionStart(h: bigint): number | undefined {
+    const v = inputElementOf(h)?.selectionStart;
+    return typeof v === "number" ? v : undefined;
+  },
+  setSelectionStart(h: bigint, value: number | undefined): void {
+    setInput(h, (el) => (el.selectionStart = value ?? null));
+  },
+  getSelectionEnd(h: bigint): number | undefined {
+    const v = inputElementOf(h)?.selectionEnd;
+    return typeof v === "number" ? v : undefined;
+  },
+  setSelectionEnd(h: bigint, value: number | undefined): void {
+    setInput(h, (el) => (el.selectionEnd = value ?? null));
+  },
+  getSelectionDirection(h: bigint): string | undefined {
+    const v = inputElementOf(h)?.selectionDirection;
+    return typeof v === "string" ? v : undefined;
+  },
+  setSelectionDirection(h: bigint, value: string | undefined): void {
+    setInput(h, (el) => (el.selectionDirection = value ?? null));
+  },
+  setRangeText(h: bigint, replacement: string): void {
+    callInput(h, "setRangeText", replacement);
+  },
+  setSelectionRange(h: bigint, start: number, end: number, direction: string | undefined): void {
+    callInput(h, "setSelectionRange", start, end, direction);
+  },
+  showPicker(h: bigint): void {
+    callInput(h, "showPicker");
+  },
+  getAlign(h: bigint): string {
+    return inputString(inputElementOf(h), "align");
+  },
+  setAlign(h: bigint, value: string): void {
+    setInput(h, (el) => (el.align = value));
+  },
+  getUseMap(h: bigint): string {
+    return inputString(inputElementOf(h), "useMap");
+  },
+  setUseMap(h: bigint, value: string): void {
+    setInput(h, (el) => (el.useMap = value));
+  },
+};
+
 // === Registry ===
 export const INTERFACES = {
   "@tairitsu-glue/window": window_exports,
   "@tairitsu-glue/location": location_exports,
   "@tairitsu-glue/history": history_exports,
+  "@tairitsu-glue/html-input-element": htmlInputElement_exports,
 };

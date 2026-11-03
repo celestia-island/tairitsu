@@ -355,6 +355,7 @@ pub(crate) mod event_callbacks {
         wit_handle: EventWitHandle,
         target: Option<u64>,
         data: Option<String>,
+        value: Option<String>,
     ) {
         let registered = listener_event_type(listener_id);
         let event: Box<dyn EventData> = if registered.as_deref() == Some("change") {
@@ -362,6 +363,7 @@ pub(crate) mod event_callbacks {
                 HostEvent {
                     event_type: String::from("change"),
                     target,
+                    value,
                     ..HostEvent::default()
                 },
                 wit_handle,
@@ -492,6 +494,10 @@ pub(crate) mod event_callbacks {
         pub current_target: Option<u64>,
         pub pointer: Option<PointerEventInput>,
         pub wheel: Option<WheelEventInput>,
+        /// The target element's `value`, read through the
+        /// `html-input-element` getter (wasm side only — native tests pass it
+        /// in directly). `None` when the getter was not consulted.
+        pub value: Option<String>,
     }
 
     impl From<PointerEventInput> for PointerEvent {
@@ -588,11 +594,13 @@ pub(crate) mod event_callbacks {
                 // Reached from `dispatch_input_event`: the glue routes `change`
                 // into the same callback as `input`, so the typed construction
                 // happens there, keyed on the listener's registered type. The
-                // event carries no payload of its own, so `value` stays empty —
-                // the host has no getter for the target's value to fill it
-                // honestly.
+                // wasm callback fills `value` from the target through the
+                // `html-input-element` getter (tairitsu 0.5.26); an empty
+                // value is an honest empty — a non-input target or a cleared
+                // input both read as "".
                 let mut evt = ChangeEvent::new().with_event_handle(wit_handle);
                 evt.target = host.target;
+                evt.value = host.value.clone().unwrap_or_default();
                 Box::new(evt)
             }
             _ => Box::new(
@@ -942,7 +950,22 @@ pub mod wasm_impl {
             } else {
                 None
             };
-            dispatch_input_event(listener_id, wit_handle, target, data.data);
+            // A `change` on an input-like target carries the committed value:
+            // read it through the `html-input-element` getter so the delivered
+            // `ChangeEvent.value` is the real value, not an invented empty.
+            // The glue's lenient getter reads "" for non-input targets, which
+            // is exactly the honest fill.
+            let value = if registered.as_deref() == Some("change") {
+                match target {
+                    Some(target) => Some(
+                        bindings::tairitsu_browser::full::html_input_element::get_value(target),
+                    ),
+                    None => None,
+                }
+            } else {
+                None
+            };
+            dispatch_input_event(listener_id, wit_handle, target, data.data, value);
         }
 
         // NOTE: touch, transition, and animation events still arrive here as generic
@@ -1025,6 +1048,7 @@ pub mod wasm_impl {
             ),
             pointer,
             wheel,
+            value: None,
         }
     }
 
@@ -3554,6 +3578,7 @@ mod tests {
         );
 
         let host = HostEvent {
+            value: None,
             event_type: String::from("pointerdown"),
             target: Some(41),
             current_target: Some(42),
@@ -3660,6 +3685,7 @@ mod tests {
         );
 
         let host = HostEvent {
+            value: None,
             event_type: String::from("wheel"),
             target: Some(41),
             current_target: Some(41),
@@ -3778,7 +3804,13 @@ mod tests {
         );
         set_event_listener_type(LISTENER_ID, "change");
 
-        dispatch_input_event(LISTENER_ID, EventWitHandle::from_wit(9), Some(41), None);
+        dispatch_input_event(
+            LISTENER_ID,
+            EventWitHandle::from_wit(9),
+            Some(41),
+            None,
+            Some(String::from("2026-06-15")),
+        );
         take_event_callback(LISTENER_ID);
         take_event_listener_type(LISTENER_ID);
 
@@ -3796,10 +3828,10 @@ mod tests {
             .clone()
             .expect("the listener should receive a typed ChangeEvent");
         assert_eq!(event.target, Some(41));
-        // The DOM `change` event carries no data payload and the host has no
-        // getter for the target's value, so `value` stays empty rather than
-        // being filled with invented data.
-        assert_eq!(event.value, "");
+        // The wasm callback reads the committed value through the
+        // `html-input-element` getter and delivers it — the value the host
+        // consumes is the real one, not an invented empty.
+        assert_eq!(event.value, "2026-06-15");
     }
 
     /// A listener registered for `input` keeps receiving the [`InputEvent`] the
@@ -3837,6 +3869,7 @@ mod tests {
             EventWitHandle::from_wit(10),
             None,
             Some(String::from("typed x")),
+            None,
         );
         take_event_callback(LISTENER_ID);
         take_event_listener_type(LISTENER_ID);
@@ -3881,7 +3914,7 @@ mod tests {
         );
         // No `set_event_listener_type` — the registry has no entry for this id.
 
-        dispatch_input_event(LISTENER_ID, EventWitHandle::from_wit(11), None, None);
+        dispatch_input_event(LISTENER_ID, EventWitHandle::from_wit(11), None, None, None);
         take_event_callback(LISTENER_ID);
 
         assert!(
