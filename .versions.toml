@@ -24,7 +24,7 @@
 # fails closed on any bump that does not update this file in the same commit.
 
 [track]
-npm = "0.5.3"
+npm = "0.5.4"
 
 [exempt.npm]
 "." = "private root workspace manifest; no published line"
