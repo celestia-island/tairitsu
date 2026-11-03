@@ -217,15 +217,14 @@ export const htmlInputElement_exports = {
   getFiles(h: bigint): bigint | undefined {
     return inputHandleIn("__fileListHandles", "__nextFileList", inputElementOf(h)?.files);
   },
+  // HTMLInputElement.files is a readonly IDL attribute ([SameObject],
+  // getter-only on the prototype): assignment throws TypeError in strict-mode
+  // ESM, so this setter is an HONEST NO-OP — a real file-list design needs a
+  // DataTransfer bridge, which this glue does not have (declared, not
+  // accidental). getFiles still returns the live FileList handle.
   setFiles(h: bigint, value: bigint | undefined): void {
-    setInput(h, (el) => {
-      if (value === undefined) {
-        el.files = null;
-        return;
-      }
-      const list = globalThis.__fileListHandles?.get(value);
-      if (list) el.files = list;
-    });
+    void h;
+    void value;
   },
   getFormAction(h: bigint): string {
     return inputString(inputElementOf(h), "formAction");
@@ -279,7 +278,9 @@ export const htmlInputElement_exports = {
     setInput(h, (el) => (el.max = value));
   },
   getMaxLength(h: bigint): number {
-    return inputNumber(inputElementOf(h), "maxLength", 0);
+    // -1 is the DOM's own unset encoding (absent element included), not 0
+    // (which would read as "max 0 characters").
+    return inputNumber(inputElementOf(h), "maxLength", -1);
   },
   setMaxLength(h: bigint, value: number): void {
     setInput(h, (el) => (el.maxLength = value));
@@ -291,7 +292,8 @@ export const htmlInputElement_exports = {
     setInput(h, (el) => (el.min = value));
   },
   getMinLength(h: bigint): number {
-    return inputNumber(inputElementOf(h), "minLength", 0);
+    // Same unset encoding as getMaxLength: -1, not 0.
+    return inputNumber(inputElementOf(h), "minLength", -1);
   },
   setMinLength(h: bigint, value: number): void {
     setInput(h, (el) => (el.minLength = value));
