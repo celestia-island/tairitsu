@@ -51,7 +51,7 @@ panic = "abort"
 # immutable, so the drift needs this bump before the next publish; consumers on
 # ^0.5 pick it up semver-compatibly. Lockstep note: 0.5.25 needs NO glue publish
 # (the change fix is host-side only; glue 0.5.3 stays current).
-version = "0.5.25"
+version = "0.5.26"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 rust-version = "1.91"
