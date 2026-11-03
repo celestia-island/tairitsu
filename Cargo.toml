@@ -40,14 +40,18 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
+# 0.5.25: first release carrying the typed `change` delivery (the host
+# discriminates change from input by each listener's registered type, so
+# `ChangeEvent` handlers fire — previously they compiled but never ran).
 # 0.5.24: the pointer-work release, and the first version whose *whole family*
 # ships together. 0.5.23 reached crates.io only as `tairitsu` + `tairitsu-macros`
 # (the lane that publishes the other eight crates was dead from #85 until its
 # OIDC probe was removed), so `tairitsu-web` / `-vdom` / `-style` / `-hooks` 0.5.23
 # never existed — consumers must pin ^0.5.24, not ^0.5.23. crates.io versions are
 # immutable, so the drift needs this bump before the next publish; consumers on
-# ^0.5 pick it up semver-compatibly.
-version = "0.5.24"
+# ^0.5 pick it up semver-compatibly. Lockstep note: 0.5.25 needs NO glue publish
+# (the change fix is host-side only; glue 0.5.3 stays current).
+version = "0.5.25"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 rust-version = "1.91"
