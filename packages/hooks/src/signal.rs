@@ -53,6 +53,19 @@ impl<T: Clone + 'static> ReactiveSignal<T> {
         &self.signal
     }
 
+    /// The component this signal re-renders when set.
+    ///
+    /// `use_signal` binds the signal to whichever component was active when it
+    /// was created (`with_component`), or to a fresh empty component when none
+    /// was. A consumer that creates signals outside a component — the usual
+    /// pattern for app-level state passed down as props — needs this to check
+    /// that the binding landed on the component whose render function it
+    /// registered. A mismatch makes `set` mark a component nobody renders and
+    /// the update disappears with no error.
+    pub fn component_id(&self) -> runtime::ComponentId {
+        self.component_id
+    }
+
     /// Dioxus compatibility alias for get()
     pub fn read(&self) -> T {
         self.get()

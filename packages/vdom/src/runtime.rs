@@ -74,6 +74,9 @@ struct RuntimeInner {
     schedule_callback: Option<ScheduleCallback>,
     apply_patches_callback: Option<ApplyPatchesCallback>,
     scheduled: bool,
+    /// When the currently booked flush was requested, used to detect a booking
+    /// the host never honours (see `frame_is_overdue`).
+    scheduled_at: Option<std::time::Instant>,
     raf_id: Option<u32>,
     effect_handles: HashMap<ComponentId, Vec<EffectHandle>>,
     element_to_component: HashMap<u64, ComponentId>,
@@ -91,6 +94,7 @@ impl RuntimeInner {
             schedule_callback: None,
             apply_patches_callback: None,
             scheduled: false,
+            scheduled_at: None,
             raf_id: None,
             effect_handles: HashMap::new(),
             element_to_component: HashMap::new(),
@@ -180,6 +184,11 @@ pub fn mark_dirty_deferred(id: ComponentId) {
 }
 
 /// Mark a component as dirty and schedule a re-render.
+///
+/// Booking is *idempotent per flush*: a pending flush covers every mark that
+/// happens before it runs, so repeated calls inside one handler do not stack.
+/// What this must not do is assume the booked flush will arrive — see
+/// [`frame_is_overdue`].
 pub fn mark_dirty(id: ComponentId) {
     // The schedule callback is invoked *outside* the RUNTIME borrow: a host
     // implementation is allowed to run the render synchronously (and the
@@ -199,6 +208,7 @@ pub fn mark_dirty(id: ComponentId) {
         }
 
         rt.scheduled = true;
+        rt.scheduled_at = Some(std::time::Instant::now());
 
         match &rt.schedule_callback {
             Some(cb) => SchedulePolicy::Deferred(Rc::clone(cb)),
@@ -210,7 +220,23 @@ pub fn mark_dirty(id: ComponentId) {
     });
 
     match policy {
-        SchedulePolicy::AlreadyScheduled => {}
+        // A frame is already booked and the dirty component is queued for it.
+        //
+        // Flushing unconditionally here would defeat frame batching (every
+        // write inside one handler would render on its own), so the fallback
+        // is time-boxed. The deadline is deliberately short: a frame normally
+        // lands within ~16 ms, so anything past a couple of UI ticks is far
+        // more likely to be a booking the host will never honour (background
+        // tab throttling, a swallowed animation callback id, a scheduler
+        // replaced mid-flight) than a slow frame. `scheduled` is reset only
+        // inside `flush_render`, so without this the first lost frame freezes
+        // every later update with no error.
+        SchedulePolicy::AlreadyScheduled => {
+            if frame_is_overdue() {
+                trace!("Scheduled flush overdue; running pending work directly");
+                flush_render();
+            }
+        }
         SchedulePolicy::Deferred(schedule_cb) => {
             let render_fn = Box::new(|| {
                 flush_render();
@@ -230,6 +256,25 @@ enum SchedulePolicy {
     Deferred(ScheduleCallback),
     /// No scheduler registered: render synchronously now.
     Immediate,
+}
+
+/// How long a booked flush may stay pending before it is treated as lost.
+///
+/// One frame is ~16 ms, so a couple of ticks is already generous: a booking
+/// that old is far more likely one the host will never honour than a slow
+/// frame. Waiting longer only delays recovery — the failure mode this guards
+/// against is a permanently frozen UI, and an early reclaim costs nothing but
+/// an extra render.
+const FRAME_DEADLINE: std::time::Duration = std::time::Duration::from_millis(32);
+
+/// Whether the booked frame has been pending past [`FRAME_DEADLINE`].
+fn frame_is_overdue() -> bool {
+    RUNTIME.with(|runtime| {
+        let rt = runtime.borrow();
+        rt.scheduled_at
+            .map(|at| at.elapsed() >= FRAME_DEADLINE)
+            .unwrap_or(true)
+    })
 }
 
 /// Set the active component for dependency tracking.
@@ -257,15 +302,21 @@ pub fn track_signal(signal_id: SignalId) {
     RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
         if let Some(component_id) = rt.active_component {
-            rt.signal_dependencies
-                .entry(signal_id)
-                .or_insert_with(Vec::new)
-                .push(component_id);
-            trace!(
-                "Component {} now depends on signal {:?}",
-                component_id,
-                signal_id
-            );
+            let deps = rt.signal_dependencies.entry(signal_id).or_default();
+            // Rendering re-reads every signal it depends on, so this runs once
+            // per dependency per render. Pushing unconditionally grows the list
+            // without bound, and since `notify_signal` walks it, a signal with
+            // N historical reads notifies its component N times per write —
+            // an O(renders) fan-out that turns a single update into a storm of
+            // redundant re-renders.
+            if !deps.contains(&component_id) {
+                deps.push(component_id);
+                trace!(
+                    "Component {} now depends on signal {:?}",
+                    component_id,
+                    signal_id
+                );
+            }
         }
     });
 }
@@ -298,24 +349,37 @@ pub fn unregister_signal(signal_id: SignalId) {
 
 /// Flush pending renders and apply patches.
 pub fn flush_render() {
-    RUNTIME.with(|runtime| {
-        let mut rt = runtime.borrow_mut();
-        let dirty = std::mem::take(&mut rt.dirty_components);
-        rt.scheduled = false;
-        rt.raf_id = None;
+    // Render until the queue drains. Rendering can dirty components again
+    // (a render function that reads a signal inside an effect, an apply-patches
+    // callback that touches state), and those marks land mid-flush. If they are
+    // left in `dirty_components` with `scheduled` already cleared, nothing
+    // re-books a frame for them and the UI stalls until some unrelated write
+    // happens to schedule one — the "update lands one click late" symptom.
+    //
+    // The loop is bounded: each pass takes the queue, so it only repeats when a
+    // render genuinely marked something during this flush.
+    loop {
+        let dirty = RUNTIME.with(|runtime| {
+            let mut rt = runtime.borrow_mut();
+            let dirty = std::mem::take(&mut rt.dirty_components);
+            rt.scheduled = false;
+            rt.scheduled_at = None;
+            rt.raf_id = None;
+            dirty
+        });
 
-        drop(rt);
-
-        if !dirty.is_empty() {
-            trace!("Flushing {} dirty components", dirty.len());
-
-            for component_id in dirty {
-                render_component(component_id);
-            }
+        if dirty.is_empty() {
+            return;
         }
-    });
+
+        trace!("Flushing {} dirty components", dirty.len());
+        for component_id in dirty {
+            render_component(component_id);
+        }
+    }
 }
 
+// -- 临时诊断计数（定位「帧跑了但渲染没跑」用，验证完删除） --------------
 /// Render a single component and apply patches.
 ///
 /// Carefully structured to avoid holding `borrow_mut()` across user code
@@ -411,15 +475,18 @@ pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
 pub fn subscribe_component(signal_id: SignalId, component_id: ComponentId) {
     RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
-        rt.signal_dependencies
-            .entry(signal_id)
-            .or_insert_with(Vec::new)
-            .push(component_id);
-        trace!(
-            "Component {} subscribed to signal {:?}",
-            component_id,
-            signal_id
-        );
+        let deps = rt.signal_dependencies.entry(signal_id).or_default();
+        // Same duplicate-guard as `track_signal`: an explicit subscribe on a
+        // signal the component also reads while rendering would otherwise be
+        // counted twice, and every write would re-render it twice.
+        if !deps.contains(&component_id) {
+            deps.push(component_id);
+            trace!(
+                "Component {} subscribed to signal {:?}",
+                component_id,
+                signal_id
+            );
+        }
     });
 }
 
@@ -616,6 +683,76 @@ mod tests {
             let rt = runtime.borrow();
             assert!(rt.dirty_components.is_empty(), "render should have run");
             assert!(!rt.scheduled, "scheduled flag must be cleared");
+        });
+    }
+
+    #[test]
+    fn test_mark_dirty_does_not_stall_after_a_lost_frame() {
+        // A host that schedules but never delivers the frame (background-tab
+        // rAF throttling, a dropped callback id, a scheduler swapped
+        // mid-flight) must not freeze the UI. `scheduled` is only reset inside
+        // `flush_render`, so before the overdue-frame fallback every later
+        // update was silently dropped.
+        let scheduled = Rc::new(RefCell::new(0));
+        let scheduled_clone = Rc::clone(&scheduled);
+        set_schedule_callback(move |_callback| {
+            // Book the frame and drop it: never runs the render.
+            *scheduled_clone.borrow_mut() += 1;
+        });
+
+        let renders = Rc::new(RefCell::new(0));
+        let renders_clone = Rc::clone(&renders);
+        let id = use_component(move || {
+            *renders_clone.borrow_mut() += 1;
+            VNode::Text(crate::vnode::VText::new("test"))
+        });
+
+        // First update books a frame; the host drops it, so nothing renders.
+        mark_dirty(id);
+        assert_eq!(*scheduled.borrow(), 1, "first update books a frame");
+        assert_eq!(*renders.borrow(), 0, "a dropped frame renders nothing");
+
+        // A second update while the frame is still fresh is batched into it,
+        // not rendered early.
+        mark_dirty(id);
+        assert_eq!(*renders.borrow(), 0, "a fresh frame still batches");
+
+        // Age the booking past the deadline to model a frame that never came.
+        RUNTIME.with(|runtime| {
+            let mut rt = runtime.borrow_mut();
+            rt.scheduled_at = Some(
+                std::time::Instant::now() - FRAME_DEADLINE - std::time::Duration::from_millis(1),
+            );
+        });
+
+        mark_dirty(id);
+        assert_eq!(
+            *renders.borrow(),
+            1,
+            "an overdue frame must not swallow the update"
+        );
+
+        // That flush cleared the flag, so scheduling resumes normally.
+        mark_dirty(id);
+        assert_eq!(*scheduled.borrow(), 2, "scheduling resumes after recovery");
+    }
+
+    #[test]
+    fn test_track_signal_deduplicates_components() {
+        // Rendering re-reads dependencies every time; without the guard the
+        // dependency list grows per render and one write fans out into N
+        // re-renders.
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+
+        with_component(id, || {
+            for _ in 0..5 {
+                track_signal(4242);
+            }
+        });
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert_eq!(rt.signal_dependencies.get(&4242), Some(&vec![id]));
         });
     }
 
