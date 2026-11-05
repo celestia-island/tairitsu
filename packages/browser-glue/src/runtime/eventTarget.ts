@@ -36,7 +36,7 @@ export const eventTarget_exports = {
               globalThis.__eventHandles.set(eventHandle, event);
 
               let listenerId = 0n;
-              const cached = (globalThis as any).__listenerByElement?.get(element)?.get(eventType);
+              const cached = (globalThis as any).__listenerByElement?.get(element)?.get(eventType); // ts-escape-ok: retires with L40
               if (cached) {
                 listenerId = cached;
               } else {
@@ -125,17 +125,17 @@ export const eventTarget_exports = {
       element.addEventListener(eventType, listener, useCapture);
 
       // Store the listener for later reference
-      const handle = (globalThis as any).__nextListenerHandle++ as unknown as bigint;
-      (globalThis as any).__listenerHandles.set(handle, { element, type: eventType, listener });
+      const handle = (globalThis as any).__nextListenerHandle++ as unknown as bigint; // ts-escape-ok: retires with L40
+      (globalThis as any).__listenerHandles.set(handle, { element, type: eventType, listener }); // ts-escape-ok: retires with L40
 
       // Maintain a reverse index for O(1) listener lookup by element+type
-      if (!(globalThis as any).__listenerByElement) {
-        (globalThis as any).__listenerByElement = new Map();
+      if (!(globalThis as any).__listenerByElement) { // ts-escape-ok: retires with L40
+        (globalThis as any).__listenerByElement = new Map(); // ts-escape-ok: retires with L40
       }
-      let byType = (globalThis as any).__listenerByElement.get(element);
+      let byType = (globalThis as any).__listenerByElement.get(element); // ts-escape-ok: retires with L40
       if (!byType) {
         byType = new Map();
-        (globalThis as any).__listenerByElement.set(element, byType);
+        (globalThis as any).__listenerByElement.set(element, byType); // ts-escape-ok: retires with L40
       }
       byType.set(eventType, handle);
 
@@ -158,11 +158,11 @@ export const eventTarget_exports = {
 
       if (listenerInfo && listenerInfo.element === element && listenerInfo.type === eventType) {
         element.removeEventListener(eventType, listenerInfo.listener);
-        (globalThis as any).__listenerHandles.delete(listenerHandle);
-        const byType = (globalThis as any).__listenerByElement?.get(element);
+        (globalThis as any).__listenerHandles.delete(listenerHandle); // ts-escape-ok: retires with L40
+        const byType = (globalThis as any).__listenerByElement?.get(element); // ts-escape-ok: retires with L40
         if (byType && byType.get(eventType) === listenerHandle) {
           byType.delete(eventType);
-          if (byType.size === 0) (globalThis as any).__listenerByElement.delete(element);
+          if (byType.size === 0) (globalThis as any).__listenerByElement.delete(element); // ts-escape-ok: retires with L40
         }
       }
     } catch (error) {

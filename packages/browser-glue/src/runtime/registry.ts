@@ -44,7 +44,7 @@ export const INTERFACES = {
   "@tairitsu-glue/event": event_exports,
 };
 
-export function generateModuleCode(exports: Record<string, (...args: any[]) => any>) {
+export function generateModuleCode(exports: Record<string, (...args: any[]) => any>) { // ts-escape-ok: retires with L40
   const lines = [];
 
   // Include helper functions needed by exports.

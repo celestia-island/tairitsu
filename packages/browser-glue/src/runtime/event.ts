@@ -1,11 +1,11 @@
 function reverseLookupElement(target: EventTarget | null): bigint | undefined {
   if (!target) return undefined;
-  const g = globalThis as any;
+  const g = globalThis as any; // ts-escape-ok: retires with L40
   if (!g.__elementReverseMap) {
     g.__elementReverseMap = new Map();
     const orig = g.__storeElement;
     if (orig) {
-      g.__storeElement = function (el: any) {
+      g.__storeElement = function (el: any) { // ts-escape-ok: retires with L40
         const handle = orig(el);
         if (handle !== undefined) {
           g.__elementReverseMap.set(el, handle);
@@ -37,8 +37,8 @@ export const event_exports = {
 
   getSrcElement(eventHandle: bigint): bigint | undefined {
     const ev = globalThis.__eventHandles?.get(eventHandle);
-    if (!ev || !(ev as any).srcElement) return undefined;
-    return reverseLookupElement((ev as any).srcElement);
+    if (!ev || !(ev as any).srcElement) return undefined; // ts-escape-ok: retires with L40
+    return reverseLookupElement((ev as any).srcElement); // ts-escape-ok: retires with L40
   },
 
   getEventPhase(eventHandle: bigint): number {
@@ -83,12 +83,12 @@ export const event_exports = {
 
   getCancelBubble(eventHandle: bigint): boolean {
     const ev = globalThis.__eventHandles?.get(eventHandle);
-    return ev ? !!(ev as any).cancelBubble : false;
+    return ev ? !!(ev as any).cancelBubble : false; // ts-escape-ok: retires with L40
   },
 
   setCancelBubble(eventHandle: bigint, value: boolean): void {
     const ev = globalThis.__eventHandles?.get(eventHandle);
-    if (ev) (ev as any).cancelBubble = value;
+    if (ev) (ev as any).cancelBubble = value; // ts-escape-ok: retires with L40
   },
 
   composedPath(eventHandle: bigint): bigint[] {

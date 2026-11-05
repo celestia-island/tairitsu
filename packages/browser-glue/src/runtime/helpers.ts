@@ -7,7 +7,7 @@ globalThis.__nextHandle = globalThis.__nextHandle || 1n;
 
 // Set globalThis helper functions (for use in generated blob URL modules)
 // IMPORTANT: Always access globalThis directly, never cache in local variables
-globalThis.__storeElement = function (el: any) {
+globalThis.__storeElement = function (el: any) { // ts-escape-ok: retires with L40
   if (!el) return undefined;
   const handle = globalThis.__nextHandle++;
   globalThis.__elementHandles.set(handle, el);
@@ -45,7 +45,7 @@ globalThis.__lookupNode = function (handle: bigint) {
 };
 
 // Local function exports for use within runtime modules
-export function storeElement(el: any) {
+export function storeElement(el: any) { // ts-escape-ok: retires with L40
   if (!el) return undefined;
   const handle = globalThis.__nextHandle++;
   globalThis.__elementHandles.set(handle, el);

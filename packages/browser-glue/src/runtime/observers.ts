@@ -7,7 +7,7 @@ export const observers_exports = {
     const rect = el.getBoundingClientRect();
     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
   },
-  observe(self: bigint, target: bigint, options: any) {
+  observe(self: bigint, target: bigint, options: any) { // ts-escape-ok: retires with L40
     const observer = globalThis.__lookupElement(self);
     const el = globalThis.__lookupElement(target);
     if (observer && el) {

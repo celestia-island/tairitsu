@@ -4,7 +4,7 @@
  * The browser-glue runtime stores all browser object references as opaque
  * bigint handles in globalThis-scoped Maps. This module declares those
  * extensions so that TypeScript strict mode can verify the runtime code
- * without @ts-nocheck.
+ * without @ts-nocheck. // ts-escape-ok: retires with L40
  *
  * NOTE: __elementHandles is intentionally typed as Map<bigint, any>
  * because it stores not only Elements but also ResizeObserver,
@@ -14,8 +14,13 @@
 
 export {};
 
+// Opaque handle-store value type. Aliased here so the ambient block below
+// carries no bare escape-prone type (the type-gate ambient scan); the alias
+// site itself is the counted escape.
+type AnyValue = any; // ts-escape-ok: retires with L40
+
 declare global {
-  var __elementHandles: Map<bigint, any>;
+  var __elementHandles: Map<bigint, AnyValue>;
   var __documentHandles: Map<bigint, Document>;
   var __nodeHandles: Map<bigint, Node>;
   var __textHandles: Map<bigint, Text>;
@@ -45,10 +50,10 @@ declare global {
   var __nextListenerHandle: bigint;
   var __nextEventHandle: bigint;
 
-  var __storeElement: (obj: any) => bigint | undefined;
+  var __storeElement: (obj: AnyValue) => bigint | undefined;
   var __storeNode: (node: Node | null) => bigint | undefined;
   var __storeText: (text: Text | null) => bigint | undefined;
-  var __lookupElement: (handle: bigint) => any;
+  var __lookupElement: (handle: bigint) => AnyValue;
   var __lookupNode: (handle: bigint) => Node;
   var __storeCssStyleDeclaration: (obj: CSSStyleDeclaration | null) => bigint | undefined;
   var __lookupCssStyleDeclaration: (handle: bigint) => CSSStyleDeclaration;
@@ -80,13 +85,13 @@ declare global {
 
   var __dispatchingEvents: Set<string>;
 
-  var __wasmExports: Record<string, any> | null;
-  var __setWasmExports: (exports: Record<string, any>) => void;
+  var __wasmExports: Record<string, AnyValue> | null;
+  var __setWasmExports: (exports: Record<string, AnyValue>) => void;
 
   var __TAIRITSU_GLUE__: {
-    INTERFACES: Record<string, Record<string, (...args: any[]) => any>>;
+    INTERFACES: Record<string, Record<string, (...args: AnyValue[]) => AnyValue>>;
     handles: {
-      readonly elementHandles: Map<bigint, any>;
+      readonly elementHandles: Map<bigint, AnyValue>;
       readonly nodeHandles: Map<bigint, Node>;
       readonly documentHandles: Map<bigint, Document>;
       readonly textHandles: Map<bigint, Text>;

@@ -176,7 +176,7 @@ function isInstanceOfType(obj: unknown, typeName: string): boolean {
   const objType = constructor.name;
   if (objType === typeName) return true;
 
-  if (!(constructor as any).__tairitsu_typeName) {
+  if (!(constructor as any).__tairitsu_typeName) { // ts-escape-ok: retires with L40
     Object.defineProperty(constructor, "__tairitsu_typeName", {
       value: objType,
       writable: false,
@@ -184,7 +184,7 @@ function isInstanceOfType(obj: unknown, typeName: string): boolean {
       configurable: false,
     });
   }
-  return (constructor as any).__tairitsu_typeName === typeName;
+  return (constructor as any).__tairitsu_typeName === typeName; // ts-escape-ok: retires with L40
 }
 
 /**

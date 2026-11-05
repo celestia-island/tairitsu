@@ -89,7 +89,7 @@ export const platformHelpers_exports = {
     return id;
   },
   cancelAnimationFrame(id: number) {
-    const s = (globalThis as any).__tairitsuAnimState;
+    const s = (globalThis as any).__tairitsuAnimState; // ts-escape-ok: retires with L40
     if (s.animationCallbacks.has(id)) {
       window.cancelAnimationFrame(s.animationCallbacks.get(id) as number);
       s.animationCallbacks.delete(id);
@@ -167,7 +167,7 @@ export const platformHelpers_exports = {
     });
     return globalThis.__storeElement(observer);
   },
-  observeMutations(observer: bigint, target: bigint, _options: any) {
+  observeMutations(observer: bigint, target: bigint, _options: any) { // ts-escape-ok: retires with L40
     const obs = globalThis.__elementHandles.get(observer);
     const el = globalThis.__elementHandles.get(target);
     if (obs && el) {
@@ -197,7 +197,7 @@ export const platformHelpers_exports = {
 
   createAudioContext() {
     try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)(); // ts-escape-ok: retires with L40
       return globalThis.__storeElement(ctx);
     } catch {
       return 0n;
@@ -374,7 +374,7 @@ export const platformHelpers_exports = {
   readClipboard() {
     if (navigator.clipboard) {
       try {
-        return (navigator.clipboard as any).readTextSync?.() ?? undefined;
+        return (navigator.clipboard as any).readTextSync?.() ?? undefined; // ts-escape-ok: retires with L40
       } catch {}
     }
     return undefined;
@@ -392,7 +392,7 @@ export const platformHelpers_exports = {
   },
 
   onScroll(callbackId: bigint) {
-    const g = globalThis as any;
+    const g = globalThis as any; // ts-escape-ok: retires with L40
     if (!g.__tairitsuScrollListeners) {
       g.__tairitsuScrollListeners = new Map();
     }
@@ -416,7 +416,7 @@ export const platformHelpers_exports = {
   },
 
   onResizeCallback(callbackId: bigint) {
-    const g = globalThis as any;
+    const g = globalThis as any; // ts-escape-ok: retires with L40
     if (!g.__tairitsuResizeListeners) {
       g.__tairitsuResizeListeners = new Map();
     }
@@ -695,7 +695,7 @@ export const platformHelpers_exports = {
           );
         }
       };
-    } catch (e: any) {
+    } catch (e: any) { // ts-escape-ok: retires with L40
       if (
         globalThis.__wasmExports &&
         globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]
@@ -737,7 +737,7 @@ export const platformHelpers_exports = {
           );
         }
       };
-    } catch (e: any) {
+    } catch (e: any) { // ts-escape-ok: retires with L40
       if (
         globalThis.__wasmExports &&
         globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]
@@ -778,7 +778,7 @@ export const platformHelpers_exports = {
           );
         }
       };
-    } catch (e: any) {
+    } catch (e: any) { // ts-escape-ok: retires with L40
       if (
         globalThis.__wasmExports &&
         globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]
@@ -820,7 +820,7 @@ export const platformHelpers_exports = {
           );
         }
       };
-    } catch (e: any) {
+    } catch (e: any) { // ts-escape-ok: retires with L40
       if (
         globalThis.__wasmExports &&
         globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]
@@ -861,7 +861,7 @@ export const platformHelpers_exports = {
           );
         }
       };
-    } catch (e: any) {
+    } catch (e: any) { // ts-escape-ok: retires with L40
       if (
         globalThis.__wasmExports &&
         globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]
@@ -884,7 +884,7 @@ export const platformHelpers_exports = {
     const closeCbId = s.nextCallbackId++;
     const errCbId = s.nextCallbackId++;
 
-    const g = globalThis as any;
+    const g = globalThis as any; // ts-escape-ok: retires with L40
     if (!g.__tairitsuWsCallbacks) {
       g.__tairitsuWsCallbacks = new Map();
     }

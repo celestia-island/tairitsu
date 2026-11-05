@@ -38,10 +38,10 @@ export const history_exports = {
   forward() {
     window.history.forward();
   },
-  pushState(data: any, unused: string, url: string) {
+  pushState(data: any, unused: string, url: string) { // ts-escape-ok: retires with L40
     window.history.pushState(data, unused, url);
   },
-  replaceState(data: any, unused: string, url: string) {
+  replaceState(data: any, unused: string, url: string) { // ts-escape-ok: retires with L40
     window.history.replaceState(data, unused, url);
   },
 };
