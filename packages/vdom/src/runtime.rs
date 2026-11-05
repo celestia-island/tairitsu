@@ -74,9 +74,11 @@ struct RuntimeInner {
     schedule_callback: Option<ScheduleCallback>,
     apply_patches_callback: Option<ApplyPatchesCallback>,
     scheduled: bool,
-    /// When the currently booked flush was requested, used to detect a booking
-    /// the host never honours (see `frame_is_overdue`).
-    scheduled_at: Option<std::time::Instant>,
+    /// mark_dirty calls that arrived while a flush was booked but not yet
+    /// delivered. A booking the host never honours is detected by this count
+    /// growing past [`OVERDUE_MARKS`] — no wall clock involved (see the
+    /// comment on `booking_is_overdue` for why that matters).
+    booking_marks: u32,
     raf_id: Option<u32>,
     effect_handles: HashMap<ComponentId, Vec<EffectHandle>>,
     element_to_component: HashMap<u64, ComponentId>,
@@ -94,7 +96,7 @@ impl RuntimeInner {
             schedule_callback: None,
             apply_patches_callback: None,
             scheduled: false,
-            scheduled_at: None,
+            booking_marks: 0,
             raf_id: None,
             effect_handles: HashMap::new(),
             element_to_component: HashMap::new(),
@@ -204,11 +206,11 @@ pub fn mark_dirty(id: ComponentId) {
         }
 
         if rt.scheduled {
+            rt.booking_marks = rt.booking_marks.saturating_add(1);
             return SchedulePolicy::AlreadyScheduled;
         }
 
         rt.scheduled = true;
-        rt.scheduled_at = Some(std::time::Instant::now());
 
         match &rt.schedule_callback {
             Some(cb) => SchedulePolicy::Deferred(Rc::clone(cb)),
@@ -232,7 +234,8 @@ pub fn mark_dirty(id: ComponentId) {
         // inside `flush_render`, so without this the first lost frame freezes
         // every later update with no error.
         SchedulePolicy::AlreadyScheduled => {
-            if frame_is_overdue() {
+            // Counted inside the borrow above (see booking_is_overdue).
+            if booking_is_overdue() {
                 trace!("Scheduled flush overdue; running pending work directly");
                 flush_render();
             }
@@ -282,23 +285,23 @@ enum SchedulePolicy {
     Immediate,
 }
 
-/// How long a booked flush may stay pending before it is treated as lost.
+/// How many additional `mark_dirty` calls a booked-but-undelivered flush may
+/// absorb before it is treated as lost.
 ///
-/// One frame is ~16 ms, so a couple of ticks is already generous: a booking
-/// that old is far more likely one the host will never honour than a slow
-/// frame. Waiting longer only delays recovery — the failure mode this guards
-/// against is a permanently frozen UI, and an early reclaim costs nothing but
-/// an extra render.
-const FRAME_DEADLINE: std::time::Duration = std::time::Duration::from_millis(32);
+/// The original design used `Instant::now()` on the runtime hot path. On
+/// wasm32-wasip2 under jco, `Instant::now` lowers to a wasi:clocks sync
+/// interface call, and from inside a promise-callback implicit thread such a
+/// call can trap silently — killing `mark_dirty` halfway with `scheduled`
+/// already set, so no frame is ever booked and the UI freezes with no error
+/// (verified against a real embedder). A mark counter is pure memory: no host
+/// call, same recovery guarantee — a genuinely delivered frame resets it, a
+/// lost one trips it after a bounded number of further updates.
+const OVERDUE_MARKS: u32 = 8;
 
-/// Whether the booked frame has been pending past [`FRAME_DEADLINE`].
-fn frame_is_overdue() -> bool {
-    RUNTIME.with(|runtime| {
-        let rt = runtime.borrow();
-        rt.scheduled_at
-            .map(|at| at.elapsed() >= FRAME_DEADLINE)
-            .unwrap_or(true)
-    })
+/// Whether the booked flush has absorbed too many further marks to still be
+/// considered pending delivery.
+fn booking_is_overdue() -> bool {
+    RUNTIME.with(|runtime| runtime.borrow().booking_marks >= OVERDUE_MARKS)
 }
 
 /// Set the active component for dependency tracking.
@@ -372,14 +375,24 @@ pub fn unregister_signal(signal_id: SignalId) {
 }
 
 /// Flush pending renders and apply patches.
+/// flush_render calls that deferred to an in-flight drain.
+pub static DEBUG_DEFERRED_FLUSHES: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
+/// Total `flush_render` entries that started a drain. Embedder diagnostics
+/// poll this to tell "flush never scheduled" from "flush stuck mid-drain".
+pub static DEBUG_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 pub fn flush_render() {
     // A drain already in progress on this stack will pick up whatever this
     // call would render: its loop re-reads the dirty queue after every pass.
     // Running a nested drain instead would re-enter `render_component` under
     // the outer apply-patches borrow and panic.
     if FLUSHING.with(|f| f.replace(true)) {
+        DEBUG_DEFERRED_FLUSHES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         return;
     }
+    DEBUG_FLUSHES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let _guard = FlushGuard;
 
     // Render until the queue drains. Rendering can dirty components again
@@ -396,7 +409,7 @@ pub fn flush_render() {
             let mut rt = runtime.borrow_mut();
             let dirty = std::mem::take(&mut rt.dirty_components);
             rt.scheduled = false;
-            rt.scheduled_at = None;
+            rt.booking_marks = 0;
             rt.raf_id = None;
             dirty
         });
@@ -516,6 +529,16 @@ pub fn debug_state() -> (bool, bool, usize, usize) {
     let components = RUNTIME.with(|runtime| runtime.borrow().render_functions.len());
     let flushing = FLUSHING.with(|f| f.get());
     (scheduled, flushing, dirty, components)
+}
+
+/// Flush accounting for embedder diagnostics:
+/// `(drains started, drains deferred to an in-flight drain)`.
+pub fn debug_flush_counts() -> (u64, u64) {
+    use std::sync::atomic::Ordering::Relaxed;
+    (
+        DEBUG_FLUSHES.load(Relaxed),
+        DEBUG_DEFERRED_FLUSHES.load(Relaxed),
+    )
 }
 
 /// Subscribe a component to a signal's changes.
@@ -764,12 +787,10 @@ mod tests {
         mark_dirty(id);
         assert_eq!(*renders.borrow(), 0, "a fresh frame still batches");
 
-        // Age the booking past the deadline to model a frame that never came.
+        // Age the booking past the mark threshold to model a frame that
+        // never came.
         RUNTIME.with(|runtime| {
-            let mut rt = runtime.borrow_mut();
-            rt.scheduled_at = Some(
-                std::time::Instant::now() - FRAME_DEADLINE - std::time::Duration::from_millis(1),
-            );
+            runtime.borrow_mut().booking_marks = OVERDUE_MARKS;
         });
 
         mark_dirty(id);
