@@ -248,6 +248,30 @@ pub fn mark_dirty(id: ComponentId) {
     }
 }
 
+thread_local! {
+    /// Whether a `flush_render` drain is currently on this call stack.
+    ///
+    /// Rendering and applying patches run arbitrary guest code — signal
+    /// subscribers, effects, apply-patches callbacks — and any of it may call
+    /// `mark_dirty` again, whose fallbacks can reach `flush_render`
+    /// synchronously (the no-scheduler `Immediate` path, the overdue-frame
+    /// reclaim). A nested drain would re-enter `render_component` while the
+    /// outer apply-patches callback is still borrowed and panic with
+    /// "RefCell already borrowed". It is also pointless: the outer drain loop
+    /// re-reads the dirty queue after every pass, so anything the nested call
+    /// would render is picked up as the next pass anyway.
+    static FLUSHING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// RAII companion to [`FLUSHING`] so a panicking render still releases the flag.
+struct FlushGuard;
+
+impl Drop for FlushGuard {
+    fn drop(&mut self) {
+        FLUSHING.with(|f| f.set(false));
+    }
+}
+
 /// How [`mark_dirty`] decided to run the pending render.
 enum SchedulePolicy {
     /// A frame is already scheduled; the render is covered by it.
@@ -349,6 +373,15 @@ pub fn unregister_signal(signal_id: SignalId) {
 
 /// Flush pending renders and apply patches.
 pub fn flush_render() {
+    // A drain already in progress on this stack will pick up whatever this
+    // call would render: its loop re-reads the dirty queue after every pass.
+    // Running a nested drain instead would re-enter `render_component` under
+    // the outer apply-patches borrow and panic.
+    if FLUSHING.with(|f| f.replace(true)) {
+        return;
+    }
+    let _guard = FlushGuard;
+
     // Render until the queue drains. Rendering can dirty components again
     // (a render function that reads a signal inside an effect, an apply-patches
     // callback that touches state), and those marks land mid-flush. If they are
@@ -469,6 +502,20 @@ pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
     RUNTIME.with(|runtime| {
         runtime.borrow_mut().component_vnodes.insert(id, vnode);
     });
+}
+
+/// Introspection for embedder diagnostics: `(scheduled, flushing, dirty, components)`.
+///
+/// "UI froze with no error" investigations start here: `scheduled` stuck true
+/// means a booked frame never came back; `flushing` stuck true means a drain
+/// never unwound; both false with `dirty > 0` means nothing will ever pick the
+/// queue up again.
+pub fn debug_state() -> (bool, bool, usize, usize) {
+    let scheduled = RUNTIME.with(|runtime| runtime.borrow().scheduled);
+    let dirty = RUNTIME.with(|runtime| runtime.borrow().dirty_components.len());
+    let components = RUNTIME.with(|runtime| runtime.borrow().render_functions.len());
+    let flushing = FLUSHING.with(|f| f.get());
+    (scheduled, flushing, dirty, components)
 }
 
 /// Subscribe a component to a signal's changes.
@@ -754,6 +801,37 @@ mod tests {
             let rt = runtime.borrow();
             assert_eq!(rt.signal_dependencies.get(&4242), Some(&vec![id]));
         });
+    }
+
+    #[test]
+    fn test_reentrant_flush_defers_to_active_drain() {
+        // Guest code runs inside apply-patches callbacks, and it may reach
+        // flush_render again (a signal write, an overdue-frame reclaim, a host
+        // that schedules synchronously). A nested drain re-enters
+        // render_component under the outer apply callback's RefCell borrow and
+        // panics with "RefCell already borrowed"; the nested call must defer
+        // to the active drain instead.
+        set_schedule_callback(|callback| callback()); // flush synchronously
+
+        let applied = Rc::new(RefCell::new(0));
+        let applied_clone = Rc::clone(&applied);
+        set_apply_patches_callback(move |_id, _patches| {
+            *applied_clone.borrow_mut() += 1;
+            // The re-entrant flush: previously panicked at the callback borrow.
+            flush_render();
+        });
+
+        let renders = Rc::new(RefCell::new(0));
+        let renders_clone = Rc::clone(&renders);
+        let id = use_component(move || {
+            *renders_clone.borrow_mut() += 1;
+            VNode::Text(crate::vnode::VText::new("b"))
+        });
+        store_initial_vnode(id, VNode::Text(crate::vnode::VText::new("a")));
+
+        mark_dirty(id);
+        assert_eq!(*renders.borrow(), 1, "outer drain renders once");
+        assert!(FLUSHING.with(|f| !f.get()), "flag released after drain");
     }
 
     #[test]
