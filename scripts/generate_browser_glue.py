@@ -42,6 +42,7 @@ def run_generate(
     *,
     dry_run: bool = False,
     stats: bool = False,
+    project_root: Optional[Path] = None,
 ) -> None:
     """Parse WIT files and generate TypeScript glue code."""
 
@@ -96,7 +97,12 @@ def run_generate(
 
     for gen_domain in generated_domains:
         wit_path = wit_dir / f"{gen_domain.name}.wit"
-        content = code_gen.render_module(gen_domain, str(wit_path))
+        try:
+            header_source = wit_path.relative_to(project_root).as_posix()
+        except (TypeError, ValueError):
+            # Fallback: the WIT dir sits outside the repo (custom --wit-dir).
+            header_source = wit_path.as_posix()
+        content = code_gen.render_module(gen_domain, header_source)
         dest = output_dir / f"{gen_domain.export_name}.ts"
 
         if dry_run:
@@ -180,6 +186,7 @@ def main() -> None:
         domains=args.domains,
         dry_run=args.dry_run,
         stats=args.stats,
+        project_root=project_root,
     )
 
 
