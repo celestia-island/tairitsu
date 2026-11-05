@@ -42,7 +42,7 @@ pub fn run_app() -> Result<()> {
     {
         let platform = WitPlatform::new()?;
         let vnode = render_desktop();
-        platform.mount_vnode_to_app(vnode)?;
+        let _ = platform.mount_vnode_to_app(vnode)?;
     }
     Ok(())
 }

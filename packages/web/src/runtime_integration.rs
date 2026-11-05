@@ -125,8 +125,8 @@ impl ComponentRenderer {
         init_runtime(root);
     }
 
-    /// Mount a VNode to the root element.
-    pub fn mount(&self, vnode: tairitsu_vdom::VNode) -> Result<()> {
+    /// Mount a VNode to the root element, returning the rendered root.
+    pub fn mount(&self, vnode: tairitsu_vdom::VNode) -> Result<crate::WitElement> {
         #[cfg(target_family = "wasm")]
         {
             if let Ok(platform) = crate::WitPlatform::new() {

@@ -145,7 +145,7 @@ impl WitPlatform {
     ///
     /// This replaces the bootstrap text set by `lifecycle.start` and mounts
     /// the actual app view tree so users can see real UI content.
-    pub fn mount_vnode_to_app(&self, _vnode: tairitsu_vdom::VNode) -> Result<()> {
+    pub fn mount_vnode_to_app(&self, _vnode: tairitsu_vdom::VNode) -> Result<WitElement> {
         #[cfg(not(target_family = "wasm"))]
         anyhow::bail!("mount_vnode_to_app is only available on wasm32 targets (wasm32-wasip2)");
 
@@ -2423,7 +2423,7 @@ pub mod wasm_impl {
         }
     }
 
-    pub(super) fn mount_vnode_to_app(platform: &WitPlatform, vnode: VNode) -> Result<()> {
+    pub(super) fn mount_vnode_to_app(platform: &WitPlatform, vnode: VNode) -> Result<WitElement> {
         let doc_handle: u64 = 0;
 
         let app = if let Some(handle) =
@@ -2442,7 +2442,16 @@ pub mod wasm_impl {
 
         bindings::tairitsu_browser::full::node::set_text_content(app.as_raw(), Some(""));
 
-        render_vnode(platform, &vnode, &app)
+        render_vnode(platform, &vnode, &app)?;
+
+        // The diff patches produced later are relative to the component vnode
+        // root (this element), not the mount parent. Return it so callers can
+        // wire init_runtime/apply_patches against the same element — passing
+        // the mount parent here resolves top-level patch indexes one level too
+        // high, and every non-first update is silently dropped.
+        let children = bindings::tairitsu_browser::full::node::get_child_nodes(app.as_raw());
+        let first = bindings::tairitsu_browser::full::node_list::item(children, 0);
+        Ok(first.map(WitElement::from_raw).unwrap_or(app))
     }
 
     fn render_vnode(platform: &WitPlatform, vnode: &VNode, parent: &WitElement) -> Result<()> {
@@ -2648,7 +2657,9 @@ pub mod wasm_impl {
             }
 
             Patch::InsertChild { index, node } => {
+                eprintln!("[tairitsu] InsertChild idx={}", index);
                 insert_child_at(platform, element, *index, node)?;
+                eprintln!("[tairitsu] InsertChild done");
             }
 
             Patch::RemoveChild { index } => {
@@ -2659,8 +2670,14 @@ pub mod wasm_impl {
                 index,
                 patches: child_patches,
             } => {
+                eprintln!(
+                    "[tairitsu] UpdateChild idx={} np={}",
+                    index,
+                    child_patches.len()
+                );
                 // Get the child at the specified index
                 let child = get_child_at(element, *index)?;
+                eprintln!("[tairitsu] UpdateChild resolved={}", child.is_some());
                 if let Some(child_element) = child {
                     // Apply the nested patches to the child
                     for child_patch in child_patches {
