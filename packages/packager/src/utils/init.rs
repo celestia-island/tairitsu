@@ -101,7 +101,7 @@ fn txt(text: &str) -> Vec<VNode> {
 pub extern "C" fn bootstrap() {
     let platform = WitPlatform::new().expect("Failed to create WitPlatform");
     let app = App::builder().build();
-    platform.mount_vnode_to_app(app).expect("Failed to mount");
+    let _root = platform.mount_vnode_to_app(app).expect("Failed to mount");
 }
 "#;
     std::fs::write(format!("{}/src/lib.rs", name), lib_rs)?;

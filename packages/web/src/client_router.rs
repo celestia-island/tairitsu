@@ -81,6 +81,8 @@ fn do_render(inner: &RouterServiceInner, path: &str) {
     if let Err(e) = inner.platform.mount_vnode_to_app(vnode) {
         tracing::error!("Failed to mount route '{}': {}", path, e);
     }
+    // Route remounts replace the subtree wholesale; the returned root is
+    // intentionally unused here.
 }
 
 fn schedule_poll() {

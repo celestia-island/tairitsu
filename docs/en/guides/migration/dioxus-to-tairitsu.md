@@ -450,7 +450,12 @@ pub extern "C" fn tairitsu_component_bootstrap() {
     let platform = tairitsu_web::WitPlatform::new().expect("Failed to create platform");
     let app = App::new();
     let vnode = app.render();
-    platform.mount_vnode_to_app(&vnode).expect("Failed to mount");
+    // mount returns the rendered vnode root element. diff patches are
+    // relative to this element — pass the SAME root to init_runtime,
+    // otherwise top-level patch indexes resolve against the mount parent
+    // and every non-first update is silently dropped.
+    let root = platform.mount_vnode_to_app(vnode).expect("Failed to mount");
+    tairitsu_web::init_runtime(root);
 }
 
 struct App {

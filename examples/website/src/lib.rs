@@ -10,13 +10,12 @@ mod theme;
 use anyhow::Result;
 
 pub use app::App;
-use tracing::{error, info};
 #[cfg(target_family = "wasm")]
-use tairitsu_web::WitPlatform;
-#[cfg(target_family = "wasm")]
-use tairitsu_web::wit_platform::wasm_impl::bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id;
 #[cfg(target_family = "wasm")]
 use tairitsu_web::wit_platform::WitElement;
+#[cfg(target_family = "wasm")]
+use tairitsu_web::WitPlatform;
+use tracing::{error, info};
 
 pub fn run_app() -> Result<()> {
     info!("Tairitsu Website starting...");
@@ -25,10 +24,11 @@ pub fn run_app() -> Result<()> {
     {
         let platform = WitPlatform::new()?;
         let vnode = App.render();
-        platform.mount_vnode_to_app(vnode.clone())?;
-
-        let root_handle = get_element_by_id(0, "app").expect("#app element not found");
-        let root_element = WitElement::from_raw(root_handle);
+        // mount returns the rendered vnode root element; diff patches are
+        // relative to this element, so init_runtime/apply_patches must use
+        // the same root (using the mount parent resolves top-level patch
+        // indexes one level too high and silently drops updates).
+        let root_element = platform.mount_vnode_to_app(vnode.clone())?;
         tairitsu_web::init_runtime(root_element);
 
         let component_id = tairitsu_vdom::use_component(|| App.render());
