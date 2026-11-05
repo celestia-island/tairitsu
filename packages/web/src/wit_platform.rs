@@ -2657,9 +2657,7 @@ pub mod wasm_impl {
             }
 
             Patch::InsertChild { index, node } => {
-                eprintln!("[tairitsu] InsertChild idx={}", index);
                 insert_child_at(platform, element, *index, node)?;
-                eprintln!("[tairitsu] InsertChild done");
             }
 
             Patch::RemoveChild { index } => {
@@ -2670,14 +2668,8 @@ pub mod wasm_impl {
                 index,
                 patches: child_patches,
             } => {
-                eprintln!(
-                    "[tairitsu] UpdateChild idx={} np={}",
-                    index,
-                    child_patches.len()
-                );
                 // Get the child at the specified index
                 let child = get_child_at(element, *index)?;
-                eprintln!("[tairitsu] UpdateChild resolved={}", child.is_some());
                 if let Some(child_element) = child {
                     // Apply the nested patches to the child
                     for child_patch in child_patches {
