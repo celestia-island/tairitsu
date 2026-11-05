@@ -1583,6 +1583,28 @@ pub mod wasm_impl {
             event: &str,
             handler: Box<dyn FnMut(Box<dyn EventData>)>,
         ) {
+            // De-dup before adding. Re-renders replace handler closures every
+            // time, so the diff emits UpdateEvent (remove + add) per handler
+            // per render. When the host-side removal fails to match — the
+            // glue's removeEventListener requires strict element identity
+            // between add and remove — the remove half silently no-ops and the
+            // add half stacks another DOM listener: the Nth interaction fires
+            // the handler N times. Removing any entry we still track for this
+            // (element, event) first bounds the DOM at one listener per pair
+            // regardless of how the remove half behaved.
+            let existing = ELEMENT_LISTENERS.with(|m| {
+                m.borrow_mut()
+                    .remove(&(element.as_raw(), event.to_string()))
+            });
+            if let Some(old_id) = existing {
+                take_event_callback(old_id);
+                take_event_listener_type(old_id);
+                let _ = bindings::tairitsu_browser::full::event_target::remove_event_listener(
+                    element.as_raw(),
+                    old_id,
+                );
+            }
+
             let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
                 element.as_raw(),
                 event,
