@@ -152,6 +152,31 @@ pub type EventHandler = Rc<RefCell<dyn FnMut(Box<dyn EventData>)>>;
 
 pub type DynamicCompute = Rc<RefCell<dyn FnMut() -> String>>;
 
+/// Push a child vnode into an element's child list, flattening fragments.
+///
+/// `Fragment` is a *transparent* grouping: the renderer (`render_vnode`),
+/// the HTML serializer (`write_html`) and the diff all treat its members as
+/// direct children of the surrounding element. Storing a fragment as one
+/// entry in `VElement::children` therefore makes the vnode child indexes and
+/// the DOM child indexes disagree, and every patch resolved by index lands on
+/// the wrong node — most visibly, `for` loops over a growing list (which rsx
+/// expands to a fragment child) insert rows at a fragment-local index and
+/// the rendered list appears frozen.
+///
+/// Flattening here keeps `children` positionally identical to the DOM at
+/// every level. Empty fragments contribute nothing, which also matches the
+/// renderer (an empty fragment appends no nodes).
+fn push_flattened(children: &mut Vec<VNode>, child: VNode) {
+    match child {
+        VNode::Fragment(members) => {
+            for member in members {
+                push_flattened(children, member);
+            }
+        }
+        other => children.push(other),
+    }
+}
+
 pub struct VElement {
     pub tag: String,
     pub key: Option<String>,
@@ -408,12 +433,14 @@ impl VElement {
     }
 
     pub fn child(mut self, child: VNode) -> Self {
-        self.children.push(child);
+        push_flattened(&mut self.children, child);
         self
     }
 
     pub fn children(mut self, children: Vec<VNode>) -> Self {
-        self.children.extend(children);
+        for child in children {
+            push_flattened(&mut self.children, child);
+        }
         self
     }
 
@@ -1377,6 +1404,46 @@ impl<T: Clone + std::string::ToString + 'static> IntoStyleValue for crate::react
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_child_flattens_fragment() {
+        // rsx expands `for`/`if` blocks into a fragment child. The element's
+        // child list must stay positionally aligned with the DOM, so the
+        // fragment has to be transparent here rather than a single entry.
+        let el = VElement::new("ul").child(VNode::Fragment(vec![
+            VNode::Element(Box::new(VElement::new("li"))),
+            VNode::Element(Box::new(VElement::new("li"))),
+        ]));
+        assert_eq!(el.children.len(), 2);
+        assert!(matches!(el.children[0], VNode::Element(_)));
+    }
+
+    #[test]
+    fn test_children_flattens_nested_fragments() {
+        let el = VElement::new("div").children(vec![
+            VNode::Text(VText::new("a")),
+            VNode::Fragment(vec![
+                VNode::Text(VText::new("b")),
+                VNode::Fragment(vec![VNode::Text(VText::new("c"))]),
+            ]),
+        ]);
+        let texts: Vec<&str> = el
+            .children
+            .iter()
+            .map(|c| match c {
+                VNode::Text(t) => t.text.as_str(),
+                other => panic!("expected text, got {other:?}"),
+            })
+            .collect();
+        assert_eq!(texts, ["a", "b", "c"]);
+    }
+
+    #[test]
+    fn test_empty_fragment_child_adds_nothing() {
+        // Matches the renderer: a fragment with no members appends no nodes.
+        let el = VElement::new("div").child(VNode::Fragment(Vec::new()));
+        assert!(el.children.is_empty());
+    }
 
     #[test]
     fn test_velement_clone_preserves_element_ref() {

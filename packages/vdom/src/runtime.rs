@@ -181,7 +181,12 @@ pub fn mark_dirty_deferred(id: ComponentId) {
 
 /// Mark a component as dirty and schedule a re-render.
 pub fn mark_dirty(id: ComponentId) {
-    let should_flush_sync = RUNTIME.with(|runtime| {
+    // The schedule callback is invoked *outside* the RUNTIME borrow: a host
+    // implementation is allowed to run the render synchronously (and the
+    // no-callback fallback below does exactly that), which re-enters
+    // `flush_render` → `RUNTIME.borrow_mut()` and panics on the already-held
+    // RefCell borrow. Taking the callback out first keeps both paths safe.
+    let policy = RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
 
         if !rt.dirty_components.contains(&id) {
@@ -190,28 +195,41 @@ pub fn mark_dirty(id: ComponentId) {
         }
 
         if rt.scheduled {
-            return false;
+            return SchedulePolicy::AlreadyScheduled;
         }
 
         rt.scheduled = true;
 
-        if let Some(schedule_cb) = &rt.schedule_callback {
-            let cb = Rc::clone(schedule_cb);
-            let render_fn = Box::new(|| {
-                flush_render();
-            });
-            (cb.borrow_mut())(render_fn);
-            trace!("Scheduled render via callback");
-            false
-        } else {
-            rt.scheduled = false;
-            true
+        match &rt.schedule_callback {
+            Some(cb) => SchedulePolicy::Deferred(Rc::clone(cb)),
+            None => {
+                rt.scheduled = false;
+                SchedulePolicy::Immediate
+            }
         }
     });
 
-    if should_flush_sync {
-        flush_render();
+    match policy {
+        SchedulePolicy::AlreadyScheduled => {}
+        SchedulePolicy::Deferred(schedule_cb) => {
+            let render_fn = Box::new(|| {
+                flush_render();
+            });
+            (schedule_cb.borrow_mut())(render_fn);
+            trace!("Scheduled render via callback");
+        }
+        SchedulePolicy::Immediate => flush_render(),
     }
+}
+
+/// How [`mark_dirty`] decided to run the pending render.
+enum SchedulePolicy {
+    /// A frame is already scheduled; the render is covered by it.
+    AlreadyScheduled,
+    /// Defer to the host's scheduling callback (rAF, timer, …).
+    Deferred(ScheduleCallback),
+    /// No scheduler registered: render synchronously now.
+    Immediate,
 }
 
 /// Set the active component for dependency tracking.
@@ -582,6 +600,23 @@ mod tests {
 
         // The schedule callback should have been called
         assert!(*called.borrow());
+    }
+
+    #[test]
+    fn test_schedule_callback_can_flush_synchronously() {
+        // A host scheduler is allowed to run the render immediately. That
+        // re-enters the runtime, so mark_dirty must not hold the RUNTIME
+        // borrow while invoking the callback (it used to panic here).
+        set_schedule_callback(|callback| callback());
+
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+        mark_dirty(id);
+
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            assert!(rt.dirty_components.is_empty(), "render should have run");
+            assert!(!rt.scheduled, "scheduled flag must be cleared");
+        });
     }
 
     #[test]
