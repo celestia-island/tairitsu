@@ -1195,19 +1195,22 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::promise_callbacks::Guest for BrowserComponent {
         fn on_promise_resolved(promise_id: u64, value: String) {
-            PROMISE_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&promise_id) {
-                    callback(Ok(value));
-                }
-            });
+            // Take the callback out BEFORE invoking it: `if let Some(x) =
+            // m.borrow_mut().remove(..)` keeps the RefMut guard alive for the
+            // whole block, so a callback that registers another promise
+            // (a fetch followed by a refetch, e.g. buy → reload) re-entered
+            // the same RefCell and panicked with "already borrowed".
+            let callback = PROMISE_CALLBACKS.with(|m| m.borrow_mut().remove(&promise_id));
+            if let Some(callback) = callback {
+                callback(Ok(value));
+            }
         }
 
         fn on_promise_rejected(promise_id: u64, error: String) {
-            PROMISE_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&promise_id) {
-                    callback(Err(error));
-                }
-            });
+            let callback = PROMISE_CALLBACKS.with(|m| m.borrow_mut().remove(&promise_id));
+            if let Some(callback) = callback {
+                callback(Err(error));
+            }
         }
     }
 
@@ -1583,6 +1586,28 @@ pub mod wasm_impl {
             event: &str,
             handler: Box<dyn FnMut(Box<dyn EventData>)>,
         ) {
+            // De-dup before adding. Re-renders replace handler closures every
+            // time, so the diff emits UpdateEvent (remove + add) per handler
+            // per render. When the host-side removal fails to match — the
+            // glue's removeEventListener requires strict element identity
+            // between add and remove — the remove half silently no-ops and the
+            // add half stacks another DOM listener: the Nth interaction fires
+            // the handler N times. Removing any entry we still track for this
+            // (element, event) first bounds the DOM at one listener per pair
+            // regardless of how the remove half behaved.
+            let existing = ELEMENT_LISTENERS.with(|m| {
+                m.borrow_mut()
+                    .remove(&(element.as_raw(), event.to_string()))
+            });
+            if let Some(old_id) = existing {
+                take_event_callback(old_id);
+                take_event_listener_type(old_id);
+                let _ = bindings::tairitsu_browser::full::event_target::remove_event_listener(
+                    element.as_raw(),
+                    old_id,
+                );
+            }
+
             let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
                 element.as_raw(),
                 event,
@@ -2657,9 +2682,7 @@ pub mod wasm_impl {
             }
 
             Patch::InsertChild { index, node } => {
-                eprintln!("[tairitsu] InsertChild idx={}", index);
                 insert_child_at(platform, element, *index, node)?;
-                eprintln!("[tairitsu] InsertChild done");
             }
 
             Patch::RemoveChild { index } => {
@@ -2670,14 +2693,8 @@ pub mod wasm_impl {
                 index,
                 patches: child_patches,
             } => {
-                eprintln!(
-                    "[tairitsu] UpdateChild idx={} np={}",
-                    index,
-                    child_patches.len()
-                );
                 // Get the child at the specified index
                 let child = get_child_at(element, *index)?;
-                eprintln!("[tairitsu] UpdateChild resolved={}", child.is_some());
                 if let Some(child_element) = child {
                     // Apply the nested patches to the child
                     for child_patch in child_patches {
