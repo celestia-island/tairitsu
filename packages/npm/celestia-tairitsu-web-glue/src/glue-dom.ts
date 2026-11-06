@@ -100,6 +100,20 @@ export const node_exports = {
     if (!first) return undefined;
     return globalThis.__storeNode(first);
   },
+  // 0.5.26 world adds get-child-nodes on node (used by diff/apply
+  // get_child_at for UpdateChild/InsertChild index resolution).
+  // NOTE: must return childNodes (all nodes incl. text) — diff child
+  // indexes count Text vnodes too; element-only lists misaddress updates.
+  getChildNodes(self) {
+    const node = globalThis.__lookupNode(self);
+    if (!globalThis.__nodeListHandles) {
+      globalThis.__nodeListHandles = new Map();
+      globalThis.__nextNodeList = 1n;
+    }
+    const handle = globalThis.__nextNodeList++;
+    globalThis.__nodeListHandles.set(handle, node.childNodes);
+    return handle;
+  },
 };
 
 // === nonElementParentNode ===

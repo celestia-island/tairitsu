@@ -29,6 +29,7 @@ VERSION = "0.5.0"
 
 DOMAIN_MAP = {
     "dom": ["document", "element", "node", "nonElementParentNode", "parentNode"],
+    "node-list": ["nodeList"],
     "events": ["event", "eventTarget"],
     "css": ["cssStyleDeclaration", "elementCssInlineStyle"],
     "html": ["htmlElement"],
