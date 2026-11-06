@@ -2619,35 +2619,8 @@ pub mod wasm_impl {
         parent: &WitElement,
         patches: &[tairitsu_vdom::Patch],
     ) -> Result<()> {
-        // TEMP PROBE: DOM-visible accounting for the embedder freeze hunt
-        // (see tsdm-x5-pokemon-plugin research doc §10.1.3). Remove before
-        // merging upstream.
-        #[cfg(target_family = "wasm")]
-        {
-            use bindings::tairitsu_browser::full::element::set_attribute;
-            use bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id;
-            if let Some(app) = get_element_by_id(0, "app") {
-                let _ = set_attribute(app, "data-apply", &format!("n={}", patches.len()));
-            }
-        }
-        for (i, patch) in patches.iter().enumerate() {
-            #[cfg(target_family = "wasm")]
-            {
-                use bindings::tairitsu_browser::full::element::set_attribute;
-                use bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id;
-                if let Some(app) = get_element_by_id(0, "app") {
-                    let _ = set_attribute(app, "data-apply", &format!("i={i}/{patch:?}"));
-                }
-            }
+        for patch in patches {
             apply_patch(platform, parent, patch)?;
-        }
-        #[cfg(target_family = "wasm")]
-        {
-            use bindings::tairitsu_browser::full::element::set_attribute;
-            use bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id;
-            if let Some(app) = get_element_by_id(0, "app") {
-                let _ = set_attribute(app, "data-apply", "done");
-            }
         }
         Ok(())
     }
