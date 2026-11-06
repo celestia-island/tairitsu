@@ -1195,19 +1195,22 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::promise_callbacks::Guest for BrowserComponent {
         fn on_promise_resolved(promise_id: u64, value: String) {
-            PROMISE_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&promise_id) {
-                    callback(Ok(value));
-                }
-            });
+            // Take the callback out BEFORE invoking it: `if let Some(x) =
+            // m.borrow_mut().remove(..)` keeps the RefMut guard alive for the
+            // whole block, so a callback that registers another promise
+            // (a fetch followed by a refetch, e.g. buy → reload) re-entered
+            // the same RefCell and panicked with "already borrowed".
+            let callback = PROMISE_CALLBACKS.with(|m| m.borrow_mut().remove(&promise_id));
+            if let Some(callback) = callback {
+                callback(Ok(value));
+            }
         }
 
         fn on_promise_rejected(promise_id: u64, error: String) {
-            PROMISE_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&promise_id) {
-                    callback(Err(error));
-                }
-            });
+            let callback = PROMISE_CALLBACKS.with(|m| m.borrow_mut().remove(&promise_id));
+            if let Some(callback) = callback {
+                callback(Err(error));
+            }
         }
     }
 
@@ -2616,8 +2619,35 @@ pub mod wasm_impl {
         parent: &WitElement,
         patches: &[tairitsu_vdom::Patch],
     ) -> Result<()> {
-        for patch in patches {
+        // TEMP PROBE: DOM-visible accounting for the embedder freeze hunt
+        // (see tsdm-x5-pokemon-plugin research doc §10.1.3). Remove before
+        // merging upstream.
+        #[cfg(target_family = "wasm")]
+        {
+            use bindings::tairitsu_browser::full::element::set_attribute;
+            use bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id;
+            if let Some(app) = get_element_by_id(0, "app") {
+                let _ = set_attribute(app, "data-apply", &format!("n={}", patches.len()));
+            }
+        }
+        for (i, patch) in patches.iter().enumerate() {
+            #[cfg(target_family = "wasm")]
+            {
+                use bindings::tairitsu_browser::full::element::set_attribute;
+                use bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id;
+                if let Some(app) = get_element_by_id(0, "app") {
+                    let _ = set_attribute(app, "data-apply", &format!("i={i}/{patch:?}"));
+                }
+            }
             apply_patch(platform, parent, patch)?;
+        }
+        #[cfg(target_family = "wasm")]
+        {
+            use bindings::tairitsu_browser::full::element::set_attribute;
+            use bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id;
+            if let Some(app) = get_element_by_id(0, "app") {
+                let _ = set_attribute(app, "data-apply", "done");
+            }
         }
         Ok(())
     }
