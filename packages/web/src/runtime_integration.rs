@@ -69,6 +69,53 @@ pub fn init_runtime(root_element: WitElement) {
         }
     });
 
+    // Reconcile guard: after every patch batch, compare the live DOM child
+    // count at the mount root against the fresh vnode's expectation. A
+    // mismatch means the stored vnode baseline and the DOM drifted apart
+    // (one mis-landed patch is permanent without this) — repair by clearing
+    // the root and re-rendering the vnode in place (root identity is kept,
+    // so embedder-captured roots stay valid).
+    tairitsu_vdom::runtime::set_reconcile_callback({
+        let root_ref_reconcile: Rc<RefCell<WitElement>> = Rc::clone(&root_ref);
+        move |component_id: tairitsu_vdom::ComponentId, expected: usize, vnode: tairitsu_vdom::VNode| {
+            #[cfg(target_family = "wasm")]
+            {
+                use tairitsu_vdom::platform::DomOps;
+                let root = root_ref_reconcile.borrow();
+                let Ok(platform) = crate::WitPlatform::new() else {
+                    return;
+                };
+                let actual = {
+                    let nodes = crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::node::get_child_nodes(root.as_raw());
+                    crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::node_list::get_length(nodes) as usize
+                };
+                if actual == expected {
+                    return;
+                }
+                tracing::warn!(
+                    "reconcile guard: component {} DOM/ vnode child count drift (dom={}, vnode={}) — re-rendering root in place",
+                    component_id,
+                    actual,
+                    expected
+                );
+                crate::wit_platform::wasm_impl::with_render_component(component_id, || {
+                    crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::node::set_text_content(root.as_raw(), Some(""));
+                    if let Err(e) = crate::wit_platform::wasm_impl::replace_element_content(
+                        &platform,
+                        &root,
+                        &vnode,
+                    ) {
+                        tracing::error!("reconcile guard repair failed: {:?}", e);
+                    }
+                });
+            }
+            #[cfg(not(target_family = "wasm"))]
+            {
+                let _ = (component_id, expected, vnode);
+            }
+        }
+    });
+
     // Set up the apply_patches callback
     tairitsu_vdom::runtime::set_apply_patches_callback({
         let root_ref_clone: Rc<RefCell<WitElement>> = Rc::clone(&root_ref);
