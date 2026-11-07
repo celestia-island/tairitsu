@@ -17,7 +17,7 @@
   "scripts": {
     "build": "python3 ../../../scripts/build_npm_glue_packages.py",
     "clean": "rimraf dist",
-    "test": "node --test \"test/**/*.test.mjs\""
+    "test": "node --experimental-strip-types --test \"test/**/*.test.mjs\""
   },
   "devDependencies": {
     "esbuild": "^0.*",
