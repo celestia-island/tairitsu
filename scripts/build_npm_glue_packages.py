@@ -8,9 +8,9 @@ Also reads runtime WASM components from target/wasm32-wasip2/release/
 and copies them into dist/wasm/.
 
 Usage:
-    python scripts/build_npm_glue_packages.py          # Generate + build
-    python scripts/build_npm_glue_packages.py --gen     # Generate only
-    python scripts/build_npm_glue_packages.py --build   # Build only (must generate first)
+    python scripts/build_npm_glue_packages.py          # Full build: domain bundles + wasm
+    python scripts/build_npm_glue_packages.py --build  # Full build (explicit)
+    python scripts/build_npm_glue_packages.py --gen    # Compile domain bundles only (skip the wasm copy)
 """
 
 import os
@@ -147,23 +147,36 @@ def copy_wasm_components():
 
 def main():
     args = set(sys.argv[1:])
+    unknown = args - {"--gen", "--build"}
+    if unknown:
+        sys.exit(
+            f"unknown option(s): {sorted(unknown)} — usage: "
+            "build_npm_glue_packages.py [--gen|--build]"
+        )
+    # Before 50b28c3 the script had separate generate/build phases and the
+    # flags each skipped one. The merge collapsed generation into the esbuild
+    # compile but kept the `if "--build" not in args` guard around the whole
+    # pipeline, so `--build` silently did NOTHING. Now: `--gen` compiles the
+    # domain bundles only; the default and `--build` do the full build
+    # (bundles + wasm copy).
+    gen_only = "--gen" in args
 
-    if "--build" not in args:
-        DIST_DIR.mkdir(parents=True, exist_ok=True)
+    DIST_DIR.mkdir(parents=True, exist_ok=True)
 
-        print("Building CDN glue packages...")
-        all_domains = list(DOMAIN_MAP.keys()) + STUB_DOMAINS
-        ok = 0
-        for domain in all_domains:
-            if build_domain(domain):
-                ok += 1
+    print("Building CDN glue packages...")
+    all_domains = list(DOMAIN_MAP.keys()) + STUB_DOMAINS
+    ok = 0
+    for domain in all_domains:
+        if build_domain(domain):
+            ok += 1
 
-        print(f"\n  Built: {ok}/{len(all_domains)} domains")
+    print(f"\n  Built: {ok}/{len(all_domains)} domains")
 
+    if not gen_only:
         print("\nCopying WASM components...")
         copy_wasm_components()
 
-        print("\nDone.")
+    print("\nDone.")
 
 
 if __name__ == "__main__":
