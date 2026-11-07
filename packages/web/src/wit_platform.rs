@@ -676,12 +676,12 @@ pub mod wasm_impl {
 
     type TimeoutCallback = Option<Box<dyn FnOnce()>>;
     type AnimationCallback = Option<Box<dyn FnOnce(f64)>>;
-    type ResizeObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>;
-    type MutationObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>;
-    type MediaQueryListCallback = Box<dyn FnMut(bool)>;
-    type ScrollCallback = Box<dyn FnMut(f64, f64)>;
-    type WindowResizeCallback = Box<dyn FnMut(i32, i32)>;
-    type VideoFrameCallback = Box<dyn FnMut(String)>;
+    type ResizeObserverCallback = Option<Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>>;
+    type MutationObserverCallback = Option<Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>>;
+    type MediaQueryListCallback = Option<Box<dyn FnMut(bool)>>;
+    type ScrollCallback = Option<Box<dyn FnMut(f64, f64)>>;
+    type WindowResizeCallback = Option<Box<dyn FnMut(i32, i32)>>;
+    type VideoFrameCallback = Option<Box<dyn FnMut(String)>>;
 
     static NEXT_CALLBACK_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -734,7 +734,7 @@ pub mod wasm_impl {
     type GeoCallback =
         Box<dyn FnOnce(Result<tairitsu_vdom::GeoPosition, tairitsu_vdom::GeoPositionError>)>;
 
-    type IntervalCallback = Box<dyn FnMut()>;
+    type IntervalCallback = Option<Box<dyn FnMut()>>;
 
     pub(super) struct WsHandleEntry {
         pub handle: u64,
@@ -762,7 +762,7 @@ pub mod wasm_impl {
         static FILE_READER_BIN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<Vec<u8>, String>)>>> = RefCell::new(HashMap::new());
         static IDB_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
         pub(super) static WS_OPEN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
-        pub(super) static WS_MESSAGE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnMut(String)>>> = RefCell::new(HashMap::new());
+        pub(super) static WS_MESSAGE_CALLBACKS: RefCell<HashMap<u64, Option<Box<dyn FnMut(String)>>>> = RefCell::new(HashMap::new());
         pub(super) static WS_CLOSE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(u16, String)>>> = RefCell::new(HashMap::new());
         pub(super) static WS_ERROR_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce()>>> = RefCell::new(HashMap::new());
         pub(super) static WS_HANDLE_MAP: RefCell<HashMap<u64, WsHandleEntry>> = RefCell::new(HashMap::new());
@@ -1054,20 +1054,27 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::timer_callbacks::Guest for BrowserComponent {
         fn on_timeout(callback_id: u64) {
-            TIMEOUT_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
-                    if let Some(cb) = callback {
-                        cb();
-                    }
-                }
-            });
+            // take-then-run：RefMut 在 if-let 条件里活到块尾（Rust 2021
+            // 临时延长），回调内再 set_timeout 会撞「already borrowed」并
+            // trap 整个实例（jco 下 panic 不解栈、markTrapped 毒化实例）。
+            let callback = TIMEOUT_CALLBACKS.with(|m| m.borrow_mut().remove(&callback_id));
+            if let Some(cb) = callback.flatten() {
+                cb();
+            }
         }
 
         fn on_interval(callback_id: u64) {
+            // take-run-put-back：回调内 clear_interval 会 remove 掉槽位
+            // （put-back 时 get_mut 为 None，丢弃即正确语义），重入注册也
+            // 不再撞「already borrowed」。
+            let mut taken = INTERVAL_CALLBACKS
+                .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
+            if let Some(cb) = taken.as_mut() {
+                cb();
+            }
             INTERVAL_CALLBACKS.with(|m| {
-                let mut callbacks = m.borrow_mut();
-                if let Some(callback) = callbacks.get_mut(&callback_id) {
-                    callback();
+                if let Some(slot) = m.borrow_mut().get_mut(&callback_id) {
+                    *slot = taken;
                 }
             });
         }
@@ -1092,10 +1099,8 @@ pub mod wasm_impl {
                 bindings::exports::tairitsu_browser::full::resize_observer_callbacks::ResizeEntry,
             >,
         ) {
-            RESIZE_OBSERVER_CALLBACKS.with(|m| {
-                let mut callbacks = m.borrow_mut();
-                if let Some(handler) = callbacks.get_mut(&callback_id) {
-                    let converted_entries: Vec<tairitsu_vdom::ResizeObserverEntry> = entries
+            // take-run-put-back：RefMut 不跨用户回调持有（见 on_timeout 注释）。
+            let converted_entries: Vec<tairitsu_vdom::ResizeObserverEntry> = entries
                         .into_iter()
                         .map(|entry| tairitsu_vdom::ResizeObserverEntry {
                             target: entry.target,
@@ -1109,7 +1114,14 @@ pub mod wasm_impl {
                             content_box_size: vec![],
                         })
                         .collect();
-                    handler(converted_entries);
+            let mut taken = RESIZE_OBSERVER_CALLBACKS
+                .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
+            if let Some(handler) = taken.as_mut() {
+                handler(converted_entries);
+            }
+            RESIZE_OBSERVER_CALLBACKS.with(|m| {
+                if let Some(slot) = m.borrow_mut().get_mut(&callback_id) {
+                    *slot = taken;
                 }
             });
         }
@@ -1122,10 +1134,8 @@ pub mod wasm_impl {
             callback_id: u64,
             entries: Vec<bindings::exports::tairitsu_browser::full::mutation_observer_callbacks::MutationEntry>,
         ) {
-            MUTATION_OBSERVER_CALLBACKS.with(|m| {
-                let mut callbacks = m.borrow_mut();
-                if let Some(handler) = callbacks.get_mut(&callback_id) {
-                    let converted_records: Vec<tairitsu_vdom::MutationRecord> = entries
+            // take-run-put-back：RefMut 不跨用户回调持有（见 on_timeout 注释）。
+            let converted_records: Vec<tairitsu_vdom::MutationRecord> = entries
                         .into_iter()
                         .map(|entry| tairitsu_vdom::MutationRecord {
                             record_type: entry.mutation_type,
@@ -1139,7 +1149,14 @@ pub mod wasm_impl {
                             old_value: entry.old_value,
                         })
                         .collect();
-                    handler(converted_records);
+            let mut taken = MUTATION_OBSERVER_CALLBACKS
+                .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
+            if let Some(handler) = taken.as_mut() {
+                handler(converted_records);
+            }
+            MUTATION_OBSERVER_CALLBACKS.with(|m| {
+                if let Some(slot) = m.borrow_mut().get_mut(&callback_id) {
+                    *slot = taken;
                 }
             });
         }
@@ -1149,10 +1166,15 @@ pub mod wasm_impl {
         for BrowserComponent
     {
         fn on_change(callback_id: u64, matches: bool) {
+            // take-run-put-back：RefMut 不跨用户回调持有（见 on_timeout 注释）。
+            let mut taken = MEDIA_QUERY_LIST_CALLBACKS
+                .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
+            if let Some(handler) = taken.as_mut() {
+                handler(matches);
+            }
             MEDIA_QUERY_LIST_CALLBACKS.with(|m| {
-                let mut callbacks = m.borrow_mut();
-                if let Some(handler) = callbacks.get_mut(&callback_id) {
-                    handler(matches);
+                if let Some(slot) = m.borrow_mut().get_mut(&callback_id) {
+                    *slot = taken;
                 }
             });
         }
@@ -1160,10 +1182,15 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::scroll_callbacks::Guest for BrowserComponent {
         fn on_scroll_event(callback_id: u64, scroll_x: f64, scroll_y: f64) {
+            // take-run-put-back：RefMut 不跨用户回调持有（见 on_timeout 注释）。
+            let mut taken = SCROLL_CALLBACKS
+                .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
+            if let Some(handler) = taken.as_mut() {
+                handler(scroll_x, scroll_y);
+            }
             SCROLL_CALLBACKS.with(|m| {
-                let mut callbacks = m.borrow_mut();
-                if let Some(handler) = callbacks.get_mut(&callback_id) {
-                    handler(scroll_x, scroll_y);
+                if let Some(slot) = m.borrow_mut().get_mut(&callback_id) {
+                    *slot = taken;
                 }
             });
         }
@@ -1173,10 +1200,15 @@ pub mod wasm_impl {
         for BrowserComponent
     {
         fn on_window_resize(callback_id: u64, width: i32, height: i32) {
+            // take-run-put-back：RefMut 不跨用户回调持有（见 on_timeout 注释）。
+            let mut taken = WINDOW_RESIZE_CALLBACKS
+                .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
+            if let Some(handler) = taken.as_mut() {
+                handler(width, height);
+            }
             WINDOW_RESIZE_CALLBACKS.with(|m| {
-                let mut callbacks = m.borrow_mut();
-                if let Some(handler) = callbacks.get_mut(&callback_id) {
-                    handler(width, height);
+                if let Some(slot) = m.borrow_mut().get_mut(&callback_id) {
+                    *slot = taken;
                 }
             });
         }
@@ -1184,10 +1216,15 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::video_frame_callbacks::Guest for BrowserComponent {
         fn on_video_frame(callback_id: u64, event: String) {
+            // take-run-put-back：RefMut 不跨用户回调持有（见 on_timeout 注释）。
+            let mut taken = VIDEO_FRAME_CALLBACKS
+                .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
+            if let Some(handler) = taken.as_mut() {
+                handler(event);
+            }
             VIDEO_FRAME_CALLBACKS.with(|m| {
-                let mut callbacks = m.borrow_mut();
-                if let Some(handler) = callbacks.get_mut(&callback_id) {
-                    handler(event);
+                if let Some(slot) = m.borrow_mut().get_mut(&callback_id) {
+                    *slot = taken;
                 }
             });
         }
@@ -1251,19 +1288,19 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::idb_callbacks::Guest for BrowserComponent {
         fn on_idb_request_success(callback_id: u64, result: Option<String>) {
-            IDB_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
-                    callback(Ok(result.unwrap_or_default()));
-                }
-            });
+            // take-then-run：idb 链式回调（open→put→get→…）在回调里注册
+            // 下一个 idb 操作，RefMut 跨回调持有必撞锁。
+            let callback = IDB_CALLBACKS.with(|m| m.borrow_mut().remove(&callback_id));
+            if let Some(callback) = callback {
+                callback(Ok(result.unwrap_or_default()));
+            }
         }
 
         fn on_idb_request_error(callback_id: u64, error: String) {
-            IDB_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
-                    callback(Err(error));
-                }
-            });
+            let callback = IDB_CALLBACKS.with(|m| m.borrow_mut().remove(&callback_id));
+            if let Some(callback) = callback {
+                callback(Err(error));
+            }
         }
     }
 
@@ -1287,35 +1324,39 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::web_socket_callbacks::Guest for BrowserComponent {
         fn on_web_socket_open(callback_id: u64) {
-            WS_OPEN_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
-                    callback();
-                }
-            });
+            // take-then-run（锁纪律见 on_timeout 注释）。
+            let callback = WS_OPEN_CALLBACKS.with(|m| m.borrow_mut().remove(&callback_id));
+            if let Some(callback) = callback {
+                callback();
+            }
         }
 
         fn on_web_socket_message(callback_id: u64, data: String) {
+            // take-run-put-back（FnMut；close 已 remove 槽位时丢弃即正确）。
+            let mut taken = WS_MESSAGE_CALLBACKS
+                .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
+            if let Some(cb) = taken.as_mut() {
+                cb(data);
+            }
             WS_MESSAGE_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().get_mut(&callback_id) {
-                    callback(data);
+                if let Some(slot) = m.borrow_mut().get_mut(&callback_id) {
+                    *slot = taken;
                 }
             });
         }
 
         fn on_web_socket_close(callback_id: u64, code: u16, reason: String) {
-            WS_CLOSE_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
-                    callback(code, reason);
-                }
-            });
+            let callback = WS_CLOSE_CALLBACKS.with(|m| m.borrow_mut().remove(&callback_id));
+            if let Some(callback) = callback {
+                callback(code, reason);
+            }
         }
 
         fn on_web_socket_error(callback_id: u64) {
-            WS_ERROR_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
-                    callback();
-                }
-            });
+            let callback = WS_ERROR_CALLBACKS.with(|m| m.borrow_mut().remove(&callback_id));
+            if let Some(callback) = callback {
+                callback();
+            }
         }
     }
 
@@ -1440,7 +1481,7 @@ pub mod wasm_impl {
                 set_interval_fn: |callback: Box<dyn FnMut()>, ms: i32| -> i32 {
                     let callback_id = next_callback_id();
                     INTERVAL_CALLBACKS.with(|m| {
-                        m.borrow_mut().insert(callback_id, callback);
+                        m.borrow_mut().insert(callback_id, Some(callback));
                     });
                     bindings::tairitsu_browser::full::platform_helpers::set_interval(
                         callback_id,
@@ -1766,7 +1807,7 @@ pub mod wasm_impl {
 
         fn set_interval(&self, callback: Box<dyn FnMut()>, ms: i32) -> i32 {
             let callback_id = next_callback_id();
-            INTERVAL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            INTERVAL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
             bindings::tairitsu_browser::full::platform_helpers::set_interval(callback_id, ms)
         }
 
@@ -1835,7 +1876,7 @@ pub mod wasm_impl {
             callback: Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>,
         ) -> u64 {
             let callback_id = next_callback_id();
-            RESIZE_OBSERVER_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            RESIZE_OBSERVER_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
             bindings::tairitsu_browser::full::platform_helpers::create_resize_observer(callback_id)
         }
 
@@ -1863,7 +1904,7 @@ pub mod wasm_impl {
             callback: Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>,
         ) -> u64 {
             let callback_id = next_callback_id();
-            MUTATION_OBSERVER_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            MUTATION_OBSERVER_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
             bindings::tairitsu_browser::full::platform_helpers::create_mutation_observer(
                 callback_id,
             )
@@ -1902,7 +1943,7 @@ pub mod wasm_impl {
 
         fn media_query_list_add_listener(&self, list: u64, callback: Box<dyn FnMut(bool)>) -> u64 {
             let callback_id = next_callback_id();
-            MEDIA_QUERY_LIST_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            MEDIA_QUERY_LIST_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
             bindings::tairitsu_browser::full::media_query_list::add_listener(
                 list,
                 Some(callback_id),
@@ -2004,13 +2045,13 @@ pub mod wasm_impl {
 
         fn on_scroll(&self, callback: Box<dyn FnMut(f64, f64)>) {
             let callback_id = next_callback_id();
-            SCROLL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            SCROLL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
             bindings::tairitsu_browser::full::platform_helpers::on_scroll(callback_id);
         }
 
         fn on_resize(&self, callback: Box<dyn FnMut(i32, i32)>) {
             let callback_id = next_callback_id();
-            WINDOW_RESIZE_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            WINDOW_RESIZE_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
             bindings::tairitsu_browser::full::platform_helpers::on_resize_callback(callback_id);
         }
 
@@ -3208,7 +3249,7 @@ pub fn ws_connect(
         m.borrow_mut().insert(on_open_cb_id, on_open);
     });
     wasm_impl::WS_MESSAGE_CALLBACKS.with(|m| {
-        m.borrow_mut().insert(msg_cb_id, on_message);
+        m.borrow_mut().insert(msg_cb_id, Some(on_message));
     });
     wasm_impl::WS_CLOSE_CALLBACKS.with(|m| {
         m.borrow_mut().insert(close_cb_id, on_close);

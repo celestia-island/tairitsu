@@ -19,6 +19,19 @@ export const document_exports = {
   getBody() {
     return globalThis.__storeElement(document.body);
   },
+  elementFromPoint(x, y) {
+    const el = document.elementFromPoint(x, y);
+    return el ? globalThis.__storeElement(el) : undefined;
+  },
+  execCommand(commandId, value) {
+    try {
+      return value === undefined || value === null
+        ? document.execCommand(commandId)
+        : document.execCommand(commandId, false, value);
+    } catch {
+      return false;
+    }
+  },
 };
 
 // === element ===
@@ -46,6 +59,9 @@ export const element_exports = {
   setInnerHtml(self, html) {
     globalThis.__lookupElement(self).innerHTML = html;
   },
+  getInnerHtml(self) {
+    return globalThis.__lookupElement(self).innerHTML || "";
+  },
   getAttribute(self, name) {
     return globalThis.__lookupElement(self).getAttribute(name);
   },
@@ -58,6 +74,13 @@ export const element_exports = {
   getClientHeight(self) {
     return globalThis.__lookupElement(self).clientHeight || 0;
   },
+  getClientWidth(self) {
+    return globalThis.__lookupElement(self).clientWidth || 0;
+  },
+  closest(self, selectors) {
+    const el = globalThis.__lookupElement(self).closest(selectors);
+    return el ? globalThis.__storeElement(el) : undefined;
+  },
   getScrollHeight(self) {
     return globalThis.__lookupElement(self).scrollHeight || 0;
   },
@@ -66,6 +89,14 @@ export const element_exports = {
   },
   setScrollTop(self, value) {
     globalThis.__lookupElement(self).scrollTop = value;
+  },
+  requestFullscreen(self) {
+    // WIT request-fullscreen 返回 u64（promise 句柄）：返回 0 表示未保留句柄。
+    const el = globalThis.__lookupElement(self);
+    if (el && el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {});
+    }
+    return 0;
   },
 };
 
@@ -96,6 +127,11 @@ export const node_exports = {
     // 查不到（parent 链第一跳就断，事件委托的 closest 语义全灭）。
     // 与 appendChild/getFirstChild 同约定：用 __storeNode 存取/复用句柄。
     return globalThis.__storeNode(el);
+  },
+  getParentNode(self) {
+    const n = globalThis.__lookupNode(self).parentNode;
+    if (!n) return undefined;
+    return globalThis.__storeNode(n);
   },
   getFirstChild(self) {
     const node = globalThis.__lookupNode(self);
