@@ -92,7 +92,10 @@ export const node_exports = {
   getParentElement(self) {
     const el = globalThis.__lookupNode(self).parentElement;
     if (!el) return undefined;
-    return globalThis.__elementHandles.get(el);
+    // __elementHandles 是 handle→元素 的表：拿「元素对象」当 key 永远
+    // 查不到（parent 链第一跳就断，事件委托的 closest 语义全灭）。
+    // 与 appendChild/getFirstChild 同约定：用 __storeNode 存取/复用句柄。
+    return globalThis.__storeNode(el);
   },
   getFirstChild(self) {
     const node = globalThis.__lookupNode(self);
