@@ -8,6 +8,8 @@
 
 // === platformHelpers ===
 let _timeoutCallbacks = new Map();
+let _nextIntervalId = 1;
+const _intervalCallbacks = new Map();
 let _nextTimeoutId = 1;
 let _animationCallbacks = new Map();
 let _nextAnimationId = 1;
@@ -33,6 +35,25 @@ export const platformHelpers_exports = {
     if (_timeoutCallbacks.has(id)) {
       clearTimeout(_timeoutCallbacks.get(id));
       _timeoutCallbacks.delete(id);
+    }
+  },
+  setInterval(callbackId, ms) {
+    const id = _nextIntervalId++;
+    const intervalId = setInterval(() => {
+      if (
+        globalThis.__wasmExports &&
+        globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]
+      ) {
+        globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]?.onInterval?.(callbackId);
+      }
+    }, ms);
+    _intervalCallbacks.set(id, intervalId);
+    return id;
+  },
+  clearInterval(id) {
+    if (_intervalCallbacks.has(id)) {
+      clearInterval(_intervalCallbacks.get(id));
+      _intervalCallbacks.delete(id);
     }
   },
   requestAnimationFrame(callbackId) {
@@ -97,18 +118,32 @@ export const platformHelpers_exports = {
     }
   },
   createMutationObserver(callbackId) {
+    const nodeHandle = (n) => {
+      if (!n) return undefined;
+      if (!globalThis.__mutationRecordHandles) {
+        globalThis.__mutationRecordHandles = new Map();
+        globalThis.__nextMutationRecord = 1n;
+      }
+      const handle = globalThis.__nextMutationRecord++;
+      globalThis.__mutationRecordHandles.set(handle, n);
+      return handle;
+    };
     const observer = new MutationObserver((records) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]) {
-        const recordHandles = records.map(record => {
-          if (!globalThis.__mutationRecordHandles) {
-            globalThis.__mutationRecordHandles = new Map();
-            globalThis.__nextMutationRecord = 1n;
-          }
-          const handle = globalThis.__nextMutationRecord++;
-          globalThis.__mutationRecordHandles.set(handle, record);
-          return handle;
-        });
-        globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]?.onMutate?.(callbackId, recordHandles);
+        // WIT mutation-entry 是 record：旧实现传「句柄数组」会被 jco 的
+        // 记录校验直接拒掉，onMutate 永远不达组件。按 WIT 形状组装。
+        const entries = records.map((r) => ({
+          mutationType: r.type || "childList",
+          target: nodeHandle(r.target) ?? 0n,
+          addedNodes: r.addedNodes && r.addedNodes.length ? nodeHandle(r.addedNodes) : undefined,
+          removedNodes: r.removedNodes && r.removedNodes.length ? nodeHandle(r.removedNodes) : undefined,
+          previousSibling: nodeHandle(r.previousSibling),
+          nextSibling: nodeHandle(r.nextSibling),
+          attributeName: r.attributeName ?? undefined,
+          attributeNamespace: r.attributeNamespace ?? undefined,
+          oldValue: r.oldValue ?? undefined,
+        }));
+        globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]?.onMutate?.(callbackId, entries);
       }
     });
     return globalThis.__storeElement(observer);
@@ -162,11 +197,14 @@ export const platformHelpers_exports = {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.onPromiseResolved?.(id);
       }
-    }).catch(() => {
+    }).catch((err) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
-        globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.onPromiseRejected?.(id);
+        globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.onPromiseRejected?.(
+          id,
+          String(err || "promise rejected"),
+        );
       }
-    });
+      });
     return id;
   },
 
@@ -178,11 +216,14 @@ export const platformHelpers_exports = {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.onPromiseResolved?.(id, text);
       }
-    }).catch(() => {
+    }).catch((err) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
-        globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.onPromiseRejected?.(id);
+        globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.onPromiseRejected?.(
+          id,
+          String(err || "promise rejected"),
+        );
       }
-    });
+      });
     return id;
   },
 
@@ -197,11 +238,14 @@ export const platformHelpers_exports = {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
         globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.onPromiseResolved?.(id, text);
       }
-    }).catch(() => {
+    }).catch((err) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]) {
-        globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.onPromiseRejected?.(id);
+        globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]?.onPromiseRejected?.(
+          id,
+          String(err || "promise rejected"),
+        );
       }
-    });
+      });
     return id;
   },
 
@@ -470,13 +514,57 @@ export const platformHelpers_exports = {
     reader.readAsArrayBuffer(b);
   },
 
+  connectWebSocket(url) {
+    if (!globalThis.__wsConns) {
+      globalThis.__wsConns = new Map();
+      globalThis.__wsConnSeq = 0;
+    }
+    const seq = ++globalThis.__wsConnSeq;
+    const handle = BigInt(seq);
+    const cb1 = BigInt((seq - 1) * 4 + 1);
+    const cb2 = cb1 + 1n;
+    const cb3 = cb1 + 2n;
+    const cb4 = cb1 + 3n;
+    const exp =
+      globalThis.__wasmExports &&
+      globalThis.__wasmExports["tairitsu-browser:full/web-socket-callbacks@0.2.0"];
+    let ws = null;
+    try {
+      ws = new WebSocket(url);
+    } catch {
+      ws = null;
+    }
+    if (ws) {
+      ws.onopen = () => exp && exp.onWebSocketOpen && exp.onWebSocketOpen(cb1);
+      ws.onmessage = (e) =>
+        exp &&
+        exp.onWebSocketMessage &&
+        exp.onWebSocketMessage(cb2, typeof e.data === "string" ? e.data : String(e.data));
+      ws.onclose = (e) =>
+        exp && exp.onWebSocketClose && exp.onWebSocketClose(cb3, e.code || 1006, e.reason || "");
+      ws.onerror = () => exp && exp.onWebSocketError && exp.onWebSocketError(cb4);
+    } else {
+      setTimeout(() => exp && exp.onWebSocketError && exp.onWebSocketError(cb4), 0);
+    }
+    globalThis.__wsConns.set(handle, ws);
+    return handle;
+  },
+
   idbOpen(name: string, version: bigint | null, callbackId: bigint) {
     const req = indexedDB.open(name, version !== undefined && version !== null ? Number(version) : undefined);
+    req.onupgradeneeded = () => {
+      try {
+        if (req.result && !req.result.objectStoreNames.contains("kv")) {
+          req.result.createObjectStore("kv");
+        }
+      } catch {}
+    };
     req.onsuccess = () => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]) {
-        globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]?.onIdbOpen?.(
+        const dbHandle = globalThis.__storeElement?.(req.result) ?? 0n;
+        globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]?.onIdbRequestSuccess?.(
           callbackId,
-          globalThis.__storeElement?.(req.result) ?? 0n,
+          String(dbHandle),
         );
       }
     };
@@ -524,7 +612,10 @@ export const platformHelpers_exports = {
       const req = store.get(key);
       req.onsuccess = () => {
         if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]) {
-          globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]?.onIdbRequestSuccess?.(callbackId, req.result);
+          globalThis.__wasmExports["tairitsu-browser:full/idb-callbacks@0.2.0"]?.onIdbRequestSuccess?.(
+            callbackId,
+            req.result === undefined || req.result === null ? "" : String(req.result),
+          );
         }
       };
       req.onerror = () => {
@@ -612,7 +703,46 @@ export const platformHelpers_exports = {
   },
 };
 
+// === canvas 2D（WIT html-canvas-element / canvas-rect / canvas-fill-stroke-styles）===
+export const htmlCanvasElement_exports = {
+  getContext(self, contextId, options) {
+    const canvas = globalThis.__lookupElement(self);
+    if (!canvas || !canvas.getContext) return undefined;
+    const opts = options ? JSON.parse(options) : undefined;
+    const ctx = canvas.getContext(contextId, opts);
+    if (!ctx) return undefined;
+    if (!globalThis.__canvasCtxHandles) {
+      globalThis.__canvasCtxHandles = new Map();
+      globalThis.__nextCanvasCtxHandle = 1n;
+    }
+    const handle = globalThis.__nextCanvasCtxHandle++;
+    globalThis.__canvasCtxHandles.set(handle, ctx);
+    return handle;
+  },
+};
+
+export const canvasRect_exports = {
+  clearRect(self, x, y, w, h) {
+    const ctx = globalThis.__canvasCtxHandles && globalThis.__canvasCtxHandles.get(self);
+    if (ctx) ctx.clearRect(x, y, w, h);
+  },
+  fillRect(self, x, y, w, h) {
+    const ctx = globalThis.__canvasCtxHandles && globalThis.__canvasCtxHandles.get(self);
+    if (ctx) ctx.fillRect(x, y, w, h);
+  },
+};
+
+export const canvasFillStrokeStyles_exports = {
+  setFillStyle(self, value) {
+    const ctx = globalThis.__canvasCtxHandles && globalThis.__canvasCtxHandles.get(self);
+    if (ctx) ctx.fillStyle = value;
+  },
+};
+
 // === Registry ===
 export const INTERFACES = {
+  "@tairitsu-glue/html-canvas-element": htmlCanvasElement_exports,
+  "@tairitsu-glue/canvas-rect": canvasRect_exports,
+  "@tairitsu-glue/canvas-fill-stroke-styles": canvasFillStrokeStyles_exports,
   "@tairitsu-glue/platform-helpers": platformHelpers_exports,
 };

@@ -14,12 +14,59 @@ export const window_exports = {
   getInnerHeight() {
     return window.innerHeight;
   },
+  getScrollY() {
+    return window.scrollY ?? window.pageYOffset ?? 0;
+  },
   getComputedStyle(elt: number, pseudoElt?: string): number {
     const el = globalThis.__lookupElement(elt);
     const result = window.getComputedStyle(el, pseudoElt);
     const handle = globalThis.__nextCssStyleDeclarationHandle++;
     globalThis.__cssStyleDeclarationHandles.set(handle, result);
     return handle;
+  },
+  matchMedia(query: string): bigint {
+    // 存储 MediaQueryList 并返回句柄；media-query-list 接口按句柄读取。
+    if (!globalThis.__mqlHandles) {
+      globalThis.__mqlHandles = new Map();
+      globalThis.__nextMqlHandle = 1n;
+    }
+    const mql = window.matchMedia(query);
+    const handle = globalThis.__nextMqlHandle++;
+    globalThis.__mqlHandles.set(handle, mql);
+    return handle;
+  },
+};
+
+// === media-query-list ===
+// WIT media-query-list：按 window.matchMedia 返回的句柄读 media/matches，
+// add-listener 把 change 事件桥到组件导出的 onMediaChange 回调。
+export const mediaQueryList_exports = {
+  getMedia(self: bigint): string {
+    const mql = globalThis.__mqlHandles?.get(self);
+    return mql ? mql.media || '' : '';
+  },
+  getMatches(self: bigint): boolean {
+    const mql = globalThis.__mqlHandles?.get(self);
+    return mql ? !!mql.matches : false;
+  },
+  addListener(self: bigint, callbackId: bigint | undefined) {
+    const mql = globalThis.__mqlHandles?.get(self);
+    if (!mql || callbackId === undefined || callbackId === null) return;
+    const cb = (event: MediaQueryListEvent) => {
+      const exp =
+        globalThis.__wasmExports?.[
+          'tairitsu-browser:full/media-query-list-callbacks@0.2.0'
+        ];
+      exp?.onChange?.(callbackId, event.matches);
+    };
+    if (mql.addEventListener) {
+      mql.addEventListener('change', cb);
+    } else if ((mql as any).addListener) {
+      (mql as any).addListener(cb);
+    }
+  },
+  removeListener(self: bigint, _callback: bigint | undefined) {
+    // 句柄级移除：WIT 回调句柄与 JS 监听器无一一对应表，当前无消费者。
   },
 };
 
@@ -73,10 +120,20 @@ export const history_exports = {
     window.history.forward();
   },
   pushState(data, unused, url) {
-    window.history.pushState(data, unused, url);
+    // 组件侧 push_state(url) 只带一个参数（WIT 三参数里的 url 位）：
+    // 单参调用按 url 语义处理，三参原样透传。
+    if (url === undefined && unused === undefined) {
+      window.history.pushState(null, '', String(data));
+    } else {
+      window.history.pushState(data, unused, url);
+    }
   },
   replaceState(data, unused, url) {
-    window.history.replaceState(data, unused, url);
+    if (url === undefined && unused === undefined) {
+      window.history.replaceState(null, '', String(data));
+    } else {
+      window.history.replaceState(data, unused, url);
+    }
   },
 };
 
@@ -471,4 +528,5 @@ export const INTERFACES = {
   "@tairitsu-glue/location": location_exports,
   "@tairitsu-glue/history": history_exports,
   "@tairitsu-glue/html-input-element": htmlInputElement_exports,
+  "@tairitsu-glue/media-query-list": mediaQueryList_exports,
 };
