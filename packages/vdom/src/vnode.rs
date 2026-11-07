@@ -998,6 +998,18 @@ impl VNode {
         VNode::Text(VText::new(""))
     }
 
+    /// 根 vnode 挂载后的「宿主子节点数」：Element 是 children.len()
+    /// （属性/文本不是子节点），Fragment 是 children.len()（展开挂载），
+    /// Text/DynamicText 挂载为单个文本节点（0 子节点）。
+    /// reconcile 守卫用它和 DOM 实测子数对账。
+    pub fn mounted_child_count(&self) -> usize {
+        match self {
+            VNode::Element(el) => el.children.len(),
+            VNode::Fragment(children) => children.len(),
+            VNode::Text(_) | VNode::DynamicText(_) => 0,
+        }
+    }
+
     /// Render this VNode tree to an HTML string for server-side rendering.
     ///
     /// Event handlers are omitted since they only work in the browser.

@@ -2959,7 +2959,7 @@ pub mod wasm_impl {
     }
 
     /// Replace the content of an element with a new VNode.
-    fn replace_element_content(
+    pub(crate) fn replace_element_content(
         platform: &WitPlatform,
         element: &WitElement,
         vnode: &VNode,

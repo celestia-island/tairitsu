@@ -25,6 +25,12 @@ type ScheduleCallback = Rc<RefCell<dyn FnMut(Box<dyn FnOnce()>)>>;
 /// Callback type for applying patches to the DOM
 type ApplyPatchesCallback = Rc<RefCell<dyn FnMut(ComponentId, Vec<Patch>)>>;
 
+/// Callback type for post-apply reconciliation: receives the component, the
+/// child count the freshly stored vnode expects at its mount root, and the
+/// vnode itself. The embedder compares against the live DOM and repairs on
+/// mismatch (see [`set_reconcile_callback`]).
+type ReconcileCallback = Rc<RefCell<dyn FnMut(ComponentId, usize, VNode)>>;
+
 thread_local! {
     static HOOK_SLOT: RefCell<HashMap<(ComponentId, String), Box<dyn std::any::Any>>> = RefCell::new(HashMap::new());
 }
@@ -73,6 +79,7 @@ struct RuntimeInner {
     dirty_components: Vec<ComponentId>,
     schedule_callback: Option<ScheduleCallback>,
     apply_patches_callback: Option<ApplyPatchesCallback>,
+    reconcile_callback: Option<ReconcileCallback>,
     scheduled: bool,
     /// mark_dirty calls that arrived while a flush was booked but not yet
     /// delivered. A booking the host never honours is detected by this count
@@ -95,6 +102,7 @@ impl RuntimeInner {
             dirty_components: Vec::new(),
             schedule_callback: None,
             apply_patches_callback: None,
+            reconcile_callback: None,
             scheduled: false,
             booking_marks: 0,
             raf_id: None,
@@ -127,6 +135,21 @@ pub fn set_apply_patches_callback<F: FnMut(ComponentId, Vec<Patch>) + 'static>(c
     RUNTIME.with(|runtime| {
         runtime.borrow_mut().apply_patches_callback = Some(Rc::new(RefCell::new(callback)));
         trace!("Apply patches callback registered");
+    });
+}
+
+/// Set the post-apply reconciliation callback.
+///
+/// After every patch batch the runtime hands the embedder the component's
+/// fresh vnode plus the child count it expects at the mount root. The
+/// embedder counts the live DOM children; a mismatch means the stored vnode
+/// baseline and the DOM have drifted apart (a mis-landed patch once — no
+/// built-in mechanism ever re-aligns them), and the embedder can repair by
+/// re-rendering the vnode into the root. Cheap O(1) check per render.
+pub fn set_reconcile_callback<F: FnMut(ComponentId, usize, VNode) + 'static>(callback: F) {
+    RUNTIME.with(|runtime| {
+        runtime.borrow_mut().reconcile_callback = Some(Rc::new(RefCell::new(callback)));
+        trace!("Reconcile callback registered");
     });
 }
 
@@ -498,17 +521,28 @@ fn render_component(id: ComponentId) {
         }
     } else {
         trace!("Initial render for component {}", id);
-        let patches = vec![Patch::CreateNode { node: new_vnode }];
+        let patches = vec![Patch::CreateNode { node: new_vnode.clone() }];
         if let Some(cb) = &ext.apply_patches_cb {
             let mut guard = cb.borrow_mut();
             guard(id, patches);
         }
     }
 
-    // Phase 5: reset active component after patch application is complete.
+    // Phase 5: reset active component after patch application is complete,
+    // then run the reconcile guard: the embedder compares the DOM child
+    // count at the mount root against the fresh vnode's expectation and
+    // repairs (full in-place re-render) on drift. Must run OUTSIDE any
+    // runtime borrow and OUTSIDE the apply-patches callback borrow: the
+    // repair re-renders the subtree directly, it does not recurse into
+    // render_component, so no guard recursion is possible.
     RUNTIME.with(|runtime| {
         runtime.borrow_mut().active_component = None;
     });
+    let reconcile = RUNTIME.with(|runtime| runtime.borrow().reconcile_callback.clone());
+    if let Some(cb) = reconcile {
+        let expected = new_vnode.mounted_child_count();
+        cb.borrow_mut()(id, expected, new_vnode);
+    }
 }
 
 pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
