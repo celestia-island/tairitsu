@@ -117,6 +117,30 @@ export const node_exports = {
     globalThis.__nodeListHandles.set(handle, node.childNodes);
     return handle;
   },
+  // 0.5.26 patch-path node ops: the diff/apply pipeline resolves child slots
+  // that may hold text nodes (getNodeType discriminates), inserts before an
+  // existing sibling (insertBefore) and swaps a slot in place (replaceChild,
+  // e.g. ReplaceNode on a text slot). Without these the wrapper fails at
+  // module load: "does not provide an export named 'getNodeType'".
+  getNodeType(self) {
+    return globalThis.__lookupNode(self).nodeType;
+  },
+  insertBefore(self, node, child) {
+    const parent = globalThis.__lookupNode(self);
+    const result = parent.insertBefore(
+      globalThis.__lookupNode(node),
+      child === undefined || child === null ? null : globalThis.__lookupNode(child),
+    );
+    return globalThis.__storeNode(result);
+  },
+  replaceChild(self, node, child) {
+    const parent = globalThis.__lookupNode(self);
+    const result = parent.replaceChild(
+      globalThis.__lookupNode(node),
+      globalThis.__lookupNode(child),
+    );
+    return globalThis.__storeNode(result);
+  },
 };
 
 // === nonElementParentNode ===
