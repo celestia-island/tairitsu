@@ -2619,8 +2619,42 @@ pub mod wasm_impl {
         parent: &WitElement,
         patches: &[tairitsu_vdom::Patch],
     ) -> Result<()> {
+        apply_patch_list(platform, parent, patches)
+    }
+
+    /// Apply a list of sibling patches with old-frame index discipline.
+    ///
+    /// Every op index in a positional diff batch refers to positions in the
+    /// OLD child list. Replace/Update ops are count-neutral, so applying them
+    /// in order keeps the old frame valid; but each executed RemoveChild
+    /// shifts every later index down by one, so a second removal (or any
+    /// index-addressed op) after a first one addresses the wrong slot and
+    /// nodes the diff removed survive in the DOM (observed as a modal that
+    /// never closes). A positional batch never mixes inserts and removals
+    /// (the child count moves one way), so deferring removals to a
+    /// descending-index second pass keeps every index exact: non-removals run
+    /// against the untouched old frame, then removals peel off slots from the
+    /// tail down.
+    fn apply_patch_list(
+        platform: &WitPlatform,
+        parent: &WitElement,
+        patches: &[tairitsu_vdom::Patch],
+    ) -> Result<()> {
+        let mut removals: Vec<usize> = Vec::new();
         for patch in patches {
+            if let tairitsu_vdom::Patch::RemoveChild { index } = patch {
+                removals.push(*index);
+                continue;
+            }
             apply_patch(platform, parent, patch)?;
+        }
+        removals.sort_unstable_by(|a, b| b.cmp(a));
+        for index in removals {
+            apply_patch(
+                platform,
+                parent,
+                &tairitsu_vdom::Patch::RemoveChild { index },
+            )?;
         }
         Ok(())
     }
@@ -2635,6 +2669,27 @@ pub mod wasm_impl {
     ) -> Result<()> {
         use tairitsu_vdom::Patch;
 
+        // A patch slot can currently hold a text node: the previous render
+        // put a Text/DynamicText vnode there and the new render swapped in an
+        // Element (or the diff walks a child list whose DOM counterpart at
+        // that index is text). Every element-only glue call below
+        // (set_attribute, set_class, add_event_listener, append_child, …)
+        // throws on a text node, and under a wasm-component host a host-side
+        // throw is a trap: it aborts the whole flush mid-drain and leaves the
+        // runtime's flushing guard stuck. Route around the node kind instead.
+        let slot_is_element =
+            bindings::tairitsu_browser::full::node::get_node_type(element.as_raw()) == 1;
+        let element_only = !matches!(
+            patch,
+            Patch::ReplaceNode { .. } | Patch::UpdateText { .. } | Patch::RemoveNode
+        );
+        if element_only && !slot_is_element {
+            tracing::warn!(
+                "skipping element-only patch on a non-element slot (text child where an element was expected)"
+            );
+            return Ok(());
+        }
+
         match patch {
             Patch::CreateNode { node } => {
                 // Create and append a new node
@@ -2647,7 +2702,36 @@ pub mod wasm_impl {
             }
 
             Patch::ReplaceNode { node } => {
-                // Replace the current element with a new node
+                // A slot replacement must actually swap the node: the vnode
+                // at this index changed kind (or tag), and the DOM node has
+                // to follow. Rebuilding the new content *inside* the old
+                // element — the historical behaviour — leaves the old
+                // element's identity in the slot (a stale TABLE where the
+                // vnode says "loading card", a stale overlay where it says
+                // empty text), so every later index-addressed patch on this
+                // child list lands on the wrong slot and the tree skews
+                // irreversibly. Materialise the new node per its own kind
+                // and swap it with a real replaceChild against the parent.
+                let parent_handle =
+                    bindings::tairitsu_browser::full::node::get_parent_element(element.as_raw());
+                if let Some(parent_handle) = parent_handle {
+                    let parent = WitElement::from_raw(parent_handle);
+                    let new_element = create_vnode_element(platform, node)?;
+                    if let VNode::Element(boxed) = node {
+                        for child in &boxed.children {
+                            render_vnode(platform, child, &new_element)?;
+                        }
+                    }
+                    let _ = bindings::tairitsu_browser::full::node::replace_child(
+                        parent.as_raw(),
+                        new_element.as_raw(),
+                        element.as_raw(),
+                    );
+                    tairitsu_vdom::runtime::on_element_removed(element.as_raw());
+                    return Ok(());
+                }
+                // Detached slot (no parent): nothing to swap against, fall
+                // back to rebuilding the content in place.
                 replace_element_content(platform, element, node)?;
             }
 
@@ -2696,10 +2780,9 @@ pub mod wasm_impl {
                 // Get the child at the specified index
                 let child = get_child_at(element, *index)?;
                 if let Some(child_element) = child {
-                    // Apply the nested patches to the child
-                    for child_patch in child_patches {
-                        apply_patch(platform, &child_element, child_patch)?;
-                    }
+                    // Apply the nested patches to the child — sibling list,
+                    // same two-pass index discipline as the root batch.
+                    apply_patch_list(platform, &child_element, child_patches)?;
                 }
             }
 
