@@ -5,7 +5,7 @@
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
 /// Version: 0.2.0
-/// Generated: 2026-05-31 03:52:06 UTC
+/// Generated: 2026-11-08 04:41:13 UTC
 ///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
@@ -558,10 +558,16 @@ interface speech-recognition-result {
     get-length: func(self: speech-recognition-result-handle) -> u32;
 
     /// `item()` operation.
-    item: func(self: speech-recognition-result-handle, index: u32) -> u64;
+    item: func(self: speech-recognition-result-handle, index: u32) -> option<u64>;
 
     /// `isFinal` attribute — getter.
     get-is-final: func(self: speech-recognition-result-handle) -> bool;
+
+    /// `speechStartTime` attribute — getter.
+    get-speech-start-time: func(self: speech-recognition-result-handle) -> f64;
+
+    /// `speechEndTime` attribute — getter.
+    get-speech-end-time: func(self: speech-recognition-result-handle) -> f64;
 }
 
 /// WebIDL interface: `SpeechRecognitionResultList`
@@ -574,7 +580,7 @@ interface speech-recognition-result-list {
     get-length: func(self: speech-recognition-result-list-handle) -> u32;
 
     /// `item()` operation.
-    item: func(self: speech-recognition-result-list-handle, index: u32) -> u64;
+    item: func(self: speech-recognition-result-list-handle, index: u32) -> option<u64>;
 }
 
 /// WebIDL interface: `SpeechRecognitionEvent`
@@ -618,9 +624,9 @@ interface speech-grammar-list {
     get-length: func(self: speech-grammar-list-handle) -> u32;
 
     /// `item()` operation.
-    item: func(self: speech-grammar-list-handle, index: u32) -> u64;
+    item: func(self: speech-grammar-list-handle, index: u32) -> option<u64>;
 
-    /// `addFromURI()` operation.
+    /// `addFromUri()` operation.
     add-from-uri: func(self: speech-grammar-list-handle, src: string, weight: option<f32>);
 
     /// `addFromString()` operation.
@@ -972,7 +978,7 @@ interface offline-audio-context {
     type offline-audio-context-handle = u64;
 
     /// `startRendering()` operation.
-    start-rendering: func(self: offline-audio-context-handle) -> u64;
+    start-rendering: func(self: offline-audio-context-handle, chunk-size: option<u32>) -> u64;
 
     /// `resume()` operation.
     resume: func(self: offline-audio-context-handle) -> u64;
@@ -980,8 +986,11 @@ interface offline-audio-context {
     /// `suspend()` operation.
     suspend: func(self: offline-audio-context-handle, suspend-time: f64) -> u64;
 
+    /// `close()` operation.
+    close: func(self: offline-audio-context-handle) -> u64;
+
     /// `length` attribute — getter.
-    get-length: func(self: offline-audio-context-handle) -> u32;
+    get-length: func(self: offline-audio-context-handle) -> option<u32>;
 
     /// `oncomplete` attribute — getter.
     get-oncomplete: func(self: offline-audio-context-handle) -> u64;
@@ -1372,6 +1381,9 @@ interface dynamics-compressor-node {
 
     /// `release` attribute — getter.
     get-release: func(self: dynamics-compressor-node-handle) -> u64;
+
+    /// `makeupGain` attribute — getter.
+    get-makeup-gain: func(self: dynamics-compressor-node-handle) -> u64;
 }
 
 /// WebIDL interface: `GainNode`
@@ -1579,32 +1591,6 @@ interface audio-worklet {
     get-port: func(self: audio-worklet-handle) -> u64;
 }
 
-/// WebIDL interface: `AudioWorkletGlobalScope`
-/// Inherits: `WorkletGlobalScope`
-/// Source: https://github.com/w3c/webref/tree/main/ed/idl/webaudio.idl
-interface audio-worklet-global-scope {
-    /// Opaque handle to a host-side `AudioWorkletGlobalScope` instance.
-    type audio-worklet-global-scope-handle = u64;
-
-    /// `registerProcessor()` operation.
-    register-processor: func(self: audio-worklet-global-scope-handle, name: string, processor-ctor: u64);
-
-    /// `currentFrame` attribute — getter.
-    get-current-frame: func(self: audio-worklet-global-scope-handle) -> u64;
-
-    /// `currentTime` attribute — getter.
-    get-current-time: func(self: audio-worklet-global-scope-handle) -> f64;
-
-    /// `sampleRate` attribute — getter.
-    get-sample-rate: func(self: audio-worklet-global-scope-handle) -> f32;
-
-    /// `renderQuantumSize` attribute — getter.
-    get-render-quantum-size: func(self: audio-worklet-global-scope-handle) -> u32;
-
-    /// `port` attribute — getter.
-    get-port: func(self: audio-worklet-global-scope-handle) -> u64;
-}
-
 /// WebIDL interface: `AudioWorkletNode`
 /// Inherits: `AudioNode`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/webaudio.idl
@@ -1665,7 +1651,7 @@ interface audio-playback-stats {
     to-json: func(self: audio-playback-stats-handle) -> u64;
 }
 
-/// Browser media world — all 63 auto-generated interfaces.
+/// Browser media world — all 62 auto-generated interfaces.
 world media-world {
     import media-capabilities;
     import media-stream;
@@ -1726,7 +1712,6 @@ world media-world {
     import stereo-panner-node;
     import wave-shaper-node;
     import audio-worklet;
-    import audio-worklet-global-scope;
     import audio-worklet-node;
     import audio-worklet-processor;
     import audio-playback-stats;

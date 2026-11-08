@@ -66,9 +66,6 @@ interface notification {
     /// `badge` attribute — getter.
     get-badge: func(self: notification-handle) -> string;
 
-    /// `vibrate` attribute — getter.
-    get-vibrate: func(self: notification-handle) -> list<u32>;
-
     /// `timestamp` attribute — getter.
     get-timestamp: func(self: notification-handle) -> u64;
 

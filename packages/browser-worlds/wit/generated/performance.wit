@@ -5,7 +5,7 @@
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
 /// Version: 0.2.0
-/// Generated: 2026-05-31 03:52:06 UTC
+/// Generated: 2026-11-08 04:41:13 UTC
 ///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
@@ -67,6 +67,44 @@ interface performance {
 
     /// `clearMeasures()` operation.
     clear-measures: func(measure-name: option<string>);
+}
+
+/// WebIDL interface: `WorkletPerformance`
+/// Source: https://github.com/w3c/webref/tree/main/ed/idl/hr-time.idl
+interface worklet-performance {
+    /// Opaque handle to a host-side `WorkletPerformance` instance.
+    type worklet-performance-handle = u64;
+
+    /// `now()` operation.
+    now: func(self: worklet-performance-handle) -> f64;
+}
+
+/// WebIDL interface: `AudioWorkletGlobalScope`
+/// Source: https://github.com/w3c/webref/tree/main/ed/idl/hr-time.idl
+interface audio-worklet-global-scope {
+    /// Opaque handle to a host-side `AudioWorkletGlobalScope` instance.
+    type audio-worklet-global-scope-handle = u64;
+
+    /// `performance` attribute — getter.
+    get-performance: func(self: audio-worklet-global-scope-handle) -> u64;
+
+    /// `registerProcessor()` operation.
+    register-processor: func(self: audio-worklet-global-scope-handle, name: string, processor-ctor: u64);
+
+    /// `currentFrame` attribute — getter.
+    get-current-frame: func(self: audio-worklet-global-scope-handle) -> u64;
+
+    /// `currentTime` attribute — getter.
+    get-current-time: func(self: audio-worklet-global-scope-handle) -> f64;
+
+    /// `sampleRate` attribute — getter.
+    get-sample-rate: func(self: audio-worklet-global-scope-handle) -> f32;
+
+    /// `renderQuantumSize` attribute — getter.
+    get-render-quantum-size: func(self: audio-worklet-global-scope-handle) -> u32;
+
+    /// `port` attribute — getter.
+    get-port: func(self: audio-worklet-global-scope-handle) -> u64;
 }
 
 /// WebIDL interface: `PerformanceNavigationTiming`
@@ -404,9 +442,11 @@ interface performance-measure {
     get-detail: func(self: performance-measure-handle) -> string;
 }
 
-/// Browser performance world — all 11 auto-generated interfaces.
+/// Browser performance world — all 13 auto-generated interfaces.
 world performance-world {
     import performance;
+    import worklet-performance;
+    import audio-worklet-global-scope;
     import performance-navigation-timing;
     import performance-timing-confidence;
     import performance-timing;
