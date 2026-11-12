@@ -15,6 +15,14 @@ package tairitsu:transport@0.1.0;
 
 /// Shared transport data types.
 interface types {
+  /// Credential intent: session = the host materializes credentials
+  /// (bearer exactly once, csrf pair complete); none = the caller owns
+  /// the request credentials outright (public endpoints, probes).
+  enum auth-intent {
+    session,
+    none,
+  }
+
   /// Shared subset of fetch init.
   record request-options {
     method: string,
@@ -23,6 +31,7 @@ interface types {
     credentials: option<credentials-mode>,
     redirect: option<redirect-mode>,
     timeout-ms: option<u64>,
+    auth: option<auth-intent>,
   }
 
   enum credentials-mode {
@@ -77,7 +86,9 @@ interface websocket {
   /// Opaque host-side connection handle.
   type ws-handle = u64;
 
-  connect: func(url: string, protocols: list<string>) -> result<ws-handle, string>;
+  /// Credential intent rides the handshake (types.auth-intent): session
+  /// = the host materializes the credential; none = caller-owned.
+  connect: func(url: string, protocols: list<string>, auth: option<types.auth-intent>) -> result<ws-handle, string>;
   send: func(handle: ws-handle, frame: ws-frame) -> result<_, string>;
   recv: func(handle: ws-handle) -> option<ws-frame>;
   close-info: func(handle: ws-handle) -> option<ws-close-info>;
@@ -94,6 +105,7 @@ interface sse {
     url: string,
     headers: list<tuple<string, string>>,
     events: list<string>,
+    auth: option<types.auth-intent>,
   ) -> result<sse-handle, string>;
   next: func(handle: sse-handle) -> option<sse-event>;
   close: func(handle: sse-handle);

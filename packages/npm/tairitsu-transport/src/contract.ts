@@ -26,6 +26,15 @@ export interface TransportRequest {
   body?: BodyInit | null;
   /** Browser only; desktop hosts map it to their cookie jar. */
   credentials?: "omit" | "same-origin" | "include";
+  /** Credential intent. Default `"session"`: the active host materializes
+   *  the session credential itself — the browser through its cookie jar,
+   *  desktop through the gateway session context (bearer + csrf pair).
+   *  On `session` requests a caller-supplied `Authorization`/`Cookie`
+   *  header is a contract violation and the desktop host rejects it
+   *  outright (a duplicated credential line 400s at the front door;
+   *  2026-11-12 ignition-P0a). `"none"` opts out for public endpoints
+   *  and probes. */
+  auth?: "session" | "none";
   /** Browser only; desktop hosts ignore it. */
   mode?: "cors" | "no-cors" | "same-origin";
   /** Browser only; desktop hosts ignore it. */
@@ -66,6 +75,9 @@ export interface WsOptions {
   protocols?: string[];
   /** Browser WebSocket cannot send custom headers; desktop may. */
   headers?: Record<string, string>;
+  /** Credential intent for the upgrade handshake — same contract as
+   *  TransportRequest.auth. */
+  auth?: "session" | "none";
 }
 
 export type WsReadyState = "connecting" | "open" | "closing" | "closed";
@@ -95,6 +107,9 @@ export interface SseOptions {
   withCredentials?: boolean;
   /** Additional named events to subscribe to (`event:` field values). */
   events?: string[];
+  /** Credential intent for the connection — same contract as
+   *  TransportRequest.auth. */
+  auth?: "session" | "none";
 }
 
 export type SseReadyState = "connecting" | "open" | "closed";

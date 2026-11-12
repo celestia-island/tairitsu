@@ -62,7 +62,7 @@ export function createBrowserTransport(
         method: req.method ?? "GET",
         headers: req.headers,
         body: req.body as BodyInit | null | undefined,
-        credentials: req.credentials,
+        credentials: req.auth === "none" ? "omit" : req.credentials,
         mode: req.mode,
         redirect: req.redirect,
         signal: mergeSignals(req.signal, req.timeoutMs),

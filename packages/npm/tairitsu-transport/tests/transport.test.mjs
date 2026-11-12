@@ -236,6 +236,7 @@ test("desktop transport forwards http requests through the host bridge", async (
     path: "https://api.example.test/v1/things",
     headers: { "content-type": "application/json" },
     body: '{"a":1}',
+    auth: "session",
   });
   assert.equal(resp.ok, true);
   assert.deepEqual(await resp.json(), { hello: "world" });
@@ -519,4 +520,74 @@ test("json-rpc honours per-call timeouts", async () => {
     rpc.request("thing.slow", undefined, { timeoutMs: 20 }),
     (err) => err instanceof TransportError && err.code === "timeout",
   );
+});
+
+
+// ── desktop credential ownership (the 2026-11-12 regression) ────────────
+
+function fakeDesktopHost() {
+  const invokes = [];
+  return {
+    invokes,
+    host: {
+      invoke(command, args) {
+        invokes.push({ command, args });
+        return Promise.resolve({ status: 200, statusText: "OK", body: { ok: true } });
+      },
+      openWs() {
+        return {
+          onMessage() {},
+          onClose() {},
+          onOpen() {},
+          send() {},
+          close() {},
+          get readyState() { return "open"; },
+        };
+      },
+    },
+  };
+}
+
+test("desktop session requests reject hand-carried credentials", async () => {
+  const { host } = fakeDesktopHost();
+  const transport = createDesktopTransport(host);
+  await assert.rejects(
+    transport.request({ url: "/api/rpc", method: "POST", headers: { Authorization: "Bearer x" }, body: "{}" }),
+    /auth=session/,
+  );
+  await assert.rejects(
+    transport.request({ url: "/api/rpc", method: "POST", headers: { cookie: "a=b" }, body: "{}" }),
+    /auth=session/,
+  );
+  // WS upgrade handshakes are session-scoped too.
+  assert.throws(
+    () => transport.openWs("wss://example.test/api/rpc", { headers: { Authorization: "Bearer x" } }),
+    /auth=session/,
+  );
+});
+
+test("desktop session requests forward the auth intent to the host", async () => {
+  const { host, invokes } = fakeDesktopHost();
+  const transport = createDesktopTransport(host);
+  await transport.request({ url: "/api/rpc", method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+  assert.equal(invokes.at(-1).args.auth, "session");
+  await transport.request({ url: "/api/health", auth: "none" });
+  assert.equal(invokes.at(-1).args.auth, "none");
+});
+
+test("desktop auth:none lets probes carry their own credentials", async () => {
+  const { host, invokes } = fakeDesktopHost();
+  const transport = createDesktopTransport(host);
+  await transport.request({ url: "/api/probe", method: "POST", headers: { Authorization: "Bearer probe" }, body: "{}", auth: "none" });
+  assert.equal(invokes.at(-1).args.auth, "none");
+  assert.equal(invokes.at(-1).args.headers.Authorization, "Bearer probe");
+});
+
+test("browser auth:none forces credentials omit", async () => {
+  const { host, fetchCalls } = fakeBrowserHost();
+  const transport = createBrowserTransport({}, host);
+  await transport.request({ url: "https://example.test/a", credentials: "include", auth: "none" });
+  assert.equal(fetchCalls.at(-1).init.credentials, "omit");
+  await transport.request({ url: "https://example.test/b", credentials: "include" });
+  assert.equal(fetchCalls.at(-1).init.credentials, "include");
 });
