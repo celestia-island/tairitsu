@@ -41,6 +41,27 @@ export interface DesktopHost extends HostInvoke {
   openSse?(url: string, opts?: SseOptions): SseChannel;
 }
 
+/** Session-scoped requests may not hand-carry credentials: the host
+ *  context materializes them (bearer exactly once, csrf pair complete).
+ *  A caller-supplied `Authorization`/`Cookie` line duplicates what the
+ *  host attaches and is rejected 400 by the front door (2026-11-12). */
+function assertNoHandCarriedCredentials(
+  headers: Record<string, string> | undefined,
+  auth: "session" | "none" | undefined,
+): void {
+  if ((auth ?? "session") !== "session") return;
+  const forbidden = Object.keys(headers ?? {}).filter((k) =>
+    /^(authorization|cookie)$/i.test(k),
+  );
+  if (forbidden.length > 0) {
+    throw new TypeError(
+      `desktop transport owns credentials for auth=session requests — strip ` +
+        `${forbidden.join(" or ")} or set auth: 'none' (a duplicated ` +
+        `credential line is rejected at the front door)`,
+    );
+  }
+}
+
 export interface DesktopTransportOptions {
   /** Host command carrying an HTTP request; defaults to "http-proxy". */
   httpCommand?: string;
@@ -58,6 +79,7 @@ export function createDesktopTransport(
         throw new TransportError("aborted", "request was aborted");
       }
       const body = serializeBody(req.body);
+      assertNoHandCarriedCredentials(req.headers, req.auth);
 
       let wire: HostHttpResponse;
       try {
@@ -68,6 +90,7 @@ export function createDesktopTransport(
               path: req.url,
               headers: req.headers ?? {},
               body,
+              auth: req.auth ?? "session",
             }),
           { signal: req.signal, timeoutMs: req.timeoutMs },
         );
@@ -120,6 +143,7 @@ export function createDesktopTransport(
     },
 
     openWs(url: string, opts?: WsOptions): WsChannel {
+      assertNoHandCarriedCredentials(opts?.headers, opts?.auth);
       if (!host.openWs) {
         throw new TransportError(
           "ws-unavailable",
@@ -130,6 +154,7 @@ export function createDesktopTransport(
     },
 
     openSse(url: string, opts?: SseOptions): SseChannel {
+      assertNoHandCarriedCredentials(opts?.headers, opts?.auth);
       if (!host.openSse) {
         throw new TransportError(
           "sse-unavailable",

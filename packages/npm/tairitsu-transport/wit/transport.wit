@@ -15,6 +15,14 @@ package tairitsu:transport@0.1.0;
 
 /// Shared transport data types.
 interface types {
+  /// Credential intent: session = the host materializes credentials
+  /// (bearer exactly once, csrf pair complete); none = the caller owns
+  /// the request credentials outright (public endpoints, probes).
+  enum auth-intent {
+    session,
+    none,
+  }
+
   /// Shared subset of fetch init.
   record request-options {
     method: string,
@@ -23,6 +31,7 @@ interface types {
     credentials: option<credentials-mode>,
     redirect: option<redirect-mode>,
     timeout-ms: option<u64>,
+    auth: option<auth-intent>,
   }
 
   enum credentials-mode {
