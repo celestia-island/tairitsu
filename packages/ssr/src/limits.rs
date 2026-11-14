@@ -26,7 +26,9 @@
 //!    [`Store::limiter`], so an allocation bomb fails (`memory.grow` returns -1,
 //!    or instantiation fails when the declared minimum already exceeds the cap)
 //!    instead of pinning gigabytes of RSS. A `-1` alone would be invisible from
-//!    outside the guest, so every denial is also recorded on the host state (see
+//!    outside the guest, so every LINEAR-MEMORY denial is also recorded on the host
+//!    state (table denials are not — their caps bound arithmetic, and a denied
+//!    `table.grow` traps the guest loudly) (see
 //!    [`SsrHostState::memory_budget_error`]) and the render path turns it into an
 //!    error instead of serving the truncated page the guest left behind.
 //!
@@ -133,6 +135,8 @@ pub const COMPONENT_CACHE_CAPACITY: usize = 32;
 /// section under Winch baseline codegen (roughly 1–4×), so a fully populated cache
 /// sits around 0.25–1 GiB. Reaching that requires the host to ingest 32 distinct
 /// 8 MiB binaries — a deliberate act, not an accident.
+pub const MAX_COMPONENT_BYTES: usize = 8 * 1024 * 1024;
+
 /// Memories one untrusted store may define — the multiplier that turns
 /// the per-memory byte cap into a total: the worst case per render is
 /// `MAX_MEMORIES_PER_STORE x RenderOptions::max_memory_bytes`.
@@ -145,8 +149,6 @@ pub const MAX_MEMORIES_PER_STORE: usize = 2;
 /// RSS by 19 MiB). A packager-produced page component instantiates a
 /// handful; 32 is a wide margin.
 pub const MAX_INSTANCES_PER_STORE: usize = 32;
-
-pub const MAX_COMPONENT_BYTES: usize = 8 * 1024 * 1024;
 
 /// Per-render guest execution policy.
 ///
