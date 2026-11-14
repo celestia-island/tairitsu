@@ -396,28 +396,32 @@ fn an_oversized_table_is_refused() {
     );
 }
 
-/// Instance count bounds the globals dimension (R4: the default 10_000
-/// would let a small input pin tens of GiB of RSS before fuel ticks).
+/// Instance count bounds the globals dimension wasmtime does not meter
+/// (R4/R5): the pin reads the effective limiter, so lowering the cap is
+/// caught without needing a nested-instance fixture.
 #[test]
-fn a_module_with_too_many_instances_fails_to_instantiate() {
+fn the_instance_count_cap_is_installed_on_every_store() {
     let _serial = serial();
     let engine = shared_engine().expect("shared engine should initialise");
-    // Nested instances are not expressible in plain WAT, so assert the
-    // limit is configured rather than the instantiation failing: the
-    // store limit itself is the contract this test owns.
+    let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
+    apply_limits(&mut store, &RenderOptions::default()).expect("limits apply");
     assert_eq!(
-        tairitsu_ssr::limits::MAX_MEMORIES_PER_STORE,
-        2,
-        "the memory multiplier is part of the documented total"
+        wasmtime::ResourceLimiter::instances(store.data()),
+        tairitsu_ssr::limits::MAX_INSTANCES_PER_STORE,
+        "the store actually carries the instance cap"
     );
-    let _ = (engine, SsrHostState::new().expect("host state"));
+    assert_eq!(
+        tairitsu_ssr::limits::MAX_INSTANCES_PER_STORE,
+        32,
+        "and the cap is the documented 32"
+    );
 }
 
 fn grow(engine: &Engine, module: &Module, options: &RenderOptions) -> i32 {
     let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
     apply_limits(&mut store, options).expect("limits should apply to a fresh store");
 
-    let instance = Instance::new(&mut store, &module, &[]).expect("module should instantiate");
+    let instance = Instance::new(&mut store, module, &[]).expect("module should instantiate");
     let grow = instance
         .get_typed_func::<(), i32>(&mut store, "grow")
         .expect("`grow` export should exist");

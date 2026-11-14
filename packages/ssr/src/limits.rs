@@ -138,6 +138,14 @@ pub const COMPONENT_CACHE_CAPACITY: usize = 32;
 /// `MAX_MEMORIES_PER_STORE x RenderOptions::max_memory_bytes`.
 pub const MAX_MEMORIES_PER_STORE: usize = 2;
 
+/// Core-module instances one untrusted store may define. Instances are
+/// the only remaining wasmtime handle on the globals dimension, so this
+/// is what keeps a small input from pinning gigabytes of RSS before any
+/// fuel ticks (R4 finding; a measured 300 instances x 4k globals grew
+/// RSS by 19 MiB). A packager-produced page component instantiates a
+/// handful; 32 is a wide margin.
+pub const MAX_INSTANCES_PER_STORE: usize = 32;
+
 pub const MAX_COMPONENT_BYTES: usize = 8 * 1024 * 1024;
 
 /// Per-render guest execution policy.
@@ -377,7 +385,7 @@ pub fn apply_limits(store: &mut Store<SsrHostState>, options: &RenderOptions) ->
         // RSS before fuel ever ticks (R4 finding — a measured 300
         // instances x 4k globals grew RSS by 19 MiB). 32 is far above
         // any real page component.
-        .instances(32)
+        .instances(MAX_INSTANCES_PER_STORE)
         .build();
     store.limiter(SsrHostState::limiter_mut);
 
