@@ -133,6 +133,11 @@ pub const COMPONENT_CACHE_CAPACITY: usize = 32;
 /// section under Winch baseline codegen (roughly 1–4×), so a fully populated cache
 /// sits around 0.25–1 GiB. Reaching that requires the host to ingest 32 distinct
 /// 8 MiB binaries — a deliberate act, not an accident.
+/// Memories one untrusted store may define — the multiplier that turns
+/// the per-memory byte cap into a total: the worst case per render is
+/// `MAX_MEMORIES_PER_STORE x RenderOptions::max_memory_bytes`.
+pub const MAX_MEMORIES_PER_STORE: usize = 2;
+
 pub const MAX_COMPONENT_BYTES: usize = 8 * 1024 * 1024;
 
 /// Per-render guest execution policy.
@@ -355,17 +360,24 @@ pub fn apply_limits(store: &mut Store<SsrHostState>, options: &RenderOptions) ->
     // `OutOfFuel`/`Interrupt` trap. `SsrHostState` therefore implements
     // `ResourceLimiter` itself and counts denials; the render path refuses to report
     // success once that counter is non-zero (see `SsrHostState::memory_budget_error`).
-    // The memory cap is PER LINEAR MEMORY (wasmtime semantics). A
-    // multi-memory component could otherwise hold N x max_memory_bytes,
-    // so the store-level counts cap the TOTAL: 2 memories x 64 MiB =
-    // 128 MiB worst case per untrusted store, and the table bounds cap
-    // per-table growth (R3 S2 — an 8-line two-memory probe held 6 MiB
-    // under a 4 MiB cap before these fields were set).
+    // The memory cap is PER LINEAR MEMORY (wasmtime semantics), so the
+    // real total for one untrusted store is `MAX_MEMORIES_PER_STORE x
+    // max_memory_bytes` (128 MiB with the default 64 MiB cap) — the
+    // count limit below is what makes that an arithmetic bound instead
+    // of an unbounded N (R3 S2: an 8-line two-memory probe held 6 MiB
+    // under a 4 MiB per-memory cap).
     store.data_mut().store_limits = StoreLimitsBuilder::new()
         .memory_size(options.max_memory_bytes)
-        .memories(2)
+        .memories(MAX_MEMORIES_PER_STORE)
         .tables(8)
         .table_elements(10_000)
+        // Instance count bounds the GLOBALS dimension wasmtime does not
+        // meter elsewhere: ~4k globals x 16 B per instance, so the
+        // default 10_000 would let a ~7 MiB input pin tens of GiB of
+        // RSS before fuel ever ticks (R4 finding — a measured 300
+        // instances x 4k globals grew RSS by 19 MiB). 32 is far above
+        // any real page component.
+        .instances(32)
         .build();
     store.limiter(SsrHostState::limiter_mut);
 

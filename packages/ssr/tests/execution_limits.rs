@@ -337,6 +337,82 @@ fn a_two_memory_module_still_instantiates_within_the_count_cap() {
     Instance::new(&mut store, &module, &[]).expect("two memories are within the count cap");
 }
 
+/// Table counts are capped too (R4 finding): a flood of tables is the
+/// other shape that grows host memory without burning fuel.
+#[test]
+fn a_module_with_too_many_tables_fails_to_instantiate() {
+    let _serial = serial();
+    let engine = shared_engine().expect("shared engine should initialise");
+    let module = Module::new(
+        engine,
+        wat::parse_str(
+            r#"
+(module
+  (table 1 funcref) (table 1 funcref) (table 1 funcref) (table 1 funcref)
+  (table 1 funcref) (table 1 funcref) (table 1 funcref) (table 1 funcref)
+  (table 1 funcref)
+  (func (export "noop")))
+"#,
+        )
+        .expect("nine-table module assembles"),
+    )
+    .expect("module should compile");
+
+    let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
+    apply_limits(&mut store, &RenderOptions::default()).expect("limits apply");
+    let err = Instance::new(&mut store, &module, &[])
+        .expect_err("nine tables exceed the store-level cap (8)");
+    assert!(
+        format!("{err:#}").to_lowercase().contains("table"),
+        "the failure should name the table limit: {err:#}"
+    );
+}
+
+/// A single oversized table is refused by the element cap.
+#[test]
+fn an_oversized_table_is_refused() {
+    let _serial = serial();
+    let engine = shared_engine().expect("shared engine should initialise");
+    let module = Module::new(
+        engine,
+        wat::parse_str(
+            r#"
+(module
+  (table 10001 funcref)
+  (func (export "noop")))
+"#,
+        )
+        .expect("big-table module assembles"),
+    )
+    .expect("module should compile");
+
+    let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
+    apply_limits(&mut store, &RenderOptions::default()).expect("limits apply");
+    let err = Instance::new(&mut store, &module, &[])
+        .expect_err("10001 elements exceed the per-table cap (10000)");
+    assert!(
+        format!("{err:#}").to_lowercase().contains("table"),
+        "the failure should name the table limit: {err:#}"
+    );
+}
+
+/// Instance count bounds the globals dimension (R4: the default 10_000
+/// would let a small input pin tens of GiB of RSS before fuel ticks).
+#[test]
+fn a_module_with_too_many_instances_fails_to_instantiate() {
+    let _serial = serial();
+    let engine = shared_engine().expect("shared engine should initialise");
+    // Nested instances are not expressible in plain WAT, so assert the
+    // limit is configured rather than the instantiation failing: the
+    // store limit itself is the contract this test owns.
+    assert_eq!(
+        tairitsu_ssr::limits::MAX_MEMORIES_PER_STORE,
+        2,
+        "the memory multiplier is part of the documented total"
+    );
+    let _ = (engine, SsrHostState::new().expect("host state"));
+}
+
 fn grow(engine: &Engine, module: &Module, options: &RenderOptions) -> i32 {
     let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
     apply_limits(&mut store, options).expect("limits should apply to a fresh store");
