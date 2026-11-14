@@ -64,6 +64,12 @@ pub struct SsrHostState {
     table: ResourceTable,
     pub dom: SsrDom,
     pub config: SsrConfig,
+    /// Guest resource limits handed to Wasmtime through [`SsrHostState::limiter_mut`].
+    ///
+    /// Unbounded by default (a bare `StoreLimits` allows any linear-memory size);
+    /// [`crate::limits::apply_limits`] replaces it with a bounded one for untrusted
+    /// renders.
+    pub store_limits: wasmtime::StoreLimits,
 }
 
 impl SsrHostState {
@@ -78,12 +84,14 @@ impl SsrHostState {
 
         let table = ResourceTable::new();
         let dom = SsrDom::new();
+        let store_limits = wasmtime::StoreLimitsBuilder::new().build();
 
         Ok(Self {
             wasi,
             table,
             dom,
             config,
+            store_limits,
         })
     }
 
@@ -95,6 +103,14 @@ impl SsrHostState {
     /// Get reference to the DOM
     pub fn dom_ref(&self) -> &SsrDom {
         &self.dom
+    }
+
+    /// Accessor installed through [`wasmtime::Store::limiter`].
+    ///
+    /// Keeping the limits in the host state (rather than inside the store) lets
+    /// individual renders pick their own bound without rebuilding the engine.
+    pub fn limiter_mut(&mut self) -> &mut dyn wasmtime::ResourceLimiter {
+        &mut self.store_limits
     }
 }
 
@@ -110,6 +126,7 @@ impl Default for SsrHostState {
                 table: ResourceTable::new(),
                 dom: SsrDom::new(),
                 config: SsrConfig::default(),
+                store_limits: wasmtime::StoreLimitsBuilder::new().build(),
             }
         })
     }

@@ -10,6 +10,7 @@ pub mod fast_refresh;
 pub mod hmr;
 pub mod host_state;
 pub mod html_render;
+pub mod limits;
 pub mod linker;
 #[cfg(feature = "streaming")]
 pub mod streaming;
@@ -24,13 +25,16 @@ use bindings::BrowserFull;
 pub use fast_refresh::sign_component;
 pub use host_state::{SsrConfig, SsrHostState};
 pub use html_render::FullDocumentConfig;
+pub use limits::{
+    cached_component, component_cache_stats, shared_engine, ComponentCacheStats, RenderOptions,
+};
 #[cfg(feature = "streaming")]
 pub use streaming::{
     hydration_script, render_suspense_boundary, render_to_stream, render_vnode_to_stream,
     HtmlChunk, HtmlStream,
 };
 pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
-use wasmtime::{Engine, Store};
+use wasmtime::Store;
 
 /// Render a WASM component to HTML
 ///
@@ -38,6 +42,12 @@ use wasmtime::{Engine, Store};
 /// instantiates it in a Wasmtime runtime with SSR-specific host functions,
 /// calls the component's `lifecycle::start()` export, and then extracts
 /// the rendered HTML from the in-memory DOM.
+///
+/// The component is JIT-compiled at most once per process (see
+/// [`cached_component`]) and the guest runs under the default execution bounds
+/// from [`RenderOptions`], so a component containing `loop {}` or allocating a
+/// 4 GiB linear memory fails with an error instead of hanging the host. Use
+/// [`render_to_html_with_options`] with [`RenderOptions::trusted`] to opt out.
 ///
 /// # Arguments
 /// * `wasm_bytes` - The compiled WASM component bytes
@@ -58,39 +68,48 @@ use wasmtime::{Engine, Store};
 /// # }
 /// ```
 pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
-    // Create engine with Winch strategy for faster compilation.
-    // Winch is a baseline (single-pass) compiler that compiles WASM much
-    // faster than Cranelift's optimizing pipeline. This is critical on
-    // QEMU TCG aarch64, where Cranelift's codegen runs under emulation
-    // and takes minutes to JIT-compile a typical tairitsu component.
-    // The generated code is less optimized, but for SSR (one-shot render)
-    // the compile-time savings dominate.
-    let mut engine_config = wasmtime::Config::new();
-    engine_config.wasm_component_model(true);
-    engine_config.strategy(wasmtime::Strategy::Winch);
-    // Reduce optimization overhead further.
-    engine_config.cranelift_opt_level(wasmtime::OptLevel::None);
-    let engine = Engine::new(&engine_config)?;
+    render_to_html_with_options(wasm_bytes, config, RenderOptions::default())
+}
 
-    // Create component from bytes
-    let component = wasmtime::component::Component::from_binary(&engine, wasm_bytes)?;
+/// Render a WASM component to HTML with an explicit execution policy.
+///
+/// Identical to [`render_to_html`] except that `options` decides whether the guest
+/// is bounded (the default) or trusted to run without fuel, wall-clock or memory
+/// limits.
+pub fn render_to_html_with_options(
+    wasm_bytes: &[u8],
+    config: SsrConfig,
+    options: RenderOptions,
+) -> Result<String> {
+    // One engine per process (Winch, fuel/epoch metering enabled) and one compiled
+    // component per distinct binary: previously every render built a fresh Engine
+    // and re-JIT-compiled the whole component.
+    let engine = limits::shared_engine()?;
+    let component = limits::cached_component(wasm_bytes)?;
 
     // Create host state
     let host_state = SsrHostState::with_config(config)?;
 
     // Create store
-    let mut store = Store::new(&engine, host_state);
+    let mut store = Store::new(engine, host_state);
+
+    // Install the guest execution bounds before anything guest-supplied runs.
+    limits::apply_limits(&mut store, &options)?;
 
     // Create linker with allow_shadowing so duplicate func_wrap calls
     // (existing real impls + auto-generated stubs) don't conflict.
-    let mut linker = wasmtime::component::Linker::new(&engine);
+    let mut linker = wasmtime::component::Linker::new(engine);
     linker.allow_shadowing(true);
     wasmtime_wasi::p2::add_to_linker_sync(&mut linker)?;
     register_ssr_imports(&mut linker)?;
 
     // Instantiate: get the raw instance first (for C exports), then wrap in
     // the bindgen BrowserFull for typed WIT access.
-    let instance = linker.instantiate(&mut store, &component)?;
+    // Instantiation runs the guest's start functions, so a spinning component is
+    // already stopped here when the bounds are in force.
+    let instance = linker
+        .instantiate(&mut store, &component)
+        .map_err(guest_error)?;
     let browser_full = BrowserFull::new(&mut store, &instance)?;
 
     // Call lifecycle::start using the generated bindings (tolerates absence)
@@ -109,7 +128,7 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
         );
         // Enumerate the component's top-level exports to find the entry point.
         let comp_ty = component.component_type();
-        let exports = comp_ty.exports(&engine);
+        let exports = comp_ty.exports(engine);
         eprintln!("[ssr] component has {} top-level exports:", exports.len());
         for (name, _) in exports {
             eprintln!("[ssr]   export: '{}'", name);
@@ -127,6 +146,11 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
                             eprintln!("[ssr] '{}' OK, DOM {} bytes", name, post_len);
                         }
                         Err(e) => {
+                            // A guest killed by one of our own bounds must not be
+                            // reported as a successful (truncated) render.
+                            if execution_bound_error(&e).is_some() {
+                                return Err(guest_error(e));
+                            }
                             let post_len = store.data().dom.render_body_html().len();
                             eprintln!("[ssr] '{}' trapped: {} (DOM {} bytes)", name, e, post_len);
                         }
@@ -180,6 +204,34 @@ pub fn render_full_page(wasm_bytes: &[u8], config: SsrConfig, template: &str) ->
     Ok(full_page)
 }
 
+/// Classify a guest error as "stopped by a host-installed execution bound".
+///
+/// Returns a human-readable reason when the trap came from the fuel budget or the
+/// epoch deadline rather than from a guest-side bug, so callers can tell a runaway
+/// component apart from a component that merely traps.
+fn execution_bound_error(error: &wasmtime::Error) -> Option<&'static str> {
+    match error.downcast_ref::<wasmtime::Trap>()? {
+        wasmtime::Trap::OutOfFuel => {
+            Some("SSR guest exhausted its fuel budget; the component did not finish rendering")
+        }
+        wasmtime::Trap::Interrupt => {
+            Some("SSR guest exceeded its render deadline; the component did not finish rendering")
+        }
+        _ => None,
+    }
+}
+
+/// Convert a guest error into an `anyhow` error, tagging the stops that came from
+/// one of our own bounds.
+fn guest_error(error: wasmtime::Error) -> anyhow::Error {
+    let bound = execution_bound_error(&error);
+    let error = anyhow::Error::from(error);
+    match bound {
+        Some(reason) => error.context(reason),
+        None => error,
+    }
+}
+
 /// Register all SSR WIT implementations with the linker
 fn register_ssr_imports(linker: &mut wasmtime::component::Linker<SsrHostState>) -> Result<()> {
     linker::register_ssr_imports_direct(linker)?;
@@ -201,6 +253,12 @@ fn call_lifecycle_start(store: &mut Store<SsrHostState>, browser_full: &BrowserF
             Ok(())
         }
         Err(e) => {
+            // A guest killed by one of our own bounds (fuel, epoch deadline, memory
+            // cap) is a hard error: returning the partially rendered DOM would
+            // silently serve a truncated page for a runaway component.
+            if execution_bound_error(&e).is_some() {
+                return Err(guest_error(e));
+            }
             // Print the full error chain to find which import trapped
             let mut chain = vec![format!("{}", e)];
             let mut src = e.source();
