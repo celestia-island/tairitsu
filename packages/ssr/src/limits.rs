@@ -355,8 +355,17 @@ pub fn apply_limits(store: &mut Store<SsrHostState>, options: &RenderOptions) ->
     // `OutOfFuel`/`Interrupt` trap. `SsrHostState` therefore implements
     // `ResourceLimiter` itself and counts denials; the render path refuses to report
     // success once that counter is non-zero (see `SsrHostState::memory_budget_error`).
+    // The memory cap is PER LINEAR MEMORY (wasmtime semantics). A
+    // multi-memory component could otherwise hold N x max_memory_bytes,
+    // so the store-level counts cap the TOTAL: 2 memories x 64 MiB =
+    // 128 MiB worst case per untrusted store, and the table bounds cap
+    // per-table growth (R3 S2 — an 8-line two-memory probe held 6 MiB
+    // under a 4 MiB cap before these fields were set).
     store.data_mut().store_limits = StoreLimitsBuilder::new()
         .memory_size(options.max_memory_bytes)
+        .memories(2)
+        .tables(8)
+        .table_elements(10_000)
         .build();
     store.limiter(SsrHostState::limiter_mut);
 

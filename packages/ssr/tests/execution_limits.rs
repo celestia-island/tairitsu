@@ -264,6 +264,79 @@ fn linear_memory_growth_is_capped_for_untrusted_stores() {
     );
 }
 
+/// Store-level memory COUNT cap (R3 S2): the per-memory byte cap alone
+/// let a multi-memory component hold N x max bytes (an 8-line probe held
+/// 6 MiB under a 4 MiB cap). A module with more memories than the store
+/// limit must fail to instantiate — loudly, not silently.
+#[test]
+fn a_module_with_too_many_memories_fails_to_instantiate() {
+    let _serial = serial();
+    let engine = shared_engine().expect("shared engine should initialise");
+    let module = Module::new(
+        engine,
+        wat::parse_str(
+            r#"
+(module
+  (memory 1)
+  (memory 1)
+  (memory 1)
+  (func (export "grow") (result i32) (memory.grow (i32.const 1))))
+"#,
+        )
+        .expect("three-memory module assembles"),
+    )
+    .expect("module should compile");
+
+    let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
+    apply_limits(
+        &mut store,
+        &RenderOptions {
+            max_memory_bytes: 1024 * 1024,
+            ..RenderOptions::default()
+        },
+    )
+    .expect("limits should apply to a fresh store");
+
+    let err = Instance::new(&mut store, &module, &[])
+        .expect_err("three memories exceed the store-level count cap (2)");
+    assert!(
+        format!("{err:#}").to_lowercase().contains("memory"),
+        "the failure should name the memory limit: {err:#}"
+    );
+}
+
+/// The count cap leaves legitimate single- and dual-memory components
+/// alone (2 x per-memory cap is the documented worst case).
+#[test]
+fn a_two_memory_module_still_instantiates_within_the_count_cap() {
+    let _serial = serial();
+    let engine = shared_engine().expect("shared engine should initialise");
+    let module = Module::new(
+        engine,
+        wat::parse_str(
+            r#"
+(module
+  (memory 1)
+  (memory 1)
+  (func (export "grow") (result i32) (memory.grow (i32.const 1))))
+"#,
+        )
+        .expect("two-memory module assembles"),
+    )
+    .expect("module should compile");
+
+    let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
+    apply_limits(
+        &mut store,
+        &RenderOptions {
+            max_memory_bytes: 1024 * 1024,
+            ..RenderOptions::default()
+        },
+    )
+    .expect("limits should apply to a fresh store");
+    Instance::new(&mut store, &module, &[]).expect("two memories are within the count cap");
+}
+
 fn grow(engine: &Engine, module: &Module, options: &RenderOptions) -> i32 {
     let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
     apply_limits(&mut store, options).expect("limits should apply to a fresh store");
