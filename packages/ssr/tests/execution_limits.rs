@@ -4,9 +4,12 @@
 //! built by the packager for `wasm32-wasip2`), so these tests build the smallest
 //! components that still exercise the shipped paths:
 //!
-//! * a component whose core module's start function never returns — proves a
+//! * components whose core module's start function never returns — proves a
 //!   runaway guest is stopped instead of hanging the calling thread;
-//! * a bare component — proves the compiled artifact is reused across renders.
+//! * bare components, made unique per test — proves the compiled artifact is reused
+//!   across renders;
+//! * a core module that grows past the memory cap and then traps — proves the denial
+//!   is reported instead of being served as a truncated page.
 //!
 //! The linear-memory cap is exercised at the store level through the same
 //! `apply_limits` primitive the render path uses.
@@ -54,6 +57,56 @@ const MEMORY_GROW_MODULE: &str = r#"
   (func (export "grow") (result i32)
     (memory.grow (i32.const 32))))
 "#;
+
+/// A core module that grows past the cap and then traps "for its own reasons".
+///
+/// With `trap_on_grow_failure` off the guest sees `memory.grow == -1`, and the
+/// `unreachable` that follows is neither an `OutOfFuel` nor an `Interrupt` trap — the
+/// shape an allocation bomb takes when the host has to notice the truncation itself.
+const GROW_THEN_TRAP_MODULE: &str = r#"
+(module
+  (memory 1)
+  (func (export "grow_then_trap")
+    (if (i32.eq (memory.grow (i32.const 32)) (i32.const -1))
+      (then (unreachable)))))
+"#;
+
+/// Name of the custom section that makes a test's component bytes unique.
+const TEST_SECTION: &[u8] = b"tairitsu-ssr-test";
+
+/// A bare component that also carries `tag` in a trailing custom section.
+///
+/// The compile cache is process-wide and keyed by content, while [`serial`] only
+/// *orders* the tests — it cannot reset the cache between them. Two tests rendering
+/// the same bytes would therefore race for who fills the cache: the loser observes a
+/// hit where it asserted a miss, and which one loses depends on scheduling. Tagging
+/// each test's binary gives every test its own cache key, so the counters it reads are
+/// its own. The custom section is inert: the component still has no tairitsu exports,
+/// which is all these tests need (the render fails after instantiating).
+fn tagged_component(tag: &str) -> Vec<u8> {
+    let mut bytes = wat::parse_str("(component)").expect("empty component should assemble");
+    let mut contents = vec![TEST_SECTION.len() as u8];
+    contents.extend_from_slice(TEST_SECTION);
+    contents.extend_from_slice(tag.as_bytes());
+
+    bytes.push(0); // custom section
+    bytes.extend(unsigned_leb128(contents.len()));
+    bytes.extend(contents);
+    bytes
+}
+
+fn unsigned_leb128(mut value: usize) -> Vec<u8> {
+    let mut out = Vec::new();
+    loop {
+        let byte = (value & 0x7f) as u8;
+        value >>= 7;
+        if value == 0 {
+            out.push(byte);
+            return out;
+        }
+        out.push(byte | 0x80);
+    }
+}
 
 fn message(error: &anyhow::Error) -> String {
     format!("{error:#}")
@@ -118,8 +171,10 @@ fn runaway_component_is_stopped_by_its_render_deadline() {
 fn rendering_the_same_binary_twice_compiles_it_once() {
     let _serial = serial();
     // A bare component compiles and instantiates, then fails to bind the tairitsu
-    // browser exports. That is enough to observe the compile cache.
-    let wasm = wat::parse_str("(component)").expect("empty component should assemble");
+    // browser exports. That is enough to observe the compile cache. The tag keeps this
+    // binary's cache key to this test, so "first render misses, second render hits"
+    // cannot be pre-empted by another test having rendered the same bytes.
+    let wasm = tagged_component("same-binary-twice");
 
     let before = component_cache_stats();
     let first = render_to_html(&wasm, SsrConfig::default());
@@ -165,8 +220,9 @@ fn unbounded_trusted_renders_do_not_install_a_deadline() {
     // A trusted render still gets an epoch deadline (a store on an epoch
     // instrumented engine traps immediately otherwise), but it is effectively
     // unreachable: the render must get past instantiation and reach the same
-    // missing-exports error as a bounded render.
-    let wasm = wat::parse_str("(component)").expect("empty component should assemble");
+    // missing-exports error as a bounded render. Tagged like the other cache test so
+    // neither test can populate the other's cache entry.
+    let wasm = tagged_component("trusted-without-deadline");
 
     let error = render_to_html_with_options(&wasm, SsrConfig::default(), RenderOptions::trusted())
         .expect_err("a component without the tairitsu exports cannot render");
@@ -212,10 +268,75 @@ fn grow(engine: &Engine, module: &Module, options: &RenderOptions) -> i32 {
     let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
     apply_limits(&mut store, options).expect("limits should apply to a fresh store");
 
-    let instance = Instance::new(&mut store, module, &[]).expect("module should instantiate");
+    let instance = Instance::new(&mut store, &module, &[]).expect("module should instantiate");
     let grow = instance
         .get_typed_func::<(), i32>(&mut store, "grow")
         .expect("`grow` export should exist");
 
     grow.call(&mut store, ()).expect("grow should not trap")
+}
+
+#[test]
+fn a_denied_growth_that_traps_afterwards_is_reported_instead_of_truncated() {
+    let _serial = serial();
+    let engine = shared_engine().expect("shared engine should initialise");
+    let module = Module::new(
+        engine,
+        wat::parse_str(GROW_THEN_TRAP_MODULE).expect("module assembles"),
+    )
+    .expect("module should compile");
+
+    // 1 MiB cap = 16 pages, so adding 32 pages is denied. The guest then traps with
+    // `unreachable`, which the render path cannot classify as an execution bound from
+    // the trap alone.
+    let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
+    apply_limits(
+        &mut store,
+        &RenderOptions {
+            max_memory_bytes: 1024 * 1024,
+            ..RenderOptions::default()
+        },
+    )
+    .expect("limits should apply to a fresh store");
+
+    let instance = Instance::new(&mut store, &module, &[]).expect("module should instantiate");
+    let call = instance
+        .get_typed_func::<(), ()>(&mut store, "grow_then_trap")
+        .expect("`grow_then_trap` export should exist");
+    let trap = call
+        .call(&mut store, ())
+        .expect_err("the guest traps after its growth is denied");
+    assert!(
+        matches!(
+            trap.downcast_ref::<wasmtime::Trap>(),
+            Some(wasmtime::Trap::UnreachableCodeReached)
+        ),
+        "expected the guest's own `unreachable` trap, got: {trap:?}"
+    );
+
+    // The denial itself is the durable evidence of the memory cap; the render path
+    // turns it into an error instead of serving the truncated page.
+    let error = store
+        .data()
+        .memory_budget_error()
+        .expect("a denied growth must be recorded on the host state");
+    assert!(
+        message(&error).contains("linear-memory budget"),
+        "unexpected classification: {error:#}"
+    );
+
+    // Negative control: with the bounds lifted the same module completes, so the
+    // denial above really comes from the cap and not from the module.
+    let mut trusted = Store::new(engine, SsrHostState::new().expect("host state"));
+    apply_limits(&mut trusted, &RenderOptions::trusted()).expect("limits should apply");
+    let instance = Instance::new(&mut trusted, &module, &[]).expect("module should instantiate");
+    let call = instance
+        .get_typed_func::<(), ()>(&mut trusted, "grow_then_trap")
+        .expect("`grow_then_trap` export should exist");
+    call.call(&mut trusted, ())
+        .expect("an unbounded store must allow the growth");
+    assert!(
+        trusted.data().memory_budget_error().is_none(),
+        "a trusted render must not report a memory-budget hit"
+    );
 }

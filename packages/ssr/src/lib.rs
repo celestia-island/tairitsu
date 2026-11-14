@@ -20,13 +20,15 @@ pub mod virtual_dom;
 use anyhow::Result;
 
 use bindings::BrowserFull;
+use host_state::MEMORY_CONTEXT;
 
 // Re-export sign_component for the sign_component_macro! to work
 pub use fast_refresh::sign_component;
 pub use host_state::{SsrConfig, SsrHostState};
 pub use html_render::FullDocumentConfig;
 pub use limits::{
-    cached_component, component_cache_stats, shared_engine, ComponentCacheStats, RenderOptions,
+    apply_limits, cached_component, component_cache_stats, shared_engine, ComponentCacheStats,
+    RenderOptions,
 };
 #[cfg(feature = "streaming")]
 pub use streaming::{
@@ -47,7 +49,9 @@ use wasmtime::Store;
 /// [`cached_component`]) and the guest runs under the default execution bounds
 /// from [`RenderOptions`], so a component containing `loop {}` or allocating a
 /// 4 GiB linear memory fails with an error instead of hanging the host. Use
-/// [`render_to_html_with_options`] with [`RenderOptions::trusted`] to opt out.
+/// [`render_to_html_with_options`] with [`RenderOptions::trusted`] to opt out, or
+/// adjust the budgets through [`SsrConfig::ssr_fuel`] /
+/// [`SsrConfig::ssr_timeout_ms`] (see [`RenderOptions::for_config`]).
 ///
 /// # Arguments
 /// * `wasm_bytes` - The compiled WASM component bytes
@@ -68,14 +72,16 @@ use wasmtime::Store;
 /// # }
 /// ```
 pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
-    render_to_html_with_options(wasm_bytes, config, RenderOptions::default())
+    let options = RenderOptions::for_config(&config);
+    render_to_html_with_options(wasm_bytes, config, options)
 }
 
 /// Render a WASM component to HTML with an explicit execution policy.
 ///
 /// Identical to [`render_to_html`] except that `options` decides whether the guest
 /// is bounded (the default) or trusted to run without fuel, wall-clock or memory
-/// limits.
+/// limits. The knobs on `config` are ignored here: the caller has already chosen the
+/// policy explicitly.
 pub fn render_to_html_with_options(
     wasm_bytes: &[u8],
     config: SsrConfig,
@@ -147,9 +153,15 @@ pub fn render_to_html_with_options(
                         }
                         Err(e) => {
                             // A guest killed by one of our own bounds must not be
-                            // reported as a successful (truncated) render.
+                            // reported as a successful (truncated) render. The memory
+                            // cap needs this second check: it is not an
+                            // `OutOfFuel`/`Interrupt` trap but a denial the guest saw
+                            // as `memory.grow == -1` before trapping on its own.
                             if execution_bound_error(&e).is_some() {
                                 return Err(guest_error(e));
+                            }
+                            if store.data().memory_budget_error().is_some() {
+                                return Err(guest_error(e).context(MEMORY_CONTEXT));
                             }
                             let post_len = store.data().dom.render_body_html().len();
                             eprintln!("[ssr] '{}' trapped: {} (DOM {} bytes)", name, e, post_len);
@@ -165,10 +177,26 @@ pub fn render_to_html_with_options(
         }
     }
 
-    // Extract HTML from the DOM
-    let html = store.data().dom.render_body_html();
+    // Extract HTML from the DOM, refusing to hand back the truncation a memory-capped
+    // guest leaves behind whatever path it took to get here.
+    let html = rendered_body_html(&store)?;
 
     Ok(html)
+}
+
+/// Extract the rendered DOM, but never return a page a memory-capped guest truncated.
+///
+/// A denied `memory.grow` only exists inside the guest as `-1`; from outside, a
+/// component that hit the cap and then carried on, returned a typed error, or trapped
+/// with `unreachable` is indistinguishable from ordinary guest behaviour. The denial
+/// is recorded on the host state (see [`SsrHostState::memory_budget_error`]), and
+/// every exit path of a render passes through this point, so the check cannot be
+/// skipped by a branch that tolerates a guest error.
+fn rendered_body_html(store: &Store<SsrHostState>) -> Result<String> {
+    if let Some(error) = store.data().memory_budget_error() {
+        return Err(error);
+    }
+    Ok(store.data().dom.render_body_html())
 }
 
 /// Render a WASM component to a full HTML page
@@ -176,6 +204,10 @@ pub fn render_to_html_with_options(
 /// This function renders the component and injects the result into
 /// an HTML template. The template should contain a `<div id="app"></div>`
 /// element that will be replaced with the rendered content.
+///
+/// The guest runs under the bounds of [`RenderOptions::for_config`], so
+/// [`SsrConfig::ssr_fuel`] and [`SsrConfig::ssr_timeout_ms`] adjust the budget of a
+/// full-page render exactly as they do for [`render_to_html`].
 ///
 /// # Arguments
 /// * `wasm_bytes` - The compiled WASM component bytes
@@ -242,12 +274,19 @@ fn register_ssr_imports(linker: &mut wasmtime::component::Linker<SsrHostState>) 
 fn call_lifecycle_start(store: &mut Store<SsrHostState>, browser_full: &BrowserFull) -> Result<()> {
     let lifecycle = browser_full.tairitsu_browser_full_lifecycle();
 
-    match lifecycle.call_start(store) {
+    match lifecycle.call_start(&mut *store) {
         Ok(Ok(())) => {
             eprintln!("[ssr] lifecycle::start() returned Ok(Ok(()))");
             Ok(())
         }
         Ok(Err(e)) => {
+            // Tolerating a typed guest error is fine (it may be reported for a
+            // recoverable condition) *unless* the guest ran out of its memory budget
+            // first: then the error is how a truncated render looks from the outside,
+            // and the page must not be served as a success.
+            if let Some(error) = store.data().memory_budget_error() {
+                return Err(error.context(format!("lifecycle::start() failed: {e}")));
+            }
             eprintln!("[ssr] lifecycle::start() returned Err: {}", e);
             // Don't fail — extract whatever DOM content was written before the error
             Ok(())
@@ -258,6 +297,13 @@ fn call_lifecycle_start(store: &mut Store<SsrHostState>, browser_full: &BrowserF
             // silently serve a truncated page for a runaway component.
             if execution_bound_error(&e).is_some() {
                 return Err(guest_error(e));
+            }
+            // The memory cap is the bound that hides best: the guest sees `-1`, then
+            // traps for its own reason (`unreachable`, a null deref, ...), which is
+            // neither `OutOfFuel` nor `Interrupt`. Classify it here rather than
+            // falling back to the partial-DOM path below.
+            if store.data().memory_budget_error().is_some() {
+                return Err(guest_error(e).context(MEMORY_CONTEXT));
             }
             // Print the full error chain to find which import trapped
             let mut chain = vec![format!("{}", e)];
@@ -308,6 +354,56 @@ mod tests {
         let dom = SsrDom::new();
         assert_ne!(dom.body_handle(), 0);
         assert_ne!(dom.head_handle(), 0);
+    }
+
+    /// A guest that hits the memory cap sees `memory.grow == -1` and then traps for
+    /// its own reasons — the exact shape an allocation bomb takes when
+    /// `trap_on_grow_failure` is off. The render path must report that, not return the
+    /// half-built DOM the guest left behind.
+    #[test]
+    fn a_memory_capped_render_never_returns_the_truncated_page() {
+        let engine = limits::shared_engine().expect("shared engine");
+        let module = wasmtime::Module::new(
+            engine,
+            wat::parse_str(
+                r#"
+                (module
+                  (memory 1)
+                  (func (export "exhaust")
+                    (drop (memory.grow (i32.const 32)))
+                    (unreachable)))
+                "#,
+            )
+            .expect("module should assemble"),
+        )
+        .expect("module should compile");
+
+        let options = RenderOptions {
+            max_memory_bytes: 1024 * 1024,
+            ..RenderOptions::default()
+        };
+        let mut store = Store::new(engine, SsrHostState::new().expect("host state"));
+        limits::apply_limits(&mut store, &options).expect("limits apply to a fresh store");
+
+        let instance = wasmtime::Instance::new(&mut store, &module, &[]).expect("instantiate");
+        let exhaust = instance
+            .get_typed_func::<(), ()>(&mut store, "exhaust")
+            .expect("`exhaust` export should exist");
+        exhaust
+            .call(&mut store, ())
+            .expect_err("the guest traps after its growth is denied");
+
+        // The guest left DOM behind, so a render that ignored the denial would return
+        // a page that looks fine — exactly the bug this guards.
+        store.data_mut().dom.create_element("div", None);
+        assert!(!store.data().dom.render_body_html().is_empty());
+
+        let error = rendered_body_html(&store)
+            .expect_err("a capped render must not be reported as a successful page");
+        assert!(
+            format!("{error:#}").contains("linear-memory budget"),
+            "unexpected classification: {error:#}"
+        );
     }
 
     #[test]
