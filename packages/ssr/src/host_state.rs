@@ -3,7 +3,7 @@
 //! This module provides the host state implementation used by the SSR container.
 
 use anyhow::Result;
-
+use serde::{Deserialize, Serialize};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 use crate::{
@@ -11,8 +11,16 @@ use crate::{
     virtual_dom::SsrDom,
 };
 
+/// Context attached when a guest is stopped by the linear-memory cap.
+///
+/// Kept here (rather than private to `lib.rs`) because both the trap path and the
+/// post-render check report the same condition, and hosts driving their own store
+/// through [`SsrHostState::memory_budget_error`] want the same wording.
+pub(crate) const MEMORY_CONTEXT: &str =
+    "SSR guest exceeded its linear-memory budget; the component did not finish rendering";
+
 /// SSR configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SsrConfig {
     /// Simulated viewport width (default 1920)
     pub viewport_width: i32,
@@ -20,6 +28,20 @@ pub struct SsrConfig {
     pub viewport_height: i32,
     /// Current URL path for route-aware rendering (default "/")
     pub current_route: String,
+    /// Optional override of [`crate::limits::DEFAULT_FUEL`] for a bounded render.
+    ///
+    /// `None` (the default) keeps the crate default. This is the knob for hosts
+    /// whose components are heavier or lighter than the estimated default; it can
+    /// only *change* the budget, not disable it — dropping the bounds stays an
+    /// explicit [`crate::RenderOptions::trusted`] opt-in in code.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ssr_fuel: Option<u64>,
+    /// Optional override of [`crate::limits::DEFAULT_TIMEOUT`], in milliseconds.
+    ///
+    /// `None` (the default) keeps the crate default. Like
+    /// [`ssr_fuel`](Self::ssr_fuel) this only adjusts a bound that stays in force.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ssr_timeout_ms: Option<u64>,
 }
 
 impl Default for SsrConfig {
@@ -28,6 +50,8 @@ impl Default for SsrConfig {
             viewport_width: 1920,
             viewport_height: 1080,
             current_route: "/".to_string(),
+            ssr_fuel: None,
+            ssr_timeout_ms: None,
         }
     }
 }
@@ -38,7 +62,7 @@ impl SsrConfig {
         Self {
             viewport_width,
             viewport_height,
-            current_route: "/".to_string(),
+            ..Self::default()
         }
     }
 
@@ -52,6 +76,7 @@ impl SsrConfig {
             } else {
                 route.to_string()
             },
+            ..Self::default()
         }
     }
 }
@@ -64,6 +89,20 @@ pub struct SsrHostState {
     table: ResourceTable,
     pub dom: SsrDom,
     pub config: SsrConfig,
+    /// Guest resource limits handed to Wasmtime through [`SsrHostState::limiter_mut`].
+    ///
+    /// Unbounded by default (a bare `StoreLimits` allows any linear-memory size);
+    /// [`crate::limits::apply_limits`] replaces it with a bounded one for untrusted
+    /// renders.
+    pub store_limits: wasmtime::StoreLimits,
+    /// How many `memory.grow` requests the cap denied during this store's lifetime.
+    ///
+    /// A denied growth is invisible from the outside: the guest sees `memory.grow`
+    /// return `-1` and then carries on with a truncated page, returns a typed error,
+    /// or traps with `unreachable`. None of those is distinguishable from ordinary
+    /// guest behaviour without this counter, which is why the render path checks it
+    /// through [`SsrHostState::memory_budget_error`] before returning any HTML.
+    pub denied_memory_grows: u64,
 }
 
 impl SsrHostState {
@@ -78,12 +117,15 @@ impl SsrHostState {
 
         let table = ResourceTable::new();
         let dom = SsrDom::new();
+        let store_limits = wasmtime::StoreLimitsBuilder::new().build();
 
         Ok(Self {
             wasi,
             table,
             dom,
             config,
+            store_limits,
+            denied_memory_grows: 0,
         })
     }
 
@@ -95,6 +137,81 @@ impl SsrHostState {
     /// Get reference to the DOM
     pub fn dom_ref(&self) -> &SsrDom {
         &self.dom
+    }
+
+    /// Accessor installed through [`wasmtime::Store::limiter`].
+    ///
+    /// Keeping the limits in the host state (rather than inside the store) lets
+    /// individual renders pick their own bound without rebuilding the engine. The
+    /// host state itself is the limiter so a denial can be recorded next to the
+    /// limits that produced it.
+    pub fn limiter_mut(&mut self) -> &mut dyn wasmtime::ResourceLimiter {
+        self
+    }
+
+    /// The error to report when this store's guest hit its linear-memory budget.
+    ///
+    /// `None` while the guest stayed inside the cap. Once any `memory.grow` was
+    /// denied the guest did not get the memory it asked for, so whatever DOM it left
+    /// behind is a truncation: the render path returns this error instead of
+    /// returning that page. Hosts that build their own [`wasmtime::Store`] with
+    /// [`crate::limits::apply_limits`] should make the same check after every guest
+    /// call.
+    pub fn memory_budget_error(&self) -> Option<anyhow::Error> {
+        (self.denied_memory_grows > 0).then(|| anyhow::anyhow!(MEMORY_CONTEXT))
+    }
+}
+
+impl wasmtime::ResourceLimiter for SsrHostState {
+    fn memory_growing(
+        &mut self,
+        current: usize,
+        desired: usize,
+        maximum: Option<usize>,
+    ) -> wasmtime::Result<bool> {
+        // `trap_on_grow_failure` is off, so a denied growth is reported to the guest
+        // as `memory.grow == -1` (spec behaviour, and what probing allocators
+        // expect). Record it here so the host can still tell that the render ran out
+        // of its budget.
+        let allow = self
+            .store_limits
+            .memory_growing(current, desired, maximum)?;
+        if !allow {
+            self.denied_memory_grows = self.denied_memory_grows.saturating_add(1);
+        }
+        Ok(allow)
+    }
+
+    fn memory_grow_failed(&mut self, error: wasmtime::Error) -> wasmtime::Result<()> {
+        // Reached when an *allowed* growth still failed (host allocation failure).
+        // Unconditionally a budget problem from the render's point of view.
+        self.denied_memory_grows = self.denied_memory_grows.saturating_add(1);
+        self.store_limits.memory_grow_failed(error)
+    }
+
+    fn table_growing(
+        &mut self,
+        current: usize,
+        desired: usize,
+        maximum: Option<usize>,
+    ) -> wasmtime::Result<bool> {
+        self.store_limits.table_growing(current, desired, maximum)
+    }
+
+    fn table_grow_failed(&mut self, error: wasmtime::Error) -> wasmtime::Result<()> {
+        self.store_limits.table_grow_failed(error)
+    }
+
+    fn instances(&self) -> usize {
+        self.store_limits.instances()
+    }
+
+    fn tables(&self) -> usize {
+        self.store_limits.tables()
+    }
+
+    fn memories(&self) -> usize {
+        self.store_limits.memories()
     }
 }
 
@@ -110,6 +227,8 @@ impl Default for SsrHostState {
                 table: ResourceTable::new(),
                 dom: SsrDom::new(),
                 config: SsrConfig::default(),
+                store_limits: wasmtime::StoreLimitsBuilder::new().build(),
+                denied_memory_grows: 0,
             }
         })
     }
@@ -374,6 +493,10 @@ mod tests {
         assert_eq!(state.config.viewport_width, 1920);
         assert_eq!(state.config.viewport_height, 1080);
         assert_eq!(state.config.current_route, "/");
+        assert_eq!(state.config.ssr_fuel, None);
+        assert_eq!(state.config.ssr_timeout_ms, None);
+        assert_eq!(state.denied_memory_grows, 0);
+        assert!(state.memory_budget_error().is_none());
     }
 
     #[test]

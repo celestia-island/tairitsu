@@ -19,6 +19,7 @@ regex = { workspace = true }
 reqwest = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+sha2 = { workspace = true }
 tairitsu = { workspace = true }
 tairitsu-browser-worlds = { workspace = true }
 tairitsu-hooks = { workspace = true, optional = true }
@@ -30,6 +31,10 @@ tracing = { workspace = true }
 uuid = { version = "^1.11", features = ["v4"] }
 wasmtime = { workspace = true }
 wasmtime-wasi = { workspace = true }
+
+[dev-dependencies]
+wat = "^1"
+
 [features]
 default = []
 streaming = ["tokio", "tokio-stream", "futures", "async-stream"]
