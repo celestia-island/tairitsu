@@ -27,8 +27,11 @@
 //!    or instantiation fails when the declared minimum already exceeds the cap)
 //!    instead of pinning gigabytes of RSS. A `-1` alone would be invisible from
 //!    outside the guest, so every LINEAR-MEMORY denial is also recorded on the host
-//!    state (table denials are not — their caps bound arithmetic, and a denied
-//!    `table.grow` traps the guest loudly) (see
+//!    state (table denials are not counted — their caps bound arithmetic to 8
+//!    tables x 10 000 elements, and a denied `table.grow` returns -1 exactly like
+//!    `memory.grow`, so the residual is a bounded silent table truncation; a table
+//!    whose declared minimum exceeds the cap still fails to INSTANTIATE loudly)
+//!    (see
 //!    [`SsrHostState::memory_budget_error`]) and the render path turns it into an
 //!    error instead of serving the truncated page the guest left behind.
 //!
