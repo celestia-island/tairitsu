@@ -58,6 +58,40 @@ interface performance {
     clear-measures: func(measure-name: option<string>);
 }
 
+interface worklet-performance {
+    /// Opaque handle to a host-side `WorkletPerformance` instance.
+    type worklet-performance-handle = u64;
+
+    /// `now()` operation.
+    now: func(self: worklet-performance-handle) -> f64;
+}
+
+interface audio-worklet-global-scope {
+    /// Opaque handle to a host-side `AudioWorkletGlobalScope` instance.
+    type audio-worklet-global-scope-handle = u64;
+
+    /// `performance` attribute — getter.
+    get-performance: func(self: audio-worklet-global-scope-handle) -> u64;
+
+    /// `registerProcessor()` operation.
+    register-processor: func(self: audio-worklet-global-scope-handle, name: string, processor-ctor: u64);
+
+    /// `currentFrame` attribute — getter.
+    get-current-frame: func(self: audio-worklet-global-scope-handle) -> u64;
+
+    /// `currentTime` attribute — getter.
+    get-current-time: func(self: audio-worklet-global-scope-handle) -> f64;
+
+    /// `sampleRate` attribute — getter.
+    get-sample-rate: func(self: audio-worklet-global-scope-handle) -> f32;
+
+    /// `renderQuantumSize` attribute — getter.
+    get-render-quantum-size: func(self: audio-worklet-global-scope-handle) -> u32;
+
+    /// `port` attribute — getter.
+    get-port: func(self: audio-worklet-global-scope-handle) -> u64;
+}
+
 interface performance-navigation-timing {
     /// Opaque handle to a host-side `PerformanceNavigationTiming` instance.
     type performance-navigation-timing-handle = u64;
