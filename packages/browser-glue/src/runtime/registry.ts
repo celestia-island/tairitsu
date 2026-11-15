@@ -19,6 +19,14 @@ import { history_exports } from "./history";
 import { observers_exports } from "./observers";
 import { mutationObserver_exports } from "./mutationObserver";
 import { event_exports } from "./event";
+// Interfaces a component built against `tairitsu-web` imports unconditionally but
+// that were never wired here — a page could not instantiate at all without them
+// (`html-input-element` is read by tairitsu-web itself; the three event types are
+// part of the vdom event bridge's import set).
+import { htmlInputElement_exports } from "./htmlInputElement";
+import { mouseEvent_exports } from "./mouseEvent";
+import { pointerEvent_exports } from "./pointerEvent";
+import { wheelEvent_exports } from "./wheelEvent";
 
 export const INTERFACES = {
   "@tairitsu-glue/document": document_exports,
@@ -42,6 +50,10 @@ export const INTERFACES = {
   "@tairitsu-glue/observers": observers_exports,
   "@tairitsu-glue/mutation-observer": mutationObserver_exports,
   "@tairitsu-glue/event": event_exports,
+  "@tairitsu-glue/html-input-element": htmlInputElement_exports,
+  "@tairitsu-glue/mouse-event": mouseEvent_exports,
+  "@tairitsu-glue/pointer-event": pointerEvent_exports,
+  "@tairitsu-glue/wheel-event": wheelEvent_exports,
 };
 
 export function generateModuleCode(exports: Record<string, (...args: any[]) => any>) { // ts-escape-ok: retires with L40

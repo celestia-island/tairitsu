@@ -1,33 +1,16 @@
-function reverseLookupElement(target: EventTarget | null): bigint | undefined {
-  if (!target) return undefined;
-  const g = globalThis as any; // ts-escape-ok: retires with L40
-  if (!g.__elementReverseMap) {
-    g.__elementReverseMap = new Map();
-    const orig = g.__storeElement;
-    if (orig) {
-      g.__storeElement = function (el: any) { // ts-escape-ok: retires with L40
-        const handle = orig(el);
-        if (handle !== undefined) {
-          g.__elementReverseMap.set(el, handle);
-        }
-        return handle;
-      };
-    }
-  }
-  return g.__elementReverseMap.get(target);
-}
+import { existingElementHandle } from "./elementReverse";
 
 export const event_exports = {
   getCurrentTarget(eventHandle: bigint): bigint | undefined {
     const ev = globalThis.__eventHandles?.get(eventHandle);
     if (!ev || !ev.currentTarget) return undefined;
-    return reverseLookupElement(ev.currentTarget);
+    return existingElementHandle(ev.currentTarget);
   },
 
   getTarget(eventHandle: bigint): bigint | undefined {
     const ev = globalThis.__eventHandles?.get(eventHandle);
     if (!ev || !ev.target) return undefined;
-    return reverseLookupElement(ev.target);
+    return existingElementHandle(ev.target);
   },
 
   getEventType(eventHandle: bigint): string {
@@ -38,7 +21,7 @@ export const event_exports = {
   getSrcElement(eventHandle: bigint): bigint | undefined {
     const ev = globalThis.__eventHandles?.get(eventHandle);
     if (!ev || !(ev as any).srcElement) return undefined; // ts-escape-ok: retires with L40
-    return reverseLookupElement((ev as any).srcElement); // ts-escape-ok: retires with L40
+    return existingElementHandle((ev as any).srcElement); // ts-escape-ok: retires with L40
   },
 
   getEventPhase(eventHandle: bigint): number {
@@ -96,7 +79,7 @@ export const event_exports = {
     if (!ev) return [];
     return ev
       .composedPath()
-      .map((t: EventTarget) => reverseLookupElement(t))
+      .map((t: EventTarget) => existingElementHandle(t))
       .filter((h: bigint | undefined): h is bigint => h !== undefined);
   },
 };
