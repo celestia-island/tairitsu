@@ -40,6 +40,13 @@ declare global {
   >;
   var __eventHandles: Map<bigint, Event>;
 
+  /**
+   * EventTarget -> element-handle reverse index, built lazily by
+   * `elementReverse.ts` and kept current by wrapping `__storeElement`
+   * (`event.ts` and `mouseEvent.ts` both resolve targets through it).
+   */
+  var __elementReverseMap: Map<EventTarget, bigint> | undefined;
+
   var __nextHandle: bigint;
   var __nextMutationRecord: bigint;
   var __nextResizeObserverEntry: bigint;
