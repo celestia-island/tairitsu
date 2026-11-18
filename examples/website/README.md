@@ -92,7 +92,6 @@ python3 -m http.server 3001
 - **use_state**: Local state management
 - **use_signal**: Reactive signals
 - **use_effect**: Side effects
-- **use_style**: Dynamic styling
 - Performance optimization with batch updates
 
 ## Multi-language Support

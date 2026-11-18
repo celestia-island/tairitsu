@@ -25,7 +25,6 @@ crossterm = { workspace = true, optional = true }
 futures = { workspace = true }
 grass = { workspace = true }
 image = { workspace = true, optional = true }
-include_dir = "^0.7"
 indicatif = { workspace = true }
 notify = { version = "^8", optional = true }
 portable-pty = { workspace = true, optional = true }

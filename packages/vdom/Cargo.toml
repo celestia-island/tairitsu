@@ -13,8 +13,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 
-anyhow = { workspace = true }
-serde = { workspace = true }
 tracing = { workspace = true }
 [target.'cfg(target_family = "wasm")'.dependencies]
 wit-bindgen = { workspace = true }
