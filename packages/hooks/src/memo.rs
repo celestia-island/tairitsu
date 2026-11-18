@@ -35,16 +35,6 @@ where
         }
     }
 
-    /// Returns a read-only reference to the internal signal for reactivity.
-    ///
-    /// Callers should only use `.get()` on the returned signal. Calling `.set()`
-    /// bypasses the memo contract and may lead to inconsistent state.
-    #[deprecated(note = "Use .read() instead to avoid exposing internal Signal. \
-        If you need reactive tracking, use the signal returned by .signal()")]
-    pub fn value(&self) -> Signal<T> {
-        self.value.clone()
-    }
-
     /// Gets the current value directly.
     pub fn read(&self) -> T {
         self.value.get()

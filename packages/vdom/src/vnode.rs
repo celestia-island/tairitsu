@@ -839,14 +839,6 @@ impl VElement {
         self
     }
 
-    #[deprecated(
-        since = "0.6.0",
-        note = "renamed to dangerous_inner_html to match React convention"
-    )]
-    pub fn inner_html(self, html: impl Into<String>) -> Self {
-        self.dangerous_inner_html(html)
-    }
-
     /// Set inner HTML from a sanitized SVG content.
     ///
     /// This is the safe alternative to [`dangerous_inner_html`] for SVG content.

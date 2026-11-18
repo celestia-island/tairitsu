@@ -485,33 +485,6 @@ impl<T: HostStateImpl> Container<T> {
         self.state = ContainerState::Stopped;
     }
 
-    /// Call a guest function by name with JSON payload
-    ///
-    /// This is a convenience method for dynamic invocation.
-    /// Requires that the guest instance implements the appropriate interface.
-    ///
-    /// # Arguments
-    /// * `function_name` - Name of the function to call
-    /// * `json_payload` - JSON string containing function arguments
-    ///
-    /// # Returns
-    /// JSON string containing the result
-    ///
-    /// # Example
-    /// ```ignore
-    /// let result = container.call_guest_json("process", r#"{"input":"hello"}"#)?;
-    /// ```
-    #[deprecated(
-        since = "0.6.0",
-        note = "use call_guest_raw_desc() with RON format instead"
-    )]
-    pub fn call_guest_json(&mut self, function_name: &str, _json_payload: &str) -> Result<String> {
-        anyhow::bail!(
-            "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}",
-            function_name,
-        )
-    }
-
     /// Call a guest function by name with raw descriptor payload
     ///
     /// This is the preferred method for dynamic invocation using type descriptors at runtime.
