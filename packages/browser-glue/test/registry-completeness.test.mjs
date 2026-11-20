@@ -41,11 +41,12 @@ register("./ts-resolve-hook.mjs", import.meta.url);
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG = join(HERE, "..");
 const REPO = join(PKG, "..", "..");
-// Two composed copies exist and they are NOT identical (pre-existing master
-// desync, see the wheel-event pin below):
+// Two composed copies exist and they must be byte-identical (single source =
+// packages/browser-worlds/wit/composed; `just wit-sync` regenerates the copies,
+// `just wit-sync-check` gates them):
 //   - packages/web/wit/composed        — what in-tree builds resolve (build.rs
 //                                        prefers this embedded copy);
-//   - packages/browser-worlds/wit/composed — the `just sync-wit` source.
+//   - packages/browser-worlds/wit/composed — the source of truth.
 const WIT_DIR = join(REPO, "packages", "web", "wit", "composed");
 const WIT_SYNC_DIR = join(REPO, "packages", "browser-worlds", "wit", "composed");
 const REGISTRY_SRC = readFileSync(join(PKG, "src", "runtime", "registry.ts"), "utf8");
@@ -170,26 +171,22 @@ for (const [iface, spec] of Object.entries(WIRED)) {
   });
 }
 
-test("wheel-event: the browser-worlds/embedded WIT desync is pinned, not silent", () => {
-  // `packages/browser-worlds/wit/composed/_domain-events.wit` declares a 5th
-  // function (`get-momentum`) that `packages/web/wit/composed` lacks. In-tree
-  // builds resolve the embedded copy (packages/web/build.rs prefers it), so the
-  // suite above is consistent today — but the first `just sync-wit` will add it
-  // here, and this pin is what turns that into a one-line, self-explaining fix:
-  // wire `getMomentum` (WebKit-only `WheelEvent.momentum`) and delete this test.
+test("wheel-event: the embedded and single-source copies agree", () => {
+  // Until W2 these two copies desynced (the source declared `get-momentum`,
+  // the embedded copy did not) and this test pinned that gap. The copies are
+  // now regenerated from one source, `getMomentum` is wired in
+  // `src/runtime/wheelEvent.ts`, and the pin becomes an equality assertion so
+  // the same gap can never come back silently.
   const embedded = declaredFunctions("_domain-events.wit", "wheel-event");
   const synced = declaredFunctions("_domain-events.wit", "wheel-event", WIT_SYNC_DIR);
-  const pending = synced.filter((fn) => !embedded.includes(fn));
   assert.deepEqual(
-    pending,
-    ["get-momentum"],
-    "the embedded/sync copy desync changed: wire the new function(s) in " +
-      "src/runtime/wheelEvent.ts and drop this pin",
+    embedded,
+    synced,
+    "the embedded and single-source WIT disagree: run `just wit-sync`",
   );
-  assert.deepEqual(
-    embedded.filter((fn) => !synced.includes(fn)),
-    [],
-    "the embedded copy declares something the sync source does not",
+  assert.ok(
+    embedded.includes("get-momentum"),
+    "the wheel-event interface lost get-momentum — regenerate the WIT instead of editing copies",
   );
 });
 

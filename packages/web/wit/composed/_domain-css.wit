@@ -1249,8 +1249,11 @@ interface element {
     /// `onfullscreenerror` attribute — setter.
     set-onfullscreenerror: func(self: element-handle, value: u64);
 
+    /// `setHTML()` operation.
+    set-html: func(self: element-handle, html: string, options: option<u64>);
+
     /// `setHTMLUnsafe()` operation.
-    set-html-unsafe: func(self: element-handle, html: string);
+    set-html-unsafe: func(self: element-handle, html: string, options: option<u64>);
 
     /// `getHTML()` operation.
     get-html: func(self: element-handle, options: option<u64>) -> string;
@@ -1448,6 +1451,11 @@ interface html-image-element {
     get-is-map: func(self: html-image-element-handle) -> bool;
     /// `isMap` attribute — setter.
     set-is-map: func(self: html-image-element-handle, value: bool);
+
+    /// `controls` attribute — getter.
+    get-controls: func(self: html-image-element-handle) -> bool;
+    /// `controls` attribute — setter.
+    set-controls: func(self: html-image-element-handle, value: bool);
 
     /// `width` attribute — getter.
     get-width: func(self: html-image-element-handle) -> u32;

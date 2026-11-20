@@ -509,7 +509,10 @@ interface document {
     set-onfullscreenerror: func(value: u64);
 
     /// `parseHTMLUnsafe()` operation.
-    parse-html-unsafe: func(html: string) -> u64;
+    parse-html-unsafe: func(html: string, options: option<u64>) -> u64;
+
+    /// `parseHTML()` operation.
+    parse-html: func(html: string, options: option<u64>) -> u64;
 
     /// `location` attribute — getter.
     get-location: func() -> option<u64>;
@@ -785,17 +788,6 @@ interface svg-use-element {
 
     /// `animatedInstanceRoot` attribute — getter.
     get-animated-instance-root: func(self: svg-use-element-handle) -> option<u64>;
-}
-
-interface svg-element-instance {
-    /// Opaque handle to a host-side `SVGElementInstance` instance.
-    type svg-element-instance-handle = u64;
-
-    /// `correspondingElement` attribute — getter.
-    get-corresponding-element: func(self: svg-element-instance-handle) -> option<u64>;
-
-    /// `correspondingUseElement` attribute — getter.
-    get-corresponding-use-element: func(self: svg-element-instance-handle) -> option<u64>;
 }
 
 interface shadow-animation {

@@ -600,5 +600,6 @@ world browser-full {
     export geolocation-callbacks;
     export idb-callbacks;
     export file-reader-callbacks;
+    export web-socket-callbacks;
 }
 

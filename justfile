@@ -324,6 +324,20 @@ wit-gen:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     {{python}} scripts/gen_wit_from_webidl.py
 
+# Regenerate the publishing copies of the composed WIT tree (web + ssr) from the
+# single source in packages/browser-worlds/wit/composed/.
+wit-sync:
+    {{python}} scripts/sync_wit.py
+
+# Gate: every crate's composed WIT must be byte-identical to the single source.
+wit-sync-check:
+    {{python}} scripts/sync_wit.py --check
+
+# Gate: every host interface tairitsu-web references is either wired in
+# browser-glue or carries an explicit, justified allowance.
+wit-surface-check:
+    {{python}} scripts/check_wit_surface.py --check
+
 # Step 1: Fetch W3C/WHATWG WebIDL spec files into target/tairitsu-wit/webidl-cache/
 wit-fetch-idl:
     @echo "Fetching WebIDL specs from w3c/webref..."

@@ -26,4 +26,14 @@ export const wheelEvent_exports = {
   getDeltaMode(self: bigint): number {
     return Number(eventOf(self).deltaMode ?? 0);
   },
+  /**
+   * `momentum` attribute — WebKit-only. Safari synthesises a follow-up wheel
+   * event for inertial scrolling and flags it here; every other engine leaves
+   * it undefined, which reads as "not momentum" (the honest default: a wheel
+   * event that cannot be identified is treated as a real user gesture).
+   */
+  getMomentum(self: bigint): boolean {
+    const momentum = (eventOf(self) as { momentum?: boolean }).momentum;
+    return momentum === true;
+  },
 };
