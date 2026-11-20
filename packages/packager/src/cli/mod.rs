@@ -694,7 +694,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             daemon::write_pid_file(std::process::id())?;
             let status = daemon::DaemonStatus {
                 pid: std::process::id(),
-                start_time: chrono::Utc::now(),
+                start_time: jiff::Timestamp::now(),
                 build_logs: Vec::new(),
             };
             daemon::write_daemon_status(&status)?;

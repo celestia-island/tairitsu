@@ -77,7 +77,7 @@ async-trait = "^0.1"
 axum = "^0.8"
 base64 = "^0.22"
 bytes = "^1"
-chrono = { version = "^0.4", default-features = false, features = ["clock", "serde"] }
+jiff = { version = "1", features = ["serde"] }
 clap = { version = "^4", features = ["derive"] }
 crossterm = "^0.28"
 dirs = "^6"

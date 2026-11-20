@@ -65,7 +65,7 @@ GROUP1_CRATES = {
     "tokio",
     "futures",
     "async_std",
-    "chrono",
+    "jiff",
     "log",
     "uuid",
     "rand",
