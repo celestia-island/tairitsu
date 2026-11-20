@@ -81,14 +81,17 @@ interface http {
 
 /// Bidirectional channel (JSON-RPC rides this).
 interface websocket {
-  use types.{ ws-frame, ws-close-info };
+  use types.{ ws-frame, ws-close-info, auth-intent };
 
   /// Opaque host-side connection handle.
   type ws-handle = u64;
 
   /// Credential intent rides the handshake (types.auth-intent): session
   /// = the host materializes the credential; none = caller-owned.
-  connect: func(url: string, protocols: list<string>, auth: option<types.auth-intent>) -> result<ws-handle, string>;
+  /// (auth-intent arrives via `use` above — qualified refs like
+  /// `types.auth-intent` inside a type constructor are rejected by
+  /// current wit-parser: "expected '>', found '.'".)
+  connect: func(url: string, protocols: list<string>, auth: option<auth-intent>) -> result<ws-handle, string>;
   send: func(handle: ws-handle, frame: ws-frame) -> result<_, string>;
   recv: func(handle: ws-handle) -> option<ws-frame>;
   close-info: func(handle: ws-handle) -> option<ws-close-info>;
@@ -97,7 +100,7 @@ interface websocket {
 
 /// Server-sent event stream.
 interface sse {
-  use types.{ sse-event };
+  use types.{ sse-event, auth-intent };
 
   type sse-handle = u64;
 
@@ -105,7 +108,7 @@ interface sse {
     url: string,
     headers: list<tuple<string, string>>,
     events: list<string>,
-    auth: option<types.auth-intent>,
+    auth: option<auth-intent>,
   ) -> result<sse-handle, string>;
   next: func(handle: sse-handle) -> option<sse-event>;
   close: func(handle: sse-handle);

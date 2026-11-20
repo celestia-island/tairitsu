@@ -8,9 +8,16 @@ Also reads runtime WASM components from target/wasm32-wasip2/release/
 and copies them into dist/wasm/.
 
 Usage:
-    python scripts/build_npm_glue_packages.py          # Full build: domain bundles + wasm
+    python scripts/build_npm_glue_packages.py          # Full build: bundles + REQUIRED wasm copy (fail-loud)
     python scripts/build_npm_glue_packages.py --build  # Full build (explicit)
-    python scripts/build_npm_glue_packages.py --gen    # Compile domain bundles only (skip the wasm copy)
+    python scripts/build_npm_glue_packages.py --gen    # Bundles only — EXPLICIT recorded skip of the wasm copy
+
+The wasm copy used to SKIP silently when the target directory was
+missing; that is how 0.5.4 shipped with zero .wasm and zero instantiate
+(spike `_scratch/spike-tairitsu-ab/REPORT.md` §7-6). A full build now
+fails loudly instead of producing an empty wasm face; skipping must be
+requested explicitly via --gen so the omission is recorded at the call
+site.
 """
 
 import os
@@ -126,18 +133,33 @@ def build_domain(domain_name):
 
 
 def copy_wasm_components():
-    """Copy pre-built WASM components from target/ into dist/wasm/."""
+    """Copy pre-built WASM components from target/ into dist/wasm/.
+
+    Fail-loud (W1): in a full build the wasm face is required. A missing
+    target directory or an empty one used to SKIP silently — that
+    produced the 0.5.4 release artifact with zero .wasm files. Skipping
+    is only legitimate as an explicit, recorded choice (--gen).
+    """
     wasm_src = WORKSPACE_ROOT / "target" / "wasm32-wasip2" / "release"
     wasm_dst = DIST_DIR / "wasm"
 
+    def _fail(reason):
+        sys.exit(
+            f"error: full glue build requires WASM components, but {reason}.\n"
+            f"  looked in: {wasm_src}\n"
+            "  build the components first, e.g.:\n"
+            "    rustup target add wasm32-wasip2\n"
+            "    cargo build --target wasm32-wasip2 --release\n"
+            "  or skip the wasm copy EXPLICITLY with --gen (the omission is\n"
+            "  then recorded at the call site — silent skips are gone)."
+        )
+
     if not wasm_src.exists():
-        print("  SKIP wasm: no wasm32-wasip2/release/ directory")
-        return
+        _fail("the wasm32-wasip2/release directory does not exist")
 
     wasm_files = list(wasm_src.glob("*.wasm"))
     if not wasm_files:
-        print("  SKIP wasm: no .wasm files found")
-        return
+        _fail("no .wasm files were found in wasm32-wasip2/release")
 
     wasm_dst.mkdir(parents=True, exist_ok=True)
     for f in wasm_files:
@@ -175,6 +197,8 @@ def main():
     if not gen_only:
         print("\nCopying WASM components...")
         copy_wasm_components()
+    else:
+        print("\n  SKIP wasm: explicit opt-out (--gen, recorded at the call site)")
 
     print("\nDone.")
 

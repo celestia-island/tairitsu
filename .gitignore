@@ -68,10 +68,12 @@ HIKARI_BROWSER_ISSUE.md
 
 # Package manager lock files
 # pnpm-lock.yaml under packages/ is tracked as the resolution source of truth.
-# Root pnpm-lock.yaml (coordinator, no deps), Cargo.lock and package-lock.json stay untracked.
+# Root pnpm-lock.yaml (coordinator, no deps) and Cargo.lock stay untracked.
+# Root package-lock.json IS tracked: it pins the build-time toolchain
+# (jco ^1.42, preview2-shim ^0.31, preview3-shim ^0.14 — reproducible
+# wrapper transpiles, W1 ruling) and an untracked lock would defeat the pin.
 /pnpm-lock.yaml
 Cargo.lock
-package-lock.json
 
 # celestia-devtools: staged-on-demand shared justfile recipes (just fetch)
 /.just/
