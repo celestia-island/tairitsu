@@ -59,17 +59,31 @@ jobs:
       - name: Generate WIT files
         run: |
           python3 scripts/generate_browser_wit.py
+          # The generator writes the single source; the publishing copies (web,
+          # ssr composed + ssr monolithic) are derived. Skipping this step is how
+          # scheduled syncs used to produce born-red PRs with stale copies.
+          python3 scripts/sync_wit.py
 
       - name: Check for changes
         id: check_changes
         run: |
-          if git diff --exit-code packages/browser-worlds/wit/generated/; then
+          # Watch the generator's inputs AND every derived copy: a change to the
+          # generator script rewrites composed/ + the monolithic world without
+          # touching generated/, which is exactly how this workflow used to
+          # report "no changes" while the tree had moved.
+          if git diff --exit-code -- \
+               packages/browser-worlds/wit/generated/ \
+               packages/browser-worlds/wit/composed/ \
+               packages/browser-worlds/wit/browser-full.wit \
+               packages/web/wit/composed/ \
+               packages/ssr/wit/composed/ \
+               packages/ssr/wit/browser-full.wit; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No WIT changes detected"
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "WIT changes detected!"
-            git diff --stat packages/browser-worlds/wit/generated/
+            git diff --stat -- packages/browser-worlds/wit/generated/ packages/browser-worlds/wit/composed/ packages/web/wit/composed/ packages/ssr/wit/composed/
           fi
 
       - name: Create summary
@@ -79,7 +93,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Changed Files" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          git diff --stat packages/browser-worlds/wit/generated/ >> $GITHUB_STEP_SUMMARY
+          git diff --stat -- packages/browser-worlds/wit/generated/ packages/browser-worlds/wit/composed/ packages/browser-worlds/wit/browser-full.wit packages/web/wit/composed/ packages/ssr/wit/composed/ packages/ssr/wit/browser-full.wit >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Create Pull Request
@@ -95,7 +109,8 @@ jobs:
             ### Changes
             - Synced with w3c/webref
             - Regenerated WIT files from latest WebIDL specs
-            - Updated packages/browser-worlds/wit/generated/
+            - Regenerated `wit/generated/` and the composed world
+            - Synced the publishing copies (web, ssr) from the single source
 
             ### Verification
             Please review the generated WIT files to ensure correctness before merging.

@@ -241,7 +241,7 @@ fmt:
     python3 scripts/enforce_use_groups.py
 
 # CI checks (format check + clippy + test)
-ci: fmt-check clippy test wit-sync-check wit-surface-check
+ci: fmt-check clippy test wit-sync-check wit-surface-check wit-generator-check
     @echo "✅ CI checks passed"
 
 # ------
@@ -333,6 +333,10 @@ wit-sync:
 # Gate: every crate's composed WIT must be byte-identical to the single source.
 wit-sync-check:
     {{python}} scripts/sync_wit.py --check
+
+# Gate: the generator's export-only contract matches the world it ships.
+wit-generator-check:
+    {{python}} scripts/check_wit_generator.py --check
 
 # Gate: every host interface tairitsu-web references is either wired in
 # browser-glue or carries an explicit, justified allowance.
