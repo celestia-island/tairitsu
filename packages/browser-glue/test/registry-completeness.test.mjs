@@ -11,9 +11,12 @@
  *   'imports.tairitsu-browser:full/html-input-element' as it is undefined.
  *
  * That is exactly how every browser component was broken at HEAD: the world
- * declares 575 interfaces, the registry wired 21, and four of the ones
- * `tairitsu-web` itself imports were among the missing. This suite pins the
- * wiring against the WIT declarations, so the same gap cannot come back silently:
+ * declared hundreds of interfaces, the registry wired a hand-curated subset,
+ * and four of the ones `tairitsu-web` itself imports were among the missing.
+ * This suite pins the wiring against the WIT declarations, so the same gap
+ * cannot come back silently (the interface-level counterpart lives in
+ * `scripts/check_wit_surface.py`, which also carries the honest inventory of
+ * interfaces that are still unwired):
  *
  *   1. every declared function of the four wired interfaces is either exported
  *      by the glue or listed in `KNOWN_UNWIRED` (adding one without wiring it,
@@ -170,6 +173,29 @@ for (const [iface, spec] of Object.entries(WIRED)) {
     );
   });
 }
+
+test("wheel-event: momentum is read from the event, not hard-coded", async () => {
+  // WebKit synthesises inertial wheel events and flags them with `momentum`;
+  // other engines leave it undefined. The glue must forward the flag honestly —
+  // a wrong default would make a host treat inertial scroll as a real gesture
+  // (or the reverse). Signature coverage alone cannot catch this, so the
+  // behaviour is pinned here.
+  const { wheelEvent_exports } = await import("../src/runtime/wheelEvent.ts");
+  const handle = 9001n;
+  const previous = globalThis.__eventHandles;
+  try {
+    globalThis.__eventHandles = new Map([[handle, { momentum: true }]]);
+    assert.equal(wheelEvent_exports.getMomentum(handle), true);
+    globalThis.__eventHandles = new Map([[handle, { momentum: false }]]);
+    assert.equal(wheelEvent_exports.getMomentum(handle), false);
+    globalThis.__eventHandles = new Map([[handle, { deltaY: 4 }]]);
+    assert.equal(wheelEvent_exports.getMomentum(handle), false, "absent momentum reads as a real gesture");
+    globalThis.__eventHandles = new Map();
+    assert.equal(wheelEvent_exports.getMomentum(handle), false, "unknown handle must not claim momentum");
+  } finally {
+    globalThis.__eventHandles = previous;
+  }
+});
 
 test("wheel-event: the embedded and single-source copies agree", () => {
   // Until W2 these two copies desynced (the source declared `get-momentum`,

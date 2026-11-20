@@ -35,6 +35,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 WEB_SRC = REPO_ROOT / "packages" / "web" / "src"
 REGISTRY = REPO_ROOT / "packages" / "browser-glue" / "src" / "runtime" / "registry.ts"
 ALLOW = REPO_ROOT / "packages" / "browser-glue" / "wit-surface-allow.tsv"
+
+# Floors, not targets: the scan is expected to stay well above these. They exist
+# so an empty match (moved directory, broken regex) fails loudly instead of
+# reading as "nothing to check".
+MIN_REFERENCED = 20
+MIN_WIRED = 20
 WORLD = REPO_ROOT / "packages" / "browser-worlds" / "wit" / "composed" / "browser-full.wit"
 
 REFERENCE_RE = re.compile(r"bindings::tairitsu_browser::full::([a-z0-9_]+)")
@@ -54,8 +60,18 @@ def referenced() -> set[str]:
     return found
 
 
+def strip_comments(text: str) -> str:
+    """Drop `//` line comments and `/* … */` blocks.
+
+    A commented-out wiring must not count as wired: the gate exists to prove the
+    host can serve the call, and `// "@tairitsu-glue/window": …` serves nothing.
+    """
+    without_block = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
+    return "\n".join(line.split("//", 1)[0] for line in without_block.splitlines())
+
+
 def wired() -> set[str]:
-    text = REGISTRY.read_text(encoding="utf-8", errors="replace")
+    text = strip_comments(REGISTRY.read_text(encoding="utf-8", errors="replace"))
     block = text.split("export const INTERFACES", 1)
     if len(block) != 2:
         raise SystemExit("error: could not locate `export const INTERFACES` in registry.ts")
@@ -112,6 +128,21 @@ def main() -> int:
         problems.append(
             f"referenced interface is not declared by the world: {name} "
             f"(check {WORLD.relative_to(REPO_ROOT)})"
+        )
+
+    # A gate that passes on an empty set is a gate that passes when it is
+    # broken. Both floors below are deliberately hard-coded: if the reference
+    # scan or the registry scan ever stops matching, the counts collapse and
+    # this fires instead of reporting a serene "OK".
+    if len(ref) < MIN_REFERENCED:
+        problems.append(
+            f"reference scan found only {len(ref)} interfaces (< {MIN_REFERENCED}); "
+            "the scan stopped matching — check REFERENCE_RE and WEB_SRC"
+        )
+    if len(wrd) < MIN_WIRED:
+        problems.append(
+            f"registry scan found only {len(wrd)} wirings (< {MIN_WIRED}); "
+            "check the INTERFACES block in registry.ts"
         )
 
     if problems:

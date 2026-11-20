@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Sync the composed WIT tree from `browser-worlds` into its publishing copies.
 
-`packages/browser-worlds/wit/composed/` is the single source of truth: it is the
-tree `generate_browser_wit.py` emits and the one the `browser-worlds` crate embeds.
+`packages/browser-worlds/wit/composed/` is the single source of truth: it is what
+`generate_browser_wit.py` emits (and `just wit-gen` now chains this script, so a
+regeneration cannot leave the copies behind) and the tree the `browser-worlds`
+crate embeds.
 `tairitsu-web` and `tairitsu-ssr` must ship the same tree inside their own crates
 (crates.io `include` lists it), so they carry **byte-identical copies** — never a
 hand-edited fork. Drift between the three used to be invisible until a host
@@ -26,6 +28,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE = REPO_ROOT / "packages" / "browser-worlds" / "wit" / "composed"
 COPY_ROOTS = ("web", "ssr")
 
+# `packages/ssr/build.rs` parses the MONOLITHIC file (not the composed tree) to
+# emit its host stubs, and silently degrades to "no stubs" when the file is
+# missing — so that copy is part of the single-source contract too.
+MONOLITHIC_SOURCE = REPO_ROOT / "packages" / "browser-worlds" / "wit" / "browser-full.wit"
+MONOLITHIC_DEST = REPO_ROOT / "packages" / "ssr" / "wit" / "browser-full.wit"
+
 
 def copies() -> list[Path]:
     return [REPO_ROOT / "packages" / name / "wit" / "composed" for name in COPY_ROOTS]
@@ -33,6 +41,16 @@ def copies() -> list[Path]:
 
 def _relative_files(root: Path) -> set[Path]:
     return {path.relative_to(root) for path in root.rglob("*") if path.is_file()}
+
+
+def monolithic_drift() -> list[str]:
+    if not MONOLITHIC_SOURCE.is_file():
+        return [f"missing single source: {MONOLITHIC_SOURCE.relative_to(REPO_ROOT)}"]
+    if not MONOLITHIC_DEST.is_file():
+        return [f"missing copy: {MONOLITHIC_DEST.relative_to(REPO_ROOT)}"]
+    if not filecmp.cmp(MONOLITHIC_SOURCE, MONOLITHIC_DEST, shallow=False):
+        return [f"differs: {MONOLITHIC_DEST.relative_to(REPO_ROOT)}"]
+    return []
 
 
 def drift(source: Path, dest: Path) -> list[str]:
@@ -52,9 +70,14 @@ def drift(source: Path, dest: Path) -> list[str]:
 
 
 def sync_one(source: Path, dest: Path) -> int:
+    """Stage next to the target, then swap — a failure never leaves a half tree."""
+    staging = dest.with_name(dest.name + ".sync-tmp")
+    if staging.exists():
+        shutil.rmtree(staging)
+    shutil.copytree(source, staging)
     if dest.exists():
         shutil.rmtree(dest)
-    shutil.copytree(source, dest)
+    staging.rename(dest)
     return len(_relative_files(dest))
 
 
@@ -78,6 +101,7 @@ def main() -> int:
                 problems.append(f"missing copy tree: {dest.relative_to(REPO_ROOT)}")
                 continue
             problems.extend(drift(SOURCE, dest))
+        problems.extend(monolithic_drift())
         if problems:
             print("composed WIT drift detected (single source = "
                   f"{SOURCE.relative_to(REPO_ROOT)}):", file=sys.stderr)
@@ -91,6 +115,8 @@ def main() -> int:
     for dest in copies():
         count = sync_one(SOURCE, dest)
         print(f"synced {count} WIT files -> {dest.relative_to(REPO_ROOT)}")
+    shutil.copyfile(MONOLITHIC_SOURCE, MONOLITHIC_DEST)
+    print(f"synced monolithic world -> {MONOLITHIC_DEST.relative_to(REPO_ROOT)}")
     return 0
 
 

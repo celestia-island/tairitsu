@@ -1294,6 +1294,9 @@ EXPORTED_CALLBACKS = [
     "scroll-callbacks", "window-resize-callbacks",
     "video-frame-callbacks", "promise-callbacks", "geolocation-callbacks",
     "idb-callbacks", "file-reader-callbacks",
+    # Export-only: the guest implements it and the host calls back into it
+    # (tairitsu-web has `export!(BrowserComponent)` and an explicit Guest impl).
+    "web-socket-callbacks",
 ]
 
 

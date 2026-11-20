@@ -28,7 +28,6 @@ world browser-full {
     import event-target;
     import platform-helpers;
     import component-types;
-    import web-socket-callbacks;
     import credential;
     import credential-user-data;
     import credentials-container;
