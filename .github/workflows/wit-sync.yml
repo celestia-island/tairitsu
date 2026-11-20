@@ -50,7 +50,10 @@ jobs:
 
       - name: Fetch W3C WebIDL
         run: |
-          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+          # Scheduled runs must revalidate: cached files are skipped without
+          # --force, so a warm cache would freeze the corpus forever while the
+          # job reports "no changes".
+          if [ "${{ github.event.inputs.force }}" = "true" ] || [ "${{ github.event_name }}" = "schedule" ]; then
             python3 scripts/fetch_webidl.py --force
           else
             python3 scripts/fetch_webidl.py
@@ -63,6 +66,12 @@ jobs:
           # ssr composed + ssr monolithic) are derived. Skipping this step is how
           # scheduled syncs used to produce born-red PRs with stale copies.
           python3 scripts/sync_wit.py
+
+      - name: Verify the regenerated tree
+        run: |
+          python3 scripts/sync_wit.py --check
+          python3 scripts/check_wit_generator.py --check
+          python3 scripts/check_wit_surface.py --check
 
       - name: Check for changes
         id: check_changes

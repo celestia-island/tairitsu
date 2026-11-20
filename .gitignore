@@ -79,3 +79,6 @@ Cargo.lock
 /.just/
 /celestia-devtools.just
 .cargo/config.toml
+
+# Staging directory used by scripts/sync_wit.py while it swaps a copy tree.
+*.sync-tmp/

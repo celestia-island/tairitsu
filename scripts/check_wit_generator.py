@@ -29,10 +29,14 @@ SCRIPTS = REPO_ROOT / "scripts"
 GENERATOR = REPO_ROOT / "scripts" / "generate_browser_wit.py"
 COMPOSED_WORLD = REPO_ROOT / "packages" / "browser-worlds" / "wit" / "composed" / "browser-full.wit"
 SSR_MANIFEST = REPO_ROOT / "packages" / "ssr" / "Cargo.toml"
+WEB_MANIFEST = REPO_ROOT / "packages" / "web" / "Cargo.toml"
 
 # tairitsu-ssr's build script reads the monolithic world and emits a file that
 # `src/stubs.rs` includes; a packaged crate without either cannot build.
 SSR_REQUIRED_INCLUDES = ("build.rs", "wit/browser-full.wit", "wit/composed/**/*")
+# tairitsu-web binds `wit/composed` from its embedded copy (build.rs), so the
+# packaged crate needs it too.
+WEB_REQUIRED_INCLUDES = ("wit/composed/**/*", "build.rs")
 MONOLITHIC_WORLD = REPO_ROOT / "packages" / "browser-worlds" / "wit" / "browser-full.wit"
 
 # Changing this set is a contract change: regenerate the WIT, update this pin in
@@ -88,13 +92,17 @@ def main() -> int:
             f"{sorted(export_only - exported)} would never be exported at all"
         )
 
-    manifest = SSR_MANIFEST.read_text(encoding="utf-8", errors="replace")
-    for required in SSR_REQUIRED_INCLUDES:
-        if f'"{required}"' not in manifest:
-            problems.append(
-                f"packages/ssr/Cargo.toml include list is missing {required} "
-                "(the packaged crate would not build)"
-            )
+    for label, manifest_path, required_items in (
+        ("packages/ssr/Cargo.toml", SSR_MANIFEST, SSR_REQUIRED_INCLUDES),
+        ("packages/web/Cargo.toml", WEB_MANIFEST, WEB_REQUIRED_INCLUDES),
+    ):
+        manifest = manifest_path.read_text(encoding="utf-8", errors="replace")
+        for required in required_items:
+            if f'"{required}"' not in manifest:
+                problems.append(
+                    f"{label} include list is missing {required} "
+                    "(the packaged crate would not build)"
+                )
 
     for label, path in (("composed", COMPOSED_WORLD), ("monolithic", MONOLITHIC_WORLD)):
         imports, exports = world_membership(path)

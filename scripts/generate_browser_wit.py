@@ -1433,6 +1433,10 @@ world w3c-idl-full {{
     log_ok(f"Wrote {w3c_dest.name:<30} {len(auto_names):3d} interfaces ({len(w3c_content):,} bytes)")
 
 
+# NOTE: `generate_full_world` removes every `*.wit` under composed/ before this
+# runs, so a hand-added or hand-split file cannot survive a regeneration — that
+# wipe is the mechanism, and it is why no stale-file sweep is needed here.
+
 def _generate_composed(
     composed_dir: Path,
     handwritten_dir: Path,
@@ -1508,7 +1512,6 @@ world browser-full {{
 
     seen_composed: Set[str] = set(hw_names)
 
-    emitted_composed: set[str] = set()
     for domain_file in sorted(generated_dir.glob("*.wit")):
         domain_name = domain_file.stem
         content = domain_file.read_text(encoding="utf-8")
@@ -1543,18 +1546,7 @@ world browser-full {{
         d_content = d_header + "\n\n".join(domain_ifaces) + "\n"
         d_dest = composed_dir / f"_domain-{domain_name}.wit"
         d_dest.write_text(d_content, encoding="utf-8")
-        emitted_composed.add(d_dest.name)
         log_ok(f"Wrote composed/{d_dest.name:<30} {len(domain_ifaces):3d} interfaces ({len(d_content):,} bytes)")
-
-    # Delete composed domain files this run did not write. A stale hand-split file
-    # (the _domain-service-workers.wit case) keeps declaring an interface that a
-    # regenerated file also declares, and one package cannot declare it twice —
-    # wit-bindgen rejects the package, so no byte gate would ever see a green tree.
-    if not dry_run:
-        for stale in sorted(composed_dir.glob("_domain-*.wit")):
-            if stale.name not in emitted_composed:
-                stale.unlink()
-                log_ok(f"Removed stale composed/{stale.name} (not emitted by this run)")
 
 
 # ---------------------------------------------------------------------------

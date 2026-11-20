@@ -72,10 +72,15 @@ def strip_comments(text: str) -> str:
 
 def wired() -> set[str]:
     text = strip_comments(REGISTRY.read_text(encoding="utf-8", errors="replace"))
-    block = text.split("export const INTERFACES", 1)
-    if len(block) != 2:
+    parts = text.split("export const INTERFACES", 1)
+    if len(parts) != 2:
         raise SystemExit("error: could not locate `export const INTERFACES` in registry.ts")
-    return set(WIRED_RE.findall(block[1]))
+    # Stop at the object's closing brace: a `"@tairitsu-glue/<iface>":` key defined
+    # anywhere later in the file (a probe, a decoy map) must not count as wired.
+    body, sep, rest = parts[1].partition("\n};")
+    if not sep:
+        raise SystemExit("error: could not find the end of the INTERFACES object in registry.ts")
+    return set(WIRED_RE.findall(body))
 
 
 def world_imports() -> set[str]:
