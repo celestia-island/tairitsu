@@ -48,6 +48,14 @@ jobs:
           restore-keys: |
             wit-
 
+      # The verify step uses `node --experimental-strip-types`, which needs
+      # node >= 22.6; the runner default is not guaranteed and other lanes in
+      # this repo pin node explicitly.
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
       - name: Fetch W3C WebIDL
         run: |
           # Scheduled runs must revalidate: cached files are skipped without

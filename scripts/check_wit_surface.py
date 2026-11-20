@@ -72,9 +72,12 @@ def strip_comments(text: str) -> str:
 
 def wired() -> set[str]:
     text = strip_comments(REGISTRY.read_text(encoding="utf-8", errors="replace"))
-    parts = text.split("export const INTERFACES", 1)
-    if len(parts) != 2:
-        raise SystemExit("error: could not locate `export const INTERFACES` in registry.ts")
+    # Anchor the START too: an `INTERFACES_LEGACY` decoy defined above the real
+    # object would otherwise let the split land on the decoy and count its keys.
+    start = re.search(r"export const INTERFACES\s*=\s*\{", text)
+    if start is None:
+        raise SystemExit("error: could not locate `export const INTERFACES = {` in registry.ts")
+    parts = [text[:start.start()], text[start.end():]]
     # Stop at the object's closing brace: a `"@tairitsu-glue/<iface>":` key defined
     # anywhere later in the file (a probe, a decoy map) must not count as wired.
     body, sep, rest = parts[1].partition("\n};")
