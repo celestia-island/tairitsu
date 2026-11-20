@@ -8,6 +8,14 @@ license-file.workspace = true
 repository.workspace = true
 description = "Server-Side Rendering engine for Tairitsu WASM components"
 
+include = [
+    "src/**/*",
+    "wit/composed/**/*",
+    "wit/browser-full.wit",
+    "build.rs",
+    "Cargo.toml",
+    "README.md",
+]
 [dependencies]
 
 anyhow = { workspace = true }

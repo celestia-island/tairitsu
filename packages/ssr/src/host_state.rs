@@ -303,6 +303,22 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
 
     fn clear_timeout(&mut self, _id: i32) {}
 
+    fn set_interval(&mut self, _callback_id: u64, _ms: i32) -> i32 {
+        // SSR has no timer wheel: the render pass is synchronous, so an
+        // interval can never fire. Report a handle anyway so a guest that only
+        // stores it keeps working; nothing will ever call back.
+        1
+    }
+
+    fn clear_interval(&mut self, _id: i32) {}
+
+    fn connect_web_socket(&mut self, _url: String) -> u64 {
+        // Server-side rendering owns no browser networking: sockets belong to
+        // the host that later hydrates the page. A guest that opens one here is
+        // out of contract; hand back the neutral handle the other stubs use.
+        0
+    }
+
     fn request_animation_frame(&mut self, _callback_id: u64) -> u32 {
         1
     }

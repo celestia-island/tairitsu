@@ -1,0 +1,19 @@
+# Host interfaces `tairitsu-web` references but `browser-glue` does not wire.
+#
+# One entry per line: <kebab-interface><TAB><reason>
+# `scripts/check_wit_surface.py --check` fails when a referenced interface is
+# missing from both this list and the runtime registry, when an entry here goes
+# stale (no longer referenced), or when an entry is already wired.
+#
+# These are real gaps, not conveniences: a guest that calls one of them has no
+# host implementation and will fail at instantiation or trap on first use. The
+# listed set is the honest inventory as of the single-source WIT cut; each line
+# should disappear when the corresponding host support lands.
+html-canvas-element	canvas host path is not wired; the canvas family (element + rect + fill-stroke-styles) is unimplemented in the runtime registry
+canvas-rect	canvas host path is not wired; imported together with the canvas element family
+canvas-fill-stroke-styles	canvas host path is not wired; imported together with the canvas element family
+html-media-element	media element host path is not wired; audio/video playback is not part of the browser host yet
+audio-context	Web Audio host path is not wired (no AudioContext construction in the runtime registry)
+base-audio-context	Web Audio host path is not wired; imported together with audio-context
+media-query-list	matchMedia host path is not wired; window currently exposes dimensions only
+web-socket	WebSocket host path is not wired; platform-helpers exposes connect-web-socket instead and the callback world is exported by the guest

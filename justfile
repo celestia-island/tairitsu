@@ -241,7 +241,7 @@ fmt:
     python3 scripts/enforce_use_groups.py
 
 # CI checks (format check + clippy + test)
-ci: fmt-check clippy test
+ci: wit-sync-check wit-surface-check wit-generator-check browser-glue-test fmt-check clippy test
     @echo "✅ CI checks passed"
 
 # ------
@@ -323,6 +323,31 @@ wit-gen:
     @echo "WIT generation pipeline (WebIDL → WIT)"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     {{python}} scripts/gen_wit_from_webidl.py
+    {{python}} scripts/sync_wit.py
+
+# Regenerate the publishing copies of the composed WIT tree (web + ssr) from the
+# single source in packages/browser-worlds/wit/composed/.
+wit-sync:
+    {{python}} scripts/sync_wit.py
+
+# Gate: every crate's composed WIT must be byte-identical to the single source.
+wit-sync-check:
+    {{python}} scripts/sync_wit.py --check
+
+# Gate: the generator's export-only contract matches the world it ships.
+wit-generator-check:
+    {{python}} scripts/check_wit_generator.py --check
+
+# The browser-glue suite is the only function-level comparator between the WIT
+# world and the host implementation, and it needs no node_modules (node's
+# --experimental-strip-types resolves the TS sources through the repo hook).
+browser-glue-test:
+    cd packages/browser-glue && node --experimental-strip-types --test "test/**/*.test.mjs"
+
+# Gate: every host interface tairitsu-web references is either wired in
+# browser-glue or carries an explicit, justified allowance.
+wit-surface-check:
+    {{python}} scripts/check_wit_surface.py --check
 
 # Step 1: Fetch W3C/WHATWG WebIDL spec files into target/tairitsu-wit/webidl-cache/
 wit-fetch-idl:
@@ -490,40 +515,6 @@ npm-build:
 cdn-demo-prod:
     @echo "Building CDN demo (esm.sh mode)..."
     {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist --cdn-mode esm-sh
-
-# ------
-# WIT sync (packages/web embedded copy)
-# ------
-
-# Sync composed WIT files from browser-worlds into packages/web
-sync-wit:
-    @{{python}} scripts/sync_wit.py
-
-# Check that embedded WIT files are in sync with browser-worlds
-[script('python')]
-sync-wit-check:
-    import filecmp, os, sys
-
-    src = "packages/browser-worlds/wit/composed"
-    dst = "packages/web/wit/composed"
-    if not os.path.isdir(dst):
-        print(f"{dst} does not exist, run: just sync-wit")
-        sys.exit(1)
-
-    # Recursive comparison (filecmp only compares shallowly by default).
-    def trees_differ(a, b):
-        cmp = filecmp.dircmp(a, b)
-        if cmp.left_only or cmp.right_only or cmp.funny_files:
-            return True
-        _, mismatch, errors = filecmp.cmpfiles(a, b, cmp.common_files, shallow=False)
-        if mismatch or errors:
-            return True
-        return any(trees_differ(os.path.join(a, sub), os.path.join(b, sub)) for sub in cmp.subdirs)
-
-    if trees_differ(src, dst):
-        print("WIT files out of sync! Run: just sync-wit")
-        sys.exit(1)
-    print("WIT files are in sync")
 
 # ------
 # Utilities

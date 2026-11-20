@@ -76,6 +76,9 @@ fn main() {
         "geolocation-callbacks",
         "idb-callbacks",
         "file-reader-callbacks",
+        // Export-only in the single-source world: the guest owns it, so the host
+        // must not register an instance for it (it would be dead weight).
+        "web-socket-callbacks",
     ]
     .into_iter()
     .collect();

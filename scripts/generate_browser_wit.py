@@ -1287,6 +1287,11 @@ def _extract_all_interfaces(
     )
 
 
+# Export-only interfaces: the guest implements them and the host calls back
+# into them, so the world must NOT import them (an import would oblige the host
+# to provide an implementation of a callback the guest owns).
+EXPORT_ONLY = ["web-socket-callbacks"]
+
 EXPORTED_CALLBACKS = [
     "event-callbacks", "lifecycle", "timer-callbacks",
     "animation-callbacks", "resize-observer-callbacks",
@@ -1294,6 +1299,9 @@ EXPORTED_CALLBACKS = [
     "scroll-callbacks", "window-resize-callbacks",
     "video-frame-callbacks", "promise-callbacks", "geolocation-callbacks",
     "idb-callbacks", "file-reader-callbacks",
+    # Export-only: the guest implements it and the host calls back into it
+    # (tairitsu-web has `export!(BrowserComponent)` and an explicit Guest impl).
+    "web-socket-callbacks",
 ]
 
 
@@ -1334,7 +1342,8 @@ def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
         log_warn("No interfaces found to include in browser-full.wit")
         return
 
-    all_imports = "\n".join(f"    import {name};" for name in all_names)
+    import_names = [name for name in all_names if name not in EXPORT_ONLY]
+    all_imports = "\n".join(f"    import {name};" for name in import_names)
     exports = "\n".join(f"    export {name};" for name in EXPORTED_CALLBACKS)
 
     handwritten_section = "\n\n".join(handwritten_interfaces)
@@ -1424,6 +1433,10 @@ world w3c-idl-full {{
     log_ok(f"Wrote {w3c_dest.name:<30} {len(auto_names):3d} interfaces ({len(w3c_content):,} bytes)")
 
 
+# NOTE: `generate_full_world` removes every `*.wit` under composed/ before this
+# runs, so a hand-added or hand-split file cannot survive a regeneration — that
+# wipe is the mechanism, and it is why no stale-file sweep is needed here.
+
 def _generate_composed(
     composed_dir: Path,
     handwritten_dir: Path,
@@ -1442,7 +1455,8 @@ def _generate_composed(
           _handwritten.wit  — all handwritten interface definitions
           _domain-*.wit     — auto-generated interfaces per domain
     """
-    all_imports = "\n".join(f"    import {name};" for name in all_names)
+    import_names = [name for name in all_names if name not in EXPORT_ONLY]
+    all_imports = "\n".join(f"    import {name};" for name in import_names)
     exports = "\n".join(f"    export {name};" for name in EXPORTED_CALLBACKS)
 
     bf_header = """/// browser-full — composition world for tairitsu-browser:full package.

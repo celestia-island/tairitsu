@@ -28,7 +28,6 @@ world browser-full {
     import event-target;
     import platform-helpers;
     import component-types;
-    import web-socket-callbacks;
     import credential;
     import credential-user-data;
     import credentials-container;
@@ -600,5 +599,6 @@ world browser-full {
     export geolocation-callbacks;
     export idb-callbacks;
     export file-reader-callbacks;
+    export web-socket-callbacks;
 }
 

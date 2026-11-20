@@ -11,9 +11,12 @@
  *   'imports.tairitsu-browser:full/html-input-element' as it is undefined.
  *
  * That is exactly how every browser component was broken at HEAD: the world
- * declares 575 interfaces, the registry wired 21, and four of the ones
- * `tairitsu-web` itself imports were among the missing. This suite pins the
- * wiring against the WIT declarations, so the same gap cannot come back silently:
+ * declared hundreds of interfaces, the registry wired a hand-curated subset,
+ * and four of the ones `tairitsu-web` itself imports were among the missing.
+ * This suite pins the wiring against the WIT declarations, so the same gap
+ * cannot come back silently (the interface-level counterpart lives in
+ * `scripts/check_wit_surface.py`, which also carries the honest inventory of
+ * interfaces that are still unwired):
  *
  *   1. every declared function of the four wired interfaces is either exported
  *      by the glue or listed in `KNOWN_UNWIRED` (adding one without wiring it,
@@ -41,11 +44,12 @@ register("./ts-resolve-hook.mjs", import.meta.url);
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG = join(HERE, "..");
 const REPO = join(PKG, "..", "..");
-// Two composed copies exist and they are NOT identical (pre-existing master
-// desync, see the wheel-event pin below):
+// Two composed copies exist and they must be byte-identical (single source =
+// packages/browser-worlds/wit/composed; `just wit-sync` regenerates the copies,
+// `just wit-sync-check` gates them):
 //   - packages/web/wit/composed        — what in-tree builds resolve (build.rs
 //                                        prefers this embedded copy);
-//   - packages/browser-worlds/wit/composed — the `just sync-wit` source.
+//   - packages/browser-worlds/wit/composed — the source of truth.
 const WIT_DIR = join(REPO, "packages", "web", "wit", "composed");
 const WIT_SYNC_DIR = join(REPO, "packages", "browser-worlds", "wit", "composed");
 const REGISTRY_SRC = readFileSync(join(PKG, "src", "runtime", "registry.ts"), "utf8");
@@ -170,26 +174,45 @@ for (const [iface, spec] of Object.entries(WIRED)) {
   });
 }
 
-test("wheel-event: the browser-worlds/embedded WIT desync is pinned, not silent", () => {
-  // `packages/browser-worlds/wit/composed/_domain-events.wit` declares a 5th
-  // function (`get-momentum`) that `packages/web/wit/composed` lacks. In-tree
-  // builds resolve the embedded copy (packages/web/build.rs prefers it), so the
-  // suite above is consistent today — but the first `just sync-wit` will add it
-  // here, and this pin is what turns that into a one-line, self-explaining fix:
-  // wire `getMomentum` (WebKit-only `WheelEvent.momentum`) and delete this test.
+test("wheel-event: momentum is read from the event, not hard-coded", async () => {
+  // WebKit synthesises inertial wheel events and flags them with `momentum`;
+  // other engines leave it undefined. The glue must forward the flag honestly —
+  // a wrong default would make a host treat inertial scroll as a real gesture
+  // (or the reverse). Signature coverage alone cannot catch this, so the
+  // behaviour is pinned here.
+  const { wheelEvent_exports } = await import("../src/runtime/wheelEvent.ts");
+  const handle = 9001n;
+  const previous = globalThis.__eventHandles;
+  try {
+    globalThis.__eventHandles = new Map([[handle, { momentum: true }]]);
+    assert.equal(wheelEvent_exports.getMomentum(handle), true);
+    globalThis.__eventHandles = new Map([[handle, { momentum: false }]]);
+    assert.equal(wheelEvent_exports.getMomentum(handle), false);
+    globalThis.__eventHandles = new Map([[handle, { deltaY: 4 }]]);
+    assert.equal(wheelEvent_exports.getMomentum(handle), false, "absent momentum reads as a real gesture");
+    globalThis.__eventHandles = new Map();
+    assert.equal(wheelEvent_exports.getMomentum(handle), false, "unknown handle must not claim momentum");
+  } finally {
+    globalThis.__eventHandles = previous;
+  }
+});
+
+test("wheel-event: the embedded and single-source copies agree", () => {
+  // Until W2 these two copies desynced (the source declared `get-momentum`,
+  // the embedded copy did not) and this test pinned that gap. The copies are
+  // now regenerated from one source, `getMomentum` is wired in
+  // `src/runtime/wheelEvent.ts`, and the pin becomes an equality assertion so
+  // the same gap can never come back silently.
   const embedded = declaredFunctions("_domain-events.wit", "wheel-event");
   const synced = declaredFunctions("_domain-events.wit", "wheel-event", WIT_SYNC_DIR);
-  const pending = synced.filter((fn) => !embedded.includes(fn));
   assert.deepEqual(
-    pending,
-    ["get-momentum"],
-    "the embedded/sync copy desync changed: wire the new function(s) in " +
-      "src/runtime/wheelEvent.ts and drop this pin",
+    embedded,
+    synced,
+    "the embedded and single-source WIT disagree: run `just wit-sync`",
   );
-  assert.deepEqual(
-    embedded.filter((fn) => !synced.includes(fn)),
-    [],
-    "the embedded copy declares something the sync source does not",
+  assert.ok(
+    embedded.includes("get-momentum"),
+    "the wheel-event interface lost get-momentum — regenerate the WIT instead of editing copies",
   );
 });
 
