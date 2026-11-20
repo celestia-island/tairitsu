@@ -31,7 +31,7 @@ COPY_ROOTS = ("web", "ssr")
 
 # A floor, not a target: it stops an emptied or half-copied source tree from
 # being propagated over the copies in write mode.
-MIN_SOURCE_FILES = 20
+MIN_SOURCE_FILES = 25
 
 # `packages/ssr/build.rs` parses the MONOLITHIC file (not the composed tree) to
 # emit its host stubs, and silently degrades to "no stubs" when the file is
@@ -49,6 +49,32 @@ def _relative_files(root: Path) -> set[Path]:
 
 
 INTERFACE_RE = re.compile(r"^interface ([a-z0-9-]+)", re.MULTILINE)
+WORLD_START_RE = re.compile(r"^world ([a-z0-9-]+) \{", re.MULTILINE)
+WORLD_MEMBER_RE = re.compile(r"^\s+(import|export) ([a-z0-9-]+)\s*;", re.MULTILINE)
+
+
+def _world_membership(text: str) -> tuple[set[str], set[str]]:
+    """(imported, exported) interface names of the last world block in `text`."""
+    match = None
+    for match in WORLD_START_RE.finditer(text):
+        pass
+    if match is None:
+        return set(), set()
+    tail = text[match.end():]
+    depth = 1
+    body_chars: list[str] = []
+    for ch in tail:
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        body_chars.append(ch)
+    body = "".join(body_chars)
+    imports = {name for kind, name in WORLD_MEMBER_RE.findall(body) if kind == "import"}
+    exports = {name for kind, name in WORLD_MEMBER_RE.findall(body) if kind == "export"}
+    return imports, exports
 
 
 def _interface_names(text: str) -> set[str]:
@@ -56,6 +82,8 @@ def _interface_names(text: str) -> set[str]:
 
 
 def monolithic_parity() -> list[str]:
+    if not MONOLITHIC_SOURCE.is_file():
+        return [f"missing single source: {MONOLITHIC_SOURCE.relative_to(REPO_ROOT)}"]
     """The monolithic world and the composed tree must declare the same interfaces.
 
     ssr parses the monolithic file to emit host stubs but binds `wit/composed`
@@ -77,6 +105,25 @@ def monolithic_parity() -> list[str]:
         problems.append(f"declared only in the monolithic world: {', '.join(only_monolithic)}")
     if only_composed:
         problems.append(f"declared only in the composed tree: {', '.join(only_composed)}")
+
+    # Same interface set is not enough: a world that imports what the other one
+    # exports describes a different host obligation (the guest owns the callback
+    # in one, the host must provide it in the other).
+    m_imports, m_exports = _world_membership(
+        MONOLITHIC_SOURCE.read_text(encoding="utf-8", errors="replace")
+    )
+    c_imports, c_exports = _world_membership(
+        (SOURCE / "browser-full.wit").read_text(encoding="utf-8", errors="replace")
+    )
+    for label, mono, comp in (("import", m_imports, c_imports), ("export", m_exports, c_exports)):
+        if mono - comp:
+            problems.append(
+                f"{label}ed only by the monolithic world: {', '.join(sorted(mono - comp))}"
+            )
+        if comp - mono:
+            problems.append(
+                f"{label}ed only by the composed world: {', '.join(sorted(comp - mono))}"
+            )
     return problems
 
 
