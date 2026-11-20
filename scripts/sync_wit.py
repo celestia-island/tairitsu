@@ -60,7 +60,10 @@ def _world_membership(text: str) -> tuple[set[str], set[str]]:
         pass
     if match is None:
         return set(), set()
+    # Strip comments BEFORE scanning braces: a `}` inside a line comment would
+    # otherwise close the block early and silently drop members.
     tail = text[match.end():]
+    tail = "\n".join(line.split("//", 1)[0] for line in tail.splitlines())
     depth = 1
     body_chars: list[str] = []
     for ch in tail:
@@ -115,8 +118,12 @@ def monolithic_parity() -> list[str]:
     m_imports, m_exports = _world_membership(
         MONOLITHIC_SOURCE.read_text(encoding="utf-8", errors="replace")
     )
+    composed_world = SOURCE / "browser-full.wit"
+    if not composed_world.is_file():
+        problems.append(f"missing single source: {composed_world.relative_to(REPO_ROOT)}")
+        return problems
     c_imports, c_exports = _world_membership(
-        (SOURCE / "browser-full.wit").read_text(encoding="utf-8", errors="replace")
+        composed_world.read_text(encoding="utf-8", errors="replace")
     )
     for label, mono, comp in (("import", m_imports, c_imports), ("export", m_exports, c_exports)):
         if mono - comp:
