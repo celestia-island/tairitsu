@@ -219,7 +219,18 @@ impl RequestOptions {
 /// send/recv move frames across channels, close surfaces a proper close
 /// frame and records the close info for later queries.
 impl self::tairitsu::transport::websocket::Host for TransportHostState {
-    fn connect(&mut self, url: String, protocols: Vec<String>) -> Result<u64, String> {
+    fn connect(
+        &mut self,
+        url: String,
+        protocols: Vec<String>,
+        auth: Option<self::tairitsu::transport::types::AuthIntent>,
+    ) -> Result<u64, String> {
+        // Same stance as the http impl's credentials: the runtime keeps
+        // no session credential store today, so both intents ride the
+        // unauthenticated handshake until auth plumbing lands with the
+        // browser transport work (W1 deliberately fixes compile shape,
+        // not credential semantics).
+        let _ = auth;
         self.ws.connect(url, protocols)
     }
 
@@ -265,7 +276,11 @@ impl self::tairitsu::transport::sse::Host for TransportHostState {
         url: String,
         headers: Vec<(String, String)>,
         events: Vec<String>,
+        auth: Option<self::tairitsu::transport::types::AuthIntent>,
     ) -> Result<u64, String> {
+        // See the websocket connect note: no session credential store
+        // exists yet, so both auth intents ride the plain handshake.
+        let _ = auth;
         self.sse.subscribe(url, headers, events)
     }
 

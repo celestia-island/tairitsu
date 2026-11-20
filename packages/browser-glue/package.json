@@ -108,9 +108,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^*",
-    "@swc/cli": "^0.*",
+    "@swc/cli": "^0.8",
     "@swc/core": "^*",
-    "esbuild": "^0.*",
+    "esbuild": "^0.28",
     "eslint": "^*",
     "prettier": "^*",
     "rimraf": "^*",

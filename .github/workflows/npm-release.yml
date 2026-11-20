@@ -267,11 +267,17 @@ jobs:
 
       - name: Install esbuild
         if: steps.glue-exists.outputs.skip != 'true'
-        run: npm install -g esbuild@0.25.4
+        run: npm install -g esbuild@0.28.2
 
       - name: Build glue packages
         if: steps.glue-exists.outputs.skip != 'true'
-        run: python3 scripts/build_npm_glue_packages.py
+        # --gen = EXPLICIT recorded skip of the wasm copy. This job has no
+        # Rust toolchain, so it cannot build the wasm32-wasip2 components;
+        # a default (full) build now fails loud instead of silently
+        # shipping an empty wasm face (that is how 0.5.4 shipped zero
+        # .wasm). Shipping the components from this pipeline is deferred
+        # to the delivery-form work (PLAN §3-D5 / W5).
+        run: python3 scripts/build_npm_glue_packages.py --gen
 
       - name: Verify dist contents
         if: steps.glue-exists.outputs.skip != 'true'

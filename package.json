@@ -11,5 +11,10 @@
     "build": "npm run build -w @celestia/tairitsu-browser-glue",
     "build:glue": "npm run build -w @celestia/tairitsu-browser-glue",
     "clean": "npm run clean -w @celestia/tairitsu-browser-glue"
+  },
+  "devDependencies": {
+    "@bytecodealliance/jco": "^1.42",
+    "@bytecodealliance/preview2-shim": "^0.31",
+    "@bytecodealliance/preview3-shim": "^0.14"
   }
 }

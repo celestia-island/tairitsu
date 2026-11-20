@@ -126,7 +126,10 @@
                 }
             }
 
-            // WASI preview2 shim — try local bundle first, fall back to CDN.
+            // WASI preview2 shim — always the locally bundled, pinned copy
+            // (the build fails loudly when the shim is missing, so there is
+            // no CDN fallback anymore: unversioned esm.sh imports are
+            // unreproducible and would be blocked by the CSP posture anyway).
             if (!globalThis.__wasiShimModules) {
                 try {
                     const shimModules = ['io', 'cli', 'random', 'clocks', 'filesystem', 'sockets'];
@@ -135,23 +138,10 @@
                         wasiIo: localImports[0], wasiCli: localImports[1], wasiRandom: localImports[2],
                         wasiClocks: localImports[3], wasiFilesystem: localImports[4], wasiSockets: localImports[5],
                     };
-                } catch (_localErr) {
-                    try {
-                        const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('CDN import timed out')), ms))]);
-                        const [
-                            wasiIo, wasiCli, wasiRandom, wasiClocks, wasiFilesystem, wasiSockets,
-                        ] = await withTimeout(Promise.all([
-                            import('https://esm.sh/@bytecodealliance/preview2-shim/io'),
-                            import('https://esm.sh/@bytecodealliance/preview2-shim/cli'),
-                            import('https://esm.sh/@bytecodealliance/preview2-shim/random'),
-                            import('https://esm.sh/@bytecodealliance/preview2-shim/clocks'),
-                            import('https://esm.sh/@bytecodealliance/preview2-shim/filesystem'),
-                            import('https://esm.sh/@bytecodealliance/preview2-shim/sockets'),
-                        ]), 15000);
-                        globalThis.__wasiShimModules = { wasiIo, wasiCli, wasiRandom, wasiClocks, wasiFilesystem, wasiSockets };
-                    } catch (e) {
-                        console.warn('[tairitsu] Could not load WASI preview2 shim (local nor CDN):', e);
-                    }
+                } catch (e) {
+                    console.error('[tairitsu] Could not load the locally bundled WASI preview2 shim (/wasi-shim/*). ' +
+                        'The build bundles the pinned shim (@bytecodealliance/preview2-shim ^0.31) — a missing bundle ' +
+                        'means the packaged output is incomplete; rebuild with `tairitsu build`.', e);
                 }
             }
             if (globalThis.__wasiShimModules) {

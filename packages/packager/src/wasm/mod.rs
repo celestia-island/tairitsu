@@ -1,6 +1,7 @@
 use std::time::{Duration, Instant};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use sha2::{Digest, Sha256};
 
 use crate::{config::Config, daemon};
 
@@ -567,22 +568,22 @@ fn build_wasm_component(
 
 /// Resolve the browser-glue runtime bundle (`dist/runtime.js`).
 ///
-/// Search order:
+/// Search order (the resolved source is logged — W1 acceptance: the
+/// packager must show where the host runtime came from):
 /// 1. `TAIRITSU_RUNTIME_BUNDLE` environment variable (absolute or relative path)
 /// 2. Monorepo-relative paths (for in-tree development)
 /// 3. [`DEP_TAIRITSU_BROWSER_WORLDS_WIT_DIR`] auto-discovery (for crates.io users)
-/// 4. `node_modules/` paths (for npm-installed `tairitsu-browser-glue`)
-fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<String> {
+/// 4. `node_modules/` paths, real published names first:
+///    `@celestia/tairitsu-browser-glue` (the runtime-bearing workspace
+///    package) and `@celestia-island/tairitsu-web-glue` (the CDN glue
+///    package), then the legacy placeholder names.
+///
+/// Returns `(source_label, bundle_content)`.
+fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<(String, String)> {
     if let Ok(env_path) = std::env::var("TAIRITSU_RUNTIME_BUNDLE") {
         let path = std::path::Path::new(&env_path);
         if path.exists() {
-            return std::fs::read_to_string(path).map_err(|e| {
-                crate::TairitsuPackagerError::BuildError(format!(
-                    "Failed to read browser-glue runtime bundle from env override {}: {}",
-                    path.display(),
-                    e
-                ))
-            });
+            return read_glue_runtime_at(path, "TAIRITSU_RUNTIME_BUNDLE env override");
         }
         tracing::warn!(
             "TAIRITSU_RUNTIME_BUNDLE={} does not exist, falling back to default search",
@@ -600,13 +601,7 @@ fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<
     for candidate in candidates {
         let path = manifest_dir.join(candidate);
         if path.exists() {
-            return std::fs::read_to_string(&path).map_err(|e| {
-                crate::TairitsuPackagerError::BuildError(format!(
-                    "Failed to read browser-glue runtime bundle {}: {}",
-                    path.display(),
-                    e
-                ))
-            });
+            return read_glue_runtime_at(&path, "monorepo path (in-tree browser-glue dist)");
         }
     }
 
@@ -617,18 +612,22 @@ fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<
             .map(|p| p.join("browser-glue/dist/runtime.js"));
         if let Some(glue_path) = glue_path {
             if glue_path.exists() {
-                return std::fs::read_to_string(&glue_path).map_err(|e| {
-                    crate::TairitsuPackagerError::BuildError(format!(
-                        "Failed to read browser-glue runtime bundle {}: {}",
-                        glue_path.display(),
-                        e
-                    ))
-                });
+                return read_glue_runtime_at(
+                    &glue_path,
+                    "DEP_TAIRITSU_BROWSER_WORLDS_WIT_DIR discovery (crates.io install)",
+                );
             }
         }
     }
 
     let node_modules_candidates: &[&str] = &[
+        // Real published names first (W1: the old list only knew
+        // placeholder names that were never published).
+        "node_modules/@celestia/tairitsu-browser-glue/dist/runtime.js",
+        "node_modules/@celestia-island/tairitsu-web-glue/dist/runtime.js",
+        "../node_modules/@celestia/tairitsu-browser-glue/dist/runtime.js",
+        "../node_modules/@celestia-island/tairitsu-web-glue/dist/runtime.js",
+        // Legacy placeholder names, kept for older layouts.
         "node_modules/tairitsu-browser-glue/dist/runtime.js",
         "node_modules/@tairitsu/browser-glue/dist/runtime.js",
         "../node_modules/tairitsu-browser-glue/dist/runtime.js",
@@ -636,13 +635,12 @@ fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<
     for candidate in node_modules_candidates {
         let path = manifest_dir.join(candidate);
         if path.exists() {
-            return std::fs::read_to_string(&path).map_err(|e| {
-                crate::TairitsuPackagerError::BuildError(format!(
-                    "Failed to read browser-glue runtime bundle {}: {}",
-                    path.display(),
-                    e
-                ))
-            });
+            let pkg = candidate
+                .trim_start_matches("../")
+                .strip_prefix("node_modules/")
+                .and_then(|rest| rest.strip_suffix("/dist/runtime.js"))
+                .unwrap_or("node_modules");
+            return read_glue_runtime_at(&path, &format!("node_modules install face ({pkg})"));
         }
     }
 
@@ -654,6 +652,22 @@ fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<
     ))
 }
 
+fn read_glue_runtime_at(path: &std::path::Path, source: &str) -> crate::Result<(String, String)> {
+    let content = std::fs::read_to_string(path).map_err(|e| {
+        crate::TairitsuPackagerError::BuildError(format!(
+            "Failed to read browser-glue runtime bundle {}: {}",
+            path.display(),
+            e
+        ))
+    })?;
+    crate::log_info!(
+        "browser-glue runtime bundle resolved from {} ({})",
+        source,
+        path.display()
+    );
+    Ok((source.to_string(), content))
+}
+
 fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
     let glue_path = config.build.browser_glue_path.trim_start_matches('/');
     let bundle_dest = output_dir.join(glue_path);
@@ -662,7 +676,7 @@ fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> c
         std::fs::create_dir_all(parent)?;
     }
 
-    let bundle = resolve_glue_runtime_bundle(&config.manifest_dir)?;
+    let (_source, bundle) = resolve_glue_runtime_bundle(&config.manifest_dir)?;
     std::fs::write(&bundle_dest, &bundle)?;
 
     Ok(())
@@ -963,31 +977,38 @@ fn prepare_component_wrapper_fallback(
 ) -> crate::Result<()> {
     write_component_wrapper_loader(config, component_wasm_path, output_dir)?;
 
-    if !try_generate_component_wrapper(config, component_wasm_path, output_dir, pb)? {
+    if !try_generate_component_wrapper(&config.manifest_dir, component_wasm_path, output_dir, pb)? {
         return Err(crate::TairitsuPackagerError::BuildError(
-            "Component wrapper transpile failed. \
-             Install jco: npm install -g @bytecodealliance/jco\n\
-             The dev server requires the jco-transpiled wrapper to serve WASM components."
+            "Component wrapper transpile produced no JS wrapper entry. \
+             See the transpile command output above for details."
                 .to_string(),
         ));
     }
 
-    let local_shim_available = bundle_local_wasi_shim(output_dir, pb)?;
-    rewrite_wrapper_imports(output_dir, local_shim_available)?;
+    bundle_local_wasi_shim(output_dir, &config.manifest_dir, pb)?;
+    rewrite_wrapper_imports(output_dir)?;
 
     Ok(())
 }
 
 const WASI_SHIM_MODULES: &[&str] = &["io", "cli", "random", "clocks", "filesystem", "sockets"];
 
-fn bundle_local_wasi_shim(output_dir: &std::path::Path, pb: &ProgressBar) -> crate::Result<bool> {
+/// Bundle the pinned WASI preview2-shim browser modules locally.
+///
+/// Fail-loud by design (W1 reproducible-build rule): a missing shim is a
+/// hard error, not a silent degradation to unversioned CDN imports — the
+/// version comes from the workspace package.json/lock, never from a
+/// floating `npm install`.
+fn bundle_local_wasi_shim(
+    output_dir: &std::path::Path,
+    manifest_dir: &std::path::Path,
+    pb: &ProgressBar,
+) -> crate::Result<()> {
     let shim_dir = output_dir.join("wasi-shim");
-    if shim_dir.exists() {
-        let marker = shim_dir.join(".tairitsu-bundled");
-        if marker.exists() {
-            return Ok(true);
-        }
-    }
+    // No Rust-side marker short-circuit: the bundled script itself checks
+    // its `.tairitsu-bundled` marker (shim package version + bundler
+    // script hash) and exits 0 without rewriting files when the copy is
+    // current, so a shim bump invalidates the stale copy (R3 S2).
 
     let node = if cfg!(windows) { "node.exe" } else { "node" };
     let script = include_str!("bundle-wasi-shim.js");
@@ -998,53 +1019,64 @@ fn bundle_local_wasi_shim(output_dir: &std::path::Path, pb: &ProgressBar) -> cra
     let result = std::process::Command::new(node)
         .arg(&temp_script)
         .arg(shim_dir.to_str().unwrap_or("."))
+        .arg(manifest_dir.to_str().unwrap_or("."))
         .output();
 
     let _ = std::fs::remove_file(&temp_script);
 
     match result {
         Ok(output) if output.status.success() => {
-            let count = WASI_SHIM_MODULES.len();
-            pb.println(format!(
-                "✓  Bundled {} WASI preview2-shim modules locally",
-                count
-            ));
-            Ok(true)
+            let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if stdout.contains("already bundled") {
+                // The script short-circuited on its versioned marker —
+                // nothing was copied; report the up-to-date stamp.
+                pb.println(format!(
+                    "✓  WASI preview2-shim bundle up to date ({stdout})"
+                ));
+            } else {
+                let count = WASI_SHIM_MODULES.len();
+                pb.println(format!(
+                    "✓  Bundled {count} WASI preview2-shim modules locally"
+                ));
+            }
+            Ok(())
         }
-        Ok(_) => {
-            pb.println(
-                "⚠  Could not bundle WASI shim locally (npm unavailable?). Falling back to CDN.",
-            );
-            Ok(false)
+        Ok(output) => {
+            let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+            let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            let detail = if !stderr.is_empty() { stderr } else { stdout };
+            let detail_preview: String = detail.chars().take(600).collect();
+            Err(crate::TairitsuPackagerError::BuildError(format!(
+                "WASI preview2-shim bundling failed (exit {}).\n   {}\n\
+                 The shim is a pinned devDependency \
+                 (@bytecodealliance/preview2-shim, ^0.31 in the workspace package.json + \
+                 package-lock.json). Install it locally with `npm install` at the workspace \
+                 or project root — CDN fallback and floating installs are not used \
+                 (reproducible-build rule).",
+                output.status, detail_preview
+            )))
         }
-        Err(_) => {
-            pb.println(
-                "⚠  Could not bundle WASI shim locally (node not found?). Falling back to CDN.",
-            );
-            Ok(false)
-        }
+        Err(err) => Err(crate::TairitsuPackagerError::BuildError(format!(
+            "node is required to bundle the pinned WASI preview2-shim locally, but it could \
+             not be executed: {err}\n\
+             Install node and the pinned shim (`npm install` at the workspace root, \
+             @bytecodealliance/preview2-shim ^0.31) — CDN fallback is not used \
+             (reproducible-build rule)."
+        ))),
     }
 }
 
-fn rewrite_wrapper_imports(
-    output_dir: &std::path::Path,
-    local_shim_available: bool,
-) -> crate::Result<()> {
+fn rewrite_wrapper_imports(output_dir: &std::path::Path) -> crate::Result<()> {
     let wrapper_dir = output_dir.join("component-wrapper");
     if !wrapper_dir.exists() {
         return Ok(());
     }
 
-    let local_prefix = if local_shim_available {
-        "'/wasi-shim/"
-    } else {
-        "'https://esm.sh/@bytecodealliance/preview2-shim/"
-    };
-    let local_prefix_dq = if local_shim_available {
-        "\"/wasi-shim/"
-    } else {
-        "\"https://esm.sh/@bytecodealliance/preview2-shim/"
-    };
+    // The shim is always bundled locally (bundle_local_wasi_shim is
+    // fail-loud), so imports always point at the co-located /wasi-shim/
+    // copy — never at an unversioned CDN URL.
+    let local_prefix = "'/wasi-shim/";
+    let local_prefix_dq = "\"/wasi-shim/";
 
     for entry in std::fs::read_dir(&wrapper_dir)? {
         let entry = entry?;
@@ -1061,21 +1093,19 @@ fn rewrite_wrapper_imports(
             .replace("'@bytecodealliance/preview2-shim/", local_prefix)
             .replace("\"@bytecodealliance/preview2-shim/", local_prefix_dq);
 
-        if local_shim_available {
-            patched = patched
-                .replace("'/wasi-shim/io'", "'/wasi-shim/io.js'")
-                .replace("'/wasi-shim/cli'", "'/wasi-shim/cli.js'")
-                .replace("'/wasi-shim/random'", "'/wasi-shim/random.js'")
-                .replace("'/wasi-shim/clocks'", "'/wasi-shim/clocks.js'")
-                .replace("'/wasi-shim/filesystem'", "'/wasi-shim/filesystem.js'")
-                .replace("'/wasi-shim/sockets'", "'/wasi-shim/sockets.js'")
-                .replace("\"/wasi-shim/io\"", "\"/wasi-shim/io.js\"")
-                .replace("\"/wasi-shim/cli\"", "\"/wasi-shim/cli.js\"")
-                .replace("\"/wasi-shim/random\"", "\"/wasi-shim/random.js\"")
-                .replace("\"/wasi-shim/clocks\"", "\"/wasi-shim/clocks.js\"")
-                .replace("\"/wasi-shim/filesystem\"", "\"/wasi-shim/filesystem.js\"")
-                .replace("\"/wasi-shim/sockets\"", "\"/wasi-shim/sockets.js\"");
-        }
+        patched = patched
+            .replace("'/wasi-shim/io'", "'/wasi-shim/io.js'")
+            .replace("'/wasi-shim/cli'", "'/wasi-shim/cli.js'")
+            .replace("'/wasi-shim/random'", "'/wasi-shim/random.js'")
+            .replace("'/wasi-shim/clocks'", "'/wasi-shim/clocks.js'")
+            .replace("'/wasi-shim/filesystem'", "'/wasi-shim/filesystem.js'")
+            .replace("'/wasi-shim/sockets'", "'/wasi-shim/sockets.js'")
+            .replace("\"/wasi-shim/io\"", "\"/wasi-shim/io.js\"")
+            .replace("\"/wasi-shim/cli\"", "\"/wasi-shim/cli.js\"")
+            .replace("\"/wasi-shim/random\"", "\"/wasi-shim/random.js\"")
+            .replace("\"/wasi-shim/clocks\"", "\"/wasi-shim/clocks.js\"")
+            .replace("\"/wasi-shim/filesystem\"", "\"/wasi-shim/filesystem.js\"")
+            .replace("\"/wasi-shim/sockets\"", "\"/wasi-shim/sockets.js\"");
 
         if patched != content {
             std::fs::write(&path, patched)?;
@@ -1110,8 +1140,181 @@ fn write_component_wrapper_loader(
     Ok(())
 }
 
+/// Marker file inside `component-wrapper/` recording the wrapper cache
+/// key. Wrapper rebuild decisions are driven by that content hash, never
+/// by mtimes.
+const WRAPPER_WASM_HASH_MARKER: &str = ".wasm-sha256";
+
+/// Cache-key discriminator for the wrapper rebuild decision. Bump when
+/// the transpile / post-processing pipeline changes shape (import
+/// rewrites, instanceof patches), so cached wrappers regenerate after a
+/// pipeline change even with identical wasm bytes.
+const WRAPPER_CACHE_KEY_VERSION: &[u8] = b"w1";
+
+/// The loader template is part of the wrapper pipeline; hashing it into
+/// the cache key makes template edits invalidate cached wrappers
+/// automatically (no manual bump needed for that file).
+const WRAPPER_LOADER_TEMPLATE: &str = include_str!("component-wrapper-loader.template.js");
+
+/// SHA-256 of the wasm file's bytes, lower-case hex.
+fn wasm_content_hash(path: &std::path::Path) -> crate::Result<String> {
+    let bytes = std::fs::read(path)?;
+    let digest = Sha256::digest(&bytes);
+    Ok(digest.iter().map(|b| format!("{b:02x}")).collect())
+}
+
+/// Identity of the jco that this build will actually execute — a bare
+/// canonical version string, source-independent (R3 S1: the key must
+/// reflect the executed tool; R5: same version from different sources
+/// must hash identically):
+///
+/// 1. `node_modules/@bytecodealliance/jco/package.json` version found by
+///    walking up from the manifest dir — this is the binary the
+///    candidate list runs first, and it survives non-npm install faces;
+/// 2. `jco --version` on PATH (executed once per build);
+/// 3. the version pinned in the nearest tracked `package-lock.json`;
+/// 4. `"unknown"` when nothing resolves.
+fn jco_identity(manifest_dir: &std::path::Path) -> String {
+    // Canonical version string with no source-dependent prefix: the same
+    // version discovered from any source must hash identically, so a
+    // cache migrated between contexts (local install → lock-only, PATH
+    // exec → lock) keeps hitting instead of falsely invalidating (R5).
+    for ancestor in manifest_dir.ancestors() {
+        let pkg = ancestor
+            .join("node_modules")
+            .join("@bytecodealliance")
+            .join("jco")
+            .join("package.json");
+        if let Ok(raw) = std::fs::read_to_string(&pkg) {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(&raw) {
+                if let Some(version) = v.get("version").and_then(|v| v.as_str()) {
+                    return version.to_string();
+                }
+            }
+        }
+    }
+
+    let bin_name = if cfg!(windows) { "jco.cmd" } else { "jco" };
+    if let Ok(output) = std::process::Command::new(bin_name)
+        .arg("--version")
+        .output()
+    {
+        if output.status.success() {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            // Last whitespace token of the first line: handles both
+            // `1.42.0` and `jco 1.42.0` outputs.
+            if let Some(first) = stdout.trim().lines().next() {
+                if let Some(token) = first.split_whitespace().last() {
+                    if !token.is_empty() {
+                        return token.to_string();
+                    }
+                }
+            }
+        }
+    }
+
+    pinned_jco_version(manifest_dir)
+}
+
+/// The jco version pinned in the nearest `package-lock.json`, or
+/// `"unknown"` when no lock is found.
+fn pinned_jco_version(manifest_dir: &std::path::Path) -> String {
+    for ancestor in manifest_dir.ancestors() {
+        let Ok(raw) = std::fs::read_to_string(ancestor.join("package-lock.json")) else {
+            continue;
+        };
+        let Ok(lock) = serde_json::from_str::<serde_json::Value>(&raw) else {
+            continue;
+        };
+        if let Some(version) = lock
+            .get("packages")
+            .and_then(|p| p.get("node_modules/@bytecodealliance/jco"))
+            .and_then(|p| p.get("version"))
+            .and_then(|v| v.as_str())
+        {
+            return version.to_string();
+        }
+    }
+    "unknown".to_string()
+}
+
+/// The wrapper cache key: a SHA-256 over the pipeline version tag, the
+/// loader template, the wasm bytes' hash and the executed jco identity.
+/// This is what the marker file records and compares against — bumping
+/// the jco install, editing the loader template or changing wasm bytes
+/// all invalidate the cache; touching files does not.
+fn wrapper_cache_key(wasm_hash: &str, jco_id: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(b"tairitsu-component-wrapper");
+    hasher.update(WRAPPER_CACHE_KEY_VERSION);
+    hasher.update(WRAPPER_LOADER_TEMPLATE.as_bytes());
+    hasher.update(wasm_hash.as_bytes());
+    hasher.update(jco_id.as_bytes());
+    let digest = hasher.finalize();
+    digest.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// A cached wrapper is reusable only when the recorded cache key equals
+/// the freshly computed one (same wasm bytes, same jco pin, same
+/// pipeline version). Mtime is deliberately never consulted:
+/// re-copying or touching the .wasm without changing bytes must NOT
+/// re-transpile, and changing a single byte must ALWAYS re-transpile.
+fn wrapper_cache_is_fresh(wrapper_dir: &std::path::Path, cache_key: &str) -> bool {
+    match std::fs::read_to_string(wrapper_dir.join(WRAPPER_WASM_HASH_MARKER)) {
+        Ok(recorded) => recorded.trim() == cache_key,
+        Err(_) => false,
+    }
+}
+
+/// The pinned jco requirement quoted by every jco-related error (W1:
+/// jco is a build-time ABI transpiler; its version is pinned
+/// `^1.42` in the workspace package.json + package-lock.json).
+const JCO_PIN_REQUIREMENT: &str = "@bytecodealliance/jco (pinned ^1.42 in the \
+workspace package.json + package-lock.json)";
+
+/// jco binary candidates for the transpile step: workspace-local
+/// `node_modules/.bin/jco` (walking up from the manifest dir), then a
+/// `jco` found on PATH.
+///
+/// There is deliberately NO `npx --yes @bytecodealliance/jco` fallback:
+/// a floating install fetches whatever version is newest at run time and
+/// is unreproducible (spike evidence: unversioned tool fetches). A
+/// missing jco is a hard build error, not a degradation.
+fn jco_bin_candidates(manifest_dir: &std::path::Path) -> Vec<String> {
+    let mut bins: Vec<String> = Vec::new();
+    let bin_name = if cfg!(windows) { "jco.cmd" } else { "jco" };
+    for ancestor in manifest_dir.ancestors() {
+        let bin = ancestor.join("node_modules").join(".bin").join(bin_name);
+        if bin.exists() {
+            let shown = bin.display().to_string();
+            if !bins.contains(&shown) {
+                bins.push(shown);
+            }
+        }
+    }
+    // Bare name: resolved via PATH by the OS (and by nix-style envs).
+    bins.push(bin_name.to_string());
+    if cfg!(windows) {
+        // Some Windows setups only expose the extensionless shim.
+        bins.push("jco".to_string());
+    }
+    bins
+}
+
+fn jco_missing_error(attempted_bins: &[String]) -> crate::TairitsuPackagerError {
+    crate::TairitsuPackagerError::BuildError(format!(
+        "jco not found (attempted: {}).\n  \
+         The wrapper transpile step requires {} installed locally — run `npm install` at \
+         the tairitsu workspace root (or your project root).\n  \
+         Floating `npx --yes @bytecodealliance/jco` installs are not used \
+         (reproducible-build rule).",
+        attempted_bins.join(", "),
+        JCO_PIN_REQUIREMENT
+    ))
+}
+
 fn try_generate_component_wrapper(
-    _config: &Config,
+    manifest_dir: &std::path::Path,
     component_wasm_path: &std::path::Path,
     output_dir: &std::path::Path,
     pb: &ProgressBar,
@@ -1122,16 +1325,6 @@ fn try_generate_component_wrapper(
     let wasm_path_for_cmd = std::fs::canonicalize(component_wasm_path)
         .unwrap_or_else(|_| component_wasm_path.to_path_buf());
     let wrapper_dir_for_cmd = std::fs::canonicalize(&wrapper_dir).unwrap_or(wrapper_dir.clone());
-    let wasm_path_hint = wasm_path_for_cmd
-        .display()
-        .to_string()
-        .trim_start_matches(r"\\?\")
-        .to_string();
-    let wrapper_dir_hint = wrapper_dir_for_cmd
-        .display()
-        .to_string()
-        .trim_start_matches(r"\\?\")
-        .to_string();
 
     let wasm_stem = component_wasm_path
         .file_stem()
@@ -1153,56 +1346,38 @@ fn try_generate_component_wrapper(
         }
     };
 
-    if let Some(main) = wrapper_main {
-        let wrapper_mtime = std::fs::metadata(&main)?.modified().ok();
-        let wasm_mtime = std::fs::metadata(component_wasm_path)?.modified().ok();
-        if let (Some(w), Some(c)) = (wrapper_mtime, wasm_mtime) {
-            if w >= c {
-                return Ok(true);
-            }
-        }
-    }
-
-    #[allow(unused_mut)]
-    let mut attempts: Vec<(&str, Vec<String>)> = vec![
-        (
-            "jco",
-            vec![
-                "transpile".to_string(),
-                wasm_path_for_cmd.display().to_string(),
-                "-o".to_string(),
-                wrapper_dir_for_cmd.display().to_string(),
-            ],
-        ),
-        (
-            "npx",
-            vec![
-                "--yes".to_string(),
-                "@bytecodealliance/jco".to_string(),
-                "transpile".to_string(),
-                wasm_path_for_cmd.display().to_string(),
-                "-o".to_string(),
-                wrapper_dir_for_cmd.display().to_string(),
-            ],
-        ),
-    ];
-
-    #[cfg(windows)]
-    {
-        attempts.push((
-            "npx.cmd",
-            vec![
-                "--yes".to_string(),
-                "@bytecodealliance/jco".to_string(),
-                "transpile".to_string(),
-                wasm_path_for_cmd.display().to_string(),
-                "-o".to_string(),
-                wrapper_dir_for_cmd.display().to_string(),
-            ],
+    // Content-hash driven rebuild: reuse the cached wrapper only when the
+    // cache key (wasm bytes + executed jco identity + loader template +
+    // pipeline version) matches. Mtimes are irrelevant — fresh checkouts,
+    // cache copies and touch(1) must not trigger re-transpiles, while a
+    // tool or pin bump or any byte change must.
+    let wasm_hash = wasm_content_hash(component_wasm_path)?;
+    let jco_id = jco_identity(manifest_dir);
+    let cache_key = wrapper_cache_key(&wasm_hash, &jco_id);
+    if wrapper_main.is_some() && wrapper_cache_is_fresh(&wrapper_dir, &cache_key) {
+        pb.println(format!(
+            "✓  Component wrapper up to date (wasm sha256 {wasm_hash:.12}… unchanged, jco {jco_id})"
         ));
+        return Ok(true);
     }
+
+    let attempts: Vec<(String, Vec<String>)> = jco_bin_candidates(manifest_dir)
+        .into_iter()
+        .map(|bin| {
+            (
+                bin,
+                vec![
+                    "transpile".to_string(),
+                    wasm_path_for_cmd.display().to_string(),
+                    "-o".to_string(),
+                    wrapper_dir_for_cmd.display().to_string(),
+                ],
+            )
+        })
+        .collect();
 
     let mut missing_commands = Vec::new();
+    let attempts_total = attempts.len();
 
     let re_import =
         regex::Regex::new(r"(?:import\s*\{([^}]+)\}\s*from\s*'@tairitsu-glue/([^']*)'\s*;?)")
@@ -1213,7 +1388,7 @@ fn try_generate_component_wrapper(
 
     for (bin, args) in attempts {
         let command_preview = format!("{} {}", bin, args.join(" "));
-        match std::process::Command::new(bin).args(&args).output() {
+        match std::process::Command::new(&bin).args(&args).output() {
             Ok(output) if output.status.success() => {
                 let has_index = wrapper_dir.join("index.js").exists();
                 let has_named = wrapper_dir.join(format!("{}.js", wasm_stem)).exists();
@@ -1337,6 +1512,11 @@ fn try_generate_component_wrapper(
                             }
                         }
                     }
+                    // Record the cache key this wrapper was produced with
+                    // (wasm bytes + jco pin + pipeline version), so the
+                    // next run can skip the transpile while none of the
+                    // inputs changed.
+                    std::fs::write(wrapper_dir.join(WRAPPER_WASM_HASH_MARKER), &cache_key)?;
                     return Ok(true);
                 }
                 pb.println(format!(
@@ -1380,16 +1560,18 @@ fn try_generate_component_wrapper(
         }
     }
 
-    // Only print one summary message for missing commands
+    // Hard error when jco was never found (W1 reproducible-build rule):
+    // no floating `npx --yes` fallback, the pinned local install is the
+    // only supported source.
+    if !missing_commands.is_empty() && missing_commands.len() == attempts_total {
+        return Err(jco_missing_error(&missing_commands));
+    }
     if !missing_commands.is_empty() {
         missing_commands.sort();
         missing_commands.dedup();
         pb.println(format!(
-            "⚠  Wrapper transpile command not found: '{}'.\n   \
-             Attempted: jco transpile {} -o {}",
-            missing_commands.join(", "),
-            wasm_path_hint,
-            wrapper_dir_hint
+            "⚠  Wrapper transpile command not found: '{}'.",
+            missing_commands.join(", ")
         ));
     }
 
@@ -2366,5 +2548,391 @@ fn extract_error_hint(msg: String) -> String {
         first[..55].to_string()
     } else {
         first.to_string()
+    }
+}
+
+#[cfg(test)]
+mod w1_reproducible_tests {
+    use super::*;
+
+    fn cache_key_for(manifest_dir: &std::path::Path, wasm: &std::path::Path) -> String {
+        wrapper_cache_key(
+            &wasm_content_hash(wasm).unwrap(),
+            &jco_identity(manifest_dir),
+        )
+    }
+
+    fn write_lock_pin(dir: &std::path::Path, version: &str) {
+        std::fs::write(
+            dir.join("package-lock.json"),
+            format!(
+                r#"{{"packages": {{"node_modules/@bytecodealliance/jco": {{"version": "{version}"}}}}}}"#
+            ),
+        )
+        .unwrap();
+    }
+
+    fn write_local_jco(dir: &std::path::Path, version: &str) {
+        let pkg = dir
+            .join("node_modules")
+            .join("@bytecodealliance")
+            .join("jco")
+            .join("package.json");
+        std::fs::create_dir_all(pkg.parent().unwrap()).unwrap();
+        std::fs::write(
+            &pkg,
+            format!(r#"{{"name": "@bytecodealliance/jco", "version": "{version}"}}"#),
+        )
+        .unwrap();
+    }
+
+    // Separate two writes by >1s of wall time so their mtimes differ on
+    // any filesystem granularity — this is what lets the tests below
+    // actually CATCH a restored mtime judgment (R3 M1 survived a
+    // granularity-collapsed fixture).
+    fn separate_in_time() {
+        std::thread::sleep(std::time::Duration::from_millis(1100));
+    }
+
+    // ------------------------------------------------------------------
+    // Content-hash driven wrapper rebuild (replaces the old mtime `w > c`
+    // comparison). The cache key covers wasm bytes + the executed jco
+    // identity + the loader template + the pipeline version tag. These
+    // tests pin the directions that matter:
+    //   - bytes unchanged (even with a NEWER wasm mtime) → cache fresh;
+    //   - a single byte change → stale;
+    //   - a jco bump (local install or lock pin) → stale;
+    //   - marker missing → stale.
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn wrapper_cache_fresh_when_bytes_unchanged_even_with_newer_wasm_mtime() {
+        let dir = tempfile::tempdir().unwrap();
+        let output = dir.path().join("dist");
+        let wrapper_dir = output.join("component-wrapper");
+        std::fs::create_dir_all(&wrapper_dir).unwrap();
+
+        let wasm = dir.path().join("component.wasm");
+        std::fs::write(&wasm, b"wasm-bytes-v1").unwrap();
+
+        // Wrapper "generated" earlier: entry file first, then the marker.
+        std::fs::write(wrapper_dir.join("index.js"), b"// wrapper").unwrap();
+        std::fs::write(
+            wrapper_dir.join(WRAPPER_WASM_HASH_MARKER),
+            cache_key_for(dir.path(), &wasm),
+        )
+        .unwrap();
+
+        // Recreate the wasm file with the SAME bytes AFTER the wrapper
+        // exists, separated in wall time so the wasm's mtime is strictly
+        // NEWER than the wrapper's. The old mtime judgment (reuse only
+        // when wrapper_mtime >= wasm_mtime) would re-transpile here; the
+        // content hash must not.
+        separate_in_time();
+        std::fs::write(&wasm, b"wasm-bytes-v1").unwrap();
+        let wrapper_mtime = std::fs::metadata(wrapper_dir.join("index.js"))
+            .unwrap()
+            .modified()
+            .unwrap();
+        let wasm_mtime = std::fs::metadata(&wasm).unwrap().modified().unwrap();
+        assert!(
+            wasm_mtime > wrapper_mtime,
+            "fixture must guarantee a strictly newer wasm mtime (got wrapper {wrapper_mtime:?}, wasm {wasm_mtime:?})"
+        );
+
+        assert!(wrapper_cache_is_fresh(
+            &wrapper_dir,
+            &cache_key_for(dir.path(), &wasm)
+        ));
+    }
+
+    #[test]
+    fn wrapper_cache_stale_when_single_byte_changes() {
+        let dir = tempfile::tempdir().unwrap();
+        let wrapper_dir = dir.path().join("dist/component-wrapper");
+        std::fs::create_dir_all(&wrapper_dir).unwrap();
+
+        let wasm = dir.path().join("component.wasm");
+        std::fs::write(&wasm, b"wasm-bytes-v1").unwrap();
+        std::fs::write(
+            wrapper_dir.join(WRAPPER_WASM_HASH_MARKER),
+            cache_key_for(dir.path(), &wasm),
+        )
+        .unwrap();
+
+        // Negative control: flip ONE byte of the wasm.
+        std::fs::write(&wasm, b"wasm-bytes-v2").unwrap();
+
+        assert!(!wrapper_cache_is_fresh(
+            &wrapper_dir,
+            &cache_key_for(dir.path(), &wasm)
+        ));
+    }
+
+    #[test]
+    fn wrapper_cache_stale_when_local_jco_bumps() {
+        // The executed jco is the workspace-local install (candidate
+        // order: node_modules/.bin first) — bumping its package version
+        // must invalidate the wrapper cache even with identical wasm
+        // bytes (R3 S1: the key reflects the executed tool).
+        let dir = tempfile::tempdir().unwrap();
+        let wrapper_dir = dir.path().join("dist/component-wrapper");
+        std::fs::create_dir_all(&wrapper_dir).unwrap();
+
+        let wasm = dir.path().join("component.wasm");
+        std::fs::write(&wasm, b"wasm-bytes-v1").unwrap();
+
+        write_local_jco(dir.path(), "1.42.0");
+        assert_eq!(jco_identity(dir.path()), "1.42.0");
+        std::fs::write(
+            wrapper_dir.join(WRAPPER_WASM_HASH_MARKER),
+            cache_key_for(dir.path(), &wasm),
+        )
+        .unwrap();
+
+        // Same wasm bytes, new local jco.
+        write_local_jco(dir.path(), "1.43.0");
+        assert_eq!(jco_identity(dir.path()), "1.43.0");
+
+        assert!(!wrapper_cache_is_fresh(
+            &wrapper_dir,
+            &cache_key_for(dir.path(), &wasm)
+        ));
+    }
+
+    #[test]
+    fn wrapper_cache_stale_when_lock_pin_bumps() {
+        // Install faces without a local jco still key on the tracked
+        // lock's pinned version.
+        let dir = tempfile::tempdir().unwrap();
+        let wrapper_dir = dir.path().join("dist/component-wrapper");
+        std::fs::create_dir_all(&wrapper_dir).unwrap();
+
+        let wasm = dir.path().join("component.wasm");
+        std::fs::write(&wasm, b"wasm-bytes-v1").unwrap();
+
+        write_lock_pin(dir.path(), "1.42.0");
+        assert_eq!(pinned_jco_version(dir.path()), "1.42.0");
+        std::fs::write(
+            wrapper_dir.join(WRAPPER_WASM_HASH_MARKER),
+            cache_key_for(dir.path(), &wasm),
+        )
+        .unwrap();
+
+        // Pin bump: same wasm bytes, new lock version.
+        write_lock_pin(dir.path(), "1.43.0");
+        assert_eq!(pinned_jco_version(dir.path()), "1.43.0");
+
+        assert!(!wrapper_cache_is_fresh(
+            &wrapper_dir,
+            &cache_key_for(dir.path(), &wasm)
+        ));
+    }
+
+    #[test]
+    fn jco_identity_falls_back_when_nothing_resolves() {
+        let dir = tempfile::tempdir().unwrap();
+        // No local install, no lock. PATH jco may or may not exist — the
+        // identity must still be a stable string either way.
+        let id = jco_identity(dir.path());
+        assert!(!id.is_empty());
+    }
+
+    #[test]
+    fn wrapper_cache_hits_across_identity_sources_with_same_version() {
+        // R5 S1 regression pin: the SAME jco version discovered from a
+        // different source must NOT invalidate the cache. A cache built
+        // under a local install keeps hitting when only the lock (or
+        // nothing but the same version) remains.
+        let dir = tempfile::tempdir().unwrap();
+        let wrapper_dir = dir.path().join("dist/component-wrapper");
+        std::fs::create_dir_all(&wrapper_dir).unwrap();
+
+        let wasm = dir.path().join("component.wasm");
+        std::fs::write(&wasm, b"wasm-bytes-v1").unwrap();
+
+        write_local_jco(dir.path(), "1.42.0");
+        assert_eq!(jco_identity(dir.path()), "1.42.0");
+        let key = cache_key_for(dir.path(), &wasm);
+        std::fs::write(wrapper_dir.join(WRAPPER_WASM_HASH_MARKER), &key).unwrap();
+
+        // Source swap: local install gone, lock pins the SAME version.
+        std::fs::remove_dir_all(
+            dir.path()
+                .join("node_modules")
+                .join("@bytecodealliance")
+                .join("jco"),
+        )
+        .unwrap();
+        write_lock_pin(dir.path(), "1.42.0");
+        assert_eq!(jco_identity(dir.path()), "1.42.0");
+
+        assert!(
+            wrapper_cache_is_fresh(&wrapper_dir, &cache_key_for(dir.path(), &wasm)),
+            "same version from a different source must keep the cache fresh"
+        );
+    }
+
+    #[test]
+    fn wrapper_cache_stale_without_marker() {
+        let dir = tempfile::tempdir().unwrap();
+        let wrapper_dir = dir.path().join("dist/component-wrapper");
+        std::fs::create_dir_all(&wrapper_dir).unwrap();
+        let wasm = dir.path().join("component.wasm");
+        std::fs::write(&wasm, b"wasm-bytes").unwrap();
+        // No marker (e.g. a wrapper from before this change) → rebuild.
+        assert!(!wrapper_cache_is_fresh(
+            &wrapper_dir,
+            &cache_key_for(dir.path(), &wasm)
+        ));
+    }
+
+    #[test]
+    fn wrapper_cache_fresh_short_circuits_before_any_jco_lookup() {
+        // End-to-end through try_generate_component_wrapper: with a
+        // fresh cache the function must return Ok(true) WITHOUT
+        // transpiling (the early return precedes command execution — if
+        // the mtime logic were restored, the strictly-newer wasm mtime
+        // below would force a transpile attempt, which cannot succeed on
+        // the fake wasm and turns this assertion red).
+        let dir = tempfile::tempdir().unwrap();
+        let output = dir.path().join("dist");
+        let wrapper_dir = output.join("component-wrapper");
+        std::fs::create_dir_all(&wrapper_dir).unwrap();
+
+        let wasm = dir.path().join("component.wasm");
+        std::fs::write(&wasm, b"wasm-bytes-v1").unwrap();
+        std::fs::write(wrapper_dir.join("index.js"), b"// wrapper").unwrap();
+        std::fs::write(
+            wrapper_dir.join(WRAPPER_WASM_HASH_MARKER),
+            cache_key_for(dir.path(), &wasm),
+        )
+        .unwrap();
+        // Same bytes, strictly newer mtime (separated in wall time so a
+        // restored mtime judgment sees wrapper < wasm).
+        separate_in_time();
+        std::fs::write(&wasm, b"wasm-bytes-v1").unwrap();
+        let wrapper_mtime = std::fs::metadata(wrapper_dir.join("index.js"))
+            .unwrap()
+            .modified()
+            .unwrap();
+        let wasm_mtime = std::fs::metadata(&wasm).unwrap().modified().unwrap();
+        assert!(wasm_mtime > wrapper_mtime, "fixture must separate mtimes");
+
+        let pb = ProgressBar::hidden();
+        let got = try_generate_component_wrapper(dir.path(), &wasm, &output, &pb);
+        assert!(
+            matches!(got, Ok(true)),
+            "fresh content-hash cache must short-circuit, got {got:?}"
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // jco pinning: no floating `npx --yes` fallback, hard error with the
+    // pinned requirement when jco is missing.
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn jco_candidates_never_contain_npx() {
+        let dir = tempfile::tempdir().unwrap();
+        let candidates = jco_bin_candidates(dir.path());
+        assert!(
+            !candidates.is_empty(),
+            "the bare PATH lookup must always be attempted"
+        );
+        assert!(
+            candidates.iter().all(|bin| !bin.contains("npx")),
+            "floating npx fallbacks are banned (reproducible build), got {candidates:?}"
+        );
+    }
+
+    #[test]
+    fn jco_candidates_prefer_local_node_modules_bin() {
+        let dir = tempfile::tempdir().unwrap();
+        let bin_dir = dir.path().join("node_modules").join(".bin");
+        std::fs::create_dir_all(&bin_dir).unwrap();
+        let bin_name = if cfg!(windows) { "jco.cmd" } else { "jco" };
+        std::fs::write(bin_dir.join(bin_name), b"#!/bin/sh\n").unwrap();
+
+        let candidates = jco_bin_candidates(dir.path());
+        assert!(
+            candidates.iter().any(|bin| bin.contains("node_modules")),
+            "an existing workspace-local jco must be attempted, got {candidates:?}"
+        );
+    }
+
+    #[test]
+    fn jco_missing_error_names_the_pinned_requirement() {
+        let err = jco_missing_error(&["jco".to_string()]);
+        let msg = match err {
+            crate::TairitsuPackagerError::BuildError(m) => m,
+            other => panic!("expected BuildError, got {other:?}"),
+        };
+        assert!(
+            msg.contains("jco"),
+            "error must name the missing command: {msg}"
+        );
+        assert!(
+            msg.contains("^1.42"),
+            "error must state the pinned version requirement: {msg}"
+        );
+        assert!(
+            msg.contains("package-lock.json"),
+            "error must point at the pinned manifest+lock: {msg}"
+        );
+        assert!(
+            msg.contains("npm install"),
+            "error must say how to install the pinned jco: {msg}"
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Host runtime resolution: the npm install face must know the real
+    // published package names, and the resolver reports its source.
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn glue_runtime_resolves_from_published_npm_install_face() {
+        let dir = tempfile::tempdir().unwrap();
+        let runtime = dir
+            .path()
+            .join("node_modules")
+            .join("@celestia-island")
+            .join("tairitsu-web-glue")
+            .join("dist")
+            .join("runtime.js");
+        std::fs::create_dir_all(runtime.parent().unwrap()).unwrap();
+        std::fs::write(&runtime, b"// runtime bundle").unwrap();
+
+        let (source, content) = resolve_glue_runtime_bundle(dir.path()).unwrap();
+        assert_eq!(content, "// runtime bundle");
+        assert!(
+            source.contains("@celestia-island/tairitsu-web-glue"),
+            "resolution source must name the real published package, got: {source}"
+        );
+    }
+
+    #[test]
+    fn glue_runtime_resolves_from_monorepo_path_with_source_label() {
+        let dir = tempfile::tempdir().unwrap();
+        // The second monorepo candidate: <root>/packages/browser-glue/…
+        let runtime = dir
+            .path()
+            .join("packages")
+            .join("browser-glue")
+            .join("dist")
+            .join("runtime.js");
+        std::fs::create_dir_all(runtime.parent().unwrap()).unwrap();
+        std::fs::write(&runtime, b"// in-tree runtime").unwrap();
+
+        let manifest_dir = dir.path().join("apps").join("demo");
+        std::fs::create_dir_all(&manifest_dir).unwrap();
+
+        let (source, content) = resolve_glue_runtime_bundle(&manifest_dir).unwrap();
+        assert_eq!(content, "// in-tree runtime");
+        assert!(
+            source.contains("monorepo path"),
+            "in-tree resolution must be labeled, got: {source}"
+        );
     }
 }
