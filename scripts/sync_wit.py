@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import filecmp
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -27,6 +28,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 SOURCE = REPO_ROOT / "packages" / "browser-worlds" / "wit" / "composed"
 COPY_ROOTS = ("web", "ssr")
+
+# A floor, not a target: it stops an emptied or half-copied source tree from
+# being propagated over the copies in write mode.
+MIN_SOURCE_FILES = 20
 
 # `packages/ssr/build.rs` parses the MONOLITHIC file (not the composed tree) to
 # emit its host stubs, and silently degrades to "no stubs" when the file is
@@ -41,6 +46,38 @@ def copies() -> list[Path]:
 
 def _relative_files(root: Path) -> set[Path]:
     return {path.relative_to(root) for path in root.rglob("*") if path.is_file()}
+
+
+INTERFACE_RE = re.compile(r"^interface ([a-z0-9-]+)", re.MULTILINE)
+
+
+def _interface_names(text: str) -> set[str]:
+    return set(INTERFACE_RE.findall(text))
+
+
+def monolithic_parity() -> list[str]:
+    """The monolithic world and the composed tree must declare the same interfaces.
+
+    ssr parses the monolithic file to emit host stubs but binds `wit/composed`
+    for its types; if the two disagree, the stubs and the bindings describe
+    different worlds — and neither byte-gate notices, because each pair stays
+    internally consistent.
+    """
+    monolithic = _interface_names(MONOLITHIC_SOURCE.read_text(encoding="utf-8", errors="replace"))
+    composed: set[str] = set()
+    for path in SOURCE.glob("*.wit"):
+        if path.name == "browser-full.wit":
+            continue
+        composed |= _interface_names(path.read_text(encoding="utf-8", errors="replace"))
+
+    only_monolithic = sorted(monolithic - composed)
+    only_composed = sorted(composed - monolithic)
+    problems: list[str] = []
+    if only_monolithic:
+        problems.append(f"declared only in the monolithic world: {', '.join(only_monolithic)}")
+    if only_composed:
+        problems.append(f"declared only in the composed tree: {', '.join(only_composed)}")
+    return problems
 
 
 def monolithic_drift() -> list[str]:
@@ -102,6 +139,7 @@ def main() -> int:
                 continue
             problems.extend(drift(SOURCE, dest))
         problems.extend(monolithic_drift())
+        problems.extend(monolithic_parity())
         if problems:
             print("composed WIT drift detected (single source = "
                   f"{SOURCE.relative_to(REPO_ROOT)}):", file=sys.stderr)
@@ -111,6 +149,15 @@ def main() -> int:
             return 1
         print(f"composed WIT in sync ({len(copies())} copies checked)")
         return 0
+
+    source_files = _relative_files(SOURCE)
+    if len(source_files) < MIN_SOURCE_FILES:
+        print(
+            f"error: single source has only {len(source_files)} files "
+            f"(< {MIN_SOURCE_FILES}) — refusing to overwrite the copies",
+            file=sys.stderr,
+        )
+        return 1
 
     for dest in copies():
         count = sync_one(SOURCE, dest)

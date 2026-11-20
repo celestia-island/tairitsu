@@ -1287,6 +1287,11 @@ def _extract_all_interfaces(
     )
 
 
+# Export-only interfaces: the guest implements them and the host calls back
+# into them, so the world must NOT import them (an import would oblige the host
+# to provide an implementation of a callback the guest owns).
+EXPORT_ONLY = ["web-socket-callbacks"]
+
 EXPORTED_CALLBACKS = [
     "event-callbacks", "lifecycle", "timer-callbacks",
     "animation-callbacks", "resize-observer-callbacks",
@@ -1337,7 +1342,8 @@ def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
         log_warn("No interfaces found to include in browser-full.wit")
         return
 
-    all_imports = "\n".join(f"    import {name};" for name in all_names)
+    import_names = [name for name in all_names if name not in EXPORT_ONLY]
+    all_imports = "\n".join(f"    import {name};" for name in import_names)
     exports = "\n".join(f"    export {name};" for name in EXPORTED_CALLBACKS)
 
     handwritten_section = "\n\n".join(handwritten_interfaces)
@@ -1445,7 +1451,8 @@ def _generate_composed(
           _handwritten.wit  — all handwritten interface definitions
           _domain-*.wit     — auto-generated interfaces per domain
     """
-    all_imports = "\n".join(f"    import {name};" for name in all_names)
+    import_names = [name for name in all_names if name not in EXPORT_ONLY]
+    all_imports = "\n".join(f"    import {name};" for name in import_names)
     exports = "\n".join(f"    export {name};" for name in EXPORTED_CALLBACKS)
 
     bf_header = """/// browser-full — composition world for tairitsu-browser:full package.
