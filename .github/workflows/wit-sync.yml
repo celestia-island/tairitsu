@@ -71,19 +71,22 @@ jobs:
           # generator script rewrites composed/ + the monolithic world without
           # touching generated/, which is exactly how this workflow used to
           # report "no changes" while the tree had moved.
-          if git diff --exit-code -- \
-               packages/browser-worlds/wit/generated/ \
-               packages/browser-worlds/wit/composed/ \
-               packages/browser-worlds/wit/browser-full.wit \
-               packages/web/wit/composed/ \
-               packages/ssr/wit/composed/ \
-               packages/ssr/wit/browser-full.wit; then
+          # `git diff` cannot see ADDED files and the sync mirrors the source
+          # tree, so detect with `status` rather than `diff`.
+          WATCHED="packages/browser-worlds/wit/generated/ \
+                   packages/browser-worlds/wit/composed/ \
+                   packages/browser-worlds/wit/browser-full.wit \
+                   packages/browser-worlds/wit/w3c-idl-full.wit \
+                   packages/web/wit/composed/ \
+                   packages/ssr/wit/composed/ \
+                   packages/ssr/wit/browser-full.wit"
+          if [ -z "$(git status --porcelain -- $WATCHED)" ]; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No WIT changes detected"
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "WIT changes detected!"
-            git diff --stat -- packages/browser-worlds/wit/generated/ packages/browser-worlds/wit/composed/ packages/web/wit/composed/ packages/ssr/wit/composed/
+            git status --short -- $WATCHED
           fi
 
       - name: Create summary
@@ -93,7 +96,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Changed Files" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          git diff --stat -- packages/browser-worlds/wit/generated/ packages/browser-worlds/wit/composed/ packages/browser-worlds/wit/browser-full.wit packages/web/wit/composed/ packages/ssr/wit/composed/ packages/ssr/wit/browser-full.wit >> $GITHUB_STEP_SUMMARY
+          git status --short -- packages/browser-worlds/wit/ packages/web/wit/composed/ packages/ssr/wit/ >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Create Pull Request

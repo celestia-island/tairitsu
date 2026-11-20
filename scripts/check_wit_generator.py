@@ -25,13 +25,14 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS = REPO_ROOT / "scripts"
 GENERATOR = REPO_ROOT / "scripts" / "generate_browser_wit.py"
 COMPOSED_WORLD = REPO_ROOT / "packages" / "browser-worlds" / "wit" / "composed" / "browser-full.wit"
 SSR_MANIFEST = REPO_ROOT / "packages" / "ssr" / "Cargo.toml"
 
 # tairitsu-ssr's build script reads the monolithic world and emits a file that
 # `src/stubs.rs` includes; a packaged crate without either cannot build.
-SSR_REQUIRED_INCLUDES = ("build.rs", "wit/browser-full.wit")
+SSR_REQUIRED_INCLUDES = ("build.rs", "wit/browser-full.wit", "wit/composed/**/*")
 MONOLITHIC_WORLD = REPO_ROOT / "packages" / "browser-worlds" / "wit" / "browser-full.wit"
 
 # Changing this set is a contract change: regenerate the WIT, update this pin in
@@ -41,8 +42,7 @@ EXPECTED_EXPORT_ONLY = {"web-socket-callbacks"}
 
 LIST_RE = re.compile(r"^(EXPORT[A-Z_]+) = \[(.*?)\]", re.MULTILINE | re.DOTALL)
 NAME_RE = re.compile(r'"([a-z0-9-]+)"')
-WORLD_START_RE = re.compile(r"^world ([a-z0-9-]+) \{", re.MULTILINE)
-MEMBER_RE = re.compile(r"^\s+(import|export) ([a-z0-9-]+)\s*;", re.MULTILINE)
+
 
 
 def generator_lists() -> dict[str, set[str]]:
@@ -57,26 +57,13 @@ def generator_lists() -> dict[str, set[str]]:
 
 
 def world_membership(path: Path) -> tuple[set[str], set[str]]:
-    text = path.read_text(encoding="utf-8", errors="replace")
-    match = None
-    for match in WORLD_START_RE.finditer(text):
-        pass
-    if match is None:
-        raise SystemExit(f"error: no world block found in {path}")
-    depth = 1
-    body: list[str] = []
-    for ch in text[match.end():]:
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-            if depth == 0:
-                break
-        body.append(ch)
-    joined = "".join(body)
-    imports = {name for kind, name in MEMBER_RE.findall(joined) if kind == "import"}
-    exports = {name for kind, name in MEMBER_RE.findall(joined) if kind == "export"}
-    return imports, exports
+    """Read a world's imports/exports through the same comment-safe parser the
+    sync gate uses, so a brace inside a comment cannot truncate this scan either."""
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sync_wit  # local module in the same directory
+
+    return sync_wit._world_membership(path.read_text(encoding="utf-8", errors="replace"))
 
 
 def main() -> int:

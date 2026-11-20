@@ -1549,6 +1549,16 @@ world browser-full {{
 # CLI entry point
 # ---------------------------------------------------------------------------
 
+    # Remove composed domain files this run did not emit. A hand-split file left
+    # behind (the service-worker case) would declare an interface a regenerated
+    # file also declares — a duplicate that makes wit-bindgen reject the package.
+    emitted = {path.name for path in composed_dir.glob("*.wit")} if composed_dir.is_dir() else set()
+    if not dry_run and composed_dir.is_dir():
+        for stale in composed_dir.glob("_domain-*.wit"):
+            if stale.name not in emitted:
+                stale.unlink()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter

@@ -85,12 +85,17 @@ def _interface_names(text: str) -> set[str]:
 
 
 def monolithic_parity() -> list[str]:
-    """The monolithic world and the composed tree must describe the same world.
+    """Compare the monolithic world with the composed tree at the levels we can check.
+
+    Scope, stated so the guard is not read as stronger than it is: this compares
+    the declared interface NAMES and each world's import/export membership. It
+    does not compare function signatures — a function-level diff between the two
+    descriptions is a known gap (see the PR body), and only a full regeneration
+    against the generator's inputs would close it.
 
     ssr parses the monolithic file to emit host stubs but binds `wit/composed`
-    for its types; if the two disagree, the stubs and the bindings describe
-    different worlds — and neither byte-gate notices, because each pair stays
-    internally consistent.
+    for its types, so the parts compared here are exactly the ones whose
+    disagreement turns stubs and bindings into two different worlds.
     """
     # A missing monolithic source is reported by monolithic_drift(); staying
     # silent here avoids printing the same line twice.
