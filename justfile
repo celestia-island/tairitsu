@@ -241,7 +241,7 @@ fmt:
     python3 scripts/enforce_use_groups.py
 
 # CI checks (format check + clippy + test)
-ci: fmt-check clippy test wit-sync-check wit-surface-check wit-generator-check browser-glue-test
+ci: wit-sync-check wit-surface-check wit-generator-check browser-glue-test fmt-check clippy test
     @echo "✅ CI checks passed"
 
 # ------
