@@ -226,7 +226,7 @@ pub fn run_visual_diff(actual_images: &[PathBuf], config: &DiffConfig) -> Result
     let failed = results.len() - passed;
 
     let report = DiffReport {
-        timestamp: chrono::Utc::now().to_rfc3339(),
+        timestamp: jiff::Timestamp::now().to_string(),
         tolerance: config.tolerance,
         total: results.len(),
         passed,

@@ -2,7 +2,7 @@
 //!
 //! Provides background service for compilation with hot-reload capabilities.
 
-use chrono::{DateTime, Utc};
+use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
 use std::{env, fs, io::IsTerminal, path::PathBuf, process::Command, sync::OnceLock};
 
@@ -231,7 +231,7 @@ pub struct DaemonStatus {
     /// PID of the daemon process
     pub pid: u32,
     /// Start time of the daemon
-    pub start_time: DateTime<Utc>,
+    pub start_time: Timestamp,
     /// Recent compilation logs
     pub build_logs: Vec<BuildLogEntry>,
 }
@@ -240,7 +240,7 @@ pub struct DaemonStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BuildLogEntry {
     /// Timestamp of the build
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: Timestamp,
     /// Module being built
     pub module: String,
     /// Whether the build succeeded
@@ -902,7 +902,7 @@ pub fn print_daemon_status() -> std::io::Result<()> {
     }
 
     let status = read_daemon_status()?;
-    let uptime = Utc::now() - status.start_time;
+    let uptime = Timestamp::now() - status.start_time;
 
     crate::log_ok!(
         "{}",
@@ -914,18 +914,18 @@ pub fn print_daemon_status() -> std::io::Result<()> {
     crate::log_info!(
         "{}",
         crate::fmt_tmpl!(loc.dev.daemon_running_since,
-            time => status.start_time.format("%Y-%m-%d %H:%M:%S UTC").to_string()
+            time => status.start_time.strftime("%Y-%m-%d %H:%M:%S UTC").to_string()
         )
     );
 
     if !status.build_logs.is_empty() {
         for log in status.build_logs.iter().rev().take(10) {
             if log.success {
-                crate::log_ok!("{}  {}  OK", log.timestamp.format("%H:%M:%S"), log.module);
+                crate::log_ok!("{}  {}  OK", log.timestamp.strftime("%H:%M:%S"), log.module);
             } else {
                 crate::log_fail!(
                     "{}  {}  FAILED",
-                    log.timestamp.format("%H:%M:%S"),
+                    log.timestamp.strftime("%H:%M:%S"),
                     log.module
                 );
                 if let Some(error) = &log.error {
@@ -939,8 +939,8 @@ pub fn print_daemon_status() -> std::io::Result<()> {
 }
 
 /// Format a duration for display
-fn format_duration(duration: chrono::Duration) -> String {
-    let secs = duration.num_seconds();
+fn format_duration(duration: SignedDuration) -> String {
+    let secs = duration.as_secs();
     if secs < 60 {
         format!("{}s", secs)
     } else if secs < 3600 {
@@ -967,13 +967,13 @@ pub fn append_build_log(module: &str, success: bool, error: Option<&str>) -> std
     let mut status = if daemon_log_path().exists() {
         read_daemon_status().unwrap_or_else(|_| DaemonStatus {
             pid: std::process::id(),
-            start_time: Utc::now(),
+            start_time: Timestamp::now(),
             build_logs: Vec::new(),
         })
     } else {
         DaemonStatus {
             pid: std::process::id(),
-            start_time: Utc::now(),
+            start_time: Timestamp::now(),
             build_logs: Vec::new(),
         }
     };
@@ -981,7 +981,7 @@ pub fn append_build_log(module: &str, success: bool, error: Option<&str>) -> std
     status.pid = std::process::id();
 
     let entry = BuildLogEntry {
-        timestamp: Utc::now(),
+        timestamp: Timestamp::now(),
         module: module.to_string(),
         success,
         error: error.map(|s| s.to_string()),
@@ -997,4 +997,109 @@ pub fn append_build_log(module: &str, success: bool, error: Option<&str>) -> std
 
     write_daemon_status(&status)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ts(raw: &str) -> Timestamp {
+        raw.parse().expect("fixture timestamp is valid RFC 3339")
+    }
+
+    /// The daemon status file is a persisted payload: a CLI built before the
+    /// jiff migration must still read the file the current daemon writes, and
+    /// the other way round. Pin the exact spelling of every timestamp field,
+    /// including a fraction whose trailing digits are zero — the one shape where
+    /// the old and new libraries disagree.
+    #[test]
+    fn daemon_status_wire_format_is_pinned() {
+        let status = DaemonStatus {
+            pid: 7,
+            start_time: ts("2026-11-20T14:30:05.500Z"),
+            build_logs: vec![BuildLogEntry {
+                timestamp: ts("2026-11-20T15:00:00Z"),
+                module: "web".to_string(),
+                success: true,
+                error: None,
+            }],
+        };
+        assert_eq!(
+            serde_json::to_string(&status).expect("DaemonStatus serializes"),
+            r#"{"pid":7,"start_time":"2026-11-20T14:30:05.5Z","build_logs":[{"timestamp":"2026-11-20T15:00:00Z","module":"web","success":true,"error":null}]}"#
+        );
+    }
+
+    /// A file written by the pre-migration build carries the same `Z` spelling
+    /// (serde wrote `Z` for `DateTime<Utc>` too) with the old 0/3/6/9-digit
+    /// fraction padding. The new type must read it and re-emit the canonical
+    /// form. The `+00:00` spelling is kept as a tolerance case, because sibling
+    /// writers in this family produce it from `to_rfc3339()`.
+    #[test]
+    fn pre_migration_status_file_still_loads() {
+        let padded = r#"{"pid":7,"start_time":"2026-11-20T14:30:05.500Z","build_logs":[{"timestamp":"2026-11-20T15:00:00Z","module":"web","success":true,"error":null}]}"#;
+        let status: DaemonStatus = serde_json::from_str(padded).expect("padded file parses");
+        assert_eq!(status.start_time.to_string(), "2026-11-20T14:30:05.5Z");
+        assert_eq!(
+            status.build_logs[0].timestamp.to_string(),
+            "2026-11-20T15:00:00Z"
+        );
+
+        let offset = r#"{"pid":7,"start_time":"2026-11-20T14:30:05.500+00:00","build_logs":[]}"#;
+        let status: DaemonStatus = serde_json::from_str(offset).expect("offset file parses");
+        assert_eq!(status.start_time.to_string(), "2026-11-20T14:30:05.5Z");
+    }
+
+    /// The old library padded the fraction to 0/3/6/9 digits; jiff trims
+    /// trailing zeros. Same instant, different spelling — pin it so a jiff bump
+    /// cannot move the file format silently.
+    #[test]
+    fn subsecond_fraction_trailing_zeros_are_trimmed() {
+        assert_eq!(
+            ts("2026-11-20T14:30:05.120Z").to_string(),
+            "2026-11-20T14:30:05.12Z"
+        );
+        assert_eq!(
+            ts("2026-11-20T14:30:05.500Z").to_string(),
+            "2026-11-20T14:30:05.5Z"
+        );
+        assert_eq!(
+            ts("2026-11-20T14:30:05.123400Z").to_string(),
+            "2026-11-20T14:30:05.1234Z"
+        );
+        assert_eq!(
+            ts("2026-11-20T14:30:05.123456789Z").to_string(),
+            "2026-11-20T14:30:05.123456789Z"
+        );
+    }
+
+    /// Uptime is elapsed wall-clock time, never a calendar span: the type itself
+    /// (`Timestamp - Timestamp` yields `SignedDuration`) is the guard, and these
+    /// assertions pin the truncation that `format_duration` applies to it,
+    /// including negative skew (a status file from a clock that runs ahead).
+    #[test]
+    fn format_duration_measures_elapsed_time() {
+        let start = ts("2026-11-20T10:00:00Z");
+        assert_eq!(
+            format_duration(ts("2026-11-20T10:00:59.900Z") - start),
+            "59s"
+        );
+        assert_eq!(format_duration(ts("2026-11-20T10:01:05Z") - start), "1m 5s");
+        assert_eq!(
+            format_duration(ts("2026-11-20T12:34:56Z") - start),
+            "2h 34m"
+        );
+        assert_eq!(
+            format_duration(start - ts("2026-11-20T10:00:00.500Z")),
+            "0s"
+        );
+        assert_eq!(
+            format_duration(start - ts("2026-11-20T10:00:01.500Z")),
+            "-1s"
+        );
+        assert_eq!(
+            format_duration(start - ts("2026-11-20T11:00:00Z")),
+            "-3600s"
+        );
+    }
 }
