@@ -82,15 +82,18 @@ def _interface_names(text: str) -> set[str]:
 
 
 def monolithic_parity() -> list[str]:
-    if not MONOLITHIC_SOURCE.is_file():
-        return [f"missing single source: {MONOLITHIC_SOURCE.relative_to(REPO_ROOT)}"]
-    """The monolithic world and the composed tree must declare the same interfaces.
+    """The monolithic world and the composed tree must describe the same world.
 
     ssr parses the monolithic file to emit host stubs but binds `wit/composed`
     for its types; if the two disagree, the stubs and the bindings describe
     different worlds — and neither byte-gate notices, because each pair stays
     internally consistent.
     """
+    # A missing monolithic source is reported by monolithic_drift(); staying
+    # silent here avoids printing the same line twice.
+    if not MONOLITHIC_SOURCE.is_file():
+        return []
+
     monolithic = _interface_names(MONOLITHIC_SOURCE.read_text(encoding="utf-8", errors="replace"))
     composed: set[str] = set()
     for path in SOURCE.glob("*.wit"):
