@@ -241,7 +241,7 @@ fmt:
     python3 scripts/enforce_use_groups.py
 
 # CI checks (format check + clippy + test)
-ci: fmt-check clippy test wit-sync-check wit-surface-check wit-generator-check
+ci: fmt-check clippy test wit-sync-check wit-surface-check wit-generator-check browser-glue-test
     @echo "✅ CI checks passed"
 
 # ------
@@ -337,6 +337,12 @@ wit-sync-check:
 # Gate: the generator's export-only contract matches the world it ships.
 wit-generator-check:
     {{python}} scripts/check_wit_generator.py --check
+
+# The browser-glue suite is the only function-level comparator between the WIT
+# world and the host implementation, and it needs no node_modules (node's
+# --experimental-strip-types resolves the TS sources through the repo hook).
+browser-glue-test:
+    cd packages/browser-glue && node --experimental-strip-types --test "test/**/*.test.mjs"
 
 # Gate: every host interface tairitsu-web references is either wired in
 # browser-glue or carries an explicit, justified allowance.
