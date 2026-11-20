@@ -49,6 +49,30 @@ NAME_RE = re.compile(r'"([a-z0-9-]+)"')
 
 
 
+def include_entries(manifest: Path) -> list[str]:
+    """The `include` array as the packaging layer will see it.
+
+    Parsed, not substring-matched: a commented-out entry (`# "build.rs",`) is
+    still in the file's text but not in the array, and the pin exists precisely
+    because that packaging break already shipped once on this branch.
+    """
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover - python < 3.11
+        text = manifest.read_text(encoding="utf-8", errors="replace")
+        block = re.search(r"^include\s*=\s*\[(.*?)\]", text, re.MULTILINE | re.DOTALL)
+        return re.findall(r'"([^"]+)"', block.group(1)) if block else []
+    with manifest.open("rb") as handle:
+        data = tomllib.load(handle)
+    entries = data.get("package", {}).get("include", [])
+    return [str(entry) for entry in entries]
+
+
+def include_glob_covers(entries: list[str], required: str) -> bool:
+    """`required` is either a literal path or a glob that must be present as-is."""
+    return any(entry == required or entry.rstrip("/") == required.rstrip("/") for entry in entries)
+
+
 def generator_lists() -> dict[str, set[str]]:
     text = GENERATOR.read_text(encoding="utf-8", errors="replace")
     found: dict[str, set[str]] = {}
@@ -96,9 +120,9 @@ def main() -> int:
         ("packages/ssr/Cargo.toml", SSR_MANIFEST, SSR_REQUIRED_INCLUDES),
         ("packages/web/Cargo.toml", WEB_MANIFEST, WEB_REQUIRED_INCLUDES),
     ):
-        manifest = manifest_path.read_text(encoding="utf-8", errors="replace")
+        declared = include_entries(manifest_path)
         for required in required_items:
-            if f'"{required}"' not in manifest:
+            if not include_glob_covers(declared, required):
                 problems.append(
                     f"{label} include list is missing {required} "
                     "(the packaged crate would not build)"
