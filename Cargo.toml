@@ -54,7 +54,6 @@ panic = "abort"
 version = "0.5.26"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
-rust-version = "1.91"
 license = "MIT"
 license-file = "LICENSE"
 repository = "https://github.com/celestia-island/tairitsu"
@@ -70,7 +69,6 @@ tairitsu-packager = { version = "^0.5.14", path = "packages/packager" }
 tairitsu-ssr = { version = "^0.5.14", path = "packages/ssr" }
 tairitsu-style = { version = "^0.5.14", path = "packages/style" }
 tairitsu-vdom = { version = "^0.5.14", path = "packages/vdom" }
-tairitsu-web = { version = "^0.5.14", path = "packages/web" }
 
 anyhow = "^1"
 async-trait = "^0.1"
@@ -80,8 +78,6 @@ bytes = "^1"
 jiff = { version = "1", features = ["serde"] }
 clap = { version = "^4", features = ["derive"] }
 crossterm = "^0.28"
-dirs = "^6"
-env_logger = "^0.11"
 futures = "^0.3"
 futures-util = { version = "^0.3", default-features = false, features = ["std", "sink"] }
 grass = "^0.13"
@@ -89,9 +85,7 @@ hex = "^0.4"
 image = "^0.25"
 indicatif = "^0.18"
 libc = "^0.2"
-log = "^0.4"
 portable-pty = "^0.8"
-rand = "^0.8"
 regex = "^1"
 reqwest = { version = "^0.13", default-features = false, features = ["json", "blocking", "rustls", "stream"] }
 serde = { version = "^1", features = ["derive"] }
@@ -113,12 +107,9 @@ toml = "^1.1"
 tower-http = "^0.6"
 tracing = "^0.1"
 tracing-subscriber = "^0.3"
-uuid = { version = "^1.11", features = ["v4"] }
 vte = "^0.15"
 wasmtime = { version = "^48", features = ["component-model", "winch", "async"] }
 wasmtime-wasi = "^48"
-which = "^8"
-windows-sys = { version = "0.61", default-features = false }
 wit-bindgen = { version = "^0.57", features = ["macros"] }
 wit-component = "^0.252"
 wit-parser = "^0.252"
