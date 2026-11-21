@@ -1335,6 +1335,9 @@ const COMPONENT_BOOT_TEMPLATE: &str = include_str!("component-boot.template.js")
 /// W5: the page's own boot module (the module script that used to be inline).
 const COMPONENT_BOOT_PAGE_TEMPLATE: &str = include_str!("boot.template.js");
 
+/// W7: the Worker host — where a component that never yields can be killed.
+const WORKER_HOST_TEMPLATE: &str = include_str!("worker.template.js");
+
 /// SHA-256 of the wasm file's bytes, lower-case hex.
 fn wasm_content_hash(path: &std::path::Path) -> crate::Result<String> {
     let bytes = std::fs::read(path)?;
@@ -1853,6 +1856,9 @@ fn generate_component_html_with_output_dir(
     // W5: the page's boot module is a REAL file (no inline `<script>`), which is
     // what lets it run under `script-src 'self'`. It carries the build's
     // cache-buster and wasm file name, exactly like the loader's `?v=`.
+    // W7: the Worker lane's host script. Emitted beside the page like boot.js.
+    std::fs::write(output_dir.join("glue-worker.js"), WORKER_HOST_TEMPLATE)?;
+
     let boot = COMPONENT_BOOT_PAGE_TEMPLATE
         .replace("{{ v }}", &v.to_string())
         .replace("{{ wasm_file }}", &wasm_file);
