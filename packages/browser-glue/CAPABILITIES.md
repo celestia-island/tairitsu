@@ -97,9 +97,11 @@ A page can opt into running the component in a dedicated Worker
   `active()`); a per-call promise-based API is what the DOM bridge will add. The
   four hikari components are pure compute and fit the existing surface without
   changes.
-* `ready` means the entry **returned**: the Worker reports the wrapper's own
-  post-entry marker with it, and the browser lane asserts that marker, so a host
-  that announces ready early cannot pass.
+* `ready` is emitted by the W3 lifecycle **after the entry returned** — that is
+  the contract, not something this lane re-derives. The lane's evidence for it is
+  the dead-loop control (`worker-kill`): a component whose entry never returns
+  never reports ready, and the page stays in its boot state until the host is
+  terminated.
 
 ## Not in this cut
 

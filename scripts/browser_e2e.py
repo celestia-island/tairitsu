@@ -1142,6 +1142,17 @@ def main():
                 )
                 if active_before is not True:
                     failures.append("the dead-loop worker was not running before terminate")
+                # `ready` may only follow a returned entry: this page's entry
+                # never returns, so announcing ready before the kill would be a
+                # host claiming success it never observed.
+                premature = evaluate(
+                    base, "document.documentElement.dataset.tairitsuReady || null"
+                )
+                if premature is not None:
+                    failures.append(
+                        "the page reported ready although the entry never returned "
+                        "(" + repr(premature) + ")"
+                    )
                 if killed is not True:
                     failures.append(f"terminate() did not report a kill ({killed!r})")
                 if active_after is not False:
