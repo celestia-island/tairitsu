@@ -116,7 +116,7 @@
             // (the build fails loudly when the shim is missing, so there is
             // no CDN fallback anymore: unversioned esm.sh imports are
             // unreproducible and would be blocked by the CSP posture anyway).
-            if (!globalThis.__wasiShimModules) {
+            if (declaredWasi.size > 0 && !globalThis.__wasiShimModules) {
                 try {
                     const shimModules = ['io', 'cli', 'random', 'clocks', 'filesystem', 'sockets'];
                     const localImports = await Promise.all(shimModules.map(m => import('/wasi-shim/' + m + '.js')));
@@ -129,6 +129,14 @@
                         'The build bundles the pinned shim (@bytecodealliance/preview2-shim ^0.31) — a missing bundle ' +
                         'means the packaged output is incomplete; rebuild with `tairitsu build`.', e);
                 }
+            }
+            const KNOWN_WASI = ['cli', 'clocks', 'filesystem', 'io', 'random', 'sockets'];
+            const unknownWasi = [...declaredWasi].filter((name) => !KNOWN_WASI.includes(name));
+            if (unknownWasi.length > 0) {
+                throw new Error(
+                    'the component declares WASI modules the host does not provide: ' +
+                    unknownWasi.sort().join(', '),
+                );
             }
             if (globalThis.__wasiShimModules && declaredWasi.size > 0) {
                 const s = globalThis.__wasiShimModules;
@@ -246,9 +254,13 @@
                 // failure — the operator needs to know the component asked for
                 // something the declaration does not allow.
                 const message = String((bootErr && bootErr.message) || bootErr || '');
-                const kind = /capabilit|not satisfied|missing import/i.test(message)
-                    ? 'capability-denied'
-                    : 'instantiate-failed';
+                // A dist that lacks the declaration is an incomplete build, not
+                // a grant decision — say so instead of blaming the component.
+                const kind = /capability declaration is missing/i.test(message)
+                    ? 'capability-declaration-missing'
+                    : /capabilit|not satisfied|missing import/i.test(message)
+                        ? 'capability-denied'
+                        : 'instantiate-failed';
                 bootSurface.fail(kind, bootErr);
             }
         }

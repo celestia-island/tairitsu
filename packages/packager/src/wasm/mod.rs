@@ -1120,7 +1120,12 @@ fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Re
     for entry in std::fs::read_dir(&source_dir)? {
         let entry = entry?;
         let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("js") {
+        // `.js` are the interface modules; `default-capabilities.json` is the
+        // default capability set `write_capabilities` needs — a copy that drops
+        // it makes every undeclared component unbuildable.
+        let wanted = path.extension().and_then(|s| s.to_str()) == Some("js")
+            || path.file_name().and_then(|s| s.to_str()) == Some("default-capabilities.json");
+        if !wanted {
             continue;
         }
         let name = path.file_name().ok_or_else(|| {
@@ -1142,7 +1147,7 @@ fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Re
 /// A component without a declaration gets the conservative default the glue
 /// package emits (every interface the glue provides + the six bundled shim
 /// modules). A component WITH a declaration (`tairitsu-capabilities.json` beside
-/// its manifest, or the `capabilities` array in the tairitsu manifest) gets
+/// its manifest) gets
 /// exactly that — the boot then injects nothing else.
 fn write_capabilities(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
     let declaration = config.manifest_dir.join("tairitsu-capabilities.json");
@@ -1170,12 +1175,32 @@ fn write_capabilities(config: &Config, output_dir: &std::path::Path) -> crate::R
             ))
         })?
     };
+    let Some(object) = body.as_object() else {
+        return Err(crate::TairitsuPackagerError::BuildError(
+            "tairitsu-capabilities.json must be an object with `interfaces` / `wasiModules`".into(),
+        ));
+    };
+    for (key, expected) in [
+        ("interfaces", "an array of interface names"),
+        ("wasiModules", "an array of module names"),
+    ] {
+        if let Some(value) = object.get(key) {
+            if !value.is_array() {
+                return Err(crate::TairitsuPackagerError::BuildError(format!(
+                    "tairitsu-capabilities.json: `{key}` must be {expected}"
+                )));
+            }
+        }
+    }
     let mut body = body;
     if let Some(object) = body.as_object_mut() {
+        // What the component declared, not where the builder kept it: an
+        // absolute path would leak the build host's layout into every page and
+        // make the dist non-reproducible.
         object.insert(
             "source".to_string(),
             serde_json::Value::String(if declaration.is_file() {
-                declaration.display().to_string()
+                "component".to_string()
             } else {
                 "default".to_string()
             }),
