@@ -372,6 +372,7 @@ browser-e2e: glue-esm
     {{python}} scripts/browser_e2e.py --scenario capability-exact
     {{python}} scripts/browser_e2e.py --scenario capability-undeclared
     {{python}} scripts/browser_e2e.py --scenario capability-overreach
+    {{python}} scripts/browser_e2e.py --scenario capability-wasi
     {{python}} scripts/browser_e2e.py --scenario two-instances
     {{python}} scripts/browser_e2e.py --scenario bad-bytes
     {{python}} scripts/browser_e2e.py --scenario missing-entry

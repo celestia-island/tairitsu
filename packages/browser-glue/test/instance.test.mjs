@@ -683,7 +683,9 @@ test("buildImports injects only what the declaration names (behavioural)", async
     assert.deepEqual(globalThis.__TAIRITSU_SKIPPED_IMPORTS__, [
       "tairitsu-browser:full/element-css-inline-style@0.2.0",
     ]);
-    // An unknown WASI module must fail like an unknown interface.
+    // An unknown WASI module must fail like an unknown interface. The error KIND
+    // (capability-denied vs instantiate-failed) is asserted end-to-end by the
+    // `capability-wasi` browser scenario, which is where the classifier runs.
     await assert.rejects(
       () => buildImports({ interfaces: ["document"], wasiModules: ["nope"] }),
       /WASI modules the host does not provide/,

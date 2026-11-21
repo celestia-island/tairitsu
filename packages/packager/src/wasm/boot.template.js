@@ -258,7 +258,7 @@
                 // a grant decision — say so instead of blaming the component.
                 const kind = /capability declaration is missing/i.test(message)
                     ? 'capability-declaration-missing'
-                    : /capabilit|not satisfied|missing import/i.test(message)
+                    : /capabilit|not satisfied|missing import|WASI modules/i.test(message)
                         ? 'capability-denied'
                         : 'instantiate-failed';
                 bootSurface.fail(kind, bootErr);

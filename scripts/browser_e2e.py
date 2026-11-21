@@ -61,6 +61,7 @@ SCENARIOS = (
     "capability-exact",
     "capability-undeclared",
     "capability-overreach",
+    "capability-wasi",
     "glue-imports",
     "two-instances",
     "bad-bytes",
@@ -146,6 +147,7 @@ WRAPPERS = {
     "capability-exact": GLUE_IMPORT_WRAPPER,
     "capability-undeclared": GLUE_IMPORT_WRAPPER,
     "capability-overreach": GLUE_IMPORT_WRAPPER,
+    "capability-wasi": GLUE_IMPORT_WRAPPER,
     # The isolation scenario boots the same component, then drives the instance
     # API from the test side.
     "two-instances": GOOD_WRAPPER,
@@ -160,6 +162,7 @@ FAILING = (
     "missing-import",
     "capability-undeclared",
     "capability-overreach",
+    "capability-wasi",
 )
 
 # What the visible card must say for each control: the same "an error card
@@ -171,6 +174,7 @@ EXPECTED_CARD = {
     "missing-import": "missing import: wasi:cli/does-not-exist@0.2.0",
     "capability-overreach": "does not provide",
     "capability-undeclared": "is not declared",
+    "capability-wasi": "WASI modules the host does not provide",
 }
 
 
@@ -352,6 +356,11 @@ def capability_declaration(scenario):
         # Declares only `document`; the wrapper imports `element-css-inline-style`,
         # so the host must refuse to satisfy it.
         return {"interfaces": ["document"], "wasiModules": []}
+    if scenario == "capability-wasi":
+        return {
+            "interfaces": ["document", "element-css-inline-style"],
+            "wasiModules": ["not-a-wasi-module"],
+        }
     if scenario == "capability-overreach":
         # Declares an interface the host does not provide: the boot must fail
         # BEFORE instantiate, not hand back an opaque link error.
@@ -443,7 +452,7 @@ def build_dist(scenario, dest):
         os.path.join(dest, "tairitsu-capabilities.json"), "w", encoding="utf-8"
     ) as fh:
         json.dump(capability_declaration(scenario), fh)
-    if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach"):
+    if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
         # The real build-time modules, copied exactly as the packager does.
         source = os.path.join(REPO_ROOT, "packages", "browser-glue", "dist", "glue-esm")
         if not os.path.isdir(source):
@@ -457,7 +466,7 @@ def build_dist(scenario, dest):
     glue_path = os.path.join(dest, "glue-runtime.js")
     # `two-instances` needs the shipped bundle (the instance API lives there);
     # the component scenarios only need the page's import map to stay green.
-    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach"):
+    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
         if not ensure_glue_bundle(glue_path):
             raise RuntimeError(
                 "the two-instances control needs the real glue bundle "
@@ -479,7 +488,7 @@ def build_dist(scenario, dest):
         os.path.join(dest, "component-boot.js"),
     )
     wrapper_source = WRAPPERS[scenario]
-    if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach"):
+    if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
         rewritten = rewrite_glue_specifiers(wrapper_source)
         if "@tairitsu-glue/" in rewritten:
             raise RuntimeError("the glue specifier rewrite left a bare specifier")
@@ -529,7 +538,7 @@ def check_boot_state(state, scenario, *, real_dist=False):
     if not isinstance(state, dict):
         return [f"page state unreadable: {state!r}"]
 
-    if scenario in ("capability-undeclared", "capability-overreach") and state.get("error") != "capability-denied":
+    if scenario in ("capability-undeclared", "capability-overreach", "capability-wasi") and state.get("error") != "capability-denied":
         failures.append(
             "a capability mismatch was not reported as capability-denied "
             f"(got {state.get('error')!r})"
@@ -714,6 +723,7 @@ def self_check():
         "capability-exact",
         "capability-undeclared",
         "capability-overreach",
+        "capability-wasi",
     ):
         if capability_scenario not in SCENARIOS:
             failures.append(f"the {capability_scenario} control is missing (W6)")
