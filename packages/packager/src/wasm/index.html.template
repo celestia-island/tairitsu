@@ -13,7 +13,17 @@
     <div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>
     <script src="{{ glue_bundle }}?v={{ v }}"></script>
     <script type="module">
-        const bootError = (msg, err) => {
+        // W3: ONE place marks a failure. `data-tairitsu-error` is the machine
+        // signal every consumer keys on, so it is set here rather than in each
+        // catch — the outermost catch used to show the card without it, which
+        // made a stale dist (missing /component-boot.js) invisible to anything
+        // watching the attribute.
+        const markBootFailure = (kind) => {
+            document.documentElement.dataset.tairitsuError = kind;
+        };
+
+        const bootError = (msg, err, kind) => {
+            if (kind) markBootFailure(kind);
             console.error('[tairitsu] Boot failed:', msg, err || '');
             const appRoot = document.getElementById('app');
             if (appRoot) appRoot.innerHTML =
@@ -26,90 +36,30 @@
 
         try {
         const { instantiateWithWrapper } = await import('/component-wrapper-loader.js?v={{ v }}');
+        const { bootComponent } = await import('/component-boot.js?v={{ v }}');
 
         const appRoot = document.getElementById('app');
-        const setAppStatus = (text) => {
-            if (!appRoot) return;
-            const current = (appRoot.textContent || '').trim();
-            if (current === 'Loading…') {
-                appRoot.textContent = text;
-            }
-        };
+        // W3: `data-tairitsu-ready` is set ONLY after the guest's boot entry
+        // returned. Failures go to `data-tairitsu-error` + the visible card
+        // and never set the ready attribute.
+        let settleBoot;
+        const bootSettled = new Promise((resolve, reject) => {
+            settleBoot = { resolve, reject };
+        });
+        // A rejected lifecycle promise that nobody awaits would surface as an
+        // unhandled rejection; the boot path awaits it below.
+        bootSettled.catch(() => {});
 
-        const clearLoadingIfUnchanged = () => {
-            if (!appRoot) return;
-            const current = (appRoot.textContent || '').trim();
-            if (current === 'Loading…') {
-                appRoot.textContent = '';
-            }
-        };
-
-        const tryInvokeBootExports = async (result) => {
-            const normalizeBootName = (name) => {
-                const lowered = String(name || '').toLowerCase();
-                if (lowered === 'run') return 'run';
-                if (lowered === 'main') return 'main';
-                if (lowered === 'init') return 'init';
-                if (lowered === 'start') return 'start';
-                return null;
-            };
-
-            const seenObjects = new Set();
-            const seenFunctions = new Set();
-            const discovered = [];
-
-            const collect = (obj, depth = 0) => {
-                if (!obj || typeof obj !== 'object' || depth > 3) return;
-                if (seenObjects.has(obj)) return;
-                seenObjects.add(obj);
-
-                for (const [name, value] of Object.entries(obj)) {
-                    if (typeof value !== 'function') continue;
-                    const kind = normalizeBootName(name);
-                    if (!kind) continue;
-                    if (seenFunctions.has(value)) continue;
-                    seenFunctions.add(value);
-                    discovered.push({ kind, fn: value });
-                }
-
-                for (const [, value] of Object.entries(obj)) {
-                    if (value && typeof value === 'object') {
-                        collect(value, depth + 1);
-                    }
-                }
-            };
-
-            const targets = [
-                result,
-                result && result.instance,
-                result && result.exports,
-                result && result.instance && result.instance.exports,
-            ];
-
-            for (const target of targets) {
-                collect(target);
-                if (target && target.exports) collect(target.exports);
-            }
-
-            let invoked = false;
-
-            for (const preferred of ['run', 'main', 'init']) {
-                for (const entry of discovered) {
-                    if (entry.kind !== preferred) continue;
-                    await entry.fn();
-                    invoked = true;
-                }
-            }
-
-            if (!invoked) {
-                const fallbackStart = discovered.find((entry) => entry.kind === 'start');
-                if (fallbackStart) {
-                    await fallbackStart.fn();
-                    invoked = true;
-                }
-            }
-
-            return invoked;
+        const bootSurface = {
+            ready: (entryName) => {
+                document.documentElement.removeAttribute('data-tairitsu-error');
+                console.info('[tairitsu] component ready (entry: ' + entryName + ')');
+                settleBoot.resolve(entryName);
+            },
+            fail: (kind, error) => {
+                bootError('Component ' + kind.replace('-', ' '), error, kind);
+                settleBoot.reject(error);
+            },
         };
 
         // Build imports object from registered browser glue interfaces
@@ -167,23 +117,36 @@
             return imports;
         };
 
-        let bootInvoked = false;
 
         // Strategy: always try the jco component wrapper first (avoids a
         // redundant 50MB fetch of the raw WASM just to inspect magic bytes).
         // The wrapper internally fetches only the core module it needs.
-        // Fall back to direct WASM loading only if no wrapper is available.
+        // Direct WASM loading stays as the no-wrapper fallback. W3: whichever
+        // path produced the instance, the SAME boot lifecycle decides the
+        // entry, the ready attribute and the error surface — and a failure on
+        // either path is terminal (never a blank page).
+        const startBoot = async (result) => {
+            if (globalThis.__setWasmExports && result) {
+                globalThis.__setWasmExports(result);
+            }
+            await bootComponent({ result, surface: bootSurface });
+        };
+
         try {
             const imports = await buildImports();
-            const wrapperResult = await instantiateWithWrapper(imports);
-            if (globalThis.__setWasmExports && wrapperResult) {
-                globalThis.__setWasmExports(wrapperResult);
-            }
-            bootInvoked = await tryInvokeBootExports(wrapperResult);
-        } catch (wrapperErr) {
-            console.error('[tairitsu] Component wrapper failed, falling back to direct WASM load:', wrapperErr);
+            let wrapperErr = null;
+            let wrapperResult = null;
             try {
-                const imports = await buildImports();
+                wrapperResult = await instantiateWithWrapper(imports);
+            } catch (error) {
+                wrapperErr = error;
+                console.error('[tairitsu] Component wrapper failed, falling back to direct WASM load:', error);
+            }
+
+            if (wrapperResult) {
+                await startBoot(wrapperResult);
+            } else {
+                const directImports = await buildImports();
                 const response = await fetch('/{{ wasm_file }}');
                 const bytes = await response.arrayBuffer();
                 const magic = new Uint8Array(bytes, 0, 8);
@@ -192,33 +155,26 @@
                 const isComponent = isWasm &&
                     magic[4] === 0x0d && magic[5] === 0x00 && magic[6] === 0x01 && magic[7] === 0x00;
 
-                if (isComponent && typeof WebAssembly.Component === 'function') {
-                    const component = new WebAssembly.Component(bytes);
-                    const componentResult = await WebAssembly.instantiate(component, imports);
-                    if (globalThis.__setWasmExports && componentResult) {
-                        globalThis.__setWasmExports(componentResult);
-                    }
-                    bootInvoked = await tryInvokeBootExports(componentResult);
-                } else if (isComponent) {
-                    console.error('[tairitsu] WASM Component detected but WebAssembly.Component is not supported.');
-                    setAppStatus('Failed to load: WASM Components require the jco wrapper. Check console.');
-                } else {
-                    const module = await WebAssembly.compile(bytes);
-                    const moduleResult = await WebAssembly.instantiate(module, imports);
-                    if (globalThis.__setWasmExports && moduleResult) {
-                        globalThis.__setWasmExports(moduleResult);
-                    }
-                    bootInvoked = await tryInvokeBootExports(moduleResult);
+                if (isComponent) {
+                    // A component without a working wrapper is exactly the
+                    // "wrapper failed" case, not a load we can fake.
+                    throw (wrapperErr || new Error(
+                        'WASM Component requires the jco wrapper, and the wrapper could not be loaded.',
+                    ));
                 }
-            } catch (directErr) {
-                bootError('Direct WASM load failed', directErr);
+                const module = await WebAssembly.compile(bytes);
+                const moduleResult = await WebAssembly.instantiate(module, directImports);
+                await startBoot(moduleResult);
             }
-        }
-
-        if (!bootInvoked) {
-            setAppStatus('Component initialized (no exported run/start entry found).');
-        } else {
-            clearLoadingIfUnchanged();
+        } catch (bootErr) {
+            // The lifecycle already reported through `bootSurface.fail` when it
+            // got that far; this covers instantiation/fetch failures that never
+            // reached it (a bad magic header, a 404 for the wasm). A missing
+            // /component-boot.js is caught EARLIER, by the outermost catch —
+            // both land on `markBootFailure`, so the attribute is always set.
+            if (!document.documentElement.dataset.tairitsuError) {
+                bootSurface.fail('instantiate-failed', bootErr);
+            }
         }
 
         // Wait for all stylesheets to finish loading before running any
@@ -344,6 +300,15 @@
                 window.dispatchEvent(new PopStateEvent('popstate'));
             }
 
+            // W3: the ready attribute is the lifecycle's success signal. The
+            // post-boot fixups above still run (styles, theme sync, routing),
+            // but a component that never booted stays "not ready" — with the
+            // error attribute set by the boot surface.
+            try {
+                await bootSettled;
+            } catch (_bootFailure) {
+                return;
+            }
             document.body.removeAttribute('data-booting');
             document.documentElement.dataset.tairitsuReady='hydrated';
         })();
@@ -454,7 +419,10 @@
         })();
 
         } catch (topErr) {
-            bootError('Unhandled error', topErr);
+            // Covers the paths that never reached `bootSurface` at all — most
+            // importantly a dist whose /component-boot.js or glue bundle is
+            // missing (deploy skew): the card shows AND the attribute is set.
+            bootError('Unhandled error', topErr, 'boot-failed');
         }
     </script>
 </body>
