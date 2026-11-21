@@ -123,3 +123,82 @@ test("the call surface is SYNCHRONOUS (the sync-facade contract)", async () => {
   assert.equal(typeof loadComponent, "function");
   assert.equal(Object.getPrototypeOf(loadComponent).constructor.name, "AsyncFunction");
 });
+
+test("a non-object instantiate result is a fail-closed error, not a hollow surface", async () => {
+  for (const value of [undefined, null, 42, "text"]) {
+    await assert.rejects(
+      loadComponent({
+        wrapper: "memory:hollow",
+        loaders: { importModule: async () => ({ instantiate: async () => value }) },
+      }),
+      (error) => error instanceof HostClientError && error.kind === "instantiate-failed",
+    );
+  }
+});
+
+test("the declaration is published for the glue modules' W6 guard", async () => {
+  const previous = globalThis.__TAIRITSU_CAPABILITIES__;
+  try {
+    await loadComponent({
+      wrapper: "memory:caps",
+      capabilities: { interfaces: [], wasiModules: [] },
+      loaders: { importModule: async () => ({ encode: () => 1 }) },
+    });
+    assert.deepEqual(globalThis.__TAIRITSU_CAPABILITIES__, { interfaces: [], wasiModules: [] });
+  } finally {
+    if (previous === undefined) delete globalThis.__TAIRITSU_CAPABILITIES__;
+    else globalThis.__TAIRITSU_CAPABILITIES__ = previous;
+  }
+});
+
+test("an async export is refused instead of leaking a promise", async () => {
+  const component = await loadComponent({
+    wrapper: "memory:async",
+    loaders: { importModule: async () => ({ encode: async () => "late" }) },
+  });
+  assert.throws(
+    () => component.call("encode"),
+    (error) => error instanceof HostClientError && error.kind === "async-export",
+  );
+});
+
+test("reading exports cannot bypass stop()", async () => {
+  const component = await loadComponent({
+    wrapper: "memory:exports",
+    loaders: { importModule: async () => ({ encode: () => "ok" }) },
+  });
+  assert.equal(component.exports.encode(), "ok");
+  await component.stop();
+  assert.throws(
+    () => component.exports.encode(),
+    (error) => error instanceof HostClientError && error.kind === "stopped",
+  );
+});
+
+test("the page lane's WASI import keys are used, not fabricated ones", () => {
+  const imports = buildImports({ wasiModules: ["io", "clocks"] }, {}, { io: {}, clocks: {} });
+  assert.ok("wasi:io/streams@0.2.0" in imports, "io must use the real key");
+  assert.ok("wasi:clocks/monotonic-clock@0.2.0" in imports, "clocks must use the real key");
+  assert.ok(!("wasi-io" in imports), "no fabricated key");
+});
+
+test("a namespaced lifecycle entry and an { exports } wrapper are reachable", async () => {
+  const component = await loadComponent({
+    wrapper: "memory:shapes",
+    loaders: {
+      importModule: async () => ({
+        instance: { exports: { encode: () => "wrapped" } },
+        "tairitsu-browser:full/lifecycle@0.2.0": { start: () => "started" },
+      }),
+    },
+  });
+  assert.equal(component.call("encode"), "wrapped");
+  assert.equal(component.call("start"), "started");
+});
+
+test("prototype-chain names are not treated as provided capabilities", () => {
+  assert.throws(
+    () => buildImports({ interfaces: ["constructor"] }, {}),
+    (error) => error instanceof HostClientError && error.kind === "capability-denied",
+  );
+});

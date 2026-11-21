@@ -74,6 +74,48 @@ const normalizeInterface = (name: string): string =>
 
 const normalizeWasi = (name: string): string => String(name || "").trim();
 
+// The import keys a component actually asks for — the page lane hardcodes the
+// same names (`boot.template.js`), so this mirrors it rather than inventing.
+const WASI_IMPORT_KEYS: Record<string, string[]> = {
+  io: ["wasi:io/error@0.2.0", "wasi:io/poll@0.2.0", "wasi:io/streams@0.2.0"],
+  clocks: ["wasi:clocks/monotonic-clock@0.2.0", "wasi:clocks/wall-clock@0.2.0"],
+  random: ["wasi:random/random@0.2.0"],
+  cli: [
+    "wasi:cli/environment@0.2.0",
+    "wasi:cli/exit@0.2.0",
+    "wasi:cli/stdin@0.2.0",
+    "wasi:cli/stdout@0.2.0",
+    "wasi:cli/stderr@0.2.0",
+  ],
+  filesystem: ["wasi:filesystem/preopens@0.2.0"],
+  sockets: [
+    "wasi:sockets/tcp@0.2.0",
+    "wasi:sockets/udp@0.2.0",
+    "wasi:sockets/network@0.2.0",
+    "wasi:sockets/instance-network@0.2.0",
+  ],
+};
+
+const hasOwn = (target: object, key: string): boolean =>
+  Object.prototype.hasOwnProperty.call(target, key);
+
+/** The shapes a wrapper may carry its exports in (page lane parity). */
+const pickExport = (instance: Record<string, unknown>, name: string): unknown => {
+  const candidates = [
+    instance,
+    instance.exports,
+    (instance.instance as Record<string, unknown> | undefined)?.exports,
+    instance.lifecycle,
+    instance["tairitsu-browser:full/lifecycle@0.2.0"],
+  ];
+  for (const holder of candidates) {
+    if (holder && typeof holder === "object" && hasOwn(holder, name)) {
+      return (holder as Record<string, unknown>)[name];
+    }
+  }
+  return undefined;
+};
+
 const KNOWN_WASI = ["cli", "clocks", "filesystem", "io", "random", "sockets"];
 
 /** Build the imports a component is allowed to see (W6, mirrored). */
@@ -85,7 +127,7 @@ export function buildImports(
   const imports: Record<string, unknown> = {};
 
   const declaredInterfaces = (capabilities.interfaces ?? []).map(normalizeInterface);
-  const missing = declaredInterfaces.filter((name) => !(name in glue));
+  const missing = declaredInterfaces.filter((name) => !hasOwn(glue, name));
   if (missing.length > 0) {
     // Declared but the host has no provider: refuse before instantiate, exactly
     // like the page lane does.
@@ -106,7 +148,7 @@ export function buildImports(
       `the component declares WASI modules the host does not provide: ${unknownWasi.sort().join(", ")}`,
     );
   }
-  const missingWasi = declaredWasi.filter((name) => !(name in wasi));
+  const missingWasi = declaredWasi.filter((name) => !hasOwn(wasi, name));
   if (missingWasi.length > 0) {
     throw new HostClientError(
       "capability-denied",
@@ -114,7 +156,7 @@ export function buildImports(
     );
   }
   for (const name of declaredWasi) {
-    imports[`wasi-${name}`] = wasi[name];
+    for (const key of WASI_IMPORT_KEYS[name] ?? []) imports[key] = wasi[name];
   }
 
   return imports;
@@ -136,6 +178,13 @@ interface Instantiable {
 export async function loadComponent(options: LoadComponentOptions): Promise<HostComponent> {
   const { wrapper, capabilities = {}, glue = {}, wasi = {}, loaders } = options;
   const imports = buildImports(capabilities, glue, wasi);
+  // W6's guard inside the emitted glue modules reads the declaration from the
+  // realm that imports them — that is this one. Without this line the guard
+  // fails open and a statically imported interface goes undeclared.
+  (globalThis as Record<string, unknown>).__TAIRITSU_CAPABILITIES__ = {
+    interfaces: capabilities.interfaces ?? [],
+    wasiModules: capabilities.wasiModules ?? [],
+  };
 
   const url = typeof wrapper === "string" ? wrapper : wrapper.href;
   const importModule =
@@ -156,14 +205,25 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
     (module.default as Instantiable["default"]) ??
     (module.init as Instantiable["init"]);
 
+  const ensureSurface = (value: unknown, shape: string): Record<string, unknown> => {
+    if (value === null || typeof value !== "object") {
+      throw new HostClientError(
+        "instantiate-failed",
+        `the component wrapper ${url} resolved to ${value === null ? "null" : typeof value} ` +
+          `through ${shape}; a component must resolve to an object of exports`,
+      );
+    }
+    return value as Record<string, unknown>;
+  };
+
   let instance: Record<string, unknown>;
   if (typeof candidate === "function") {
     try {
-      instance = (await candidate(imports)) as Record<string, unknown>;
+      instance = ensureSurface(await candidate(imports), "instantiate(imports)");
     } catch (firstError) {
       // The jco shape: instantiate(resolveCoreModule, imports).
       try {
-        instance = (await (
+        instance = ensureSurface(await (
           candidate as unknown as (
             resolve: (path: string) => Promise<unknown>,
             imports: Record<string, unknown>,
@@ -178,7 +238,7 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
             return WebAssembly.compileStreaming(response);
           },
           imports,
-        )) as Record<string, unknown>;
+        ), "instantiate(resolveCoreModule, imports)");
       } catch (secondError) {
         throw new HostClientError(
           "instantiate-failed",
@@ -190,7 +250,7 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
     }
   } else {
     // A wrapper that is a plain namespace of exports needs no instantiation.
-    instance = module;
+    instance = ensureSurface(module, "the wrapper namespace");
   }
 
   let stopped = false;
@@ -203,8 +263,18 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
     for (const resolve of waiters) resolve();
   };
 
+  const exportsView = new Proxy(instance, {
+    get(target, property) {
+      const value = Reflect.get(target, property);
+      if (typeof property === "string" && typeof value === "function") {
+        return (...args: unknown[]) => surface.call(property, ...args);
+      }
+      return value;
+    },
+  });
+
   const surface: HostComponent = {
-    exports: instance,
+    exports: exportsView,
     get stopped() {
       return stopped;
     },
@@ -212,25 +282,33 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
       if (stopped) {
         throw new HostClientError("stopped", `this component was stopped; "${name}" is not callable`);
       }
-      const candidate = instance[name];
-      const resolved =
-        typeof candidate === "function"
-          ? candidate
-          : (instance.lifecycle as Record<string, unknown> | undefined)?.[name];
+      const resolved = pickExport(instance, name);
       if (typeof resolved !== "function") {
         throw new HostClientError("no-export", `the component exports no "${name}"`);
       }
       inFlight += 1;
       try {
-        return (resolved as (...callArgs: unknown[]) => T)(...args);
+        const value = (resolved as (...callArgs: unknown[]) => unknown)(...args);
+        if (value !== null && typeof (value as { then?: unknown })?.then === "function") {
+          throw new HostClientError(
+            "async-export",
+            `"${name}" returned a thenable; this client exposes a synchronous surface only`,
+          );
+        }
+        return value as T;
       } finally {
         inFlight -= 1;
         if (inFlight === 0) settleIdle();
       }
     },
     async stop(): Promise<void> {
-      // Cooperative, like W4: mark first (no new calls), then drain.
+      // Mark first (no new calls), let the guest wind down its own state if it
+      // exposes the cooperative hook, then drain.
       stopped = true;
+      const guestStop = pickExport(instance, "stop");
+      if (typeof guestStop === "function") {
+        await (guestStop as () => Promise<void> | void)();
+      }
       await surface.whenIdle();
     },
     whenIdle(): Promise<void> {
