@@ -723,6 +723,18 @@ test("the worker lane exists and terminate is the hard kill (W7 pin)", async () 
   );
   // the worker host refuses DOM-capability declarations (it has no DOM)
   const host = await readFile(resolve(here, "../../packager/src/wasm/worker.template.js"), "utf8");
+  // The wrapper must go through the loader: a hardcoded path is exactly the
+  // defect two review rounds found, and it must never come back silently.
+  assert.match(
+    host,
+    /instantiateWithWrapper\(imports\)/,
+    "the worker host does not use the wrapper loader",
+  );
+  assert.equal(
+    /component-wrapper\/component\.js/.test(host),
+    false,
+    "the worker host hardcodes a wrapper path",
+  );
   assert.match(host, /this lane cannot provide/, "the worker host does not refuse DOM capabilities");
   assert.match(host, /kind: "capability-denied"/, "the refusal is not a capability failure");
 });

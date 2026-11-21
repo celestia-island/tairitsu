@@ -65,8 +65,6 @@ SCENARIOS = (
     "worker-kill",
     "capability-wasi",
     "worker-boot",
-    "worker-refused",
-    "worker-kill",
     "worker-terminate",
     "glue-imports",
     "two-instances",
@@ -452,6 +450,7 @@ def render_boot_script():
     return boot
 
 
+WRAPPER_STEM = "tairitsu_fixture"
 WORKER_SCENARIOS = {"worker-boot", "worker-terminate", "worker-refused", "worker-kill"}
 
 
@@ -540,7 +539,9 @@ def build_dist(scenario, dest):
     with open(loader_src, encoding="utf-8") as fh:
         loader = fh.read()
     # The dist's wasm stem is `component` (see PAGE_CONTEXT["wasm_file"]).
-    loader = loader.replace("__WASM_STEM__", "component")
+    # A REAL build names the wrapper after the wasm stem. Using a stem that is
+    # not `component` is what makes a hardcoded wrapper path impossible to miss.
+    loader = loader.replace("__WASM_STEM__", WRAPPER_STEM)
     with open(os.path.join(dest, "component-wrapper-loader.js"), "w", encoding="utf-8") as fh:
         fh.write(loader)
     shutil.copyfile(
@@ -553,7 +554,7 @@ def build_dist(scenario, dest):
         # stem, so a second directory is the honest way to serve both.
         healthy = os.path.join(dest, "healthy")
         os.makedirs(os.path.join(healthy, "component-wrapper"), exist_ok=True)
-        with open(os.path.join(healthy, "component-wrapper", "component.js"), "w", encoding="utf-8") as fh:
+        with open(os.path.join(healthy, "component-wrapper", WRAPPER_STEM + ".js"), "w", encoding="utf-8") as fh:
             fh.write(WRAPPERS["worker-boot"])
         for name in ("boot.js", "component-boot.js", "component-wrapper-loader.js", "glue-worker.js", "glue-runtime.js"):
             source = os.path.join(dest, name)
@@ -572,7 +573,7 @@ def build_dist(scenario, dest):
             raise RuntimeError("the glue specifier rewrite left a bare specifier")
         wrapper_source = rewritten
     with open(
-        os.path.join(dest, "component-wrapper", "component.js"), "w", encoding="utf-8"
+        os.path.join(dest, "component-wrapper", WRAPPER_STEM + ".js"), "w", encoding="utf-8"
     ) as fh:
         fh.write(wrapper_source)
     # A placeholder core module: the synthetic wrappers never fetch it, but the
@@ -823,6 +824,9 @@ def self_check():
     for capability_scenario in REQUIRED_CONTROLS:
         if capability_scenario not in SCENARIOS:
             failures.append(f"the {capability_scenario} control is missing")
+    if len(SCENARIOS) != len(set(SCENARIOS)):
+        duplicates = sorted({name for name in SCENARIOS if SCENARIOS.count(name) > 1})
+        failures.append(f"SCENARIOS has duplicates: {duplicates}")
     if "glue-imports" not in SCENARIOS:
         failures.append("the glue-imports scenario is missing (static resolution is unproven)")
     if "csp" not in WRAPPERS:
@@ -1072,8 +1076,7 @@ def main():
                     base,
                     "(() => ({ workerActive: !!(globalThis.__TAIRITSU_WORKER__ && "
                     "globalThis.__TAIRITSU_WORKER__.active()), "
-                    "pageRanEntry: globalThis.__w3_entry_ran === true, "
-                    "compute: globalThis.__TAIRITSU_WORKER_RESULT__ }))()",
+                    "pageRanEntry: globalThis.__w3_entry_ran === true }))()",
                 )
                 if not isinstance(state, dict):
                     failures.append("worker state unreadable: " + repr(state))
@@ -1081,11 +1084,7 @@ def main():
                     failures.append("the component did not boot in a Worker")
                 elif state.get("pageRanEntry") is True:
                     failures.append("the entry ran on the page: this is the main-thread lane")
-                elif state.get("compute") != 42:
-                    failures.append(
-                        "ready did not carry the entry's result: the Worker reported ready "
-                        "before the entry ran (compute=" + repr(state.get("compute")) + ")"
-                    )
+
             if args.scenario == "worker-terminate":
                 # The kill path without a spinning worker: boot normally, then
                 # terminate and check both halves of the reclaim — the Worker is

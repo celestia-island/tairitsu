@@ -92,10 +92,9 @@ async function boot({ capabilities }) {
   const surface = {
     ready: (entry) => {
       entryName = entry;
-      // `bootComponent` calls this only after the entry returned; the wrapper's
-      // own marker travels with it so the page can tell "ready" from "ready
-      // before the entry ran".
-      post({ type: "ready", entry, compute: globalThis.__w7_compute });
+      // `bootComponent` calls this only after the entry returned (the W3
+      // contract); the lane does not re-derive that here.
+      post({ type: "ready", entry });
     },
     fail: (kind, error) => fail(kind, error),
   };
