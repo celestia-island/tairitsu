@@ -20,7 +20,6 @@ graph LR
         subgraph JCO["browser-glue/ (jco import 어댑터)"]
             J1["console.js, document.js, element.js, node.js, ..."]
         end
-        NOTE["Import Map: tairitsu-browser:full/* → ./browser-glue/*<br/>jco transpile: 적절한 imports로 컴포넌트 래퍼 생성"]
     end
     WASM -- "WIT imports" --> BG
     BG --> JCO
@@ -46,7 +45,7 @@ WIT 인터페이스의 자동 생성된 TypeScript 구현:
 
 IDE 지원 및 타입 검사를 위한 TypeScript 선언 파일.
 
-### 인터페이스 래퍼 (`dist/browser-glue/*.js`)
+### 인터페이스 래퍼 (`dist/glue-esm/*.js`)
 
 jco 변환된 imports를 위한 최소한의 어댑터 파일:
 
@@ -61,17 +60,10 @@ jco 변환된 imports를 위한 최소한의 어댑터 파일:
 
 ## jco 통합
 
-### Import Map 설정
 
-```html
-<script type="importmap">
-{
-  "imports": {
-    "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/",
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
 ### 변환 프로세스
@@ -79,7 +71,6 @@ jco 변환된 imports를 위한 최소한의 어댑터 파일:
 1. WASM 컴포넌트 빌드: `cargo build --target wasm32-wasip2 --lib --release`
 2. jco로 변환: `jco transpile component.wasm -o output/`
 3. jco가 `tairitsu-browser:full/*`에서 imports를 가져오는 래퍼 생성
-4. Import map이 `./browser-glue/*` 어댑터로 해석
 
 ## 핸들 시스템
 

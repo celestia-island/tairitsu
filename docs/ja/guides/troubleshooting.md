@@ -56,18 +56,12 @@ Error: Component import "tairitsu-browser:full/document" was not satisfied
 ```
 
 **解決策:**
-1. Import Mapが設定されていることを確認：
-```html
-<script type="importmap">
-{
-  "imports": {
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
-2. browser-glueファイルが出力ディレクトリに存在することを確認。
+- browser-glueファイルが出力ディレクトリに存在することを確認。
 
 ### コンポーネント初期化失敗
 
@@ -173,7 +167,7 @@ opt-level = 'z'
 
 **解決策:**
 1. ハンドラ内で同期操作を避ける
-2. 視覚的更新に `requestAnimationFrame` を使用
+- 視覚的更新に `requestAnimationFrame` を使用
 3. 高速なイベントをデバウンス
 
 ## ヘルプを得る

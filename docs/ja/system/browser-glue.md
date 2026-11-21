@@ -20,7 +20,6 @@ graph LR
         subgraph JCO["browser-glue/ (jco import adapters)"]
             J1["console.js, document.js, element.js, node.js, ..."]
         end
-        NOTE["Import Map: tairitsu-browser:full/* → ./browser-glue/*<br/>jco transpile: generates component wrapper with proper imports"]
     end
     WASM -- "WIT imports" --> BG
     BG --> JCO
@@ -46,7 +45,7 @@ WITインターフェースの自動生成TypeScript実装：
 
 IDEサポートと型チェックのためのTypeScript宣言ファイル。
 
-### インターフェースラッパー (`dist/browser-glue/*.js`)
+### インターフェースラッパー (`dist/glue-esm/*.js`)
 
 jcoトランスパイル済みインポート用の最小アダプターファイル：
 
@@ -61,17 +60,10 @@ jcoトランスパイル済みインポート用の最小アダプターファ�
 
 ## jco統合
 
-### Import Map設定
 
-```html
-<script type="importmap">
-{
-  "imports": {
-    "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/",
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
 ### トランスパイルプロセス
@@ -79,7 +71,6 @@ jcoトランスパイル済みインポート用の最小アダプターファ�
 1. WASMコンポーネントをビルド: `cargo build --target wasm32-wasip2 --lib --release`
 2. jcoでトランスパイル: `jco transpile component.wasm -o output/`
 3. jcoが `tairitsu-browser:full/*` からのインポートを含むラッパーを生成
-4. Import Mapが `./browser-glue/*` アダプターに解決
 
 ## ハンドルシステム
 

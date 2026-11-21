@@ -20,7 +20,6 @@ graph LR
         subgraph JCO["browser-glue/ (adaptadores de importación jco)"]
             J1["console.js, document.js, element.js, node.js, ..."]
         end
-        NOTE["Import Map: tairitsu-browser:full/* → ./browser-glue/*<br/>jco transpile: genera wrapper del componente con imports correctos"]
     end
     WASM -- "WIT imports" --> BG
     BG --> JCO
@@ -46,7 +45,7 @@ Implementaciones TypeScript autogeneradas de interfaces WIT:
 
 Archivos de declaración TypeScript para soporte de IDE y verificación de tipos.
 
-### Wrappers de Interfaces (`dist/browser-glue/*.js`)
+### Wrappers de Interfaces (`dist/glue-esm/*.js`)
 
 Archivos adaptadores mínimos para imports transpilados con jco:
 
@@ -61,17 +60,10 @@ Archivos adaptadores mínimos para imports transpilados con jco:
 
 ## Integración con jco
 
-### Configuración del Import Map
 
-```html
-<script type="importmap">
-{
-  "imports": {
-    "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/",
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
 ### Proceso de Transpilación
@@ -79,7 +71,6 @@ Archivos adaptadores mínimos para imports transpilados con jco:
 1. Compilar componente WASM: `cargo build --target wasm32-wasip2 --lib --release`
 2. Transpilar con jco: `jco transpile component.wasm -o output/`
 3. jco genera wrapper con imports desde `tairitsu-browser:full/*`
-4. El import map resuelve a los adaptadores `./browser-glue/*`
 
 ## Sistema de Handles
 

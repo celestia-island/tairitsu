@@ -7,7 +7,7 @@
 // and nothing could be authorized per instance (§0 B1).
 //
 // The migration keeps the *call sites* unchanged: the glue (and the code
-// `generateModuleCode` emits) still writes `globalThis.__elementHandles.set(…)`,
+// the build-time glue modules) still writes `globalThis.__elementHandles.set(…)`,
 // but those names are now ACCESSOR PROPERTIES that forward to the current
 // instance's own tables. Nothing mutable is stored on `globalThis` any more —
 // it only holds the pointer to the current instance and the instance registry.

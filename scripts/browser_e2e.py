@@ -73,8 +73,13 @@ SCENARIOS = (
 # makes the glue scenario able to catch a wrong/missing interface file — the
 # other scenarios use a glue-less wrapper and cannot.
 GLUE_IMPORT_WRAPPER = """
-import { createElement } from "../glue/document.js";
-import { getStyle } from "../glue/element-css-inline-style.js";
+// The BARE specifiers a fresh jco wrapper carries. The packager rewrites them to
+// `../glue/<name>.js`; this harness applies the same rule (see
+// `rewrite_glue_specifiers`) so the scenario proves the rewrite rather than
+// presupposing its output. The Rust test `glue_specifiers_become_relative_files`
+// pins the packager's own implementation of the same rule.
+import { createElement } from "@tairitsu-glue/document";
+import { getStyle } from "@tairitsu-glue/element-css-inline-style";
 
 const entry = () => {
   globalThis.__w3_entry_ran = true;
@@ -340,6 +345,31 @@ def render_page():
     return page
 
 
+def rewrite_glue_specifiers(source):
+    """`from '@tairitsu-glue/x'` → `from '../glue/x.js'`, versions dropped.
+
+    The packager does this in Rust (`glue_specifier_extension`); the browser lane
+    needs the same transformation to load the real modules, and applying it here
+    (instead of writing the rewritten shape into the fixture) is what makes the
+    `glue-imports` scenario exercise the rewrite.
+    """
+    import re
+
+    rewritten = source.replace("from '@tairitsu-glue/", "from '../glue/").replace(
+        'from "@tairitsu-glue/', 'from "../glue/'
+    )
+    pattern = re.compile(r"""((?:from|import)\s*\(?\s*['\"])(\.\./glue/[A-Za-z0-9._@-]+)(['\"])""")
+
+    def add_extension(match):
+        spec = match.group(2)
+        if spec.endswith(".js"):
+            return match.group(0)
+        without_version = spec.split("@", 1)[0]
+        return f"{match.group(1)}{without_version}.js{match.group(3)}"
+
+    return pattern.sub(add_extension, rewritten)
+
+
 def build_dist(scenario, dest):
     """A dist-shaped tree: the real page, the real loader, a stub component."""
     os.makedirs(os.path.join(dest, "component-wrapper"), exist_ok=True)
@@ -382,10 +412,16 @@ def build_dist(scenario, dest):
         os.path.join(TEMPLATE_DIR, "component-boot.template.js"),
         os.path.join(dest, "component-boot.js"),
     )
+    wrapper_source = WRAPPERS[scenario]
+    if scenario == "glue-imports":
+        rewritten = rewrite_glue_specifiers(wrapper_source)
+        if "@tairitsu-glue/" in rewritten:
+            raise RuntimeError("the glue specifier rewrite left a bare specifier")
+        wrapper_source = rewritten
     with open(
         os.path.join(dest, "component-wrapper", "component.js"), "w", encoding="utf-8"
     ) as fh:
-        fh.write(WRAPPERS[scenario])
+        fh.write(wrapper_source)
     # A placeholder core module: the synthetic wrappers never fetch it, but the
     # page's direct-load fallback checks magic bytes.
     with open(os.path.join(dest, "component.wasm"), "wb") as fh:

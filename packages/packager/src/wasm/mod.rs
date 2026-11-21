@@ -3056,4 +3056,99 @@ mod w1_reproducible_tests {
             "in-tree resolution must be labeled, got: {source}"
         );
     }
+
+    // ── W5: the glue specifier rewrite ─────────────────────────────────────
+    #[test]
+    fn glue_specifiers_become_relative_files() {
+        // The packager rewrites the wrapper's bare specifiers to real modules.
+        let single = "import { createElement } from '@tairitsu-glue/document';";
+        assert_eq!(
+            glue_specifier_extension(&single.replace("@tairitsu-glue/", "../glue/")),
+            "import { createElement } from '../glue/document.js';"
+        );
+
+        let doubled = "import { a } from \"@tairitsu-glue/node\";";
+        assert_eq!(
+            glue_specifier_extension(&doubled.replace("@tairitsu-glue/", "../glue/")),
+            "import { a } from \"../glue/node.js\";"
+        );
+
+        // Idempotent: a specifier that already names the file is left alone.
+        let done = "import { a } from '../glue/node.js';";
+        assert_eq!(glue_specifier_extension(done), done);
+
+        // Versioned specifiers name files that are never emitted; the version is
+        // dropped so the import resolves.
+        let versioned = "import { a } from '../glue/element-css-inline-style@0.2.0';";
+        assert_eq!(
+            glue_specifier_extension(versioned),
+            "import { a } from '../glue/element-css-inline-style.js';"
+        );
+
+        // Several imports on one line all get their extension.
+        let many = "import { a } from '../glue/dom'; import { b } from \"../glue/event\";";
+        let patched = glue_specifier_extension(many);
+        assert!(patched.contains("'../glue/dom.js'"), "got: {patched}");
+        assert!(patched.contains("\"../glue/event.js\""), "got: {patched}");
+    }
+
+    #[test]
+    fn rewrite_wrapper_imports_rewrites_a_real_wrapper_directory() {
+        // Drive the shipped function (not a copy of its regex) over a fixture:
+        // a wrapper that imports the glue by its bare specifier and the WASI
+        // shim by `@bytecodealliance/preview2-shim/`.
+        let dir = std::env::temp_dir().join(format!(
+            "tairitsu-w5-rewrite-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        let wrapper_dir = dir.join("component-wrapper");
+        std::fs::create_dir_all(&wrapper_dir).expect("temp dir");
+        let wrapper = wrapper_dir.join("app.js");
+        std::fs::write(
+            &wrapper,
+            "import { createElement } from '@tairitsu-glue/document';\n\
+             import { getStyle } from \"@tairitsu-glue/element-css-inline-style@0.2.0\";\n\
+             import { io } from '@bytecodealliance/preview2-shim/io';\n",
+        )
+        .expect("write wrapper");
+
+        rewrite_wrapper_imports(&dir).expect("rewrite");
+        let patched = std::fs::read_to_string(&wrapper).expect("read back");
+
+        assert!(
+            patched.contains("from '../glue/document.js'"),
+            "the glue specifier was not rewritten: {patched}"
+        );
+        assert!(
+            patched.contains("from \"../glue/element-css-inline-style.js\""),
+            "the versioned glue specifier was not rewritten: {patched}"
+        );
+        assert!(
+            patched.contains("/wasi-shim/io.js"),
+            "the shim specifier was not rewritten: {patched}"
+        );
+        assert!(
+            !patched.contains("@tairitsu-glue/"),
+            "a bare glue specifier survived: {patched}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn the_glue_esm_directory_is_the_one_the_emitter_writes() {
+        // The packager must read the directory the emitter produces; a rename on
+        // either side would silently copy nothing (or stale output).
+        let emitter = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../browser-glue/scripts/emit-glue-esm.mjs");
+        let source = std::fs::read_to_string(&emitter).expect("emitter source");
+        assert!(
+            source.contains("\"dist\", \"glue-esm\""),
+            "the emitter no longer writes dist/glue-esm"
+        );
+        assert!(
+            !source.contains("\"dist\", \"glue\")"),
+            "the emitter writes swc's npm output directory"
+        );
+    }
 }

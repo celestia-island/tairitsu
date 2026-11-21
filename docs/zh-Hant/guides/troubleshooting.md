@@ -56,18 +56,12 @@ Error: Component import "tairitsu-browser:full/document" was not satisfied
 ```
 
 **解決方案：**
-1. 確保已設定匯入映射：
-```html
-<script type="importmap">
-{
-  "imports": {
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
-2. 確認 browser-glue 檔案存在於輸出目錄中。
+- 確認 browser-glue 檔案存在於輸出目錄中。
 
 ### 元件初始化失敗
 

@@ -56,15 +56,9 @@ Error: Component import "tairitsu-browser:full/document" was not satisfied
 ```
 
 **الحل:**
-1. تأكد من تكوين خريطة الاستيراد:
-```html
-<script type="importmap">
-{
-  "imports": {
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
 2. تحقق من وجود ملفات browser-glue في مجلد الإخراج.
