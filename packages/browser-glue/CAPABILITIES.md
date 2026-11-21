@@ -103,6 +103,40 @@ A page can opt into running the component in a dedicated Worker
   never reports ready, and the page stays in its boot state until the host is
   terminated.
 
+## Mount root (W8)
+
+`<html data-tairitsu-root="<id>">` names a **container** the host owns. The
+component gets its own `#app` shell inside it, so the host's children are never
+touched: the guest clears its shell on entry, and a host's content must not be
+in the way of that.
+
+* the host container keeps all its attributes and children. If the container
+  already holds an `#app` (server-rendered host content), that node keeps its
+  children and its other attributes but **loses its id**: the guest mounts by
+  `#app`, so the id moves to the shell the boot creates for it;
+* the host container must not **be** `#app`, and the page must not keep a
+  page-level `#app` outside it — either would mean the guest clears (or renders
+  away from) something the host owns. Both are refused with
+  `data-tairitsu-error="mount-root-conflict"`;
+* a name that matches no element fails closed with
+  `data-tairitsu-error="mount-root-missing"` — the host named it, so it must
+  exist;
+* without the attribute the page keeps its old shape: a page-level `#app`,
+  created if the page has none, and the old clear semantics;
+* the failure card never replaces a host container's children (it writes into the
+  guest shell, or not at all when a mount error prevented one);
+* the worker lane (W7) has no DOM, so `data-tairitsu-root` does not apply there
+  (it is not even resolved: a DOM conflict must not refuse a worker-only boot).
+
+**What this does not solve, on purpose.** A page whose own root IS `#app` cannot
+hand that element to the component: the guest clears what it mounts into, so the
+host's content would go. Whether host content may be cleared is the **host's**
+decision, never the guest's — the host renames its root or wraps a dedicated
+container around it, and that container is what `data-tairitsu-root` names. For
+the chest integration (stage 5) that means: point `data-tairitsu-root` at a
+dedicated div inside chest, rather than letting a component mount into chest's
+own `#app`.
+
 ## Not in this cut
 
 * **W4 residue ①** — the `elementReverse` reverse index keeps a page-level store

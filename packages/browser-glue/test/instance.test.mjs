@@ -739,6 +739,39 @@ test("the worker lane exists and terminate is the hard kill (W7 pin)", async () 
   assert.match(host, /kind: "capability-denied"/, "the refusal is not a capability failure");
 });
 
+test("the mount root is a host container, and the default path is unchanged (W8 pin)", async () => {
+  const boot = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");
+  assert.match(boot, /tairitsuRoot/, "no host mount-root channel");
+  // A host container is refused when it IS the shell, or when a page-level #app
+  // lives elsewhere: the guest clears whatever it mounts into.
+  assert.match(boot, /mount-root-conflict/, "the shell/container conflict is not refused");
+  // A named root that does not exist fails closed with its own kind.
+  assert.match(boot, /mount-root-missing/, "a missing named root is not refused");
+  // The container is never adopted as the mount point: a shell is created in it.
+  assert.match(
+    boot,
+    /container\.appendChild\(shell\)/,
+    "no shell is created inside the host container",
+  );
+  assert.match(
+    boot,
+    /fallback = document\.createElement\('div'\)/,
+    "the default path no longer creates #app",
+  );
+  // The card must not replace a host container's children.
+  assert.match(
+    boot,
+    /const cardTarget = mountState\.shellOwned === true \? appRoot : null;/,
+    "the failure card can write where the host owns the element",
+  );
+  // The message sink is innerHTML: the host's own text must be escaped.
+  assert.match(boot, /replace\(\/&\/g, '&amp;'\)/, "the card does not escape its message");
+  // The two refusals and the kind preservation are behaviour-tested by the
+  // browser lane (`mount-conflict-shell` / `mount-conflict-page` /
+  // `mount-missing`); these assert the shapes still exist for it to hit.
+  assert.match(boot, /kind: mount\.kind|kind: topErr\.kind|reported: true/, "no refusal kind");
+});
+
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {
   // The tables must be accessors whose storage is the instance, not data
   // properties holding Maps. A regression to `globalThis.__elementHandles =
