@@ -190,7 +190,9 @@ jobs:
     # Publishing is secretless (hikari npm-release pattern): the job's
     # short-lived OIDC identity is exchanged with npmjs against the
     # trusted-publisher binding on each package page (repo
-    # celestia-island/tairitsu + workflow publish.yml). No static
+    # celestia-island/tairitsu + workflow npm-release.yml — npm matches the
+    # workflow FILENAME exactly, so a binding created against the old
+    # publish.yml name is rejected). No static
     # publish token exists anymore — npmjs deprecated fixed tokens.
     name: Publish npm packages
     runs-on: ubuntu-latest
