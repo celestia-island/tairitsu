@@ -19,11 +19,17 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist",
+    "pretest": "npm run build",
+    "prepublishOnly": "npm run build",
     "test": "node --experimental-strip-types --test \"test/**/*.test.mjs\""
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/celestia-island/tairitsu.git",
     "directory": "packages/npm/tairitsu-host-client"
+  },
+  "devDependencies": {
+    "typescript": "^5.9"
   }
 }
