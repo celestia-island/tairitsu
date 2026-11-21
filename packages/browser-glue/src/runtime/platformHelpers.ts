@@ -1,26 +1,4 @@
-// State stored on globalThis so that when generateModuleCode() stringifies
-// these functions into a blob module, the state is still accessible.
-// (Blob modules have their own scope — closure variables from this file are
-// invisible inside the blob.)
-if (!globalThis.__tairitsuTimerState) {
-  globalThis.__tairitsuTimerState = {
-    timeoutCallbacks: new Map(),
-    intervalCallbacks: new Map(),
-    nextTimeoutId: 1,
-  };
-}
-if (!globalThis.__tairitsuAnimState) {
-  globalThis.__tairitsuAnimState = {
-    animationCallbacks: new Map(),
-    nextAnimationId: 1,
-  };
-}
 
-if (!globalThis.__tairitsuWsState) {
-  globalThis.__tairitsuWsState = {
-    nextCallbackId: 1n,
-  };
-}
 
 export const platformHelpers_exports = {
   innerWidth() {
@@ -30,7 +8,7 @@ export const platformHelpers_exports = {
     return window.innerHeight;
   },
   setTimeout(callbackId: bigint, ms: number) {
-    const s = globalThis.__tairitsuTimerState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.timerState;
     const id = s.nextTimeoutId++;
     const timeoutId = window.setTimeout(() => {
       if (
@@ -39,22 +17,23 @@ export const platformHelpers_exports = {
       ) {
         const exp = globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"];
         (exp.onTimeout || exp.on_timeout)?.(callbackId);
-    // W4: owned by the instance, cleared on dispose.
-    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.timers.add(timeoutId);
       }
     }, ms);
+    // W4: registered at creation (not when it fires), so a PENDING timer is
+    // reclaimed by dispose and is never attributed to the wrong instance.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.timers.add(timeoutId);
     s.timeoutCallbacks.set(id, timeoutId);
     return id;
   },
   clearTimeout(id: number) {
-    const s = globalThis.__tairitsuTimerState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.timerState;
     if (s.timeoutCallbacks.has(id)) {
       window.clearTimeout(s.timeoutCallbacks.get(id));
       s.timeoutCallbacks.delete(id);
     }
   },
   setInterval(callbackId: bigint, ms: number) {
-    const s = globalThis.__tairitsuTimerState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.timerState;
     const id = s.nextTimeoutId++;
     const intervalId = window.setInterval(() => {
       if (
@@ -63,22 +42,21 @@ export const platformHelpers_exports = {
       ) {
         const exp = globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"];
         (exp.onInterval || exp.on_interval)?.(callbackId);
-    // W4: owned by the instance, cleared on dispose.
-    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.intervals.add(intervalId);
       }
     }, ms);
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.intervals.add(intervalId);
     s.intervalCallbacks.set(id, intervalId);
     return id;
   },
   clearInterval(id: number) {
-    const s = globalThis.__tairitsuTimerState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.timerState;
     if (s.intervalCallbacks.has(id)) {
       window.clearInterval(s.intervalCallbacks.get(id));
       s.intervalCallbacks.delete(id);
     }
   },
   requestAnimationFrame(callbackId: bigint) {
-    const s = globalThis.__tairitsuAnimState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.animState;
     const id = s.nextAnimationId++;
     const animationId = window.requestAnimationFrame((timestamp) => {
       if (
@@ -93,7 +71,7 @@ export const platformHelpers_exports = {
     return id;
   },
   cancelAnimationFrame(id: number) {
-    const s = (globalThis as any).__tairitsuAnimState; // ts-escape-ok: retires with L40
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.animState;
     if (s.animationCallbacks.has(id)) {
       window.cancelAnimationFrame(s.animationCallbacks.get(id) as number);
       s.animationCallbacks.delete(id);
@@ -886,7 +864,7 @@ export const platformHelpers_exports = {
     const ws = new WebSocket(url);
     const handle = globalThis.__storeElement(ws);
 
-    const s = globalThis.__tairitsuWsState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.wsState;
     const openCbId = s.nextCallbackId++;
     const msgCbId = s.nextCallbackId++;
     const closeCbId = s.nextCallbackId++;

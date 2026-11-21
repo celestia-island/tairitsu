@@ -34,11 +34,16 @@ export interface InstanceTables {
   // Page-global indexes that hand handles between instances if they stay
   // shared: the element→handle reverse index and the (element,type)→listener
   // cache used by the dispatch bridge.
-  elementReverseMap: Map<unknown, unknown>;
+  elementReverseMap: Map<unknown, unknown> | undefined;
   listenerByElement: Map<unknown, unknown>;
   tairitsuResizeListeners: Map<bigint, unknown>;
   tairitsuWsCallbacks: Map<bigint, unknown>;
   subEventHandles: WeakMap<object, bigint>;
+  // Timer / animation / websocket state bags: their ids are handed to the guest,
+  // so a shared bag lets one instance cancel another's timer.
+  timerState: { timeoutCallbacks: Map<number, unknown>; intervalCallbacks: Map<number, unknown>; nextTimeoutId: number };
+  animState: { animationCallbacks: Map<number, unknown>; nextAnimationId: number };
+  wsState: { nextCallbackId: number };
   eventHandles: Map<bigint, unknown>;
   dispatchingEvents: Set<string>;
 }
@@ -73,11 +78,14 @@ export class TairitsuInstance {
     cssStyleDeclarationHandles: new Map(),
     listenerHandles: new Map(),
     tairitsuScrollListeners: new Map(),
-    elementReverseMap: new Map(),
+    elementReverseMap: undefined as unknown as Map<unknown, unknown>,
     listenerByElement: new Map(),
     tairitsuResizeListeners: new Map(),
     tairitsuWsCallbacks: new Map(),
     subEventHandles: new WeakMap(),
+    timerState: { timeoutCallbacks: new Map(), intervalCallbacks: new Map(), nextTimeoutId: 1 },
+    animState: { animationCallbacks: new Map(), nextAnimationId: 1 },
+    wsState: { nextCallbackId: 1 },
     eventHandles: new Map(),
     dispatchingEvents: new Set(),
   };
@@ -117,8 +125,9 @@ export class TairitsuInstance {
     this.disposed = true;
 
     for (const table of Object.values(this.tables)) {
-      // WeakMaps cannot be cleared; dropping the instance drops them.
-      if (typeof (table as { clear?: () => void }).clear === "function") {
+      // WeakMaps cannot be cleared and a lazy table may be absent yet; the
+      // instance itself is dropped, so skipping both is the right reclaim.
+      if (table && typeof (table as { clear?: () => void }).clear === "function") {
         (table as { clear: () => void }).clear();
       }
     }
@@ -259,7 +268,17 @@ function defineDelegate(name: string, read: () => unknown, write: (value: unknow
  * Install the compat accessors. Idempotent; called by the modules that used to
  * create the tables (`handles.ts`, `eventTarget.ts`).
  */
+/**
+ * Blob-safe handle to the current instance. `generateModuleCode` stringifies
+ * function bodies into a separate module, where module-scope bindings do not
+ * exist — those bodies must reach the instance through `globalThis`.
+ */
+export function installCurrentAccessor(): void {
+  (globalThis as any).__TAIRITSU_CURRENT__ = () => currentInstance(); // ts-escape-ok: retires with L40
+}
+
 export function installGlobalDelegates(): void {
+  installCurrentAccessor();
   for (const name of TABLE_NAMES) {
     defineDelegate(
       name,
@@ -288,15 +307,6 @@ export function installGlobalDelegates(): void {
  * Public API for the page / the browser e2e: create, inspect and dispose
  * instances. The W4 isolation test drives exactly these.
  */
-/**
- * Blob-safe handle to the current instance. `generateModuleCode` stringifies
- * function bodies into a separate module, where module-scope bindings do not
- * exist — those bodies must reach the instance through `globalThis`.
- */
-export function installCurrentAccessor(): void {
-  (globalThis as any).__TAIRITSU_CURRENT__ = () => currentInstance(); // ts-escape-ok: retires with L40
-}
-
 export function installInstanceApi(): void {
   installCurrentAccessor();
   (globalThis as any).__TAIRITSU_INSTANCES__ = { // ts-escape-ok: retires with L40

@@ -668,11 +668,7 @@ export function atob(self: bigint, data: string): string {
  */
 export function setTimeout(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
-  const id = obj.setTimeout(handler, timeout, _arguments);
-  // W4: a timer belongs to the instance that created it; dispose() clears it
-  // so a destroyed component cannot keep firing.
-  (globalThis as any).__TAIRITSU_INSTANCES__?.current().reclaimables.timers.add(id); // ts-escape-ok: retires with L40
-  return id;
+  return obj.setTimeout(handler, timeout, _arguments);
 }
 
 /**
@@ -688,9 +684,7 @@ export function clearTimeout(self: bigint, id: number | undefined): void {
  */
 export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
-  const id = obj.setInterval(handler, timeout, _arguments);
-  (globalThis as any).__TAIRITSU_INSTANCES__?.current().reclaimables.intervals.add(id); // ts-escape-ok: retires with L40
-  return id;
+  return obj.setInterval(handler, timeout, _arguments);
 }
 
 /**

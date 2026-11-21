@@ -237,12 +237,14 @@ test("every delegate name maps to a real table (the scroll regression)", async (
       "__eventHandles",
       "__dispatchingEvents",
       "__tairitsuScrollListeners",
-      "__elementReverseMap",
       "__listenerByElement",
       "__tairitsuResizeListeners",
       "__tairitsuWsCallbacks",
       "__subEventHandles",
     ];
+    // `__elementReverseMap` is deliberately absent until the reverse index is
+    // built (an eager empty Map would make its builder early-return), so it is
+    // checked below rather than here.
     for (const name of names) {
       const value = globalThis[name];
       assert.ok(
@@ -268,6 +270,40 @@ test("every delegate name maps to a real table (the scroll regression)", async (
     globalThis.window = originalWindow;
     setCurrentInstance(previous);
   }
+});
+
+test("withInstance restores the previous instance even when the call throws", () => {
+  const a = createInstance();
+  const b = createInstance();
+  setCurrentInstance(a);
+  assert.throws(() =>
+    withInstance(b, () => {
+      assert.equal(currentInstance(), b);
+      throw new Error("boom");
+    }),
+  );
+  assert.equal(currentInstance(), a, "the previous instance was not restored");
+  setCurrentInstance(null);
+  disposeInstance(a);
+  disposeInstance(b);
+});
+
+test("disposing the current instance clears the pointer, and counters reset to the seed", () => {
+  const instance = createInstance();
+  setCurrentInstance(instance);
+  const before = instance.counters.nextHandle;
+  store(instance, "x");
+  assert.ok(instance.counters.nextHandle > before);
+  disposeInstance(instance);
+  assert.equal(globalThis.__TAIRITSU_INSTANCES__.list().includes(instance), false);
+  assert.equal(currentInstance() === instance, false, "the disposed instance stayed current");
+  assert.equal(instance.counters.nextHandle, instance.seed, "the counter did not reset to the seed");
+});
+
+test("the boot template disposes its instance on a failed boot (source pin)", async () => {
+  const page = await readFile(resolve(here, "../../packager/src/wasm/index.html.template"), "utf8");
+  assert.match(page, /instanceApi\.dispose\(bootInstance\)/, "a failed boot no longer reclaims");
+  assert.match(page, /instanceApi\.create\(\)/, "the boot no longer creates an instance");
 });
 
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {
