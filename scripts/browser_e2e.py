@@ -138,6 +138,15 @@ def evaluate(base, expression):
     return data.get("result") if isinstance(data, dict) else data
 
 
+def _free_port():
+    """An unused loopback port (the process that binds it is a child anyway)."""
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
 def wait_healthy(base, timeout):
     deadline = time.time() + timeout
     last = None
@@ -358,7 +367,14 @@ def main():
         default=os.environ.get("SHIRABE_BIN", "shirabe"),
         help="shirabe binary (default: $SHIRABE_BIN or PATH lookup)",
     )
-    ap.add_argument("--port", type=int, default=3919)
+    ap.add_argument(
+        "--port",
+        type=int,
+        default=0,
+        help="shirabe debug port (default 0 = pick a free one; a fixed port can "
+        "collide with a stale or another agent's instance, and then this script "
+        "talks to that browser instead of its own)",
+    )
     ap.add_argument(
         "--scenario",
         choices=SCENARIOS,
@@ -400,11 +416,19 @@ def main():
     if args.self_check:
         return self_check()
 
-    base = f"http://127.0.0.1:{args.port}"
+    port = args.port or _free_port()
+    base = f"http://127.0.0.1:{port}"
+    # shirabe enforces a MACHINE-WIDE tab cap (SHIRABE_MAX_TABS, default 3) and
+    # reuses one browser, so a run collides with any other agent/reviewer using
+    # it ("tab cap reached (3/3)"). Raise the cap for this harness instead of
+    # closing somebody else's tabs; the instance is torn down below.
+    env = dict(os.environ)
+    env.setdefault("SHIRABE_MAX_TABS", "8")
     proc = subprocess.Popen(
-        [args.shirabe_bin, "debug", "--port", str(args.port)],
+        [args.shirabe_bin, "debug", "--port", str(port)],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        env=env,
     )
     failures = []
     tmp_root = None
@@ -465,6 +489,11 @@ def main():
                     fh.write(base64.b64decode(raw))
                 print(f"screenshot -> {args.screenshot}")
     finally:
+        try:
+            # Leave no tab behind on an instance that outlives this run.
+            call(base, "/browser/close", {})
+        except Exception:  # noqa: BLE001 - best effort teardown
+            pass
         if server is not None:
             server.shutdown()
             server.server_close()
