@@ -9,23 +9,99 @@ API. Add scenarios here rather than growing a second CDP implementation.
 
 Requires `shirabe` on PATH (or --shirabe-bin / SHIRABE_BIN), e.g.
 `cargo install --git https://github.com/celestia-island/shirabe shirabe`
-or `npm i -g @celestia-island/shirabe`.
+or `npm i -g @celestia-island/shirabe`, plus a Chromium binary shirabe can
+resolve. That is why this lane is not part of `just ci`; the browser-free
+half of the same contract lives in `just packager-js-test`
+(`packages/packager/test/`).
+
+W3 (fail-closed boot): the DEFAULT scenario now loads a real compone      # noqa: E501
+page — the packaged `index.html` (built from `index.html.template`), the
+real wrapper loader and the real boot runtime — and asserts the whole
+lifecycle: the component instantiates, its entry runs, and only then does
+`data-tairitsu-ready` appear. Three negative controls load components that
+must fail closed (corrupted bytes, no boot entry, a missing import): each
+must show the error surface and must NOT report ready.
+
+Scenarios:
+  component            good synthetic component -> ready + entry ran
+  bad-bytes            instantiate throws       -> error, not ready
+  missing-entry        no boot export           -> error, not ready
+  missing-import       instantiate throws on a missing import -> error, not ready
+  fixture              legacy selector smoke (fast, no component)
 
 Examples:
   python3 scripts/browser_e2e.py
-  python3 scripts/browser_e2e.py --url http://127.0.0.1:8080 --expect "#app"
-  python3 scripts/browser_e2e.py --screenshot /mnt/work/e2e.png
+  python3 scripts/browser_e2e.py --scenario bad-bytes
+  python3 scripts/browser_e2e.py --dist target/tairitsu-dist --scenario component
+  python3 scripts/browser_e2e.py --scenario fixture --expect "#app"
 """
 
 import argparse
 import base64
+import functools
+import http.server
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
+import threading
 import time
 import urllib.error
 import urllib.request
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMPLATE_DIR = os.path.join(REPO_ROOT, "packages", "packager", "src", "wasm")
+
+SCENARIOS = ("component", "bad-bytes", "missing-entry", "missing-import", "fixture")
+
+# The entry the good synthetic component exports: it records that it ran and
+# mutates the page, so "the entry was invoked" is observable from the DOM.
+GOOD_WRAPPER = """
+export async function instantiate(imports) {
+  const result = {
+    tairitsu_component_bootstrap() {
+      globalThis.__w3_entry_ran = true;
+      const app = document.getElementById('app');
+      if (app) app.textContent = 'component booted';
+    },
+  };
+  return result;
+}
+"""
+
+# A component that cannot be instantiated: the loader must surface this, not
+# swallow it and present a ready page.
+BAD_BYTES_WRAPPER = """
+export async function instantiate(imports) {
+  throw new Error('core module is not a valid WebAssembly binary');
+}
+"""
+
+# A component that instantiates but exposes no boot entry at all.
+MISSING_ENTRY_WRAPPER = """
+export async function instantiate(imports) {
+  return { notAnEntry() {} };
+}
+"""
+
+# A component that reaches for an import the page does not provide.
+MISSING_IMPORT_WRAPPER = """
+export async function instantiate(imports) {
+  const need = imports['wasi:cli/does-not-exist@0.2.0'];
+  return need.run();
+}
+"""
+
+WRAPPERS = {
+    "component": GOOD_WRAPPER,
+    "bad-bytes": BAD_BYTES_WRAPPER,
+    "missing-entry": MISSING_ENTRY_WRAPPER,
+    "missing-import": MISSING_IMPORT_WRAPPER,
+}
+
+FAILING = ("bad-bytes", "missing-entry", "missing-import")
 
 
 def call(base, path, body=None):
@@ -56,6 +132,12 @@ def call(base, path, body=None):
     return envelope
 
 
+def evaluate(base, expression):
+    """Evaluate in the page and return the JSON result."""
+    data = call(base, "/evaluate", {"expression": expression})
+    return data.get("result") if isinstance(data, dict) else data
+
+
 def wait_healthy(base, timeout):
     deadline = time.time() + timeout
     last = None
@@ -73,6 +155,201 @@ DEFAULT_FIXTURE = (
     '<div id="app" data-glue="ok">tairitsu browser-glue fixture</div>'
 )
 
+# The page's own placeholders (a subset of the packager's Tera context: only
+# the ones that matter for a browser-loadable page).
+PAGE_CONTEXT = {
+    "charset": "utf-8",
+    "lang": "en",
+    "viewport": "width=device-width, initial-scale=1",
+    "title": "tairitsu boot e2e",
+    "body_class": "",
+    "head": "",
+    "favicon": "",
+    "glue_bundle": "/glue-stub.js",
+    "wasm_file": "component.wasm",
+    "v": "e2e",
+}
+
+# Minimal glue bundle: the page probes these globals for its import map. The
+# synthetic components do not need real glue; a stub keeps the page's
+# `buildImports` green so the failures under test come from the component.
+GLUE_STUB = """
+globalThis.__TAIRITSU_GLUE__ = { INTERFACES: {} };
+"""
+
+
+def render_page():
+    """Render `index.html.template` with the e2e context."""
+    with open(os.path.join(TEMPLATE_DIR, "index.html.template"), encoding="utf-8") as fh:
+        page = fh.read()
+    for key, value in PAGE_CONTEXT.items():
+        page = page.replace("{{ " + key + " }}", value)
+        page = page.replace("{{" + key + "}}", value)
+    for leftover in ("{{ head | safe }}", "{{ favicon | safe }}"):
+        page = page.replace(leftover, "")
+    if "{{" in page:
+        raise RuntimeError("index.html.template still carries a placeholder: " + page[page.index("{{") : page.index("{{") + 40])
+    return page
+
+
+def build_dist(scenario, dest):
+    """A dist-shaped tree: the real page, the real loader, a stub component."""
+    os.makedirs(os.path.join(dest, "component-wrapper"), exist_ok=True)
+    with open(os.path.join(dest, "index.html"), "w", encoding="utf-8") as fh:
+        fh.write(render_page())
+    with open(os.path.join(dest, "glue-stub.js"), "w", encoding="utf-8") as fh:
+        fh.write(GLUE_STUB)
+
+    loader_src = os.path.join(TEMPLATE_DIR, "component-wrapper-loader.template.js")
+    with open(loader_src, encoding="utf-8") as fh:
+        loader = fh.read()
+    # The dist's wasm stem is `component` (see PAGE_CONTEXT["wasm_file"]).
+    loader = loader.replace("__WASM_STEM__", "component")
+    with open(os.path.join(dest, "component-wrapper-loader.js"), "w", encoding="utf-8") as fh:
+        fh.write(loader)
+    shutil.copyfile(
+        os.path.join(TEMPLATE_DIR, "component-boot.template.js"),
+        os.path.join(dest, "component-boot.js"),
+    )
+    with open(
+        os.path.join(dest, "component-wrapper", "component.js"), "w", encoding="utf-8"
+    ) as fh:
+        fh.write(WRAPPERS[scenario])
+    # A placeholder core module: the synthetic wrappers never fetch it, but the
+    # page's direct-load fallback checks magic bytes.
+    with open(os.path.join(dest, "component.wasm"), "wb") as fh:
+        fh.write(b"\x00asm\x0d\x00\x01\x00" + b"\x00" * 16)
+
+
+class _QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *_args):  # noqa: D401 - silence the per-request log
+        return
+
+
+def serve(directory):
+    """Serve `directory` on an ephemeral port; returns (server, thread, url)."""
+    handler = functools.partial(_QuietHandler, directory=directory)
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    port = server.server_address[1]
+    return server, thread, f"http://127.0.0.1:{port}"
+
+
+def check_boot_state(state, scenario):
+    """The W3 assertions over ONE observed page state (pure: no browser).
+
+    `state` = {ready, error, entryRan, appText}. Split out so `--self-check`
+    can prove the assertions still bite (a control that cannot fail is not a
+    control).
+    """
+    failures = []
+    if not isinstance(state, dict):
+        return [f"page state unreadable: {state!r}"]
+
+    if scenario in FAILING:
+        if state.get("ready") is not None:
+            failures.append(f"failed component reported ready ({state['ready']!r})")
+        if not state.get("error"):
+            failures.append("failed component set no data-tairitsu-error")
+        if state.get("entryRan"):
+            failures.append("failed component ran an entry")
+        if "Tairitsu boot error" not in (state.get("appText") or ""):
+            failures.append("no visible error card in #app")
+    else:
+        if state.get("ready") != "hydrated":
+            failures.append(f"good component not ready (ready={state.get('ready')!r})")
+        if state.get("error"):
+            failures.append(f"good component reported an error ({state['error']!r})")
+        if not state.get("entryRan"):
+            failures.append("the component's boot entry never ran")
+        if "component booted" not in (state.get("appText") or ""):
+            failures.append("#app was not updated by the component")
+    return failures
+
+
+def assert_boot_contract(base, scenario):
+    """Observe the live page, then apply the W3 assertions."""
+    state = evaluate(
+        base,
+        """(() => {
+            const root = document.documentElement;
+            return {
+                ready: root.dataset.tairitsuReady || null,
+                error: root.dataset.tairitsuError || null,
+                entryRan: globalThis.__w3_entry_ran === true,
+                appText: (document.getElementById('app') || {}).textContent || '',
+                bodyText: document.body ? document.body.innerText : '',
+            };
+        })()""",
+    )
+    return check_boot_state(state, scenario)
+
+
+GOOD_STATE = {
+    "ready": "hydrated",
+    "error": None,
+    "entryRan": True,
+    "appText": "component booted",
+}
+BAD_STATE = {
+    "ready": None,
+    "error": "no-entry",
+    "entryRan": False,
+    "appText": "Tairitsu boot error",
+}
+
+
+def self_check():
+    """Offline: the negative controls must be able to fail, and must be present.
+
+    This is the browser-free half of G2-W3 ①/③: if a control is deleted, or if
+    the assertions stop catching a wrongly-ready page, this goes red — without
+    needing shirabe or a Chromium binary (so it belongs in `just ci`).
+    """
+    failures = []
+
+    expected_controls = {"bad-bytes", "missing-entry", "missing-import"}
+    present = expected_controls & set(FAILING)
+    missing = expected_controls - present
+    if missing:
+        failures.append(f"negative controls missing: {sorted(missing)}")
+    for scenario in sorted(present):
+        if scenario not in WRAPPERS:
+            failures.append(f"control {scenario} has no component under test")
+        # A control that cannot fail is not a control: the same scenario with a
+        # page that wrongly reports ready MUST produce failures.
+        if not check_boot_state(GOOD_STATE, scenario):
+            failures.append(f"control {scenario} would pass a page that is wrongly ready")
+        if not check_boot_state(dict(BAD_STATE, error=None), scenario):
+            failures.append(f"control {scenario} would pass a page with no error attribute")
+        if not check_boot_state(dict(BAD_STATE, appText=""), scenario):
+            failures.append(f"control {scenario} would pass a page with no visible error")
+        # ... and the honest failure state must pass it.
+        if check_boot_state(BAD_STATE, scenario):
+            failures.append(f"control {scenario} rejects a correct error page")
+
+    # The good-component assertions must bite in both directions too.
+    if check_boot_state(GOOD_STATE, "component"):
+        failures.append("the good scenario rejects a healthy page")
+    if not check_boot_state(dict(GOOD_STATE, ready=None), "component"):
+        failures.append("the good scenario accepts a page that never became ready")
+    if not check_boot_state(dict(GOOD_STATE, entryRan=False), "component"):
+        failures.append("the good scenario accepts a page whose entry never ran")
+    if not check_boot_state(dict(GOOD_STATE, error="entry-failed"), "component"):
+        failures.append("the good scenario accepts a page carrying an error")
+
+    if failures:
+        for line in failures:
+            print(f"FAIL: {line}", file=sys.stderr)
+        return 1
+    print(
+        "OK: browser-e2e self-check passed "
+        f"({len(expected_controls & set(FAILING))} negative controls bite, "
+        "good-component assertions bite both ways)"
+    )
+    return 0
+
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
@@ -83,20 +360,45 @@ def main():
     )
     ap.add_argument("--port", type=int, default=3919)
     ap.add_argument(
+        "--scenario",
+        choices=SCENARIOS,
+        default="component",
+        help="component (real lifecycle, default) or one of the negative controls",
+    )
+    ap.add_argument(
+        "--dist",
+        default=None,
+        help="serve an already-built dist (e.g. from `tairitsu build`) instead of "
+        "the synthetic one; the boot contract is asserted the same way",
+    )
+    ap.add_argument(
         "--url",
-        default="about:blank",
-        help="page to load; about:blank injects the built-in fixture",
+        default=None,
+        help="page to load; only meaningful with --scenario fixture",
     )
     ap.add_argument(
         "--expect",
         action="append",
         default=[],
         metavar="SELECTOR",
-        help="CSS selector that must match (repeatable)",
+        help="fixture mode: CSS selector that must match (repeatable)",
     )
-    ap.add_argument("--expect-text", default=None, help="text that must appear in body text")
+    ap.add_argument("--expect-text", default=None, help="fixture mode: text that must appear")
     ap.add_argument("--screenshot", default=None, help="save a PNG screenshot here")
+    ap.add_argument(
+        "--only-fail",
+        action="store_true",
+        help="run the negative controls and skip the good component",
+    )
+    ap.add_argument(
+        "--self-check",
+        action="store_true",
+        help="offline: prove the negative controls can fail (no browser needed)",
+    )
     args = ap.parse_args()
+
+    if args.self_check:
+        return self_check()
 
     base = f"http://127.0.0.1:{args.port}"
     proc = subprocess.Popen(
@@ -105,36 +407,54 @@ def main():
         stderr=subprocess.DEVNULL,
     )
     failures = []
+    tmp_root = None
+    server = None
     try:
         wait_healthy(base, 60)
-        call(base, "/navigate", {"url": args.url})
-        if args.url == "about:blank":
-            call(
-                base,
-                "/evaluate",
-                {
-                    "expression": "document.body.innerHTML = %s; 'fixture'"
-                    % json.dumps(DEFAULT_FIXTURE)
-                },
-            )
-        for selector in args.expect or (["#app"] if args.url == "about:blank" else []):
-            data = call(
-                base,
-                "/evaluate",
-                {"expression": f"document.querySelector({json.dumps(selector)}) !== null"},
-            )
-            ok = data.get("result") if isinstance(data, dict) else data
-            if ok is not True:
-                failures.append(f"selector not found: {selector}")
-        if args.expect_text:
-            data = call(
-                base,
-                "/evaluate",
-                {"expression": f"document.body.innerText.includes({json.dumps(args.expect_text)})"},
-            )
-            ok = data.get("result") if isinstance(data, dict) else data
-            if ok is not True:
-                failures.append(f"text not found: {args.expect_text!r}")
+
+        if args.scenario == "fixture":
+            url = args.url or "about:blank"
+            call(base, "/navigate", {"url": url})
+            if url == "about:blank":
+                call(
+                    base,
+                    "/evaluate",
+                    {
+                        "expression": "document.body.innerHTML = %s; 'fixture'"
+                        % json.dumps(DEFAULT_FIXTURE)
+                    },
+                )
+            selectors = args.expect or (["#app"] if url == "about:blank" else [])
+            for selector in selectors:
+                ok = evaluate(base, f"document.querySelector({json.dumps(selector)}) !== null")
+                if ok is not True:
+                    failures.append(f"selector not found: {selector}")
+            if args.expect_text:
+                ok = evaluate(
+                    base, f"document.body.innerText.includes({json.dumps(args.expect_text)})"
+                )
+                if ok is not True:
+                    failures.append(f"text not found: {args.expect_text!r}")
+        else:
+            if args.dist:
+                dist = args.dist
+                if not os.path.isfile(os.path.join(dist, "index.html")):
+                    raise RuntimeError(f"--dist {dist} has no index.html")
+            else:
+                tmp_root = tempfile.mkdtemp(prefix="tairitsu-w3-e2e-")
+                dist = os.path.join(tmp_root, "dist")
+                build_dist(args.scenario, dist)
+            server, _thread, url = serve(dist)
+            call(base, "/navigate", {"url": url + "/index.html"})
+            # The page boots asynchronously (styles + lifecycle); poll briefly.
+            deadline = time.time() + 20
+            while time.time() < deadline:
+                ready = evaluate(base, "!!(document.documentElement.dataset.tairitsuReady || document.documentElement.dataset.tairitsuError)")
+                if ready is True:
+                    break
+                time.sleep(0.1)
+            failures.extend(assert_boot_contract(base, args.scenario))
+
         if args.screenshot:
             data = call(base, "/screenshot", {})
             raw = data.get("data") if isinstance(data, dict) else None
@@ -145,6 +465,11 @@ def main():
                     fh.write(base64.b64decode(raw))
                 print(f"screenshot -> {args.screenshot}")
     finally:
+        if server is not None:
+            server.shutdown()
+            server.server_close()
+        if tmp_root is not None:
+            shutil.rmtree(tmp_root, ignore_errors=True)
         proc.terminate()
         try:
             proc.wait(timeout=10)
@@ -154,7 +479,7 @@ def main():
     if failures:
         print("FAIL:", "; ".join(failures), file=sys.stderr)
         return 1
-    print("OK: browser-glue e2e passed")
+    print(f"OK: boot e2e passed (scenario={args.scenario})")
     return 0
 
 

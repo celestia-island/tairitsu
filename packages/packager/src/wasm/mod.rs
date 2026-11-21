@@ -1137,6 +1137,12 @@ fn write_component_wrapper_loader(
 
     let loader_path = output_dir.join("component-wrapper-loader.js");
     std::fs::write(loader_path, loader)?;
+
+    // W3: the boot lifecycle (entry resolution, ready/error gating) lives in
+    // its own module so the page stays a thin adapter and so tests can drive
+    // it without a browser.
+    let boot_path = output_dir.join("component-boot.js");
+    std::fs::write(boot_path, COMPONENT_BOOT_TEMPLATE)?;
     Ok(())
 }
 
@@ -1155,6 +1161,10 @@ const WRAPPER_CACHE_KEY_VERSION: &[u8] = b"w1";
 /// the cache key makes template edits invalidate cached wrappers
 /// automatically (no manual bump needed for that file).
 const WRAPPER_LOADER_TEMPLATE: &str = include_str!("component-wrapper-loader.template.js");
+
+/// W3 boot runtime. Same contract as the loader template: part of the wrapper
+/// pipeline, hashed into the cache key so an edit invalidates cached wrappers.
+const COMPONENT_BOOT_TEMPLATE: &str = include_str!("component-boot.template.js");
 
 /// SHA-256 of the wasm file's bytes, lower-case hex.
 fn wasm_content_hash(path: &std::path::Path) -> crate::Result<String> {
@@ -1248,6 +1258,7 @@ fn wrapper_cache_key(wasm_hash: &str, jco_id: &str) -> String {
     hasher.update(b"tairitsu-component-wrapper");
     hasher.update(WRAPPER_CACHE_KEY_VERSION);
     hasher.update(WRAPPER_LOADER_TEMPLATE.as_bytes());
+    hasher.update(COMPONENT_BOOT_TEMPLATE.as_bytes());
     hasher.update(wasm_hash.as_bytes());
     hasher.update(jco_id.as_bytes());
     let digest = hasher.finalize();

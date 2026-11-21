@@ -241,7 +241,7 @@ fmt:
     python3 scripts/enforce_use_groups.py
 
 # CI checks (format check + clippy + test)
-ci: wit-sync-check wit-surface-check wit-generator-check browser-glue-test fmt-check clippy test
+ci: wit-sync-check wit-surface-check wit-generator-check browser-glue-test packager-js-test fmt-check clippy test
     @echo "✅ CI checks passed"
 
 # ------
@@ -343,6 +343,26 @@ wit-generator-check:
 # --experimental-strip-types resolves the TS sources through the repo hook).
 browser-glue-test:
     cd packages/browser-glue && node --experimental-strip-types --test "test/**/*.test.mjs"
+
+# W3 fail-closed boot: the loader (no swallowed instantiation errors) and the
+# boot lifecycle (explicit entry, ready only after it ran) are plain JS, so
+# their contract is tested without a browser.  Browser-level coverage of the
+# same contract = `just browser-e2e` (needs shirabe + a Chromium binary).
+packager-js-test:
+    node --test "packages/packager/test/*.test.mjs"
+    {{python}} scripts/browser_e2e.py --self-check
+
+# Browser lane of the same contract (W3): loads a real page built from
+# index.html.template with the real wrapper loader + boot runtime and asserts
+# the lifecycle (instantiate -> entry -> ready) plus three fail-closed controls
+# (corrupted bytes / no boot entry / missing import).  Needs `shirabe` on PATH
+# (npm i -g @celestia-island/shirabe) and a Chromium binary; that is why this
+# is NOT part of `just ci` — `packager-js-test` covers the browser-free half.
+browser-e2e:
+    {{python}} scripts/browser_e2e.py --scenario component
+    {{python}} scripts/browser_e2e.py --scenario bad-bytes
+    {{python}} scripts/browser_e2e.py --scenario missing-entry
+    {{python}} scripts/browser_e2e.py --scenario missing-import
 
 # Gate: every host interface tairitsu-web references is either wired in
 # browser-glue or carries an explicit, justified allowance.
