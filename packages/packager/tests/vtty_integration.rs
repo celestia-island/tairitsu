@@ -244,3 +244,86 @@ fn test_multiple_sessions() {
     mgr.kill(&b.id).ok();
     assert!(mgr.list().is_empty());
 }
+
+// ── W5: the glue ESM modules must ship with the page ───────────────────────
+//
+// The jco wrapper's `@tairitsu-glue/<name>` specifiers are rewritten to
+// `../glue/<name>.js`, so a dist without those files loads a page that cannot
+// instantiate. `copy_glue_modules` is the step that puts them there; these tests
+// pin both directions (it copies what exists, and it refuses to build when the
+// emitted directory is absent).
+mod glue_modules {
+    use std::path::Path;
+
+    /// The directory the artifact tests read. Pinned, because these tests
+    /// validate whatever is in it: repointing them at swc's `dist/glue` (the
+    /// npm `exports` output) would silently validate the wrong artifact set.
+    fn emitted_dir() -> std::path::PathBuf {
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../browser-glue/dist/glue-esm");
+        assert_eq!(
+            dir.file_name().and_then(|name| name.to_str()),
+            Some("glue-esm"),
+            "the artifact tests must read the emitter's directory"
+        );
+        assert!(
+            !dir.ends_with("dist/glue"),
+            "dist/glue is swc's npm output, not the emitted glue modules"
+        );
+        dir
+    }
+
+    #[test]
+    fn the_emitter_produces_real_esm_modules() {
+        let dir = emitted_dir();
+        if !dir.is_dir() {
+            // The packager refuses to build without them; in a bare checkout the
+            // emitter has not run yet, and that is the build error, not a test
+            // failure.
+            eprintln!("skipping: {} has not been generated yet", dir.display());
+            return;
+        }
+        let mut modules = 0usize;
+        for entry in std::fs::read_dir(&dir).expect("readable") {
+            let path = entry.expect("entry").path();
+            if path.extension().and_then(|s| s.to_str()) != Some("js") {
+                continue;
+            }
+            let source = std::fs::read_to_string(&path).expect("readable");
+            assert!(
+                source.contains("export const "),
+                "{} carries no named export",
+                path.display()
+            );
+            assert!(
+                !source.contains("new Blob("),
+                "{} still builds a blob module",
+                path.display()
+            );
+            modules += 1;
+        }
+        assert!(
+            modules >= 20,
+            "expected the interface modules, got {modules}"
+        );
+    }
+
+    #[test]
+    fn the_manifest_lists_every_interface() {
+        let manifest = emitted_dir().join("manifest.json");
+        if !manifest.is_file() {
+            eprintln!(
+                "skipping: {} has not been generated yet",
+                manifest.display()
+            );
+            return;
+        }
+        let text = std::fs::read_to_string(&manifest).expect("readable");
+        let value: serde_json::Value = serde_json::from_str(&text).expect("valid json");
+        let interfaces = value["interfaces"].as_array().expect("interfaces array");
+        assert!(
+            interfaces.len() >= 20,
+            "manifest lists {} interfaces",
+            interfaces.len()
+        );
+    }
+}

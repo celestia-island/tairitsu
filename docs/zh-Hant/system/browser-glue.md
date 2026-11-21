@@ -20,7 +20,7 @@ graph LR
         subgraph JCO["browser-glue/ (jco 匯入轉接器)"]
             J1["console.js, document.js, element.js, node.js, ..."]
         end
-        NOTE["匯入映射: tairitsu-browser:full/* → ./browser-glue/*<br/>jco 轉譯: 產生帶有正確匯入的元件包裝器"]
+        NOTE["靜態模組: ../glue/<interface>.js<br/>jco 轉譯: 產生帶有正確匯入的元件包裝器"]
     end
     WASM -- "WIT imports" --> BG
     BG --> JCO
@@ -46,7 +46,7 @@ graph LR
 
 提供 IDE 支援與類型檢查的 TypeScript 宣告檔案。
 
-### 介面包裝器 (`dist/browser-glue/*.js`)
+### 介面包裝器 (`dist/glue-esm/*.js`)
 
 jco 轉譯匯入的最小轉接器檔案：
 
@@ -61,17 +61,11 @@ jco 轉譯匯入的最小轉接器檔案：
 
 ## jco 整合
 
-### 匯入映射設定
+### 靜態模組解析
 
-```html
-<script type="importmap">
-{
-  "imports": {
-    "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/",
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
 ### 轉譯流程
@@ -79,7 +73,7 @@ jco 轉譯匯入的最小轉接器檔案：
 1. 建置 WASM 元件：`cargo build --target wasm32-wasip2 --lib --release`
 2. 使用 jco 轉譯：`jco transpile component.wasm -o output/`
 3. jco 產生帶有 `tairitsu-browser:full/*` 匯入的包裝器
-4. 匯入映射解析至 `./browser-glue/*` 轉接器
+4. 打包器把說明符改寫至 `../glue/<interface>.js` 真實檔案
 
 ## 控制代碼系統
 

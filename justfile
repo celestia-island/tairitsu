@@ -57,9 +57,16 @@ install-tools:
     {{python}} scripts/download_wasi_adapters.py
 
 # Build browser-glue runtime bundle (IIFE for HTML <script> tag)
-build-glue-runtime:
+build-glue-runtime: glue-esm
     mkdir -p packages/browser-glue/dist
     npx esbuild packages/browser-glue/src/runtime/index.ts --bundle --outfile=packages/browser-glue/dist/runtime.js --format=iife --platform=browser
+
+# W5: the interface modules the jco wrapper imports (`@tairitsu-glue/<name>`
+# rewritten to `../glue/<name>.js`) are REAL ESM files emitted at build time.
+# Without them the packager refuses to build (no glue = a page that cannot
+# instantiate).
+glue-esm:
+    node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs
 
 # Install tairitsu-packager CLI binary (tairitsu)
 install-packager: (build-glue-runtime)
@@ -358,8 +365,10 @@ packager-js-test:
 # (corrupted bytes / no boot entry / missing import).  Needs `shirabe` on PATH
 # (npm i -g @celestia-island/shirabe) and a Chromium binary; that is why this
 # is NOT part of `just ci` — `packager-js-test` covers the browser-free half.
-browser-e2e:
+browser-e2e: glue-esm
     {{python}} scripts/browser_e2e.py --scenario component
+    {{python}} scripts/browser_e2e.py --scenario csp
+    {{python}} scripts/browser_e2e.py --scenario glue-imports
     {{python}} scripts/browser_e2e.py --scenario two-instances
     {{python}} scripts/browser_e2e.py --scenario bad-bytes
     {{python}} scripts/browser_e2e.py --scenario missing-entry

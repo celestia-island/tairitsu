@@ -57,6 +57,8 @@ TEMPLATE_DIR = os.path.join(REPO_ROOT, "packages", "packager", "src", "wasm")
 
 SCENARIOS = (
     "component",
+    "csp",
+    "glue-imports",
     "two-instances",
     "bad-bytes",
     "missing-entry",
@@ -66,6 +68,31 @@ SCENARIOS = (
 
 # The entry the good synthetic component exports: it records that it ran and
 # mutates the page, so "the entry was invoked" is observable from the DOM.
+# A wrapper shaped like the packager's post-rewrite output: it imports the glue
+# interfaces from the real emitted modules (`../glue/<name>.js`). This is what
+# makes the glue scenario able to catch a wrong/missing interface file — the
+# other scenarios use a glue-less wrapper and cannot.
+GLUE_IMPORT_WRAPPER = """
+// The BARE specifiers a fresh jco wrapper carries. The packager rewrites them to
+// `../glue/<name>.js`; this harness applies the same rule (see
+// `rewrite_glue_specifiers`) so the scenario proves the rewrite rather than
+// presupposing its output. The Rust test `glue_specifiers_become_relative_files`
+// pins the packager's own implementation of the same rule.
+import { createElement } from "@tairitsu-glue/document";
+import { getStyle } from "@tairitsu-glue/element-css-inline-style";
+
+const entry = () => {
+  globalThis.__w3_entry_ran = true;
+  const el = createElement("div");
+  globalThis.__w3_glue_probe = { element: typeof el, style: typeof getStyle };
+  const app = document.getElementById("app");
+  if (app) app.textContent = "component booted";
+};
+
+const lifecycle = { start: entry };
+export { lifecycle, lifecycle as "tairitsu-browser:full/lifecycle@0.2.0" };
+"""
+
 GOOD_WRAPPER = """
 // The shape `jco transpile` actually emits for a tairitsu component: a module
 // namespace that exposes the WIT interfaces (no `instantiate` export), so the
@@ -108,6 +135,11 @@ export async function instantiate(imports) {
 
 WRAPPERS = {
     "component": GOOD_WRAPPER,
+    # Same component, same page — served with `script-src 'self'` so a page that
+    # needed a blob URL or an inline module could not boot at all (D5).
+    "csp": GOOD_WRAPPER,
+    # Serves the REAL emitted glue modules and a wrapper that imports them.
+    "glue-imports": GLUE_IMPORT_WRAPPER,
     # The isolation scenario boots the same component, then drives the instance
     # API from the test side.
     "two-instances": GOOD_WRAPPER,
@@ -287,6 +319,18 @@ def ensure_glue_bundle(dest):
     return proc.returncode == 0 and os.path.isfile(dest)
 
 
+def render_boot_script():
+    """Render `boot.template.js` the way the packager emits `boot.js` (W5)."""
+    with open(os.path.join(TEMPLATE_DIR, "boot.template.js"), encoding="utf-8") as fh:
+        boot = fh.read()
+    boot = boot.replace("{{ v }}", PAGE_CONTEXT["v"]).replace(
+        "{{ wasm_file }}", PAGE_CONTEXT["wasm_file"]
+    )
+    if "{{" in boot:
+        raise RuntimeError("boot.template.js still carries a placeholder")
+    return boot
+
+
 def render_page():
     """Render `index.html.template` with the e2e context."""
     with open(os.path.join(TEMPLATE_DIR, "index.html.template"), encoding="utf-8") as fh:
@@ -301,15 +345,53 @@ def render_page():
     return page
 
 
+def rewrite_glue_specifiers(source):
+    """`from '@tairitsu-glue/x'` → `from '../glue/x.js'`, versions dropped.
+
+    The packager does this in Rust (`glue_specifier_extension`); the browser lane
+    needs the same transformation to load the real modules, and applying it here
+    (instead of writing the rewritten shape into the fixture) is what makes the
+    `glue-imports` scenario exercise the rewrite.
+    """
+    import re
+
+    rewritten = source.replace("from '@tairitsu-glue/", "from '../glue/").replace(
+        'from "@tairitsu-glue/', 'from "../glue/'
+    )
+    pattern = re.compile(r"""((?:from|import)\s*\(?\s*['\"])(\.\./glue/[A-Za-z0-9._@-]+)(['\"])""")
+
+    def add_extension(match):
+        spec = match.group(2)
+        if spec.endswith(".js"):
+            return match.group(0)
+        without_version = spec.split("@", 1)[0]
+        return f"{match.group(1)}{without_version}.js{match.group(3)}"
+
+    return pattern.sub(add_extension, rewritten)
+
+
 def build_dist(scenario, dest):
     """A dist-shaped tree: the real page, the real loader, a stub component."""
     os.makedirs(os.path.join(dest, "component-wrapper"), exist_ok=True)
     with open(os.path.join(dest, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(render_page())
+    with open(os.path.join(dest, "boot.js"), "w", encoding="utf-8") as fh:
+        fh.write(render_boot_script())
+    if scenario == "glue-imports":
+        # The real build-time modules, copied exactly as the packager does.
+        source = os.path.join(REPO_ROOT, "packages", "browser-glue", "dist", "glue-esm")
+        if not os.path.isdir(source):
+            raise RuntimeError(
+                "the glue-imports control needs the emitted glue modules; run "
+                "`node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs`"
+            )
+        shutil.copytree(source, os.path.join(dest, "glue"))
+        # The wrapper sits in component-wrapper/, so `../glue/` resolves to the
+        # copy above — the same path the packager rewrites to.
     glue_path = os.path.join(dest, "glue-runtime.js")
     # `two-instances` needs the shipped bundle (the instance API lives there);
     # the component scenarios only need the page's import map to stay green.
-    if scenario == "two-instances":
+    if scenario in ("two-instances", "glue-imports"):
         if not ensure_glue_bundle(glue_path):
             raise RuntimeError(
                 "the two-instances control needs the real glue bundle "
@@ -330,25 +412,40 @@ def build_dist(scenario, dest):
         os.path.join(TEMPLATE_DIR, "component-boot.template.js"),
         os.path.join(dest, "component-boot.js"),
     )
+    wrapper_source = WRAPPERS[scenario]
+    if scenario == "glue-imports":
+        rewritten = rewrite_glue_specifiers(wrapper_source)
+        if "@tairitsu-glue/" in rewritten:
+            raise RuntimeError("the glue specifier rewrite left a bare specifier")
+        wrapper_source = rewritten
     with open(
         os.path.join(dest, "component-wrapper", "component.js"), "w", encoding="utf-8"
     ) as fh:
-        fh.write(WRAPPERS[scenario])
+        fh.write(wrapper_source)
     # A placeholder core module: the synthetic wrappers never fetch it, but the
     # page's direct-load fallback checks magic bytes.
     with open(os.path.join(dest, "component.wasm"), "wb") as fh:
         fh.write(b"\x00asm\x0d\x00\x01\x00" + b"\x00" * 16)
 
 
+CSP_POLICY = "script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'none'"
+
+
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        if getattr(self.server, "csp", None):
+            self.send_header("Content-Security-Policy", self.server.csp)
+        super().end_headers()
+
     def log_message(self, *_args):  # noqa: D401 - silence the per-request log
         return
 
 
-def serve(directory):
+def serve(directory, csp=None):
     """Serve `directory` on an ephemeral port; returns (server, thread, url)."""
     handler = functools.partial(_QuietHandler, directory=directory)
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    server.csp = csp
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     port = server.server_address[1]
@@ -537,6 +634,16 @@ def self_check():
         if check_boot_state(honest, scenario):
             failures.append(f"control {scenario} rejects a correct error page")
 
+    # W5: the CSP scenario is the D5 proof (a page that needed a blob URL or an
+    # inline module cannot boot under `script-src 'self'`), so its absence must
+    # fail the offline gate.
+    if "csp" not in SCENARIOS:
+        failures.append("the CSP scenario is missing")
+    if "glue-imports" not in SCENARIOS:
+        failures.append("the glue-imports scenario is missing (static resolution is unproven)")
+    if "csp" not in WRAPPERS:
+        failures.append("the CSP scenario has no component under test")
+
     # W4: the dual-instance isolation control must exist and its checks must be
     # able to fail (a control that cannot fail is not a control).
     if "two-instances" not in SCENARIOS:
@@ -703,7 +810,20 @@ def main():
                 tmp_root = tempfile.mkdtemp(prefix="tairitsu-w3-e2e-")
                 dist = os.path.join(tmp_root, "dist")
                 build_dist(args.scenario, dist)
-            server, _thread, url = serve(dist)
+            if args.scenario == "csp":
+                # Prove the policy bites: an inline script and a blob module must
+                # both be refused, or the scenario proves nothing about D5.
+                page_path = os.path.join(dist, "index.html")
+                with open(page_path, encoding="utf-8") as fh:
+                    page = fh.read()
+                page = page.replace(
+                    "</body>",
+                    '<script>window.__inline_ran = true;</script>'
+                    "<script type=\"module\">window.__blob_ran = true;</script></body>",
+                )
+                with open(page_path, "w", encoding="utf-8") as fh:
+                    fh.write(page)
+            server, _thread, url = serve(dist, csp=CSP_POLICY if args.scenario == "csp" else None)
             call(base, "/navigate", {"url": url + "/index.html"})
             # The page boots asynchronously (styles + lifecycle); poll briefly.
             deadline = time.time() + 20
@@ -723,6 +843,35 @@ def main():
             failures.extend(
                 assert_boot_contract(base, args.scenario, real_dist=bool(args.dist))
             )
+            if args.scenario == "glue-imports" and not failures:
+                probe = evaluate(
+                    base,
+                    """(() => ({
+                        probe: globalThis.__w3_glue_probe || null,
+                    }))()""",
+                )
+                state = (probe or {}).get("probe") if isinstance(probe, dict) else None
+                if state is None:
+                    failures.append("the wrapper's glue imports did not run")
+                elif state.get("element") != "bigint" or state.get("style") != "function":
+                    failures.append(f"the glue modules did not provide their exports: {state!r}")
+                else:
+                    print("glue imports resolved statically:", state)
+            if args.scenario == "csp" and not failures:
+                enforcement = evaluate(
+                    base,
+                    """(() => ({
+                        inlineRan: globalThis.__inline_ran === true,
+                    }))()""",
+                )
+                if not isinstance(enforcement, dict) or enforcement.get("inlineRan"):
+                    failures.append(
+                        "the CSP policy is not enforced (an inline script ran)"
+                        if isinstance(enforcement, dict)
+                        else f"CSP enforcement probe failed: {enforcement!r}"
+                    )
+                else:
+                    print("CSP enforced: inline scripts blocked, component still boots")
             if args.scenario == "two-instances" and not failures:
                 failures.extend(check_isolation(evaluate(base, ISOLATION_PROBE)))
 

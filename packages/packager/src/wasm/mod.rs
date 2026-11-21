@@ -977,6 +977,8 @@ fn prepare_component_wrapper_fallback(
 ) -> crate::Result<()> {
     write_component_wrapper_loader(config, component_wasm_path, output_dir)?;
 
+    copy_glue_modules(config, output_dir)?;
+
     if !try_generate_component_wrapper(&config.manifest_dir, component_wasm_path, output_dir, pb)? {
         return Err(crate::TairitsuPackagerError::BuildError(
             "Component wrapper transpile produced no JS wrapper entry. \
@@ -1066,6 +1068,74 @@ fn bundle_local_wasi_shim(
     }
 }
 
+/// W5: copy the emitted `browser-glue/dist/glue-esm/` modules into the output. The wrapper's
+/// imports were rewritten to `../glue/<name>.js`, so a build without these files
+/// would 404 at load time — hence fail-loud rather than a partial dist.
+fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+    // The emitted modules sit in the glue package, which may live beside this
+    // crate (workspace build) or be reached from the project being built — the
+    // same candidate-probing the glue *runtime* bundle uses. A compile-time
+    // absolute path would make every installed binary fail on other machines.
+    // Same shape as `resolve_glue_runtime_bundle`: an env override, then paths
+    // relative to the PROJECT being built (a consumer repo), then the workspace
+    // layout. Resolving against the process CWD would fail from a repo root.
+    let mut candidates: Vec<std::path::PathBuf> = Vec::new();
+    if let Ok(dir) = std::env::var("TAIRITSU_GLUE_ESM_DIR") {
+        candidates.push(std::path::PathBuf::from(dir));
+    }
+    let project = &config.manifest_dir;
+    for relative in [
+        "../../tairitsu/packages/browser-glue/dist/glue-esm",
+        "../tairitsu/packages/browser-glue/dist/glue-esm",
+        "../browser-glue/dist/glue-esm",
+        "../../packages/browser-glue/dist/glue-esm",
+        // The package that actually ships the glue (the same one the runtime
+        // bundle resolver probes). Its tarball must carry `dist/glue-esm/`.
+        "node_modules/@celestia-island/tairitsu-web-glue/dist/glue-esm",
+        "node_modules/@celestia-island/tairitsu-browser-glue/dist/glue-esm",
+    ] {
+        candidates.push(project.join(relative));
+    }
+    // And the workspace layout relative to this crate (a `cargo run` from the
+    // tairitsu checkout).
+    candidates.push(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../browser-glue/dist/glue-esm"),
+    );
+    let source_dir = candidates
+        .iter()
+        .find(|path| path.is_dir())
+        .cloned()
+        .ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError(
+                "the glue ESM modules are missing (searched for browser-glue/dist/glue-esm). Run \
+                 `node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs` \
+                 (or `just build-glue-runtime`) before building, or set TAIRITSU_GLUE_ESM_DIR."
+                    .to_string(),
+            )
+        })?;
+    let target_dir = output_dir.join("glue");
+    std::fs::create_dir_all(&target_dir)?;
+    let mut copied = 0usize;
+    for entry in std::fs::read_dir(&source_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("js") {
+            continue;
+        }
+        let name = path.file_name().ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError("glue module without a file name".into())
+        })?;
+        std::fs::copy(&path, target_dir.join(name))?;
+        copied += 1;
+    }
+    if copied == 0 {
+        return Err(crate::TairitsuPackagerError::BuildError(
+            "the glue ESM directory is empty — regenerate it with scripts/emit-glue-esm.mjs".into(),
+        ));
+    }
+    Ok(())
+}
+
 fn rewrite_wrapper_imports(output_dir: &std::path::Path) -> crate::Result<()> {
     let wrapper_dir = output_dir.join("component-wrapper");
     if !wrapper_dir.exists() {
@@ -1093,7 +1163,12 @@ fn rewrite_wrapper_imports(output_dir: &std::path::Path) -> crate::Result<()> {
             .replace("'@bytecodealliance/preview2-shim/", local_prefix)
             .replace("\"@bytecodealliance/preview2-shim/", local_prefix_dq);
 
+        // W5: the glue interfaces are real ESM files copied beside the page
+        // (`glue/<name>.js`), so the wrapper's bare specifiers become relative
+        // paths — statically resolvable at load time, no import map.
         patched = patched
+            .replace("from '@tairitsu-glue/", "from '../glue/")
+            .replace("from \"@tairitsu-glue/", "from \"../glue/")
             .replace("'/wasi-shim/io'", "'/wasi-shim/io.js'")
             .replace("'/wasi-shim/cli'", "'/wasi-shim/cli.js'")
             .replace("'/wasi-shim/random'", "'/wasi-shim/random.js'")
@@ -1107,12 +1182,34 @@ fn rewrite_wrapper_imports(output_dir: &std::path::Path) -> crate::Result<()> {
             .replace("\"/wasi-shim/filesystem\"", "\"/wasi-shim/filesystem.js\"")
             .replace("\"/wasi-shim/sockets\"", "\"/wasi-shim/sockets.js\"");
 
+        patched = glue_specifier_extension(&patched);
+
         if patched != content {
             std::fs::write(&path, patched)?;
         }
     }
 
     Ok(())
+}
+
+/// W5: `from '../glue/<name>'` → `from '../glue/<name>.js'` — a bare relative
+/// directory path is not a module specifier in the browser, the file extension
+/// is what makes the import static.
+fn glue_specifier_extension(source: &str) -> String {
+    let re =
+        regex::Regex::new(r#"((?:from|import)\s*\(?\s*['\"])(\.\./glue/[A-Za-z0-9._@-]+)(['\"])"#)
+            .expect("static regex is valid");
+    re.replace_all(source, |caps: &regex::Captures| {
+        let spec = &caps[2];
+        if spec.ends_with(".js") {
+            return format!("{}{}{}", &caps[1], spec, &caps[3]);
+        }
+        // The emitted modules are version-less; a versioned specifier would
+        // name a file that is never written.
+        let without_version = spec.split_once('@').map_or(spec, |(base, _)| base);
+        format!("{}{}.js{}", &caps[1], without_version, &caps[3])
+    })
+    .to_string()
 }
 
 fn write_component_wrapper_loader(
@@ -1159,6 +1256,9 @@ const WRAPPER_LOADER_TEMPLATE: &str = include_str!("component-wrapper-loader.tem
 /// W3 boot runtime: the page's boot lifecycle, emitted beside `index.html` on
 /// every build (it is not part of the wrapper pipeline, hence not in the key).
 const COMPONENT_BOOT_TEMPLATE: &str = include_str!("component-boot.template.js");
+
+/// W5: the page's own boot module (the module script that used to be inline).
+const COMPONENT_BOOT_PAGE_TEMPLATE: &str = include_str!("boot.template.js");
 
 /// SHA-256 of the wasm file's bytes, lower-case hex.
 fn wasm_content_hash(path: &std::path::Path) -> crate::Result<String> {
@@ -1674,6 +1774,14 @@ fn generate_component_html_with_output_dir(
             }
         }
     }
+
+    // W5: the page's boot module is a REAL file (no inline `<script>`), which is
+    // what lets it run under `script-src 'self'`. It carries the build's
+    // cache-buster and wasm file name, exactly like the loader's `?v=`.
+    let boot = COMPONENT_BOOT_PAGE_TEMPLATE
+        .replace("{{ v }}", &v.to_string())
+        .replace("{{ wasm_file }}", &wasm_file);
+    std::fs::write(output_dir.join("boot.js"), boot)?;
 
     // W3: the boot lifecycle (entry resolution, ready/error gating) is a
     // separate module the page imports unconditionally, so it is emitted next
@@ -2948,6 +3056,101 @@ mod w1_reproducible_tests {
         assert!(
             source.contains("monorepo path"),
             "in-tree resolution must be labeled, got: {source}"
+        );
+    }
+
+    // ── W5: the glue specifier rewrite ─────────────────────────────────────
+    #[test]
+    fn glue_specifiers_become_relative_files() {
+        // The packager rewrites the wrapper's bare specifiers to real modules.
+        let single = "import { createElement } from '@tairitsu-glue/document';";
+        assert_eq!(
+            glue_specifier_extension(&single.replace("@tairitsu-glue/", "../glue/")),
+            "import { createElement } from '../glue/document.js';"
+        );
+
+        let doubled = "import { a } from \"@tairitsu-glue/node\";";
+        assert_eq!(
+            glue_specifier_extension(&doubled.replace("@tairitsu-glue/", "../glue/")),
+            "import { a } from \"../glue/node.js\";"
+        );
+
+        // Idempotent: a specifier that already names the file is left alone.
+        let done = "import { a } from '../glue/node.js';";
+        assert_eq!(glue_specifier_extension(done), done);
+
+        // Versioned specifiers name files that are never emitted; the version is
+        // dropped so the import resolves.
+        let versioned = "import { a } from '../glue/element-css-inline-style@0.2.0';";
+        assert_eq!(
+            glue_specifier_extension(versioned),
+            "import { a } from '../glue/element-css-inline-style.js';"
+        );
+
+        // Several imports on one line all get their extension.
+        let many = "import { a } from '../glue/dom'; import { b } from \"../glue/event\";";
+        let patched = glue_specifier_extension(many);
+        assert!(patched.contains("'../glue/dom.js'"), "got: {patched}");
+        assert!(patched.contains("\"../glue/event.js\""), "got: {patched}");
+    }
+
+    #[test]
+    fn rewrite_wrapper_imports_rewrites_a_real_wrapper_directory() {
+        // Drive the shipped function (not a copy of its regex) over a fixture:
+        // a wrapper that imports the glue by its bare specifier and the WASI
+        // shim by `@bytecodealliance/preview2-shim/`.
+        let dir = std::env::temp_dir().join(format!(
+            "tairitsu-w5-rewrite-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        let wrapper_dir = dir.join("component-wrapper");
+        std::fs::create_dir_all(&wrapper_dir).expect("temp dir");
+        let wrapper = wrapper_dir.join("app.js");
+        std::fs::write(
+            &wrapper,
+            "import { createElement } from '@tairitsu-glue/document';\n\
+             import { getStyle } from \"@tairitsu-glue/element-css-inline-style@0.2.0\";\n\
+             import { io } from '@bytecodealliance/preview2-shim/io';\n",
+        )
+        .expect("write wrapper");
+
+        rewrite_wrapper_imports(&dir).expect("rewrite");
+        let patched = std::fs::read_to_string(&wrapper).expect("read back");
+
+        assert!(
+            patched.contains("from '../glue/document.js'"),
+            "the glue specifier was not rewritten: {patched}"
+        );
+        assert!(
+            patched.contains("from \"../glue/element-css-inline-style.js\""),
+            "the versioned glue specifier was not rewritten: {patched}"
+        );
+        assert!(
+            patched.contains("/wasi-shim/io.js"),
+            "the shim specifier was not rewritten: {patched}"
+        );
+        assert!(
+            !patched.contains("@tairitsu-glue/"),
+            "a bare glue specifier survived: {patched}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn the_glue_esm_directory_is_the_one_the_emitter_writes() {
+        // The packager must read the directory the emitter produces; a rename on
+        // either side would silently copy nothing (or stale output).
+        let emitter = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../browser-glue/scripts/emit-glue-esm.mjs");
+        let source = std::fs::read_to_string(&emitter).expect("emitter source");
+        assert!(
+            source.contains("\"dist\", \"glue-esm\""),
+            "the emitter no longer writes dist/glue-esm"
+        );
+        assert!(
+            !source.contains("\"dist\", \"glue\")"),
+            "the emitter writes swc's npm output directory"
         );
     }
 }

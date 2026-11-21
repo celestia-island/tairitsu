@@ -20,7 +20,6 @@ graph LR
         subgraph JCO["browser-glue/ (jco import adapters)"]
             J1["console.js, document.js, element.js, node.js, ..."]
         end
-        NOTE["Import Map: tairitsu-browser:full/* → ./browser-glue/*<br/>jco transpile: generates component wrapper with proper imports"]
     end
     WASM -- "WIT imports" --> BG
     BG --> JCO
@@ -46,7 +45,7 @@ graph LR
 
 ملفات تعريف TypeScript لدعم IDE وفحص الأنواع.
 
-### غلافات الواجهات (`dist/browser-glue/*.js`)
+### غلافات الواجهات (`dist/glue-esm/*.js`)
 
 ملفات محولات بسيطة لاستيرادات jco المحوّلة:
 
@@ -61,17 +60,10 @@ graph LR
 
 ## التكامل مع jco
 
-### تكوين خريطة الاستيراد
 
-```html
-<script type="importmap">
-{
-  "imports": {
-    "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/",
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
 ### عملية التحويل (Transpile)
@@ -79,7 +71,6 @@ graph LR
 1. بناء مكون WASM: `cargo build --target wasm32-wasip2 --lib --release`
 2. التحويل باستخدام jco: `jco transpile component.wasm -o output/`
 3. jco يُنشئ غلافاً مع الاستيرادات من `tairitsu-browser:full/*`
-4. خريطة الاستيراد تحل إلى محولات `./browser-glue/*`
 
 ## نظام المقابض (Handle System)
 

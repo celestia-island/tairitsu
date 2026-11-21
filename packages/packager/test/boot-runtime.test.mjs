@@ -194,7 +194,7 @@ test("a rejected entry never reports ready even when it resolves later", async (
 });
 
 test("the page template no longer fishes for names by depth (source check)", async () => {
-  const page = await readFile(resolve(here, "../src/wasm/index.html.template"), "utf8");
+  const page = await readFile(resolve(here, "../src/wasm/boot.template.js"), "utf8");
   assert.equal(/tryInvokeBootExports/.test(page), false, "the depth-3 entry walk is gone");
   assert.equal(
     /no exported run\/start entry found/.test(page),
@@ -217,7 +217,7 @@ test("the page template no longer fishes for names by depth (source check)", asy
 });
 
 test("the outermost catch sets the boot-failed kind (source check)", async () => {
-  const page = await readFile(resolve(here, "../src/wasm/index.html.template"), "utf8");
+  const page = await readFile(resolve(here, "../src/wasm/boot.template.js"), "utf8");
   // The inner catch also calls bootSurface.fail, so behavioural probes cannot
   // tell whether the OUTER catch (deploy skew: a missing /component-boot.js)
   // still sets the attribute — this pin can. Dropping the kind argument

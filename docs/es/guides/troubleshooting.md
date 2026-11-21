@@ -56,18 +56,12 @@ Error: Component import "tairitsu-browser:full/document" was not satisfied
 ```
 
 **Solución:**
-1. Asegurar que el import map esté configurado:
-```html
-<script type="importmap">
-{
-  "imports": {
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
-2. Verificar que los archivos browser-glue existan en el directorio de salida.
+- Verificar que los archivos browser-glue existan en el directorio de salida.
 
 ### Fallo de inicialización del componente
 
@@ -92,7 +86,7 @@ Error: Failed to transpile component
 npm install -g @bytecodealliance/jco
 ```
 
-2. Verificar que el componente WASM sea válido:
+- Verificar que el componente WASM sea válido:
 ```bash
 wasm-tools print component.wasm
 ```

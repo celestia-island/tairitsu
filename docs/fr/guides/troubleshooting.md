@@ -56,18 +56,12 @@ Error: Component import "tairitsu-browser:full/document" was not satisfied
 ```
 
 **Solution :**
-1. Vérifiez que l'import map est configuré :
-```html
-<script type="importmap">
-{
-  "imports": {
-    "tairitsu-browser:full/": "./browser-glue/"
-  }
-}
-</script>
+```text
+glue/<interface>.js        # real ES module, one per interface, emitted at build time
+# the jco wrapper's specifiers are rewritten to ../glue/<interface>.js
 ```
 
-2. Vérifiez que les fichiers browser-glue existent dans le répertoire de sortie.
+- Vérifiez que les fichiers browser-glue existent dans le répertoire de sortie.
 
 ### Échec d'initialisation du composant
 
@@ -92,7 +86,7 @@ Error: Failed to transpile component
 npm install -g @bytecodealliance/jco
 ```
 
-2. Vérifiez que le composant WASM est valide :
+- Vérifiez que le composant WASM est valide :
 ```bash
 wasm-tools print component.wasm
 ```
@@ -116,7 +110,7 @@ cat packages/web/src/wit_platform.rs | head -100
 ### DevTools du navigateur
 
 1. Ouvrez DevTools (F12)
-2. Vérifiez la Console pour les erreurs
+- Vérifiez la Console pour les erreurs
 3. Onglet Network pour les modules non chargés
 4. Onglet Sources pour le débogage
 
