@@ -1,26 +1,4 @@
-// State stored on globalThis so that when generateModuleCode() stringifies
-// these functions into a blob module, the state is still accessible.
-// (Blob modules have their own scope — closure variables from this file are
-// invisible inside the blob.)
-if (!globalThis.__tairitsuTimerState) {
-  globalThis.__tairitsuTimerState = {
-    timeoutCallbacks: new Map(),
-    intervalCallbacks: new Map(),
-    nextTimeoutId: 1,
-  };
-}
-if (!globalThis.__tairitsuAnimState) {
-  globalThis.__tairitsuAnimState = {
-    animationCallbacks: new Map(),
-    nextAnimationId: 1,
-  };
-}
 
-if (!globalThis.__tairitsuWsState) {
-  globalThis.__tairitsuWsState = {
-    nextCallbackId: 1n,
-  };
-}
 
 export const platformHelpers_exports = {
   innerWidth() {
@@ -30,7 +8,7 @@ export const platformHelpers_exports = {
     return window.innerHeight;
   },
   setTimeout(callbackId: bigint, ms: number) {
-    const s = globalThis.__tairitsuTimerState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.timerState;
     const id = s.nextTimeoutId++;
     const timeoutId = window.setTimeout(() => {
       if (
@@ -41,18 +19,21 @@ export const platformHelpers_exports = {
         (exp.onTimeout || exp.on_timeout)?.(callbackId);
       }
     }, ms);
+    // W4: registered at creation (not when it fires), so a PENDING timer is
+    // reclaimed by dispose and is never attributed to the wrong instance.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.timers.add(timeoutId);
     s.timeoutCallbacks.set(id, timeoutId);
     return id;
   },
   clearTimeout(id: number) {
-    const s = globalThis.__tairitsuTimerState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.timerState;
     if (s.timeoutCallbacks.has(id)) {
       window.clearTimeout(s.timeoutCallbacks.get(id));
       s.timeoutCallbacks.delete(id);
     }
   },
   setInterval(callbackId: bigint, ms: number) {
-    const s = globalThis.__tairitsuTimerState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.timerState;
     const id = s.nextTimeoutId++;
     const intervalId = window.setInterval(() => {
       if (
@@ -63,18 +44,19 @@ export const platformHelpers_exports = {
         (exp.onInterval || exp.on_interval)?.(callbackId);
       }
     }, ms);
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.intervals.add(intervalId);
     s.intervalCallbacks.set(id, intervalId);
     return id;
   },
   clearInterval(id: number) {
-    const s = globalThis.__tairitsuTimerState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.timerState;
     if (s.intervalCallbacks.has(id)) {
       window.clearInterval(s.intervalCallbacks.get(id));
       s.intervalCallbacks.delete(id);
     }
   },
   requestAnimationFrame(callbackId: bigint) {
-    const s = globalThis.__tairitsuAnimState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.animState;
     const id = s.nextAnimationId++;
     const animationId = window.requestAnimationFrame((timestamp) => {
       if (
@@ -85,11 +67,13 @@ export const platformHelpers_exports = {
         (exp.onFrame || exp.on_animation_frame)?.(callbackId, timestamp);
       }
     });
+    // W4: owned by the instance, cancelled on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.frames.add(animationId);
     s.animationCallbacks.set(id, animationId);
     return id;
   },
   cancelAnimationFrame(id: number) {
-    const s = (globalThis as any).__tairitsuAnimState; // ts-escape-ok: retires with L40
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.animState;
     if (s.animationCallbacks.has(id)) {
       window.cancelAnimationFrame(s.animationCallbacks.get(id) as number);
       s.animationCallbacks.delete(id);
@@ -110,10 +94,6 @@ export const platformHelpers_exports = {
         globalThis.__wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"]
       ) {
         const entryHandles = entries.map((entry) => {
-          if (!globalThis.__resizeObserverEntryHandles) {
-            globalThis.__resizeObserverEntryHandles = new Map();
-            globalThis.__nextResizeObserverEntry = 1n;
-          }
           const handle = globalThis.__nextResizeObserverEntry++;
           globalThis.__resizeObserverEntryHandles.set(handle, entry);
           return handle;
@@ -123,6 +103,8 @@ export const platformHelpers_exports = {
         ]?.on_resize?.(callbackId, entryHandles);
       }
     });
+    // W4: owned by the instance, disconnected on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.observers.add(observer);
     return globalThis.__storeElement(observer);
   },
   observeResize(observer: bigint, element: bigint) {
@@ -152,10 +134,6 @@ export const platformHelpers_exports = {
         globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]
       ) {
         const recordHandles = records.map((record) => {
-          if (!globalThis.__mutationRecordHandles) {
-            globalThis.__mutationRecordHandles = new Map();
-            globalThis.__nextMutationRecord = 1n;
-          }
           const handle = globalThis.__nextMutationRecord++;
           globalThis.__mutationRecordHandles.set(handle, record);
           return handle;
@@ -165,6 +143,8 @@ export const platformHelpers_exports = {
         ]?.on_mutation?.(callbackId, recordHandles);
       }
     });
+    // W4: owned by the instance, disconnected on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.observers.add(observer);
     return globalThis.__storeElement(observer);
   },
   observeMutations(observer: bigint, target: bigint, _options: any) { // ts-escape-ok: retires with L40
@@ -210,9 +190,7 @@ export const platformHelpers_exports = {
 
   clipboardWriteTextPromise(text: string) {
     if (!navigator.clipboard?.writeText) return 0n;
-    const id = globalThis.__nextHandle
-      ? globalThis.__nextHandle++
-      : ((globalThis.__nextHandle = 1n), 1n);
+    const id = globalThis.__nextHandle++;
     navigator.clipboard
       .writeText(text)
       .then(() => {
@@ -240,9 +218,7 @@ export const platformHelpers_exports = {
 
   clipboardReadTextPromise() {
     if (!navigator.clipboard?.readText) return 0n;
-    const id = globalThis.__nextHandle
-      ? globalThis.__nextHandle++
-      : ((globalThis.__nextHandle = 1n), 1n);
+    const id = globalThis.__nextHandle++;
     navigator.clipboard
       .readText()
       .then((text) => {
@@ -269,9 +245,7 @@ export const platformHelpers_exports = {
   },
 
   fetchPromise(url: string, options: string | null) {
-    const id = globalThis.__nextHandle
-      ? globalThis.__nextHandle++
-      : ((globalThis.__nextHandle = 1n), 1n);
+    const id = globalThis.__nextHandle++;
     let opts: RequestInit | undefined;
     if (options) {
       try {
@@ -393,9 +367,7 @@ export const platformHelpers_exports = {
 
   onScroll(callbackId: bigint) {
     const g = globalThis as any; // ts-escape-ok: retires with L40
-    if (!g.__tairitsuScrollListeners) {
-      g.__tairitsuScrollListeners = new Map();
-    }
+    // W4: the scroll-listener table belongs to the current instance.
     const handler = () => {
       if (g.__wasmExports && g.__wasmExports["tairitsu-browser:full/scroll-callbacks@0.2.0"]) {
         const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -410,7 +382,16 @@ export const platformHelpers_exports = {
       }
     };
     window.addEventListener("scroll", handler, { passive: true });
-    const handle = g.__nextHandle ? g.__nextHandle++ : ((g.__nextHandle = 1n), 1n);
+    // W4: owned by the instance, removed on dispose.
+    if (g.__TAIRITSU_INSTANCES__) {
+      g.__TAIRITSU_INSTANCES__.current().reclaimables.listeners.add({
+        target: window,
+        type: "scroll",
+        handler,
+        options: { passive: true },
+      });
+    }
+    const handle = g.__nextHandle++;
     g.__tairitsuScrollListeners.set(handle, handler);
     return handle;
   },
@@ -426,7 +407,14 @@ export const platformHelpers_exports = {
       }
     };
     window.addEventListener("resize", handler);
-    const handle = g.__nextHandle ? g.__nextHandle++ : ((g.__nextHandle = 1n), 1n);
+    // W4: owned by the instance, removed on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.listeners.add({
+      target: window,
+      type: "resize",
+      handler,
+      options: undefined,
+    });
+    const handle = g.__nextHandle++;
     g.__tairitsuResizeListeners.set(handle, handler);
     return handle;
   },
@@ -876,9 +864,11 @@ export const platformHelpers_exports = {
 
   connectWebSocket(url: string) {
     const ws = new WebSocket(url);
+    // W4: owned by the instance, closed on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.sockets.add(ws);
     const handle = globalThis.__storeElement(ws);
 
-    const s = globalThis.__tairitsuWsState;
+    const s = globalThis.__TAIRITSU_CURRENT__().tables.wsState;
     const openCbId = s.nextCallbackId++;
     const msgCbId = s.nextCallbackId++;
     const closeCbId = s.nextCallbackId++;

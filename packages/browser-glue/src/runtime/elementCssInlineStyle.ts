@@ -1,5 +1,6 @@
-globalThis.__cssStyleDeclarationHandles = globalThis.__cssStyleDeclarationHandles || new Map();
-globalThis.__nextCssStyleDeclarationHandle = globalThis.__nextCssStyleDeclarationHandle || 1n;
+import { installGlobalDelegates } from "./instance.ts";
+
+installGlobalDelegates();
 
 globalThis.__storeCssStyleDeclaration = function (obj: CSSStyleDeclaration | null) {
   if (!obj) return undefined;

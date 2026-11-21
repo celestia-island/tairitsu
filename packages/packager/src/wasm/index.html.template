@@ -57,6 +57,9 @@
                 settleBoot.resolve(entryName);
             },
             fail: (kind, error) => {
+                // W4: a failed boot reclaims its instance (handles, listeners,
+                // observers, timers) instead of leaving them on the page.
+                if (instanceApi && bootInstance) instanceApi.dispose(bootInstance);
                 bootError('Component ' + kind.replace('-', ' '), error, kind);
                 settleBoot.reject(error);
             },
@@ -125,6 +128,31 @@
         // path produced the instance, the SAME boot lifecycle decides the
         // entry, the ready attribute and the error surface — and a failure on
         // either path is terminal (never a blank page).
+        // W4: the guest's handle tables belong to THIS boot's instance. The
+        // glue bundle defines the API; without it (a page built before W4) the
+        // boot still works, it just has no per-instance container to own.
+        // ONE instance per booted component: `current` is a page-level pointer,
+        // so a second component on the same page displaces the first unless the
+        // host interposes per call (`withInstance`). The dual-instance test
+        // drives exactly that interposition; a second guest boot would not.
+        const instanceApi = globalThis.__TAIRITSU_INSTANCES__;
+        const bootInstance = instanceApi ? instanceApi.create() : null;
+        // W4 contract: ONE active guest per page. `claim` refuses when another
+        // component already owns the glue surface, instead of silently
+        // displacing it; the refusal reaches the error surface below.
+        let guestRefused = null;
+        if (instanceApi && bootInstance) {
+            try {
+                instanceApi.claim(bootInstance);
+            } catch (claimErr) {
+                // A refusal is TERMINAL: reporting it and then booting anyway
+                // would run the second guest's entry on the first guest's
+                // tables. `guestRefused` aborts the boot below.
+                guestRefused = claimErr;
+                bootSurface.fail('guest-active', claimErr);
+            }
+        }
+
         const startBoot = async (result) => {
             if (globalThis.__setWasmExports && result) {
                 globalThis.__setWasmExports(result);
@@ -132,7 +160,10 @@
             await bootComponent({ result, surface: bootSurface });
         };
 
-        try {
+        // Nothing below may run after a refusal: the surface already carries
+        // the error. (A thrown refusal would land in the outermost catch and be
+        // re-reported as a generic 'boot-failed'.)
+        if (!guestRefused) try {
             const imports = await buildImports();
             let wrapperErr = null;
             let wrapperResult = null;
@@ -309,6 +340,8 @@
             } catch (_bootFailure) {
                 return;
             }
+            // The successful instance stays current until the page goes away;
+            // the dual-instance test drives the API to add and dispose peers.
             document.body.removeAttribute('data-booting');
             document.documentElement.dataset.tairitsuReady='hydrated';
         })();

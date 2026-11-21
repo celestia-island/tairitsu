@@ -1,13 +1,13 @@
-// Initialize global handle tables for event listeners
-globalThis.__listenerHandles = globalThis.__listenerHandles || new Map();
-globalThis.__nextListenerHandle = globalThis.__nextListenerHandle || 1n;
+import { installGlobalDelegates } from "./instance.ts";
+
+// W4: listener/event tables belong to the current instance (see instance.ts).
+installGlobalDelegates();
+
+// Install the per-instance delegates for the event tables (W4)
 // Event handles
-globalThis.__eventHandles = globalThis.__eventHandles || new Map();
-globalThis.__nextEventHandle = globalThis.__nextEventHandle || 1n;
 
 // Re-entrancy guard: track which (element, eventType) pairs are currently being dispatched
 // to WASM to prevent infinite recursion when a handler triggers the same event type.
-globalThis.__dispatchingEvents = globalThis.__dispatchingEvents || new Set<string>();
 
 export const eventTarget_exports = {
   /**
@@ -123,6 +123,13 @@ export const eventTarget_exports = {
       };
 
       element.addEventListener(eventType, listener, useCapture);
+      // W4: the listener belongs to this instance; dispose() removes it.
+      globalThis.__TAIRITSU_CURRENT__().reclaimables.listeners.add({
+        target: element,
+        type: eventType,
+        handler: listener,
+        options: useCapture,
+      });
 
       // Store the listener for later reference
       const handle = (globalThis as any).__nextListenerHandle++ as unknown as bigint; // ts-escape-ok: retires with L40

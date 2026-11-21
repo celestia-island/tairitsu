@@ -98,17 +98,9 @@ function lookupNode(handle) {
   // State initializers for modules that keep mutable state on globalThis.
   // When generateModuleCode stringifies export functions into a blob module,
   // the blob has its own scope — any closure variables from the original file
-  // are invisible.  The platform-helpers module stores timer/animation state
-  // on globalThis so it survives the transition, but the blob must ensure
-  // the globalThis properties exist before any export function runs.
-  const stateInit = `// Ensure globalThis state objects exist (needed when this blob runs
-// inside an import-map module that has no access to the IIFE closure).
-if (!globalThis.__tairitsuTimerState) {
-  globalThis.__tairitsuTimerState = { timeoutCallbacks: new Map(), nextTimeoutId: 1 };
-}
-if (!globalThis.__tairitsuAnimState) {
-  globalThis.__tairitsuAnimState = { animationCallbacks: new Map(), nextAnimationId: 1 };
-}`;
+  // W4: timer/animation state lives on the instance (`tables.timerState`),
+  // so the emitted module no longer seeds page-global copies.
+  const stateInit = '';;
 
   lines.push(stateInit.trim());
   lines.push(helpers.trim());

@@ -55,7 +55,14 @@ import urllib.request
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(REPO_ROOT, "packages", "packager", "src", "wasm")
 
-SCENARIOS = ("component", "bad-bytes", "missing-entry", "missing-import", "fixture")
+SCENARIOS = (
+    "component",
+    "two-instances",
+    "bad-bytes",
+    "missing-entry",
+    "missing-import",
+    "fixture",
+)
 
 # The entry the good synthetic component exports: it records that it ran and
 # mutates the page, so "the entry was invoked" is observable from the DOM.
@@ -101,6 +108,9 @@ export async function instantiate(imports) {
 
 WRAPPERS = {
     "component": GOOD_WRAPPER,
+    # The isolation scenario boots the same component, then drives the instance
+    # API from the test side.
+    "two-instances": GOOD_WRAPPER,
     "bad-bytes": BAD_BYTES_WRAPPER,
     "missing-entry": MISSING_ENTRY_WRAPPER,
     "missing-import": MISSING_IMPORT_WRAPPER,
@@ -127,7 +137,10 @@ def call(base, path, body=None):
         headers={"content-type": "application/json"},
     )
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        # Loopback must never go through an HTTP proxy: with `HTTP_PROXY` set
+        # (common in this workspace) the debug API answers 502.
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(req, timeout=30) as resp:
             envelope = json.load(resp)
     except urllib.error.HTTPError as exc:
         # Non-2xx carries the same {ok, error} envelope; surface its message.
@@ -188,17 +201,90 @@ PAGE_CONTEXT = {
     "body_class": "",
     "head": "",
     "favicon": "",
-    "glue_bundle": "/glue-stub.js",
+    "glue_bundle": "/glue-runtime.js",
     "wasm_file": "component.wasm",
     "v": "e2e",
 }
 
-# Minimal glue bundle: the page probes these globals for its import map. The
-# synthetic components do not need real glue; a stub keeps the page's
-# `buildImports` green so the failures under test come from the component.
+# Minimal glue bundle for the component-only scenarios: the page probes these
+# globals for its import map. The synthetic components do not need real glue; a
+# stub keeps the page's `buildImports` green so the failures under test come
+# from the component.
 GLUE_STUB = """
 globalThis.__TAIRITSU_GLUE__ = { INTERFACES: {} };
 """
+
+GLUE_ENTRY = "packages/browser-glue/src/runtime/index.ts"
+
+
+def _source_hash():
+    """Content hash of the glue sources the bundle is built from."""
+    import hashlib
+
+    digest = hashlib.sha256()
+    roots = [
+        os.path.join(REPO_ROOT, "packages", "browser-glue", "src", "runtime"),
+        os.path.join(REPO_ROOT, "packages", "browser-glue", "src", "glue"),
+    ]
+    files = []
+    for root in roots:
+        for dirpath, _dirnames, filenames in os.walk(root):
+            for name in filenames:
+                if name.endswith((".ts", ".mjs", ".js")):
+                    files.append(os.path.join(dirpath, name))
+    for path in sorted(files):
+        digest.update(os.path.relpath(path, REPO_ROOT).encode())
+        try:
+            with open(path, "rb") as handle:
+                digest.update(handle.read())
+        except OSError:
+            digest.update(b"<unreadable>")
+    return digest.hexdigest()
+
+
+def ensure_glue_bundle(dest):
+    """The REAL glue bundle, or None.
+
+    The isolation scenario must drive the shipped instance API, not a copy of
+    it: a stand-in would let the control pass while the real container is
+    broken (that exact divergence produced the W3 S1). A prebuilt
+    `packages/browser-glue/dist/runtime.js` is used ONLY when its stamp names the
+    CURRENT source hash — mtimes cannot tell "rebuilt after the edit" from
+    "built from other code". Otherwise the bundle is built from `src` here.
+    """
+    dist_dir = os.path.join(REPO_ROOT, "packages", "browser-glue", "dist")
+    committed = os.path.join(dist_dir, "runtime.js")
+    stamp = os.path.join(dist_dir, ".glue-src-hash")
+    if os.path.isfile(committed) and os.path.isfile(stamp):
+        try:
+            with open(stamp, encoding="utf-8") as handle:
+                if handle.read().strip() == _source_hash():
+                    shutil.copyfile(committed, dest)
+                    return True
+        except OSError:
+            pass
+    entry = os.path.join(REPO_ROOT, GLUE_ENTRY)
+    if not os.path.isfile(entry):
+        return False
+    try:
+        proc = subprocess.run(
+            [
+                "npx",
+                "--yes",
+                "esbuild@0.28.0",
+                entry,
+                "--bundle",
+                f"--outfile={dest}",
+                "--format=iife",
+                "--platform=browser",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return proc.returncode == 0 and os.path.isfile(dest)
 
 
 def render_page():
@@ -220,8 +306,18 @@ def build_dist(scenario, dest):
     os.makedirs(os.path.join(dest, "component-wrapper"), exist_ok=True)
     with open(os.path.join(dest, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(render_page())
-    with open(os.path.join(dest, "glue-stub.js"), "w", encoding="utf-8") as fh:
-        fh.write(GLUE_STUB)
+    glue_path = os.path.join(dest, "glue-runtime.js")
+    # `two-instances` needs the shipped bundle (the instance API lives there);
+    # the component scenarios only need the page's import map to stay green.
+    if scenario == "two-instances":
+        if not ensure_glue_bundle(glue_path):
+            raise RuntimeError(
+                "the two-instances control needs the real glue bundle "
+                f"({GLUE_ENTRY}); build it with `npx esbuild … --bundle`"
+            )
+    else:
+        with open(glue_path, "w", encoding="utf-8") as fh:
+            fh.write(GLUE_STUB)
 
     loader_src = os.path.join(TEMPLATE_DIR, "component-wrapper-loader.template.js")
     with open(loader_src, encoding="utf-8") as fh:
@@ -295,6 +391,66 @@ def check_boot_state(state, scenario, *, real_dist=False):
             failures.append("the component's boot entry never ran")
         if "component booted" not in (state.get("appText") or ""):
             failures.append("#app was not updated by the component")
+    return failures
+
+
+ISOLATION_PROBE = """(() => {
+    const api = globalThis.__TAIRITSU_INSTANCES__;
+    if (!api) return { error: "the glue bundle exposed no instance API" };
+    const A = api.current();
+    const B = api.create();
+
+    const store = (instance, value) => api.withInstance(instance, () => {
+        const handle = globalThis.__nextHandle++;
+        globalThis.__elementHandles.set(handle, value);
+        return handle;
+    });
+
+    const handleB = store(B, { owner: "B" });
+    const handleA = store(A, { owner: "A" });
+    const inA = api.withInstance(A, () => globalThis.__elementHandles.get(handleA));
+    const inB = api.withInstance(B, () => globalThis.__elementHandles.get(handleB));
+    const crossRead = api.withInstance(A, () => globalThis.__elementHandles.get(handleB));
+
+    api.dispose(A);
+    const afterDisposeA = api.withInstance(A, () => globalThis.__elementHandles.get(handleA));
+    const stillInB = api.withInstance(B, () => globalThis.__elementHandles.get(handleB));
+
+    return {
+        error: null,
+        aOwner: inA && inA.owner,
+        bOwner: inB && inB.owner,
+        crossRead: crossRead === undefined ? null : (crossRead.owner || "?"),
+        afterDisposeA: afterDisposeA === undefined ? null : "still resolvable",
+        stillInB: stillInB && stillInB.owner,
+        aDisposed: A.disposed,
+        bDisposed: B.disposed,
+        api_ok: true,
+    };
+})()"""
+
+
+def check_isolation(state):
+    """W4 acceptance ①/②: no cross-talk, and dispose reclaims only its own."""
+    failures = []
+    if not isinstance(state, dict) or state.get("error"):
+        return [f"isolation probe failed: {(state or {}).get('error') if isinstance(state, dict) else state}"]
+    if state.get("aOwner") != "A":
+        failures.append(f"instance A resolved {state.get('aOwner')!r} from its own handle")
+    if state.get("bOwner") != "B":
+        failures.append(f"instance B resolved {state.get('bOwner')!r} from its own handle")
+    if state.get("crossRead") is not None:
+        failures.append(
+            f"instance A could read B's handle ({state.get('crossRead')!r}) - handles cross instances"
+        )
+    if state.get("afterDisposeA") is not None:
+        failures.append("a disposed instance's handle still resolved")
+    if not state.get("aDisposed"):
+        failures.append("the disposed instance was not marked disposed")
+    if state.get("bDisposed"):
+        failures.append("disposing A also disposed B")
+    if state.get("stillInB") != "B":
+        failures.append(f"disposing A broke B ({state.get('stillInB')!r})")
     return failures
 
 
@@ -380,6 +536,36 @@ def self_check():
         # ... and the honest failure state (card naming THIS failure) must pass.
         if check_boot_state(honest, scenario):
             failures.append(f"control {scenario} rejects a correct error page")
+
+    # W4: the dual-instance isolation control must exist and its checks must be
+    # able to fail (a control that cannot fail is not a control).
+    if "two-instances" not in SCENARIOS:
+        failures.append("the dual-instance isolation scenario is missing")
+    else:
+        healthy = {
+            "aOwner": "A",
+            "bOwner": "B",
+            "crossRead": None,
+            "afterDisposeA": None,
+            "aDisposed": True,
+            "bDisposed": False,
+            "stillInB": "B",
+        }
+        if check_isolation(healthy):
+            failures.append("the isolation control rejects a correctly isolated page")
+        bleeding = [
+            (dict(healthy, crossRead="B"), "would pass a page whose handles cross instances"),
+            (
+                dict(healthy, afterDisposeA="still resolvable"),
+                "would pass a page that still resolves a disposed instance's handle",
+            ),
+            (dict(healthy, bDisposed=True), "would pass a page that disposed both instances"),
+            (dict(healthy, stillInB=None), "would pass a page where disposing A broke B"),
+            (dict(healthy, aOwner="B"), "would pass a page where A resolved B's object"),
+        ]
+        for state, message in bleeding:
+            if not check_isolation(state):
+                failures.append(f"the isolation control {message}")
 
     # The good-component assertions must bite in both directions too.
     if check_boot_state(GOOD_STATE, "component"):
@@ -537,6 +723,8 @@ def main():
             failures.extend(
                 assert_boot_contract(base, args.scenario, real_dist=bool(args.dist))
             )
+            if args.scenario == "two-instances" and not failures:
+                failures.extend(check_isolation(evaluate(base, ISOLATION_PROBE)))
 
         if args.screenshot:
             data = call(base, "/screenshot", {})

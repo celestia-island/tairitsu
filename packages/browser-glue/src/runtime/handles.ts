@@ -1,14 +1,10 @@
-// Initialize global handle tables if not already set
-globalThis.__elementHandles = globalThis.__elementHandles || new Map();
-globalThis.__documentHandles = globalThis.__documentHandles || new Map();
-globalThis.__nodeHandles = globalThis.__nodeHandles || new Map();
-globalThis.__textHandles = globalThis.__textHandles || new Map();
-globalThis.__nextHandle = globalThis.__nextHandle || 1n;
-globalThis.__mutationRecordHandles = globalThis.__mutationRecordHandles || new Map();
-globalThis.__nextMutationRecord = globalThis.__nextMutationRecord || 1n;
-globalThis.__resizeObserverEntryHandles = globalThis.__resizeObserverEntryHandles || new Map();
-globalThis.__nextResizeObserverEntry = globalThis.__nextResizeObserverEntry || 1n;
-globalThis.__resizeObserverSizeHandles = globalThis.__resizeObserverSizeHandles || new Map();
-globalThis.__nextResizeObserverSizeHandle = globalThis.__nextResizeObserverSizeHandle || 1n;
-globalThis.__domRectHandles = globalThis.__domRectHandles || new Map();
-globalThis.__nextDomRectHandle = globalThis.__nextDomRectHandle || 1n;
+import { installGlobalDelegates, installInstanceApi } from "./instance.ts";
+
+// W4: the handle tables are PER INSTANCE now. `installGlobalDelegates()`
+// defines these names on `globalThis` as accessors that forward to the
+// current instance, so the call sites below/elsewhere stay unchanged and
+// no mutable handle state lives on `globalThis`.
+installGlobalDelegates();
+installInstanceApi();
+
+// Install the per-instance handle-table delegates (W4)

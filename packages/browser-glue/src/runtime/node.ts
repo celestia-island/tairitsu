@@ -35,10 +35,6 @@ export const node_exports = {
     const node = globalThis.__lookupNode(self);
     if (!node) return undefined;
     const children = node.childNodes;
-    if (!globalThis.__nodeListHandles) {
-      globalThis.__nodeListHandles = new Map();
-      globalThis.__nextNodeList = 1n;
-    }
     const handle = globalThis.__nextNodeList++;
     globalThis.__nodeListHandles.set(handle, children);
     return handle;
