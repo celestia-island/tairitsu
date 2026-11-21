@@ -61,8 +61,10 @@ SCENARIOS = (
     "capability-exact",
     "capability-undeclared",
     "capability-overreach",
+    "worker-refused",
     "capability-wasi",
     "worker-boot",
+    "worker-refused",
     "worker-terminate",
     "worker-kill",
     "glue-imports",
@@ -178,6 +180,7 @@ WRAPPERS = {
     "capability-overreach": GLUE_IMPORT_WRAPPER,
     "capability-wasi": GLUE_IMPORT_WRAPPER,
     "worker-boot": WORKER_WRAPPER,
+    "worker-refused": WORKER_WRAPPER,
     "worker-terminate": WORKER_WRAPPER,
     "worker-kill": DEAD_LOOP_WRAPPER,
     # The isolation scenario boots the same component, then drives the instance
@@ -194,6 +197,7 @@ FAILING = (
     "missing-import",
     "capability-undeclared",
     "capability-overreach",
+    "worker-refused",
     "capability-wasi",
 )
 
@@ -207,6 +211,7 @@ EXPECTED_CARD = {
     "capability-overreach": "does not provide",
     "capability-undeclared": "is not declared",
     "capability-wasi": "WASI modules the host does not provide",
+    "worker-refused": "this lane cannot provide",
 }
 
 
@@ -411,6 +416,10 @@ def capability_declaration(scenario):
         "missing-import",
         "fixture",
     }
+    if scenario == "worker-refused":
+        # The one control that makes the worker host's refusal observable: it
+        # declares an interface the lane cannot provide (it has no DOM).
+        return {"interfaces": ["document"], "wasiModules": []}
     if scenario in STUB_SCENARIOS or scenario in WORKER_SCENARIOS:
         return {"interfaces": [], "wasiModules": []}
     if scenario == "capability-exact":
@@ -425,7 +434,9 @@ def capability_declaration(scenario):
 def render_worker_script():
     """Render `worker.template.js` the way the packager emits `glue-worker.js`."""
     with open(os.path.join(TEMPLATE_DIR, "worker.template.js"), encoding="utf-8") as fh:
-        return fh.read()
+        # The packager substitutes the build stamp; the harness must too, or the
+        # worker dies on a ReferenceError that looks like a component failure.
+        return fh.read().replace("__TAIRITSU_BUILD__", "e2e")
 
 
 def render_boot_script():
@@ -440,7 +451,7 @@ def render_boot_script():
     return boot
 
 
-WORKER_SCENARIOS = {"worker-boot", "worker-terminate", "worker-kill"}
+WORKER_SCENARIOS = {"worker-boot", "worker-terminate", "worker-refused", "worker-kill"}
 
 
 def render_page(scenario=None):
@@ -618,8 +629,9 @@ def check_boot_state(state, scenario, *, real_dist=False):
             # purpose, so "not ready" is the expected state.
             return failures
         if scenario in WORKER_SCENARIOS:
-            # The entry runs in the Worker: the page cannot see its global or
-            # its DOM writes, so the observable contract is ready + no error.
+            # The entry runs in the Worker: this pure check only sees ready/no
+            # error; the "was it really the Worker" half lives in the run loop
+            # (it needs the page).
             return failures
         if real_dist:
             # A real build is not instrumented: ready + no error is the whole
@@ -1026,6 +1038,22 @@ def main():
                     failures.append(f"the glue modules did not provide their exports: {state!r}")
                 else:
                     print("glue imports resolved statically:", state)
+            if args.scenario in WORKER_SCENARIOS and not failures:
+                # Prove the lane: the Worker is live and the page's own realm
+                # never ran the entry. Without this the scenario passes on the
+                # main-thread lane too (it did once).
+                state = evaluate(
+                    base,
+                    "(() => ({ workerActive: !!(globalThis.__TAIRITSU_WORKER__ && "
+                    "globalThis.__TAIRITSU_WORKER__.active()), "
+                    "pageRanEntry: globalThis.__w3_entry_ran === true }))()",
+                )
+                if not isinstance(state, dict):
+                    failures.append("worker state unreadable: " + repr(state))
+                elif state.get("workerActive") is not True:
+                    failures.append("the component did not boot in a Worker")
+                elif state.get("pageRanEntry") is True:
+                    failures.append("the entry ran on the page: this is the main-thread lane")
             if args.scenario == "worker-terminate":
                 # The kill path without a spinning worker: boot normally, then
                 # terminate and check both halves of the reclaim — the Worker is

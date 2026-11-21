@@ -64,31 +64,38 @@
             document.documentElement.dataset.tairitsuWorker !== undefined &&
             typeof Worker === 'function';
         let workerHost = null;
+        let workerCancelled = false;
 
         const startWorkerBoot = async (capabilities) => {
+            if (workerCancelled) return;
             const worker = new Worker('/glue-worker.js', { type: 'module' });
             workerHost = worker;
+            let settledFlag = false;
             const settled = new Promise((resolve) => {
                 worker.onmessage = (event) => {
                     const message = event.data || {};
+                    if (settledFlag) return;
                     if (message.type === 'ready') {
+                        settledFlag = true;
                         bootSurface.ready(message.entry);
                         resolve({ ok: true });
                     } else if (message.type === 'error') {
+                        settledFlag = true;
                         bootSurface.fail(message.kind || 'boot-failed', new Error(message.message));
                         resolve({ ok: false });
                     }
                 };
                 worker.onerror = (event) => {
+                    // Only while the boot is still undecided: a late uncaught
+                    // error must not tear down a page that already reported
+                    // ready (and leave ready + error set at once).
+                    if (settledFlag) return;
+                    settledFlag = true;
                     bootSurface.fail('instantiate-failed', new Error(event.message || 'worker error'));
                     resolve({ ok: false });
                 };
             });
-            worker.postMessage({
-                type: 'boot',
-                wrapper: '/component-wrapper/' + (window.__TAIRITSU_WORKER_WRAPPER__ || 'component.js'),
-                capabilities,
-            });
+            worker.postMessage({ type: 'boot', capabilities });
             await settled;
         };
 
@@ -96,6 +103,9 @@
         // `terminate()` can interrupt a synchronous loop, so that is what this
         // does — plus the main-thread half of the reclaim (the W4 instance).
         const terminateWorkerHost = () => {
+            // Before the host exists there is nothing to kill, but the boot must
+            // still be cancelled — otherwise a "killed" page boots afterwards.
+            workerCancelled = true;
             if (!workerHost) return false;
             workerHost.terminate();
             workerHost = null;

@@ -1856,8 +1856,13 @@ fn generate_component_html_with_output_dir(
     // W5: the page's boot module is a REAL file (no inline `<script>`), which is
     // what lets it run under `script-src 'self'`. It carries the build's
     // cache-buster and wasm file name, exactly like the loader's `?v=`.
-    // W7: the Worker lane's host script. Emitted beside the page like boot.js.
-    std::fs::write(output_dir.join("glue-worker.js"), WORKER_HOST_TEMPLATE)?;
+    // W7: the Worker lane's host script. Emitted beside the page like boot.js,
+    // and stamped with the same cache-buster so the two realms cannot end up
+    // running different lifecycle implementations after a redeploy.
+    std::fs::write(
+        output_dir.join("glue-worker.js"),
+        WORKER_HOST_TEMPLATE.replace("__TAIRITSU_BUILD__", &v.to_string()),
+    )?;
 
     let boot = COMPONENT_BOOT_PAGE_TEMPLATE
         .replace("{{ v }}", &v.to_string())

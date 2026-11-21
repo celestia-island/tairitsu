@@ -13,7 +13,7 @@
 // lane and the main-thread lane, not a missing feature.
 //
 // Protocol (page → worker):
-//   { type: "boot", wasm: "<file>", wrapper: "<path>", capabilities: {...} }
+//   { type: "boot", capabilities: {...} }
 //   { type: "call", name: "<export>", args: [...] }
 //   { type: "stop" }                       // cooperative; see below
 // (worker → page):
@@ -41,7 +41,7 @@ const normalize = (name) =>
     .replace(/^tairitsu-browser:full\//, "")
     .replace(/@\d+\.\d+\.\d+$/, "");
 
-async function boot({ wrapper, capabilities }) {
+async function boot({ capabilities }) {
   // W6 applies here too: the declaration decides, and this host can provide no
   // glue interfaces (no DOM). A declaration that asks for one is refused rather
   // than silently ignored — the component belongs on the main thread.
@@ -68,16 +68,27 @@ async function boot({ wrapper, capabilities }) {
     );
   }
 
+  // W6's guard inside the emitted glue modules reads the declaration from the
+  // realm that imports them — that is this one, not the page's.
+  globalThis.__TAIRITSU_CAPABILITIES__ = capabilities;
+
   // No glue imports and no WASI shim: a compute-only component needs neither.
+  // The wrapper goes through the SAME loader as the main-thread lane, so both
+  // instantiate ABI shapes and the build's wrapper stem are handled in one place.
   const imports = {};
+  const { instantiateWithWrapper } = await import(
+    new URL("./component-wrapper-loader.js?v=__TAIRITSU_BUILD__", import.meta.url).href
+  );
   let loaded;
   try {
-    loaded = await import(wrapper);
+    loaded = await instantiateWithWrapper(imports);
   } catch (error) {
     fail("instantiate-failed", error);
     return;
   }
-  const { bootComponent } = await import("./component-boot.js");
+  const { bootComponent } = await import(
+    new URL("./component-boot.js?v=__TAIRITSU_BUILD__", import.meta.url).href
+  );
   const surface = {
     ready: (entry) => {
       entryName = entry;
