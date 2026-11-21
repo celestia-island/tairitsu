@@ -68,7 +68,12 @@
 
         const startWorkerBoot = async (capabilities) => {
             if (workerCancelled) return;
-            const worker = new Worker('/glue-worker.js', { type: 'module' });
+            // Relative to THIS module, like the loader's own resolution: a page
+            // served from a sub-path gets its own host (and its own wrapper).
+            const worker = new Worker(
+                new URL('glue-worker.js', import.meta.url),
+                { type: 'module' },
+            );
             workerHost = worker;
             let settledFlag = false;
             const settled = new Promise((resolve) => {

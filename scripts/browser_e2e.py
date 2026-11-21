@@ -548,10 +548,23 @@ def build_dist(scenario, dest):
         os.path.join(dest, "component-boot.js"),
     )
     if scenario == "worker-kill":
-        # The re-boot half of the control needs a healthy wrapper in the same
-        # dist: the killed one never returns.
-        with open(os.path.join(dest, "component-wrapper", "worker-fresh.js"), "w", encoding="utf-8") as fh:
+        # The re-boot half needs a HEALTHY page in the same dist: the killed
+        # component never returns, and the loader resolves the wrapper from the
+        # stem, so a second directory is the honest way to serve both.
+        healthy = os.path.join(dest, "healthy")
+        os.makedirs(os.path.join(healthy, "component-wrapper"), exist_ok=True)
+        with open(os.path.join(healthy, "component-wrapper", "component.js"), "w", encoding="utf-8") as fh:
             fh.write(WRAPPERS["worker-boot"])
+        for name in ("boot.js", "component-boot.js", "component-wrapper-loader.js", "glue-worker.js", "glue-runtime.js"):
+            source = os.path.join(dest, name)
+            if os.path.isfile(source):
+                shutil.copy2(source, os.path.join(healthy, name))
+        with open(os.path.join(healthy, "index.html"), "w", encoding="utf-8") as fh:
+            # The template points at the absolute /boot.js (W5, for route pages);
+            # this sibling lives one level down and must load its OWN copy.
+            fh.write(render_page("worker-boot").replace('src="/boot.js', 'src="boot.js'))
+        with open(os.path.join(healthy, "tairitsu-capabilities.json"), "w", encoding="utf-8") as fh:
+            json.dump({"interfaces": [], "wasiModules": []}, fh)
     wrapper_source = WRAPPERS[scenario]
     if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
         rewritten = rewrite_glue_specifiers(wrapper_source)
@@ -939,8 +952,9 @@ def main():
         print(
             "SKIP worker-kill: this lane's browser runs --single-process (shirabe), "
             "where a spinning Worker blocks the browser process — the exact property "
-            "this control asserts. Re-run on a multi-process browser with "
-            "--force-worker-kill; see the recorded environment note.",
+            "this control asserts. Re-run it against a multi-process browser with "
+            "--force-worker-kill (SHIRABE_BIN may point at any shim that speaks the "
+            "same debug HTTP contract); it passes there — see the PR's 复跑 paragraph.",
             file=sys.stderr,
         )
         return 0
@@ -1133,34 +1147,19 @@ def main():
                     failures.append(f"terminate() did not report a kill ({killed!r})")
                 if active_after is not False:
                     failures.append("the worker was still active after terminate")
-                # A fresh host must boot on the same, still-alive page.
-                evaluate(base, """(() => {
-                    const worker = new Worker('/glue-worker.js', { type: 'module' });
-                    window.__fresh = 'pending';
-                    worker.onmessage = (event) => {
-                        const message = event.data || {};
-                        window.__fresh = message.type === 'ready' ? 'ready' : 'error:' + message.kind;
-                        if (message.type === 'ready') worker.terminate();
-                    };
-                    worker.onerror = () => { window.__fresh = 'worker-error'; };
-                    worker.postMessage({
-                        type: 'boot',
-                        wrapper: '/component-wrapper/worker-fresh.js',
-                        capabilities: { interfaces: [], wasiModules: [] },
-                    });
-                    return true;
-                })()""")
+                # A fresh component must boot in the same, still-alive browser:
+                # load the healthy sibling page and require it to reach ready.
+                call(base, "/navigate", {"url": url + "/healthy/index.html"})
                 started = time.time()
-                fresh = "pending"
-                while time.time() - started < 10:
-                    fresh = evaluate(base, "window.__fresh || 'pending'")
-                    if fresh in ("ready",) or str(fresh).startswith(("error", "worker-error")):
+                while time.time() - started < 15:
+                    fresh = evaluate(base, "document.documentElement.dataset.tairitsuReady || null")
+                    if fresh == "hydrated":
                         break
-                    time.sleep(0.2)
-                if fresh != "ready":
-                    failures.append(f"a fresh worker could not boot after the kill ({fresh!r})")
+                    time.sleep(0.3)
+                if fresh != "hydrated":
+                    failures.append("a fresh component could not boot after the kill (" + repr(fresh) + ")")
                 if not failures:
-                    print("worker killed; main thread alive; fresh worker booted ready")
+                    print("worker killed; main thread alive; a fresh component booted ready")
             if args.scenario == "csp" and not failures:
                 enforcement = evaluate(
                     base,

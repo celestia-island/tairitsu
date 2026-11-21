@@ -709,7 +709,7 @@ test("the worker lane exists and terminate is the hard kill (W7 pin)", async () 
   const boot = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");
   // opt-in only: the default must stay the main thread
   assert.match(boot, /tairitsuWorker/, "no worker opt-in attribute");
-  assert.match(boot, /new Worker\('\/glue-worker\.js'/, "no worker host");
+  assert.match(boot, /new Worker\(\s*\n?\s*new URL\('glue-worker\.js'/, "no worker host");
   assert.match(boot, /const terminateWorkerHost = \(\) => \{/, "no terminate path");
   assert.match(
     boot,
