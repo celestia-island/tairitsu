@@ -257,7 +257,7 @@ mod glue_modules {
 
     /// The emitter's output directory (built by `just glue-esm`).
     fn emitted_dir() -> std::path::PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../browser-glue/dist/glue")
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../browser-glue/dist/glue-esm")
     }
 
     #[test]

@@ -349,7 +349,15 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
             boot_source = boot_file.read_text(encoding="utf-8")
             boot_idx = boot_source.find(post_boot_marker)
             if boot_idx != -1:
-                post_boot_code = boot_source[boot_idx:]
+                # Stop before the module's outer `try`/`catch` tail: copying
+                # from the marker to EOF leaves an unmatched `} catch`, which
+                # makes the generated page a SyntaxError.
+                tail = boot_source[boot_idx:]
+                for terminator in ("\n        } catch (topErr) {", "\n        } catch ("):
+                    if terminator in tail:
+                        tail = tail[: tail.index(terminator)]
+                        break
+                post_boot_code = tail
                 print(f"CDN boot: post-boot utilities read from {boot_file.name}")
         if not post_boot_code:
             print(

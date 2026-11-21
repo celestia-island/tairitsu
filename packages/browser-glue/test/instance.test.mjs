@@ -555,6 +555,15 @@ test("the build-time glue modules are real ESM with named exports (W5)", async (
       `no emitted module for @tairitsu-glue/${name}`,
     );
   }
+  // The export count is the interface surface, not a byproduct of the scanner:
+  // 299 named functions across the 25 interfaces (a paren-scanning relapse once
+  // inflated this to 364 by recording parameter names).
+  const total = files.reduce(async (sumPromise, name) => {
+    const source = await readFile(join(glueDir, name), "utf8");
+    return (await sumPromise) + (source.match(/^export const /gm) || []).length;
+  }, Promise.resolve(0));
+  assert.equal(await total, 299, "the emitted export surface changed");
+
   const manifest = JSON.parse(await readFile(join(glueDir, "manifest.json"), "utf8"));
   assert.ok(manifest.interfaces.length >= 20);
   assert.equal(

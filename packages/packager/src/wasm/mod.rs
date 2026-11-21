@@ -1068,27 +1068,36 @@ fn bundle_local_wasi_shim(
     }
 }
 
-/// W5: copy `packages/browser-glue/dist/glue/` into the output. The wrapper's
+/// W5: copy the emitted `browser-glue/dist/glue-esm/` modules into the output. The wrapper's
 /// imports were rewritten to `../glue/<name>.js`, so a build without these files
 /// would 404 at load time — hence fail-loud rather than a partial dist.
-fn copy_glue_modules(_config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
     // The emitted modules sit in the glue package, which may live beside this
     // crate (workspace build) or be reached from the project being built — the
     // same candidate-probing the glue *runtime* bundle uses. A compile-time
     // absolute path would make every installed binary fail on other machines.
-    let candidates: Vec<std::path::PathBuf> = std::env::var("TAIRITSU_GLUE_ESM_DIR")
-        .map(std::path::PathBuf::from)
-        .into_iter()
-        .chain(
-            [
-                "../../../tairitsu/packages/browser-glue/dist/glue-esm",
-                "../../packages/browser-glue/dist/glue-esm",
-                "../browser-glue/dist/glue-esm",
-            ]
-            .iter()
-            .map(std::path::PathBuf::from),
-        )
-        .collect();
+    // Same shape as `resolve_glue_runtime_bundle`: an env override, then paths
+    // relative to the PROJECT being built (a consumer repo), then the workspace
+    // layout. Resolving against the process CWD would fail from a repo root.
+    let mut candidates: Vec<std::path::PathBuf> = Vec::new();
+    if let Ok(dir) = std::env::var("TAIRITSU_GLUE_ESM_DIR") {
+        candidates.push(std::path::PathBuf::from(dir));
+    }
+    let project = &config.manifest_dir;
+    for relative in [
+        "../../tairitsu/packages/browser-glue/dist/glue-esm",
+        "../tairitsu/packages/browser-glue/dist/glue-esm",
+        "../browser-glue/dist/glue-esm",
+        "../../packages/browser-glue/dist/glue-esm",
+        "node_modules/@celestia-island/tairitsu-browser-glue/dist/glue-esm",
+    ] {
+        candidates.push(project.join(relative));
+    }
+    // And the workspace layout relative to this crate (a `cargo run` from the
+    // tairitsu checkout).
+    candidates.push(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../browser-glue/dist/glue-esm"),
+    );
     let source_dir = candidates
         .iter()
         .find(|path| path.is_dir())
@@ -1192,7 +1201,10 @@ fn glue_specifier_extension(source: &str) -> String {
         if spec.ends_with(".js") {
             return format!("{}{}{}", &caps[1], spec, &caps[3]);
         }
-        format!("{}{}.js{}", &caps[1], spec, &caps[3])
+        // The emitted modules are version-less; a versioned specifier would
+        // name a file that is never written.
+        let without_version = spec.split_once('@').map_or(spec, |(base, _)| base);
+        format!("{}{}.js{}", &caps[1], without_version, &caps[3])
     })
     .to_string()
 }

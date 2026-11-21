@@ -20,6 +20,12 @@
         };
 
         try {
+        // A boot that hangs must not stay invisible forever. This used to be an
+        // inline <script> in the page, which the CSP this build targets blocks.
+        setTimeout(() => {
+            document.body.removeAttribute('data-booting');
+        }, 10000);
+
         const { instantiateWithWrapper } = await import('/component-wrapper-loader.js?v={{ v }}');
         const { bootComponent } = await import('/component-boot.js?v={{ v }}');
 

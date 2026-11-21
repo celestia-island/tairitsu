@@ -365,7 +365,7 @@ packager-js-test:
 # (corrupted bytes / no boot entry / missing import).  Needs `shirabe` on PATH
 # (npm i -g @celestia-island/shirabe) and a Chromium binary; that is why this
 # is NOT part of `just ci` — `packager-js-test` covers the browser-free half.
-browser-e2e:
+browser-e2e: glue-esm
     {{python}} scripts/browser_e2e.py --scenario component
     {{python}} scripts/browser_e2e.py --scenario two-instances
     {{python}} scripts/browser_e2e.py --scenario bad-bytes

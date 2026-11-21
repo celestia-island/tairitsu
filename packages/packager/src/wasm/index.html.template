@@ -9,9 +9,9 @@
 </head>
 <body class="{{ body_class }}" data-booting>
     <style>[data-booting] { visibility: hidden !important; } .tairitsu-boot-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:system-ui,sans-serif; color:rgba(255,255,255,.7); }</style>
-    <script>setTimeout(function(){document.body.removeAttribute('data-booting')},10000)</script>
     <div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>
     <script src="{{ glue_bundle }}?v={{ v }}"></script>
-    <script type="module" src="./boot.js?v={{ v }}"></script>
+    <!-- absolute: route pages are written into subdirectories -->
+    <script type="module" src="/boot.js?v={{ v }}"></script>
 </body>
 </html>
