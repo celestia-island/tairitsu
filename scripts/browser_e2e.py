@@ -480,10 +480,11 @@ def render_page(scenario=None):
         # W8: the host owns a panel and declares it as the mount root. The `#app`
         # the template ships must lose to it, and the host node inside must
         # survive the boot.
+        # A host that mounts into its own panel has no page-level `#app`; leaving
+        # one there is the conflict the boot refuses.
         page = page.replace(
             '<div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>',
             '<div id="host-panel"><p id="host-child">host owns this</p></div>'
-            '<div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>'
             '<p id="outside">untouched</p>',
             1,
         )

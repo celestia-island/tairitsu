@@ -10,11 +10,18 @@
         const bootError = (msg, err, kind) => {
             if (kind) markBootFailure(kind);
             console.error('[tairitsu] Boot failed:', msg, err || '');
-            const appRoot = (globalThis.__TAIRITSU_MOUNT_ROOT__ || {}).element || document.getElementById('app');
-            if (appRoot) appRoot.innerHTML =
+            const mountState = globalThis.__TAIRITSU_MOUNT_ROOT__ || {};
+            const appRoot = mountState.element || document.getElementById('app');
+            if (appRoot && !mountState.host) appRoot.innerHTML =
                 '<div style="padding:2em;font-family:monospace;color:#e06c75">' +
                 '<b>Tairitsu boot error</b><br><pre style="margin-top:.5em;white-space:pre-wrap">' +
-                (err ? String(err.message || err) : String(msg)) +
+                // Escaped: a message can carry the host's own text (the mount
+                // root name), and this sink is innerHTML.
+                String(err ? (err.message || err) : msg)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;') +
                 '</pre></div>';
             document.body.removeAttribute('data-booting');
         };
@@ -30,60 +37,77 @@
         const { bootComponent } = await import('/component-boot.js?v={{ v }}');
 
         // W8: the mount root is the HOST's choice. `<html data-tairitsu-root="id">`
-        // names an element the host owns; the guest patches inside it and must
-        // not clear it. Without the attribute the page keeps its old shape: the
-        // `#app` element, created if the page has none.
+        // names a CONTAINER the host owns; the component gets its own `#app`
+        // shell inside it, so the host's children are never touched. Without the
+        // attribute the page keeps its old shape (a page-level `#app`).
+        //
+        // The host's children are never adopted as the guest's: the guest clears
+        // its shell on mount, so anything it took over would be lost.
+        const mountError = (kind, detail) => {
+            // Reported directly, not thrown: the outer catch would re-mark the
+            // document as a generic boot failure and destroy the kind.
+            markBootFailure(kind);
+            document.body.removeAttribute('data-booting');
+            console.error('[tairitsu] mount root: ' + detail);
+            return { element: null, host: true, missing: null, kind };
+        };
+
         const resolveMountRoot = () => {
             const named = document.documentElement.dataset.tairitsuRoot;
-            if (named) {
-                const hostRoot = document.getElementById(named);
-                if (!hostRoot) {
-                    // The host named it, so a missing one is a wiring error, not
-                    // something to paper over with a fresh element.
-                    return { element: null, host: true, missing: named };
+            if (!named) {
+                let fallback = document.getElementById('app');
+                if (!fallback) {
+                    fallback = document.createElement('div');
+                    fallback.id = 'app';
+                    document.body.appendChild(fallback);
                 }
-                // The guest mounts through `get_element_by_id("app")`. The host
-                // root keeps every attribute it has (its id included): when it is
-                // not itself `#app`, the guest's own shell is MOVED inside it, so
-                // the guest clears its own element and never the host's children.
-                if (hostRoot.id === 'app') {
-                    hostRoot.setAttribute('data-tairitsu-host-root', '');
-                    return { element: hostRoot, host: true, missing: null };
-                }
-                let shell = document.getElementById('app');
-                if (!shell) {
-                    shell = document.createElement('div');
-                    shell.id = 'app';
-                }
-                if (shell.parentNode !== hostRoot) hostRoot.appendChild(shell);
-                return { element: shell, host: true, missing: null, hostRoot };
+                return { element: fallback, host: false, missing: null };
             }
-            let fallback = document.getElementById('app');
-            if (!fallback) {
-                fallback = document.createElement('div');
-                fallback.id = 'app';
-                document.body.appendChild(fallback);
+            const container = document.getElementById(named);
+            if (!container) {
+                return mountError(
+                    'mount-root-missing',
+                    'data-tairitsu-root="' + named + '" matches no element',
+                );
             }
-            return { element: fallback, host: false, missing: null };
+            const existing = document.getElementById('app');
+            if (existing && existing !== container && !container.contains(existing)) {
+                // A shell that lives elsewhere would be cleared and the component
+                // would render outside the container the host named. Refuse
+                // rather than silently pick one.
+                return mountError(
+                    'mount-root-conflict',
+                    'the page already has an #app outside "' + named + '"',
+                );
+            }
+            if (container.id === 'app') {
+                // The guest clears its mount point on entry, so a container that
+                // IS the shell would be wiped. Give it its own shell instead.
+                return mountError(
+                    'mount-root-conflict',
+                    'the mount root must be a container, not the #app shell itself',
+                );
+            }
+            if (!existing) {
+                const shell = document.createElement('div');
+                shell.id = 'app';
+                container.appendChild(shell);
+                return { element: shell, host: true, missing: null, container };
+            }
+            return { element: existing, host: true, missing: null, container };
         };
 
         const mount = resolveMountRoot();
         const appRoot = mount.element;
-        if (mount.missing) {
-            // Fail closed: the host asked for a root that is not there.
-            markBootFailure('mount-root-missing');
-            document.body.removeAttribute('data-booting');
-            console.error(
-                '[tairitsu] the host declared data-tairitsu-root="' + mount.missing +
-                '" but no element has that id',
-            );
-            throw new Error('mount-root-missing: ' + mount.missing);
+        if (!appRoot) {
+            // Fail closed with a kind the page can read; nothing is invented and
+            // no host content is touched.
+            throw Object.assign(new Error(mount.kind + ': mount root unusable'), {
+                kind: mount.kind,
+                reported: true,
+            });
         }
-        // W4/W6/W7 read the root too; publish the decision once.
-        globalThis.__TAIRITSU_MOUNT_ROOT__ = {
-            element: appRoot,
-            host: mount.host,
-        };
+        globalThis.__TAIRITSU_MOUNT_ROOT__ = { element: appRoot, host: mount.host };
         // W3: `data-tairitsu-ready` is set ONLY after the guest's boot entry
         // returned. Failures go to `data-tairitsu-error` + the visible card
         // and never set the ready attribute.
@@ -645,6 +669,12 @@
             // Covers the paths that never reached `bootSurface` at all — most
             // importantly a dist whose /component-boot.js or glue bundle is
             // missing (deploy skew): the card shows AND the attribute is set.
-            bootError('Unhandled error', topErr, 'boot-failed');
+            // A refusal that already named its kind (W8's mount errors) keeps it:
+            // re-marking would turn a specific failure into a generic one.
+            if (topErr && topErr.reported && topErr.kind) {
+                document.body.removeAttribute('data-booting');
+            } else {
+                bootError('Unhandled error', topErr, 'boot-failed');
+            }
         }
     

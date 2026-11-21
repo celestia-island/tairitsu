@@ -105,20 +105,24 @@ A page can opt into running the component in a dedicated Worker
 
 ## Mount root (W8)
 
-`<html data-tairitsu-root="<id>">` names the element the component mounts into.
-The host owns that element:
+`<html data-tairitsu-root="<id>">` names a **container** the host owns. The
+component gets its own `#app` shell inside it, so the host's children are never
+touched: the guest clears its shell on entry, and a host's content must not be
+in the way of that.
 
-* the boot moves the guest's own `#app` shell **inside** the host root, so the
-  guest clears its own element and never the host's children — the host's nodes
-  stay, and everything outside the root is untouched;
-* if the named element **is** `#app`, it is marked `data-tairitsu-host-root` and
-  the guest skips its initial clear entirely (both sides check the marker);
-* without the attribute the page keeps its old shape: `#app`, created if the
-  page has none, and cleared as before;
-* a name that matches no element fails closed (`data-tairitsu-error="mount-root-missing"`)
-  rather than inventing one — the host named it, so it must exist;
-* the worker lane (W7) mounts nothing (it has no DOM), so `data-tairitsu-root`
-  has no meaning there.
+* the host container keeps all its attributes and children;
+* the host container must not **be** `#app`, and the page must not keep a
+  page-level `#app` outside it — either would mean the guest clears (or renders
+  away from) something the host owns. Both are refused with
+  `data-tairitsu-error="mount-root-conflict"`;
+* a name that matches no element fails closed with
+  `data-tairitsu-error="mount-root-missing"` — the host named it, so it must
+  exist;
+* without the attribute the page keeps its old shape: a page-level `#app`,
+  created if the page has none, and the old clear semantics;
+* the failure card never replaces a host container's children (it writes into the
+  guest shell, or not at all when a mount error prevented one);
+* the worker lane (W7) has no DOM, so `data-tairitsu-root` does not apply there.
 
 ## Not in this cut
 
