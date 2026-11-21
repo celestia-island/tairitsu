@@ -215,3 +215,16 @@ test("the page template no longer fishes for names by depth (source check)", asy
     "exactly one ready write exists",
   );
 });
+
+test("the outermost catch sets the boot-failed kind (source check)", async () => {
+  const page = await readFile(resolve(here, "../src/wasm/index.html.template"), "utf8");
+  // The inner catch also calls bootSurface.fail, so behavioural probes cannot
+  // tell whether the OUTER catch (deploy skew: a missing /component-boot.js)
+  // still sets the attribute — this pin can. Dropping the kind argument
+  // regresses the page to a failure with no data-tairitsu-error.
+  assert.match(
+    page,
+    /bootError\('Unhandled error',\s*topErr,\s*'boot-failed'\)/,
+    "the outermost catch no longer reports the boot-failed kind",
+  );
+});

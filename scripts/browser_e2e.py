@@ -356,18 +356,31 @@ def self_check():
         # assertions look alive while they are dead.
         card = EXPECTED_CARD[scenario]
         honest = dict(BAD_STATE, appText="Tairitsu boot error\n" + card)
+        # Each probe differs from `honest` in EXACTLY ONE dimension and must
+        # fail on EXACTLY THAT assertion: a probe that fails on two dimensions
+        # (the pre-fix `dict(BAD_STATE, error=None)` shape — its appText also
+        # names no card) keeps the targeted assertion free to die silently.
         probes = [
-            (dict(honest, ready="hydrated"), "would pass a page that is wrongly ready"),
-            (dict(honest, error=None), "would pass a page with no error attribute"),
+            (dict(honest, ready="hydrated"), "reported ready", "would pass a page that is wrongly ready"),
+            (dict(honest, error=None), "no data-tairitsu-error", "would pass a page with no error attribute"),
             (
                 dict(honest, appText="Tairitsu boot error: something else failed"),
+                "does not name the failure",
                 f"would pass a card that does not name {card!r}",
             ),
-            (dict(honest, entryRan=True), "would pass a page whose entry ran"),
+            (dict(honest, entryRan=True), "ran an entry", "would pass a page whose entry ran"),
         ]
-        for state, message in probes:
-            if not check_boot_state(state, scenario):
+        for state, needle, message in probes:
+            probe_failures = check_boot_state(state, scenario)
+            if not probe_failures:
                 failures.append(f"control {scenario} {message}")
+                continue
+            off_target = [f for f in probe_failures if needle not in f]
+            if off_target or len(probe_failures) != 1:
+                failures.append(
+                    f"control {scenario} probe for {needle!r} is not single-dimension "
+                    f"(off-target failures: {off_target})"
+                )
         # ... and the honest failure state (card naming THIS failure) must pass.
         if check_boot_state(honest, scenario):
             failures.append(f"control {scenario} rejects a correct error page")
