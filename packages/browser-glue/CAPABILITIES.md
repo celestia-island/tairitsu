@@ -122,7 +122,17 @@ in the way of that.
   created if the page has none, and the old clear semantics;
 * the failure card never replaces a host container's children (it writes into the
   guest shell, or not at all when a mount error prevented one);
-* the worker lane (W7) has no DOM, so `data-tairitsu-root` does not apply there.
+* the worker lane (W7) has no DOM, so `data-tairitsu-root` does not apply there
+  (it is not even resolved: a DOM conflict must not refuse a worker-only boot).
+
+**What this does not solve, on purpose.** A page whose own root IS `#app` cannot
+hand that element to the component: the guest clears what it mounts into, so the
+host's content would go. Whether host content may be cleared is the **host's**
+decision, never the guest's — the host renames its root or wraps a dedicated
+container around it, and that container is what `data-tairitsu-root` names. For
+the chest integration (stage 5) that means: point `data-tairitsu-root` at a
+dedicated div inside chest, rather than letting a component mount into chest's
+own `#app`.
 
 ## Not in this cut
 
