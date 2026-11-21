@@ -29,3 +29,4 @@ npm = "0.5.4"
 [exempt.npm]
 "." = "private root workspace manifest; no published line"
 "packages/npm/tairitsu-transport" = "independent transport-contract line (0.3.x, published on its own wave)"
+"packages/npm/tairitsu-host-client" = "independent library-facing host client (0.1.x, published on its own wave)"

@@ -248,7 +248,7 @@ fmt:
     python3 scripts/enforce_use_groups.py
 
 # CI checks (format check + clippy + test)
-ci: wit-sync-check wit-surface-check wit-generator-check browser-glue-test packager-js-test fmt-check clippy test
+ci: wit-sync-check wit-surface-check wit-generator-check browser-glue-test host-client-test packager-js-test fmt-check clippy test
     @echo "✅ CI checks passed"
 
 # ------
@@ -350,6 +350,12 @@ wit-generator-check:
 # --experimental-strip-types resolves the TS sources through the repo hook).
 browser-glue-test:
     cd packages/browser-glue && node --experimental-strip-types --test "test/**/*.test.mjs"
+
+# Stage 3: the library-facing host client (load a component, call it
+# synchronously). Its contract — fail-closed load, W6 capability enforcement, the
+# W4 lifecycle — is plain JS, so it is tested without a browser.
+host-client-test:
+    cd packages/npm/tairitsu-host-client && node --experimental-strip-types --test "test/**/*.test.mjs"
 
 # W3 fail-closed boot: the loader (no swallowed instantiation errors) and the
 # boot lifecycle (explicit entry, ready only after it ran) are plain JS, so
