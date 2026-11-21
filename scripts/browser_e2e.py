@@ -356,10 +356,6 @@ def self_check():
         # assertions look alive while they are dead.
         card = EXPECTED_CARD[scenario]
         honest = dict(BAD_STATE, appText="Tairitsu boot error\n" + card)
-        # Each probe differs from `honest` in EXACTLY ONE dimension and must
-        # fail on EXACTLY THAT assertion: a probe that fails on two dimensions
-        # (the pre-fix `dict(BAD_STATE, error=None)` shape — its appText also
-        # names no card) keeps the targeted assertion free to die silently.
         probes = [
             (dict(honest, ready="hydrated"), "reported ready", "would pass a page that is wrongly ready"),
             (dict(honest, error=None), "no data-tairitsu-error", "would pass a page with no error attribute"),
