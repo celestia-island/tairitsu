@@ -27,7 +27,7 @@ export interface CapabilityDeclaration {
 
 export interface LoadComponentOptions {
   /** The component's wrapper module (packaged next to the wasm). */
-  wrapper: string | URL;
+  wrapper?: string | URL;
   /** Capability declaration; defaults to "no glue, no wasi". */
   capabilities?: CapabilityDeclaration;
   /**
@@ -38,6 +38,8 @@ export interface LoadComponentOptions {
   glue?: Record<string, unknown>;
   /** WASI shim modules, keyed by bare module name (`io`, `clocks`, …). */
   wasi?: Record<string, unknown>;
+  /** A wrapper the consumer imported itself (bundler-safe route). */
+  module?: Record<string, unknown>;
   /** Override `fetch`/`import` for tests and non-browser hosts. */
   loaders?: {
     importModule?: (url: string) => Promise<Record<string, unknown>>;
@@ -53,8 +55,39 @@ export interface HostComponent {
   stop(): Promise<void>;
   /** Resolves when no call is in flight. */
   whenIdle(): Promise<void>;
-  /** True once `stop()` ran or the underlying instance was disposed. */
+  /** True once `stop()` ran. */
   readonly stopped: boolean;
+}
+
+/**
+ * Publish the declaration this realm's glue modules read.
+ *
+ * Call this BEFORE a static `import` of the wrapper: the emitted glue modules
+ * check the declaration when they are evaluated, and an absent declaration lets
+ * them pass (`if (!capabilities) return true`). `loadComponent` does this for a
+ * dynamic import, and restores the previous value once the module is evaluated.
+ *
+ * Returns the previous value so a caller can restore it.
+ */
+export function publishCapabilities(
+  capabilities: CapabilityDeclaration,
+): CapabilityDeclaration | undefined {
+  const realm = globalThis as unknown as {
+    __TAIRITSU_CAPABILITIES__?: CapabilityDeclaration;
+  };
+  const previous = realm.__TAIRITSU_CAPABILITIES__;
+  realm.__TAIRITSU_CAPABILITIES__ = {
+    interfaces: capabilities.interfaces ?? [],
+    wasiModules: capabilities.wasiModules ?? [],
+  };
+  return previous;
+}
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __TAIRITSU_CAPABILITIES__: CapabilityDeclaration | undefined;
+  // eslint-disable-next-line no-var
+  var __TAIRITSU_GLUE__: { INTERFACES: Record<string, unknown> } | undefined;
 }
 
 export class HostClientError extends Error {
@@ -104,6 +137,7 @@ const pickExport = (instance: Record<string, unknown>, name: string): unknown =>
   const candidates = [
     instance,
     instance.exports,
+    instance.instance,
     (instance.instance as Record<string, unknown> | undefined)?.exports,
     instance.lifecycle,
     instance["tairitsu-browser:full/lifecycle@0.2.0"],
@@ -179,26 +213,41 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
   const { wrapper, capabilities = {}, glue = {}, wasi = {}, loaders } = options;
   const imports = buildImports(capabilities, glue, wasi);
   // W6's guard inside the emitted glue modules reads the declaration from the
-  // realm that imports them — that is this one. Without this line the guard
-  // fails open and a statically imported interface goes undeclared.
-  (globalThis as Record<string, unknown>).__TAIRITSU_CAPABILITIES__ = {
-    interfaces: capabilities.interfaces ?? [],
-    wasiModules: capabilities.wasiModules ?? [],
-  };
+  // realm that imports them — that is this one. A consumer that imports the
+  // wrapper statically must call `declareCapabilities` BEFORE that import; a
+  // dynamic import through this function is ordered for it.
+  const previousDeclaration = publishCapabilities(capabilities);
+  // The glue plane the W5 modules read. Providers passed here are visible to a
+  // statically imported glue module for the duration of the import.
+  const previousGlue = globalThis.__TAIRITSU_GLUE__;
+  globalThis.__TAIRITSU_GLUE__ = { INTERFACES: glue };
 
-  const url = typeof wrapper === "string" ? wrapper : wrapper.href;
+  const url = wrapper === undefined ? "<module>" : typeof wrapper === "string" ? wrapper : wrapper.href;
   const importModule =
-    loaders?.importModule ?? ((target: string) => import(/* @vite-ignore */ target));
+    options.module !== undefined
+      ? async () => options.module as Record<string, unknown>
+      : (loaders?.importModule ?? ((target: string) => import(/* @vite-ignore */ target)));
 
   let module: Record<string, unknown>;
   try {
     module = await importModule(url);
   } catch (error) {
-    throw new HostClientError(
-      "wrapper-not-found",
-      `could not load the component wrapper ${url}: ${(error as Error)?.message ?? error}`,
-    );
+    if (previousDeclaration === undefined) delete globalThis.__TAIRITSU_CAPABILITIES__;
+    else globalThis.__TAIRITSU_CAPABILITIES__ = previousDeclaration;
+    globalThis.__TAIRITSU_GLUE__ = previousGlue;
+    // A glue module refusing an undeclared interface is a capability failure, not
+    // a missing wrapper — keep the two diagnosable.
+    const message = String((error as Error)?.message ?? error);
+    const kind = /capability denied|is not declared/.test(message)
+      ? "capability-denied"
+      : "wrapper-not-found";
+    throw new HostClientError(kind, `could not load the component wrapper ${url}: ${message}`);
   }
+
+  // The modules a wrapper statically imports have been evaluated by now.
+  if (previousDeclaration === undefined) delete globalThis.__TAIRITSU_CAPABILITIES__;
+  else globalThis.__TAIRITSU_CAPABILITIES__ = previousDeclaration;
+  globalThis.__TAIRITSU_GLUE__ = previousGlue;
 
   const candidate =
     (module.instantiate as Instantiable["instantiate"]) ??
@@ -230,7 +279,7 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
           ) => unknown
         )(
           async (path: string) => {
-            const resolved = new URL(path, url);
+            const resolved = new URL(path, url === "<module>" ? import.meta.url : url);
             const response = await fetch(resolved);
             if (!response.ok) {
               throw new Error(`failed to fetch core module ${path}: HTTP ${response.status}`);
@@ -263,18 +312,61 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
     for (const resolve of waiters) resolve();
   };
 
-  const exportsView = new Proxy(instance, {
-    get(target, property) {
-      const value = Reflect.get(target, property);
-      if (typeof property === "string" && typeof value === "function") {
-        return (...args: unknown[]) => surface.call(property, ...args);
-      }
-      return value;
-    },
-  });
+  // Every holder `pickExport` can resolve must be behind the same gate, or
+  // `exports.<holder>.<fn>()` walks around `stop()`.
+  const guardedView = (holder: Record<string, unknown>): Record<string, unknown> =>
+    new Proxy(holder, {
+      get(target, property) {
+        if (typeof property !== "string") return Reflect.get(target, property);
+        // Resolve WITHIN this holder first: `exports.instance.encode` must call
+        // the instance-shaped export, not the first holder that happens to carry
+        // the same name.
+        const own = hasOwn(target, property) ? Reflect.get(target, property) : undefined;
+        if (typeof own === "function") {
+          return (...args: unknown[]) => surface.invoke(property, own as (...a: unknown[]) => unknown, args);
+        }
+        if (own && typeof own === "object" && !Array.isArray(own)) {
+          return guardedView(own as Record<string, unknown>);
+        }
+        const exported = pickExport(instance, property);
+        if (typeof exported === "function") {
+          return (...args: unknown[]) => surface.call(property, ...args);
+        }
+        return own;
+      },
+    });
+  const exportsView = guardedView(instance);
 
-  const surface: HostComponent = {
+  const invoke = <T = unknown>(
+    name: string,
+    resolved: (...args: unknown[]) => unknown,
+    args: unknown[],
+  ): T => {
+    if (stopped) {
+      throw new HostClientError("stopped", `this component was stopped; "${name}" is not callable`);
+    }
+    inFlight += 1;
+    try {
+      const value = resolved(...args);
+      if (value !== null && typeof (value as { then?: unknown })?.then === "function") {
+        void Promise.resolve(value as PromiseLike<unknown>).catch(() => {});
+        throw new HostClientError(
+          "async-export",
+          `"${name}" returned a thenable; this client exposes a synchronous surface only`,
+        );
+      }
+      return value as T;
+    } finally {
+      inFlight -= 1;
+      if (inFlight === 0) settleIdle();
+    }
+  };
+
+  const surface: HostComponent & {
+    invoke: (name: string, resolved: (...a: unknown[]) => unknown, args: unknown[]) => unknown;
+  } = {
     exports: exportsView,
+    invoke,
     get stopped() {
       return stopped;
     },
@@ -286,20 +378,7 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
       if (typeof resolved !== "function") {
         throw new HostClientError("no-export", `the component exports no "${name}"`);
       }
-      inFlight += 1;
-      try {
-        const value = (resolved as (...callArgs: unknown[]) => unknown)(...args);
-        if (value !== null && typeof (value as { then?: unknown })?.then === "function") {
-          throw new HostClientError(
-            "async-export",
-            `"${name}" returned a thenable; this client exposes a synchronous surface only`,
-          );
-        }
-        return value as T;
-      } finally {
-        inFlight -= 1;
-        if (inFlight === 0) settleIdle();
-      }
+      return invoke<T>(name, resolved as (...callArgs: unknown[]) => unknown, args);
     },
     async stop(): Promise<void> {
       // Mark first (no new calls), let the guest wind down its own state if it

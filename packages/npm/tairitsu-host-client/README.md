@@ -15,6 +15,19 @@ lane established:
 | the W4 lifecycle | the surface exposes `stop()` / `whenIdle()` / `stopped` instead of hiding them |
 | synchronous calls | `loadComponent()` is async; `component.call()` is sync |
 
+The **bundler-safe** route imports the wrapper statically (so Vite/Rollup can
+analyse it) and publishes the declaration *before* that import — the emitted
+glue modules check it when they are evaluated:
+
+```ts
+import { loadComponent } from "@celestia-island/tairitsu-host-client";
+import * as wrapper from "./qr/wrapper.js"; // static: bundlers see it
+
+const qr = await loadComponent({ module: wrapper, capabilities: { interfaces: [], wasiModules: [] } });
+```
+
+For a dynamic load, `loadComponent` orders the publish itself:
+
 ```ts
 import { loadComponent } from "@celestia-island/tairitsu-host-client";
 

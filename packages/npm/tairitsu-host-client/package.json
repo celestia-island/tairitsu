@@ -30,6 +30,7 @@
     "directory": "packages/npm/tairitsu-host-client"
   },
   "devDependencies": {
-    "typescript": "^5.9"
+    "rimraf": "^*",
+    "typescript": "^*"
   }
 }

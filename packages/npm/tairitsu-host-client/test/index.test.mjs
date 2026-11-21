@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildImports, HostClientError, loadComponent } from "../src/index.ts";
+import { buildImports, HostClientError, loadComponent, publishCapabilities } from "../src/index.ts";
 
 const fakeGlue = { document: { createElement: () => "el" }, element: { setAttribute: () => {} } };
 
@@ -136,14 +136,28 @@ test("a non-object instantiate result is a fail-closed error, not a hollow surfa
   }
 });
 
-test("the declaration is published for the glue modules' W6 guard", async () => {
-  const previous = globalThis.__TAIRITSU_CAPABILITIES__;
+test("the declaration is visible while the wrapper is imported, then restored", async () => {
+  // The glue modules a wrapper statically imports are evaluated DURING the
+  // import; the declaration must be there then (not only afterwards).
+  let seenDuringImport;
+  await loadComponent({
+    wrapper: "memory:caps",
+    capabilities: { interfaces: ["document"], wasiModules: [] },
+    glue: { document: {} },
+    loaders: {
+      importModule: async () => {
+        seenDuringImport = globalThis.__TAIRITSU_CAPABILITIES__;
+        return { encode: () => 1 };
+      },
+    },
+  });
+  assert.deepEqual(seenDuringImport, { interfaces: ["document"], wasiModules: [] });
+  assert.equal(globalThis.__TAIRITSU_CAPABILITIES__, undefined, "the previous value is restored");
+});
+
+test("a consumer can publish the declaration before a STATIC import", async () => {
+  const previous = publishCapabilities({ interfaces: [], wasiModules: [] });
   try {
-    await loadComponent({
-      wrapper: "memory:caps",
-      capabilities: { interfaces: [], wasiModules: [] },
-      loaders: { importModule: async () => ({ encode: () => 1 }) },
-    });
     assert.deepEqual(globalThis.__TAIRITSU_CAPABILITIES__, { interfaces: [], wasiModules: [] });
   } finally {
     if (previous === undefined) delete globalThis.__TAIRITSU_CAPABILITIES__;
@@ -201,4 +215,66 @@ test("prototype-chain names are not treated as provided capabilities", () => {
     () => buildImports({ interfaces: ["constructor"] }, {}),
     (error) => error instanceof HostClientError && error.kind === "capability-denied",
   );
+});
+
+test("nested holders are behind the same stop() gate", async () => {
+  const component = await loadComponent({
+    wrapper: "memory:nested",
+    loaders: {
+      importModule: async () => ({
+        exports: { encode: () => "nested" },
+        lifecycle: { start: () => "lifecycle" },
+        instance: { encode: () => "instance-shape" },
+      }),
+    },
+  });
+  assert.equal(component.exports.exports.encode(), "nested");
+  assert.equal(component.exports.lifecycle.start(), "lifecycle");
+  assert.equal(component.exports.instance.encode(), "instance-shape");
+  await component.stop();
+  for (const invoke of [
+    () => component.exports.exports.encode(),
+    () => component.exports.lifecycle.start(),
+    () => component.exports.instance.encode(),
+  ]) {
+    assert.throws(invoke, (error) => error.kind === "stopped");
+  }
+});
+
+test("a refusing async export does not leak an unhandled rejection", async () => {
+  const component = await loadComponent({
+    wrapper: "memory:reject",
+    loaders: { importModule: async () => ({ encode: async () => { throw new Error("guest blew up"); } }) },
+  });
+  assert.throws(() => component.call("encode"), (error) => error.kind === "async-export");
+  await new Promise((resolve) => setTimeout(resolve, 20));
+});
+
+test("a capability denial during import keeps its kind", async () => {
+  await assert.rejects(
+    loadComponent({
+      wrapper: "memory:denied",
+      loaders: {
+        importModule: async () => {
+          throw new Error("capability denied: @tairitsu-glue/document is not declared");
+        },
+      },
+    }),
+    (error) => error.kind === "capability-denied",
+  );
+});
+
+test("the bundler-safe route hands in an already-imported module", async () => {
+  let seenDuringImport;
+  const component = await loadComponent({
+    module: {
+      get encode() {
+        return () => "from-module";
+      },
+    },
+    capabilities: { interfaces: [], wasiModules: [] },
+  });
+  assert.equal(component.call("encode"), "from-module");
+  assert.equal(globalThis.__TAIRITSU_CAPABILITIES__, undefined, "declaration restored after the module route");
+  assert.equal(seenDuringImport, undefined);
 });
