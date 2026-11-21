@@ -41,7 +41,7 @@ export interface InstanceTables {
   subEventHandles: WeakMap<object, bigint>;
   // Timer / animation / websocket state bags: their ids are handed to the guest,
   // so a shared bag lets one instance cancel another's timer.
-  timerState: { timeoutCallbacks: Map<number, unknown>; intervalCallbacks: Map<number, unknown>; nextTimeoutId: number };
+  timerState: { timeoutCallbacks: Map<number, number>; intervalCallbacks: Map<number, number>; nextTimeoutId: number };
   animState: { animationCallbacks: Map<number, unknown>; nextAnimationId: number };
   wsState: { nextCallbackId: number };
   eventHandles: Map<bigint, unknown>;

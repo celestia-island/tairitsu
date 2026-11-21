@@ -31,7 +31,6 @@ declare global {
   var __TAIRITSU_INSTANCES__: unknown;
   var __subEventHandles: WeakMap<object, bigint>;
   var __listenerByElement: Map<unknown, unknown> | undefined;
-  var __elementReverseMap: Map<unknown, unknown> | undefined;
   var __tairitsuScrollListeners: Map<bigint, unknown> | undefined;
   var __tairitsuResizeListeners: Map<bigint, unknown> | undefined;
   var __tairitsuWsCallbacks: Map<bigint, unknown> | undefined;

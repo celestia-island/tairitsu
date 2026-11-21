@@ -35,7 +35,7 @@ function ensureIndex(): Map<EventTarget, bigint> {
   for (const [handle, element] of handles) {
     index.set(element, handle);
   }
-  globalThis.__elementReverseMap = index as Map<unknown, unknown>;
+  globalThis.__elementReverseMap = index;
 
   // Same reasoning for the store hook: without `./helpers` there is none yet, and
   // wrapping a missing function would turn every later store into a TypeError.
