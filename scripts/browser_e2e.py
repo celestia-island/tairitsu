@@ -58,6 +58,9 @@ TEMPLATE_DIR = os.path.join(REPO_ROOT, "packages", "packager", "src", "wasm")
 SCENARIOS = (
     "component",
     "csp",
+    "capability-exact",
+    "capability-undeclared",
+    "capability-overreach",
     "glue-imports",
     "two-instances",
     "bad-bytes",
@@ -140,6 +143,9 @@ WRAPPERS = {
     "csp": GOOD_WRAPPER,
     # Serves the REAL emitted glue modules and a wrapper that imports them.
     "glue-imports": GLUE_IMPORT_WRAPPER,
+    "capability-exact": GLUE_IMPORT_WRAPPER,
+    "capability-undeclared": GLUE_IMPORT_WRAPPER,
+    "capability-overreach": GLUE_IMPORT_WRAPPER,
     # The isolation scenario boots the same component, then drives the instance
     # API from the test side.
     "two-instances": GOOD_WRAPPER,
@@ -148,7 +154,13 @@ WRAPPERS = {
     "missing-import": MISSING_IMPORT_WRAPPER,
 }
 
-FAILING = ("bad-bytes", "missing-entry", "missing-import")
+FAILING = (
+    "bad-bytes",
+    "missing-entry",
+    "missing-import",
+    "capability-undeclared",
+    "capability-overreach",
+)
 
 # What the visible card must say for each control: the same "an error card
 # exists" assertion would pass on a 404'd wrapper or a broken loader, so each
@@ -157,6 +169,8 @@ EXPECTED_CARD = {
     "bad-bytes": "not a valid WebAssembly binary",
     "missing-entry": "none of the boot entries",
     "missing-import": "missing import: wasi:cli/does-not-exist@0.2.0",
+    "capability-overreach": "does not provide",
+    "capability-undeclared": "is not declared",
 }
 
 
@@ -319,6 +333,54 @@ def ensure_glue_bundle(dest):
     return proc.returncode == 0 and os.path.isfile(dest)
 
 
+DEFAULT_CAPABILITIES = os.path.join(
+    REPO_ROOT, "packages", "browser-glue", "dist", "glue-esm", "default-capabilities.json"
+)
+
+
+def capability_declaration(scenario):
+    """The `tairitsu-capabilities.json` this scenario is served with (W6)."""
+    if not os.path.isfile(DEFAULT_CAPABILITIES):
+        raise RuntimeError(
+            "the default capability set is missing; run "
+            "`node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs`"
+        )
+    with open(DEFAULT_CAPABILITIES, encoding="utf-8") as handle:
+        default = json.load(handle)
+
+    if scenario == "capability-undeclared":
+        # Declares only `document`; the wrapper imports `element-css-inline-style`,
+        # so the host must refuse to satisfy it.
+        return {"interfaces": ["document"], "wasiModules": []}
+    if scenario == "capability-overreach":
+        # Declares an interface the host does not provide: the boot must fail
+        # BEFORE instantiate, not hand back an opaque link error.
+        return {
+            "interfaces": default["interfaces"] + ["does-not-exist"],
+            "wasiModules": default["wasiModules"],
+        }
+    # Scenarios that deliberately run the glue STUB provide no interfaces, so
+    # their declaration is empty — otherwise the host would be asked for the
+    # default set it does not have (which is exactly what W6 refuses to fake).
+    STUB_SCENARIOS = {
+        "component",
+        "csp",
+        "bad-bytes",
+        "missing-entry",
+        "missing-import",
+        "fixture",
+    }
+    if scenario in STUB_SCENARIOS:
+        return {"interfaces": [], "wasiModules": []}
+    if scenario == "capability-exact":
+        # Exactly what the wrapper imports — the positive control.
+        return {
+            "interfaces": ["document", "element-css-inline-style"],
+            "wasiModules": [],
+        }
+    return default
+
+
 def render_boot_script():
     """Render `boot.template.js` the way the packager emits `boot.js` (W5)."""
     with open(os.path.join(TEMPLATE_DIR, "boot.template.js"), encoding="utf-8") as fh:
@@ -377,7 +439,11 @@ def build_dist(scenario, dest):
         fh.write(render_page())
     with open(os.path.join(dest, "boot.js"), "w", encoding="utf-8") as fh:
         fh.write(render_boot_script())
-    if scenario == "glue-imports":
+    with open(
+        os.path.join(dest, "tairitsu-capabilities.json"), "w", encoding="utf-8"
+    ) as fh:
+        json.dump(capability_declaration(scenario), fh)
+    if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach"):
         # The real build-time modules, copied exactly as the packager does.
         source = os.path.join(REPO_ROOT, "packages", "browser-glue", "dist", "glue-esm")
         if not os.path.isdir(source):
@@ -391,7 +457,7 @@ def build_dist(scenario, dest):
     glue_path = os.path.join(dest, "glue-runtime.js")
     # `two-instances` needs the shipped bundle (the instance API lives there);
     # the component scenarios only need the page's import map to stay green.
-    if scenario in ("two-instances", "glue-imports"):
+    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach"):
         if not ensure_glue_bundle(glue_path):
             raise RuntimeError(
                 "the two-instances control needs the real glue bundle "
@@ -413,7 +479,7 @@ def build_dist(scenario, dest):
         os.path.join(dest, "component-boot.js"),
     )
     wrapper_source = WRAPPERS[scenario]
-    if scenario == "glue-imports":
+    if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach"):
         rewritten = rewrite_glue_specifiers(wrapper_source)
         if "@tairitsu-glue/" in rewritten:
             raise RuntimeError("the glue specifier rewrite left a bare specifier")
@@ -463,6 +529,11 @@ def check_boot_state(state, scenario, *, real_dist=False):
     if not isinstance(state, dict):
         return [f"page state unreadable: {state!r}"]
 
+    if scenario in ("capability-undeclared", "capability-overreach") and state.get("error") != "capability-denied":
+        failures.append(
+            "a capability mismatch was not reported as capability-denied "
+            f"(got {state.get('error')!r})"
+        )
     if scenario in FAILING:
         if state.get("ready") is not None:
             failures.append(f"failed component reported ready ({state['ready']!r})")
@@ -639,6 +710,13 @@ def self_check():
     # fail the offline gate.
     if "csp" not in SCENARIOS:
         failures.append("the CSP scenario is missing")
+    for capability_scenario in (
+        "capability-exact",
+        "capability-undeclared",
+        "capability-overreach",
+    ):
+        if capability_scenario not in SCENARIOS:
+            failures.append(f"the {capability_scenario} control is missing (W6)")
     if "glue-imports" not in SCENARIOS:
         failures.append("the glue-imports scenario is missing (static resolution is unproven)")
     if "csp" not in WRAPPERS:

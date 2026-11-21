@@ -574,6 +574,61 @@ test("the build-time glue modules are real ESM with named exports (W5)", async (
   await rm(glueDir, { recursive: true, force: true });
 });
 
+test("the default capability set is data, and it matches the registry (W6)", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const { mkdtemp, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const packageRoot = resolve(here, "..");
+  const glueDir = await mkdtemp(join(tmpdir(), "w6-caps-"));
+  execFileSync(process.execPath, ["--experimental-strip-types", resolve(packageRoot, "scripts/emit-glue-esm.mjs")], {
+    cwd: packageRoot,
+    stdio: "pipe",
+    env: { ...process.env, GLUE_ESM_OUT: glueDir },
+  });
+  const defaults = JSON.parse(
+    await readFile(join(glueDir, "default-capabilities.json"), "utf8"),
+  );
+  const registry = await readFile(resolve(packageRoot, "src/runtime/registry.ts"), "utf8");
+  const declared = [...registry.matchAll(/"@tairitsu-glue\/([a-z0-9-]+)"\s*:/g)]
+    .map((match) => match[1])
+    .sort();
+  assert.deepEqual(
+    defaults.interfaces,
+    declared,
+    "the default set drifted from the glue registry (silent capability growth)",
+  );
+  assert.deepEqual(
+    defaults.wasiModules,
+    ["cli", "clocks", "filesystem", "io", "random", "sockets"],
+    "the default WASI set changed",
+  );
+  assert.equal(defaults.interfaces.length, 25, "the default interface count changed");
+  await rm(glueDir, { recursive: true, force: true });
+});
+
+test("the boot filters imports by the declaration (W6 source pin)", async () => {
+  const boot = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");
+  assert.match(boot, /const declaredInterfaces = new Set/, "no declared-interface set");
+  assert.match(
+    boot,
+    /if \(!declaredInterfaces\.has\(ifaceName\)\) \{[\s\S]{0,120}?continue;/,
+    "the boot injects interfaces it was not authorized for",
+  );
+  assert.match(
+    boot,
+    /does not provide: /,
+    "a declared-but-missing interface is not reported before instantiate",
+  );
+  assert.equal(
+    /for \(const \[shortName, exports\] of Object\.entries\(globalThis\.__TAIRITSU_GLUE__\.INTERFACES\)\) \{\n\s*const ifaceName[\s\S]{0,80}?imports\[fullName\] = exports;\n\s*\}/.test(boot),
+    false,
+    "the pre-W6 unfiltered injection is back",
+  );
+  // The emitted modules enforce it too (W5 made their imports static).
+  const emitted = await readFile(resolve(here, "../dist/glue-esm/document.js"), "utf8");
+  assert.match(emitted, /capability denied/, "the emitted module does not check the declaration");
+});
+
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {
   // The tables must be accessors whose storage is the instance, not data
   // properties holding Maps. A regression to `globalThis.__elementHandles =

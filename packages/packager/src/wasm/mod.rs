@@ -978,6 +978,7 @@ fn prepare_component_wrapper_fallback(
     write_component_wrapper_loader(config, component_wasm_path, output_dir)?;
 
     copy_glue_modules(config, output_dir)?;
+    write_capabilities(config, output_dir)?;
 
     if !try_generate_component_wrapper(&config.manifest_dir, component_wasm_path, output_dir, pb)? {
         return Err(crate::TairitsuPackagerError::BuildError(
@@ -1133,6 +1134,55 @@ fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Re
             "the glue ESM directory is empty — regenerate it with scripts/emit-glue-esm.mjs".into(),
         ));
     }
+    Ok(())
+}
+
+/// W6: write the component's capability declaration into the dist.
+///
+/// A component without a declaration gets the conservative default the glue
+/// package emits (every interface the glue provides + the six bundled shim
+/// modules). A component WITH a declaration (`tairitsu-capabilities.json` beside
+/// its manifest, or the `capabilities` array in the tairitsu manifest) gets
+/// exactly that — the boot then injects nothing else.
+fn write_capabilities(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+    let declaration = config.manifest_dir.join("tairitsu-capabilities.json");
+    let body: serde_json::Value = if declaration.is_file() {
+        let text = std::fs::read_to_string(&declaration)?;
+        serde_json::from_str(&text).map_err(|error| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "{}: not valid JSON ({error})",
+                declaration.display()
+            ))
+        })?
+    } else {
+        // The default set ships with the glue modules; without it the build
+        // cannot say what a component is allowed to use.
+        let default_path = output_dir.join("glue").join("default-capabilities.json");
+        let text = std::fs::read_to_string(&default_path).map_err(|error| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "the default capability set is missing ({}): {error}",
+                default_path.display()
+            ))
+        })?;
+        serde_json::from_str(&text).map_err(|error| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "the default capability set is not valid JSON: {error}"
+            ))
+        })?
+    };
+    let mut body = body;
+    if let Some(object) = body.as_object_mut() {
+        object.insert(
+            "source".to_string(),
+            serde_json::Value::String(if declaration.is_file() {
+                declaration.display().to_string()
+            } else {
+                "default".to_string()
+            }),
+        );
+    }
+    let capabilities = output_dir.join("tairitsu-capabilities.json");
+    std::fs::write(&capabilities, serde_json::to_string_pretty(&body)?)?;
     Ok(())
 }
 
