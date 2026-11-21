@@ -72,6 +72,25 @@ component (see the single-guest contract in W4); the capability list therefore
 describes that component. A host that wants two differently-authorized
 components on one page needs the per-call instance binding listed below.
 
+## Worker lane (W7)
+
+A page can opt into running the component in a dedicated Worker
+(`<html data-tairitsu-worker>`); the default is unchanged (main thread).
+
+* The worker host has **no DOM**, so it can provide no glue interface and no WASI
+  module: a capability declaration that names any of them is refused there with
+  `capability-denied`. Components that touch the DOM stay on the main thread —
+  that is the boundary, not a gap.
+* `globalThis.__TAIRITSU_WORKER__.terminate()` is the hard kill: it drops the
+  Worker, disposes the page's W4 instance and reports whether anything was
+  running. It is the only way to stop a component that never yields; the
+  cooperative stop still exists for components that do.
+* **The facade is async in this lane.** Post-message is asynchronous by nature,
+  and a synchronous facade would need `Atomics.wait`, which blocks the main
+  thread — contradicting the reason the lane exists. Callers get an async entry
+  (`boot` resolves on `ready`/`error`); the four hikari components are pure
+  compute and fit it without changes.
+
 ## Not in this cut
 
 * **W4 residue ①** — the `elementReverse` reverse index keeps a page-level store
