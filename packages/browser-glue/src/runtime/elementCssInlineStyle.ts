@@ -1,4 +1,4 @@
-import { installGlobalDelegates } from './instance.ts';
+import { installGlobalDelegates } from "./instance.ts";
 
 installGlobalDelegates();
 

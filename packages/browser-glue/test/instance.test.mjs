@@ -131,6 +131,38 @@ test("dispose reclaims listeners, observers, timers and intervals", () => {
   assert.equal(instance.reclaimables.timers.size, 0);
 });
 
+test("listeners and observers created through the glue are owned by the instance", async () => {
+  // The reclaimables table is only useful if the registration sites actually
+  // feed it. This drives the real `addEventListener` export against a fake
+  // element and checks the instance owns the listener (and dispose removes it).
+  // Import the helper module first: it installs `__lookupElement`, which the
+  // the `__lookupElement` helper the exports rely on (the shipped bundle does
+  // the same through `runtime/index.ts`).
+  await import("../src/runtime/helpers.ts");
+  const { eventTarget_exports } = await import("../src/runtime/eventTarget.ts");
+  const instance = createInstance();
+  const previous = setCurrentInstance(instance);
+  const removed = [];
+  const fakeElement = {
+    addEventListener: () => {},
+    removeEventListener: (type, handler) => removed.push([type, handler]),
+  };
+  try {
+    instance.tables.elementHandles.set(7n, fakeElement);
+    const listenerHandle = eventTarget_exports.addEventListener(7n, "click", false);
+    assert.equal(typeof listenerHandle, "bigint");
+    assert.equal(instance.reclaimables.listeners.size, 1, "the listener was not registered");
+    const [entry] = [...instance.reclaimables.listeners];
+    assert.equal(entry.target, fakeElement);
+    assert.equal(entry.type, "click");
+    disposeInstance(instance);
+    assert.equal(removed.length, 1, "dispose did not remove the listener");
+    assert.equal(removed[0][0], "click");
+  } finally {
+    setCurrentInstance(previous);
+  }
+});
+
 test("disposing twice is reported, not silently repeated", () => {
   const instance = createInstance();
   assert.equal(disposeInstance(instance), true);

@@ -1,3 +1,5 @@
+import { currentInstance } from "./instance.ts";
+
 export const observers_exports = {
   getBoundingClientRect(element: bigint) {
     const el = globalThis.__elementHandles.get(element);
@@ -12,6 +14,8 @@ export const observers_exports = {
     const el = globalThis.__lookupElement(target);
     if (observer && el) {
       observer.observe(el, options || { childList: true, subtree: true });
+      // W4: reclaimed by dispose().
+      currentInstance().reclaimables.observers.add(observer);
     }
   },
 };

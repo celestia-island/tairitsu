@@ -1,4 +1,4 @@
-import { installGlobalDelegates } from './instance.ts';
+import { currentInstance, installGlobalDelegates } from "./instance.ts";
 
 // W4: listener/event tables belong to the current instance (see instance.ts).
 installGlobalDelegates();
@@ -123,6 +123,13 @@ export const eventTarget_exports = {
       };
 
       element.addEventListener(eventType, listener, useCapture);
+      // W4: the listener belongs to this instance; dispose() removes it.
+      currentInstance().reclaimables.listeners.add({
+        target: element,
+        type: eventType,
+        handler: listener,
+        options: useCapture,
+      });
 
       // Store the listener for later reference
       const handle = (globalThis as any).__nextListenerHandle++ as unknown as bigint; // ts-escape-ok: retires with L40

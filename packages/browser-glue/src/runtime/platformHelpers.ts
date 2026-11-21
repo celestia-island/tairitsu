@@ -394,6 +394,15 @@ export const platformHelpers_exports = {
       }
     };
     window.addEventListener("scroll", handler, { passive: true });
+    // W4: owned by the instance, removed on dispose.
+    if (g.__TAIRITSU_INSTANCES__) {
+      g.__TAIRITSU_INSTANCES__.current().reclaimables.listeners.add({
+        target: window,
+        type: "scroll",
+        handler,
+        options: { passive: true },
+      });
+    }
     const handle = g.__nextHandle++;
     g.__tairitsuScrollListeners.set(handle, handler);
     return handle;

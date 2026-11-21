@@ -1,4 +1,4 @@
-import { installGlobalDelegates, installInstanceApi } from './instance.ts';
+import { installGlobalDelegates, installInstanceApi } from "./instance.ts";
 
 // W4: the handle tables are PER INSTANCE now. `installGlobalDelegates()`
 // defines these names on `globalThis` as accessors that forward to the

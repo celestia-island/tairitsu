@@ -137,7 +137,10 @@ def call(base, path, body=None):
         headers={"content-type": "application/json"},
     )
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        # Loopback must never go through an HTTP proxy: with `HTTP_PROXY` set
+        # (common in this workspace) the debug API answers 502.
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(req, timeout=30) as resp:
             envelope = json.load(resp)
     except urllib.error.HTTPError as exc:
         # Non-2xx carries the same {ok, error} envelope; surface its message.
