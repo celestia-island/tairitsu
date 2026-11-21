@@ -1,0 +1,29 @@
+{
+  "name": "@celestia-island/tairitsu-host-client",
+  "version": "0.1.0",
+  "description": "Load a tairitsu component from a library: async load, synchronous call surface, W6 capability enforcement and the W4 lifecycle",
+  "license": "MIT OR Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test \"test/**/*.test.mjs\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celestia-island/tairitsu.git",
+    "directory": "packages/npm/tairitsu-host-client"
+  }
+}
