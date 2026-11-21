@@ -173,6 +173,14 @@ export class TairitsuInstance {
     for (const key of Object.keys(this.counters) as (keyof typeof this.counters)[]) {
       this.counters[key] = this.seed;
     }
+
+    // The state bags hold ids and callbacks too; clear them with the tables.
+    this.tables.timerState.timeoutCallbacks.clear();
+    this.tables.timerState.intervalCallbacks.clear();
+    this.tables.timerState.nextTimeoutId = 1;
+    this.tables.animState.animationCallbacks.clear();
+    this.tables.animState.nextAnimationId = 1;
+    this.tables.wsState.nextCallbackId = 1;
   }
 }
 

@@ -3,7 +3,7 @@ import { installGlobalDelegates } from "./instance.ts";
 // W4: listener/event tables belong to the current instance (see instance.ts).
 installGlobalDelegates();
 
-// Initialize global handle tables for event listeners
+// Install the per-instance delegates for the event tables (W4)
 // Event handles
 
 // Re-entrancy guard: track which (element, eventType) pairs are currently being dispatched

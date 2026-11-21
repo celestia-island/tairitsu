@@ -8,8 +8,6 @@ export const parentNode_exports = {
   querySelectorAll(self: bigint, selectors: string) {
     const el = globalThis.__lookupElement(self);
     const result = el.querySelectorAll(selectors);
-    if (!globalThis.__nodeListHandles) {
-    }
     const handle = globalThis.__nextNodeList++;
     globalThis.__nodeListHandles.set(handle, result);
     return handle;

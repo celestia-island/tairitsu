@@ -7,4 +7,4 @@ import { installGlobalDelegates, installInstanceApi } from "./instance.ts";
 installGlobalDelegates();
 installInstanceApi();
 
-// Initialize global handle tables if not already set
+// Install the per-instance handle-table delegates (W4)

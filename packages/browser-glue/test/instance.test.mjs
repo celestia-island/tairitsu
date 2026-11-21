@@ -301,6 +301,17 @@ test("disposing the current instance clears the pointer, and counters reset to t
   assert.equal(instance.counters.nextHandle, instance.seed, "the counter did not reset to the seed");
 });
 
+test("a refused boot is TERMINAL in the page template (source pin)", async () => {
+  const page = await readFile(resolve(here, "../../packager/src/wasm/index.html.template"), "utf8");
+  assert.match(page, /guestRefused = claimErr/, "the refusal is not remembered");
+  assert.match(page, /bootSurface\.fail\('guest-active'/, "the refusal is not reported");
+  assert.match(
+    page,
+    /if \(!guestRefused\) try \{/,
+    "the boot does not abort after a refused claim",
+  );
+});
+
 test("the boot template disposes its instance on a failed boot (source pin)", async () => {
   const page = await readFile(resolve(here, "../../packager/src/wasm/index.html.template"), "utf8");
   assert.match(page, /instanceApi\.dispose\(bootInstance\)/, "a failed boot no longer reclaims");
@@ -366,18 +377,47 @@ test("every creation site registers, and dispose reclaims it", async () => {
     globalThis.MutationObserver = globalThis.ResizeObserver;
     ph.createResizeObserver(1n);
     ph.createMutationObserver(1n);
+    const platformHelpersObservers = instance.reclaimables.observers.size;
+    assert.ok(platformHelpersObservers >= 2, "platform-helpers observers were not registered");
+
+    // The three observer MODULES export observe/unobserve/disconnect (not
+    // `create`), so they are driven through `observe` — the site that owns the
+    // constructor. A no-op call would leave the count unchanged.
     const { resizeObserver_exports } = await import("../src/runtime/resizeObserver.ts");
     const { mutationObserver_exports } = await import("../src/runtime/mutationObserver.ts");
     const { observers_exports } = await import("../src/runtime/observers.ts");
+    // `observe(self, target, options)` looks BOTH handles up as elements, so
+    // the stub observer is stored as an element handle too — exactly the shape
+    // the guest uses.
     const fakeEl = { nodeType: 1 };
     instance.tables.elementHandles.set(9n, fakeEl);
-    resizeObserver_exports.create?.(1n);
-    mutationObserver_exports.create?.(1n);
-    observers_exports.create?.(1n);
-    assert.ok(
-      instance.reclaimables.observers.size >= 2,
-      `observers were not registered (size ${instance.reclaimables.observers.size})`,
-    );
+    instance.tables.nodeHandles.set(9n, fakeEl);
+    for (const [name, exports] of [
+      ["resizeObserver", resizeObserver_exports],
+      ["mutationObserver", mutationObserver_exports],
+      ["observers", observers_exports],
+    ]) {
+      assert.equal(typeof exports.observe, "function", `${name} has no observe export`);
+      const stubObserver = {
+        observed: [],
+        observe(target, options) {
+          this.observed.push([target, options]);
+        },
+        unobserve() {},
+        disconnect() {
+          this.disconnected = true;
+        },
+      };
+      const selfHandle = 90n + BigInt(instance.reclaimables.observers.size);
+      instance.tables.elementHandles.set(selfHandle, stubObserver);
+      const before = instance.reclaimables.observers.size;
+      exports.observe(selfHandle, 9n, { childList: true });
+      assert.equal(stubObserver.observed.length, 1, `${name}.observe did not reach the stub`);
+      assert.ok(
+        instance.reclaimables.observers.size > before,
+        `${name}.observe did not register its observer`,
+      );
+    }
 
     // …and dispose reclaims all of them
     const registeredObservers = [...instance.reclaimables.observers];
@@ -395,6 +435,39 @@ test("every creation site registers, and dispose reclaims it", async () => {
     globalThis.cancelAnimationFrame = originalCancelRaf;
     globalThis.clearTimeout = originalClearTimeout;
     globalThis.clearInterval = originalClearInterval;
+    setCurrentInstance(previous);
+  }
+});
+
+test("WebSocket creation registers and dispose closes it", async () => {
+  await import("../src/runtime/helpers.ts");
+  const instance = createInstance();
+  const previous = setCurrentInstance(instance);
+  claimGuest(instance);
+  const closed = [];
+  const sockets = [];
+  const originalWebSocket = globalThis.WebSocket;
+  globalThis.WebSocket = class {
+    constructor(url) {
+      this.url = url;
+      sockets.push(this);
+    }
+    close() {
+      closed.push(this.url);
+    }
+    addEventListener() {}
+    send() {}
+  };
+  try {
+    const { platformHelpers_exports: ph } = await import("../src/runtime/platformHelpers.ts");
+    const connect = ph.connectWebSocket || ph.connect_websocket;
+    assert.equal(typeof connect, "function", "no WebSocket connect export");
+    connect.call(ph, "ws://example.test/socket", 1n, 1n, 1n, 1n);
+    assert.equal(instance.reclaimables.sockets.size, 1, "the socket was not registered");
+    disposeInstance(instance);
+    assert.deepEqual(closed, ["ws://example.test/socket"], "dispose did not close the socket");
+  } finally {
+    globalThis.WebSocket = originalWebSocket;
     setCurrentInstance(previous);
   }
 });

@@ -140,10 +140,15 @@
         // W4 contract: ONE active guest per page. `claim` refuses when another
         // component already owns the glue surface, instead of silently
         // displacing it; the refusal reaches the error surface below.
+        let guestRefused = null;
         if (instanceApi && bootInstance) {
             try {
                 instanceApi.claim(bootInstance);
             } catch (claimErr) {
+                // A refusal is TERMINAL: reporting it and then booting anyway
+                // would run the second guest's entry on the first guest's
+                // tables. `guestRefused` aborts the boot below.
+                guestRefused = claimErr;
                 bootSurface.fail('guest-active', claimErr);
             }
         }
@@ -155,7 +160,10 @@
             await bootComponent({ result, surface: bootSurface });
         };
 
-        try {
+        // Nothing below may run after a refusal: the surface already carries
+        // the error. (A thrown refusal would land in the outermost catch and be
+        // re-reported as a generic 'boot-failed'.)
+        if (!guestRefused) try {
             const imports = await buildImports();
             let wrapperErr = null;
             let wrapperResult = null;
