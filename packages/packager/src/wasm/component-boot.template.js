@@ -10,7 +10,8 @@
 // wrapper namespace carries the entry at `lifecycle.start` (the transpiled
 // form may also namespace it as `tairitsu-browser:full/lifecycle@0.2.0`).
 // The legacy top-level names stay supported for hand-written wrappers and for
-// parity with the SSR host, which accepts the same list.
+// parity with the SSR host, which accepts `tairitsu_component_bootstrap`,
+// `run`, `_start` and `start` (`packages/ssr/src/lib.rs`).
 //
 //   * the entry is resolved from ENTRY_MANIFEST only — no recursive probing;
 //   * the resolved name (and its kind) is logged, so a build's entry is
@@ -25,14 +26,16 @@
  *
  * `top-level` entries live on the instance/exports; `wit` entries are the
  * component's own WIT exports (one nesting level, exactly as jco emits them).
- * `run` / `main` / `init` / `start` are the legacy names the browser page and
- * the SSR host have always accepted (`packages/ssr/src/lib.rs`).
+ * `run` / `main` / `init` are the names the browser page has always accepted;
+ * `_start` / `start` are the WASI-style entries the SSR host also accepts, so
+ * both hosts agree on what a component's boot entry is.
  */
 export const ENTRY_MANIFEST = [
   { path: ["tairitsu_component_bootstrap"], kind: "top-level" },
   { path: ["run"], kind: "top-level" },
   { path: ["main"], kind: "top-level" },
   { path: ["init"], kind: "top-level" },
+  { path: ["_start"], kind: "top-level" },
   { path: ["start"], kind: "top-level" },
   { path: ["lifecycle", "start"], kind: "wit" },
   { path: ["tairitsu-browser:full/lifecycle@0.2.0", "start"], kind: "wit" },

@@ -40,6 +40,7 @@ test("the entry contract is explicit and ordered", () => {
     "run",
     "main",
     "init",
+    "_start",
     "start",
     "lifecycle.start",
     "tairitsu-browser:full/lifecycle@0.2.0.start",
@@ -65,8 +66,9 @@ test("a REAL jco wrapper namespace resolves its WIT lifecycle entry", () => {
   assert.equal(entry.kind, "wit");
 });
 
-test("the legacy top-level `start` stays accepted (SSR parity)", () => {
+test("the legacy `_start` / `start` stay accepted (SSR parity)", () => {
   assert.equal(resolveEntry({ start: noop }).name, "start");
+  assert.equal(resolveEntry({ _start: noop }).name, "_start");
 });
 
 test("the documented bootstrap export wins over run/main/init", () => {

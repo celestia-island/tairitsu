@@ -13,7 +13,17 @@
     <div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>
     <script src="{{ glue_bundle }}?v={{ v }}"></script>
     <script type="module">
-        const bootError = (msg, err) => {
+        // W3: ONE place marks a failure. `data-tairitsu-error` is the machine
+        // signal every consumer keys on, so it is set here rather than in each
+        // catch — the outermost catch used to show the card without it, which
+        // made a stale dist (missing /component-boot.js) invisible to anything
+        // watching the attribute.
+        const markBootFailure = (kind) => {
+            document.documentElement.dataset.tairitsuError = kind;
+        };
+
+        const bootError = (msg, err, kind) => {
+            if (kind) markBootFailure(kind);
             console.error('[tairitsu] Boot failed:', msg, err || '');
             const appRoot = document.getElementById('app');
             if (appRoot) appRoot.innerHTML =
@@ -47,8 +57,7 @@
                 settleBoot.resolve(entryName);
             },
             fail: (kind, error) => {
-                document.documentElement.dataset.tairitsuError = kind;
-                bootError('Component ' + kind.replace('-', ' '), error);
+                bootError('Component ' + kind.replace('-', ' '), error, kind);
                 settleBoot.reject(error);
             },
         };
@@ -410,7 +419,10 @@
         })();
 
         } catch (topErr) {
-            bootError('Unhandled error', topErr);
+            // Covers the paths that never reached `bootSurface` at all — most
+            // importantly a dist whose /component-boot.js or glue bundle is
+            // missing (deploy skew): the card shows AND the attribute is set.
+            bootError('Unhandled error', topErr, 'boot-failed');
         }
     </script>
 </body>
