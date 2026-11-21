@@ -761,7 +761,7 @@ test("the mount root is a host container, and the default path is unchanged (W8 
   // The card must not replace a host container's children.
   assert.match(
     boot,
-    /const cardTarget = mountState\.shellOwned \|\| !mountState\.host \? appRoot : null;/,
+    /const cardTarget = mountState\.shellOwned === true \? appRoot : null;/,
     "the failure card can write where the host owns the element",
   );
   // The message sink is innerHTML: the host's own text must be escaped.

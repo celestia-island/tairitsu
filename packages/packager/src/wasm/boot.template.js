@@ -12,7 +12,10 @@
             console.error('[tairitsu] Boot failed:', msg, err || '');
             const mountState = globalThis.__TAIRITSU_MOUNT_ROOT__ || {};
             const appRoot = mountState.element || document.getElementById('app');
-            const cardTarget = mountState.shellOwned || !mountState.host ? appRoot : null;
+            // Only into a shell the boot owns: the `#app` fallback below is for
+            // reading, and writing into a page element the boot never created
+            // would clear host content (a deploy-skew or worker-lane failure).
+            const cardTarget = mountState.shellOwned === true ? appRoot : null;
             if (cardTarget) cardTarget.innerHTML =
                 '<div style="padding:2em;font-family:monospace;color:#e06c75">' +
                 '<b>Tairitsu boot error</b><br><pre style="margin-top:.5em;white-space:pre-wrap">' +
@@ -54,7 +57,12 @@
         };
 
         const resolveMountRoot = () => {
-            const named = (document.documentElement.dataset.tairitsuRoot || '').trim();
+            const raw = document.documentElement.dataset.tairitsuRoot;
+            const named = (raw || '').trim();
+            if (raw !== undefined && named === '') {
+                // Present but blank: the host meant something and named nothing.
+                return mountError('mount-root-missing', 'data-tairitsu-root is empty');
+            }
             if (!named) {
                 let fallback = document.getElementById('app');
                 if (!fallback) {
@@ -83,7 +91,9 @@
             if (existing && container.contains(existing)) {
                 // The container already holds an #app: that one is the host's
                 // (server-rendered HTML, typically), and the guest would clear it.
-                // Give the component its own shell instead of adopting it.
+                // Give the component its own shell instead of adopting it. The
+                // host's node loses its id (the guest mounts by `#app`) but keeps
+                // its children and every other attribute.
                 const shell = document.createElement('div');
                 shell.id = 'app';
                 existing.removeAttribute('id');
@@ -113,8 +123,21 @@
         const wantsWorker =
             document.documentElement.dataset.tairitsuWorker !== undefined &&
             typeof Worker === 'function';
+        // The worker lane does not resolve a host container (no DOM to mount
+        // into, and a DOM conflict must not refuse it), but a failure there still
+        // needs somewhere to write its card: the page's own `#app`, when it has
+        // one, is the shell this boot owns.
         const mount = wantsWorker
-            ? { element: null, host: false, shellOwned: false, missing: null, skipped: true }
+            ? (() => {
+                  const shell = document.getElementById('app');
+                  return {
+                      element: shell,
+                      host: false,
+                      shellOwned: shell !== null,
+                      missing: null,
+                      skipped: true,
+                  };
+              })()
             : resolveMountRoot();
         const appRoot = mount.element;
         if (!appRoot && !mount.skipped) {

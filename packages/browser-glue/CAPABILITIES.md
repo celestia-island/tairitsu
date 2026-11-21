@@ -110,7 +110,10 @@ component gets its own `#app` shell inside it, so the host's children are never
 touched: the guest clears its shell on entry, and a host's content must not be
 in the way of that.
 
-* the host container keeps all its attributes and children;
+* the host container keeps all its attributes and children. If the container
+  already holds an `#app` (server-rendered host content), that node keeps its
+  children and its other attributes but **loses its id**: the guest mounts by
+  `#app`, so the id moves to the shell the boot creates for it;
 * the host container must not **be** `#app`, and the page must not keep a
   page-level `#app` outside it — either would mean the guest clears (or renders
   away from) something the host owns. Both are refused with

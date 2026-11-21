@@ -2506,18 +2506,7 @@ pub mod wasm_impl {
             WitElement::from_raw(div)
         };
 
-        // W8: a host-supplied root is the host's element — the guest patches
-        // inside it and must not clear what the host put there. The boot marks
-        // such a root with `data-tairitsu-host-root`; the default `#app` keeps
-        // the old "clear what we created" behaviour.
-        let host_owned = bindings::tairitsu_browser::full::element::get_attribute(
-            app.as_raw(),
-            "data-tairitsu-host-root",
-        )
-        .is_some();
-        if !host_owned {
-            bindings::tairitsu_browser::full::node::set_text_content(app.as_raw(), Some(""));
-        }
+        bindings::tairitsu_browser::full::node::set_text_content(app.as_raw(), Some(""));
 
         render_vnode(platform, &vnode, &app)?;
 

@@ -76,6 +76,7 @@ SCENARIOS = (
     "missing-import",
     "fixture",
     "custom-root",
+    "mount-inner-app",
 )
 
 # W8: a component that patches inside whatever root the host mounted it into.
@@ -84,6 +85,9 @@ const entry = () => {
   globalThis.__w3_entry_ran = true;
   const root = (globalThis.__TAIRITSU_MOUNT_ROOT__ || {}).element;
   if (!root) return;
+  // The real guest clears its mount element on entry (wit_platform.rs); model it,
+  // or a boot that adopted host content would look harmless here.
+  root.textContent = '';
   const guest = document.createElement('div');
   guest.id = 'guest-content';
   guest.textContent = 'component booted';
@@ -202,6 +206,7 @@ WRAPPERS = {
     "mount-conflict-shell": CUSTOM_ROOT_WRAPPER,
     "mount-conflict-page": CUSTOM_ROOT_WRAPPER,
     "mount-missing": CUSTOM_ROOT_WRAPPER,
+    "mount-inner-app": CUSTOM_ROOT_WRAPPER,
     "worker-boot": WORKER_WRAPPER,
     "worker-refused": WORKER_WRAPPER,
     "worker-terminate": WORKER_WRAPPER,
@@ -449,7 +454,7 @@ def capability_declaration(scenario):
         # The one control that makes the worker host's refusal observable: it
         # declares an interface the lane cannot provide (it has no DOM).
         return {"interfaces": ["document"], "wasiModules": []}
-    if scenario in ("mount-conflict-shell", "mount-conflict-page", "mount-missing"):
+    if scenario in ("mount-conflict-shell", "mount-conflict-page", "mount-missing", "mount-inner-app"):
         # These exercise the mount check; a declaration failure would mask it.
         return {"interfaces": [], "wasiModules": []}
     if scenario in STUB_SCENARIOS or scenario in WORKER_SCENARIOS:
@@ -504,6 +509,15 @@ def render_page(scenario=None):
             1,
         )
         page = page.replace("<html ", '<html data-tairitsu-root="host-panel" ', 1)
+    if scenario == "mount-inner-app":
+        # The container already holds a server-rendered #app; the boot must give
+        # the component its own shell and leave that content alone.
+        page = page.replace(
+            '<div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>',
+            '<div id="panel"><div id="app"><p id="host-ssr">host ssr</p></div></div>',
+            1,
+        )
+        page = page.replace("<html ", '<html data-tairitsu-root="panel" ', 1)
     if scenario in ("mount-conflict-shell", "mount-conflict-page", "mount-missing"):
         page = page.replace(
             '<div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>',
@@ -884,8 +898,13 @@ def self_check():
         "worker-terminate",
         "worker-refused",
         "worker-kill",
-        # W8: the host-owned mount root has no other browser-level control.
+        # W8: the host-owned mount root and its refusals have no other
+        # browser-level control.
         "custom-root",
+        "mount-conflict-shell",
+        "mount-conflict-page",
+        "mount-missing",
+        "mount-inner-app",
     )
     for capability_scenario in REQUIRED_CONTROLS:
         if capability_scenario not in SCENARIOS:
@@ -1151,7 +1170,7 @@ def main():
                 elif state.get("pageRanEntry") is True:
                     failures.append("the entry ran on the page: this is the main-thread lane")
 
-            if args.scenario.startswith("mount-") and not failures:
+            if args.scenario.startswith("mount-") and args.scenario != "mount-inner-app" and not failures:
                 state = evaluate(
                     base,
                     "(() => ({"
@@ -1177,8 +1196,33 @@ def main():
                         failures.append("the component booted despite a refused mount root")
                     if not state.get("hostChild"):
                         failures.append("the host's node was lost")
+                    if state.get("pageApp") != "Loading…":
+                        failures.append(
+                            "the page-level #app was modified: " + repr(state.get("pageApp"))
+                        )
                     if state.get("ready") is not None:
                         failures.append("a refused boot still reported ready")
+            if args.scenario == "mount-inner-app" and not failures:
+                state = evaluate(
+                    base,
+                    "(() => ({"
+                    " hostSsr: !!document.getElementById('host-ssr'),"
+                    " hostSsrText: (document.getElementById('host-ssr') || {}).textContent || '',"
+                    " shells: document.querySelectorAll('#app').length,"
+                    " guest: !!document.getElementById('guest-content'),"
+                    " inPanel: !!document.getElementById('panel') &&"
+                    "   document.getElementById('panel').contains(document.getElementById('guest-content'))"
+                    "}))()",
+                )
+                if not isinstance(state, dict):
+                    failures.append("inner-app state unreadable: " + repr(state))
+                else:
+                    if not state.get("hostSsr") or state.get("hostSsrText") != "host ssr":
+                        failures.append("the host's server-rendered content was cleared")
+                    if state.get("shells") != 1:
+                        failures.append("expected exactly one #app shell, got " + repr(state.get("shells")))
+                    if not state.get("guest") or not state.get("inPanel"):
+                        failures.append("the guest did not render inside the container")
             if args.scenario == "custom-root":
                 state = evaluate(
                     base,
