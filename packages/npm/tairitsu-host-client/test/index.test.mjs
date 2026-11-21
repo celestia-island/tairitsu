@@ -289,10 +289,57 @@ test("createSurface is the synchronous door for a static import", () => {
   assert.equal(typeof result.then, "undefined");
 });
 
-test("createSurface refuses a declaration the host cannot satisfy", () => {
+test("createSurface refuses a declaration it cannot provide, and says so", () => {
+  // A statically imported wrapper binds its imports before this call: the sync
+  // door can only refuse a capability, never provide one.
+  for (const declaration of [
+    { interfaces: ["document"] },
+    { wasiModules: ["clocks"] },
+  ]) {
+    assert.throws(
+      () => createSurface({ encode: () => 1 }, declaration),
+      (error) => error instanceof HostClientError && error.kind === "sync-door-cannot-provide",
+    );
+  }
   assert.throws(
-    () => createSurface({ encode: () => 1 }, { interfaces: ["document"] }),
-    (error) => error instanceof HostClientError && error.kind === "capability-denied",
+    () => createSurface({ encode: () => 1 }, {}, { document: {} }),
+    (error) => error instanceof HostClientError && error.kind === "sync-door-cannot-provide",
+  );
+});
+
+test("every instantiate ABI name is refused by the sync door", () => {
+  for (const name of ["instantiate", "default", "init"]) {
+    assert.throws(
+      () => createSurface({ [name]: () => ({}) }),
+      (error) => error instanceof HostClientError && error.kind === "needs-loading",
+    );
+  }
+});
+
+test("the sync door rejects a non-object module like the async one", () => {
+  for (const value of [null, 42, "text"]) {
+    assert.throws(
+      () => createSurface(value),
+      (error) => error instanceof HostClientError && error.kind === "instantiate-failed",
+    );
+  }
+});
+
+test("the sync door's exports view is behind the same stop gate", async () => {
+  const component = createSurface({ encode: () => "ok" });
+  assert.equal(component.exports.encode(), "ok");
+  await component.stop();
+  assert.throws(
+    () => component.exports.encode(),
+    (error) => error instanceof HostClientError && error.kind === "stopped",
+  );
+});
+
+test("the sync door refuses a thenable export", () => {
+  const component = createSurface({ encode: async () => "late" });
+  assert.throws(
+    () => component.call("encode"),
+    (error) => error instanceof HostClientError && error.kind === "async-export",
   );
 });
 

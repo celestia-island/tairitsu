@@ -30,17 +30,24 @@ For a **synchronous** facade (`qrMatrix` is the first), build the surface from
 the statically imported module — no await anywhere in the call path:
 
 ```ts
-import * as wrapper from "./qr/wrapper.js";
-import { createSurface, publishCapabilities } from "@celestia-island/tairitsu-host-client";
+// declare-caps.ts — a side-effect module, imported BEFORE the wrapper, because
+// ES module imports are hoisted: no statement in this file can run earlier.
+//   import { publishCapabilities } from "@celestia-island/tairitsu-host-client";
+//   publishCapabilities({ interfaces: [], wasiModules: [] });
 
-const CAPABILITIES = { interfaces: [], wasiModules: [] };
-publishCapabilities(CAPABILITIES);          // before the import evaluates the glue modules
-const qr = createSurface(wrapper, CAPABILITIES);
-const matrix = qr.call<boolean[][]>("encode", text, opts);   // synchronous
+import "./declare-caps.js";
+import * as wrapper from "./qr/wrapper.js";
+import { createSurface } from "@celestia-island/tairitsu-host-client";
+
+const qr = createSurface(wrapper);                       // compute-only
+const matrix = qr.call<boolean[][]>("encode", text, { ecc: "m", version: 0 });
 ```
 
-`createSurface` refuses a wrapper that needs instantiating (`needs-loading`) and
-applies the same capability gate as `loadComponent`.
+`createSurface` serves **compute-only** components: a statically imported wrapper
+binds its imports before this call, so the door can only *refuse* a capability,
+never provide one — a declaration naming an interface or WASI module is rejected
+with `sync-door-cannot-provide` (use `loadComponent` for anything else). It also
+refuses a wrapper that needs instantiating (`needs-loading`).
 
 For a dynamic load, `loadComponent` orders the publish itself:
 
