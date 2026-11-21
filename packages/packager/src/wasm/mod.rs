@@ -1156,8 +1156,8 @@ const WRAPPER_CACHE_KEY_VERSION: &[u8] = b"w1";
 /// automatically (no manual bump needed for that file).
 const WRAPPER_LOADER_TEMPLATE: &str = include_str!("component-wrapper-loader.template.js");
 
-/// W3 boot runtime. Same contract as the loader template: part of the wrapper
-/// pipeline, hashed into the cache key so an edit invalidates cached wrappers.
+/// W3 boot runtime: the page's boot lifecycle, emitted beside `index.html` on
+/// every build (it is not part of the wrapper pipeline, hence not in the key).
 const COMPONENT_BOOT_TEMPLATE: &str = include_str!("component-boot.template.js");
 
 /// SHA-256 of the wasm file's bytes, lower-case hex.
@@ -1251,8 +1251,10 @@ fn wrapper_cache_key(wasm_hash: &str, jco_id: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(b"tairitsu-component-wrapper");
     hasher.update(WRAPPER_CACHE_KEY_VERSION);
+    // The boot module is NOT a wrapper input — it is written next to
+    // `index.html` on every build (see generate_component_html_with_output_dir),
+    // so hashing it here would only force a needless jco re-transpile.
     hasher.update(WRAPPER_LOADER_TEMPLATE.as_bytes());
-    hasher.update(COMPONENT_BOOT_TEMPLATE.as_bytes());
     hasher.update(wasm_hash.as_bytes());
     hasher.update(jco_id.as_bytes());
     let digest = hasher.finalize();

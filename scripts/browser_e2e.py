@@ -60,16 +60,18 @@ SCENARIOS = ("component", "bad-bytes", "missing-entry", "missing-import", "fixtu
 # The entry the good synthetic component exports: it records that it ran and
 # mutates the page, so "the entry was invoked" is observable from the DOM.
 GOOD_WRAPPER = """
-export async function instantiate(imports) {
-  const result = {
-    tairitsu_component_bootstrap() {
-      globalThis.__w3_entry_ran = true;
-      const app = document.getElementById('app');
-      if (app) app.textContent = 'component booted';
-    },
-  };
-  return result;
-}
+// The shape `jco transpile` actually emits for a tairitsu component: a module
+// namespace that exposes the WIT interfaces (no `instantiate` export), so the
+// loader's `return mod` branch and the WIT entry resolution are both exercised.
+const entry = () => {
+  globalThis.__w3_entry_ran = true;
+  const app = document.getElementById('app');
+  if (app) app.textContent = 'component booted';
+};
+
+const lifecycle = { start: entry };
+// The string-named re-export is exactly what jco emits for a WIT interface.
+export { lifecycle, lifecycle as "tairitsu-browser:full/lifecycle@0.2.0" };
 """
 
 # A component that cannot be instantiated: the loader must surface this, not
@@ -349,21 +351,24 @@ def self_check():
         # page that wrongly reports ready MUST produce failures.
         if not check_boot_state(GOOD_STATE, scenario):
             failures.append(f"control {scenario} would pass a page that is wrongly ready")
-        if not check_boot_state(dict(BAD_STATE, error=None), scenario):
-            failures.append(f"control {scenario} would pass a page with no error attribute")
-        if not check_boot_state(dict(BAD_STATE, appText=""), scenario):
-            failures.append(f"control {scenario} would pass a page with no visible error")
-        if not check_boot_state(dict(BAD_STATE, entryRan=True), scenario):
-            failures.append(f"control {scenario} would pass a page whose entry ran")
+        # Each probe differs from the honest state in EXACTLY ONE dimension:
+        # a probe that already fails a different assertion would make the other
+        # assertions look alive while they are dead.
         card = EXPECTED_CARD[scenario]
-        generic = {"ready": None, "error": "instantiate-failed", "entryRan": False,
-                   "appText": "Tairitsu boot error: something else failed"}
-        if not check_boot_state(generic, scenario):
-            failures.append(
-                f"control {scenario} would pass a card that does not name {card!r}"
-            )
+        honest = dict(BAD_STATE, appText="Tairitsu boot error\n" + card)
+        probes = [
+            (dict(honest, ready="hydrated"), "would pass a page that is wrongly ready"),
+            (dict(honest, error=None), "would pass a page with no error attribute"),
+            (
+                dict(honest, appText="Tairitsu boot error: something else failed"),
+                f"would pass a card that does not name {card!r}",
+            ),
+            (dict(honest, entryRan=True), "would pass a page whose entry ran"),
+        ]
+        for state, message in probes:
+            if not check_boot_state(state, scenario):
+                failures.append(f"control {scenario} {message}")
         # ... and the honest failure state (card naming THIS failure) must pass.
-        honest = dict(BAD_STATE, appText="Tairitsu boot error\n" + EXPECTED_CARD[scenario])
         if check_boot_state(honest, scenario):
             failures.append(f"control {scenario} rejects a correct error page")
 
@@ -430,6 +435,13 @@ def main():
     )
     ap.add_argument("--expect-text", default=None, help="fixture mode: text that must appear")
     ap.add_argument("--screenshot", default=None, help="save a PNG screenshot here")
+    ap.add_argument(
+        "--settle-seconds",
+        type=float,
+        default=2.0,
+        help="wait this long after the first ready/error signal before asserting "
+        "(the error attribute lands before the deferred boot IIFE settles)",
+    )
     ap.add_argument(
         "--self-check",
         action="store_true",
@@ -501,10 +513,18 @@ def main():
             # The page boots asynchronously (styles + lifecycle); poll briefly.
             deadline = time.time() + 20
             while time.time() < deadline:
-                ready = evaluate(base, "!!(document.documentElement.dataset.tairitsuReady || document.documentElement.dataset.tairitsuError)")
-                if ready is True:
+                seen = evaluate(
+                    base,
+                    "!!(document.documentElement.dataset.tairitsuReady"
+                    " || document.documentElement.dataset.tairitsuError)",
+                )
+                if seen is True:
                     break
                 time.sleep(0.1)
+            # The error attribute is written before the deferred boot IIFE
+            # settles, so the FIRST signal is early: re-read after a settle
+            # window, otherwise a page that wrongly becomes ready later passes.
+            time.sleep(args.settle_seconds)
             failures.extend(
                 assert_boot_contract(base, args.scenario, real_dist=bool(args.dist))
             )

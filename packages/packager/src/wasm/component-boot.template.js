@@ -66,7 +66,9 @@ const exportSurfaces = (result) => [
 function follow(surface, path) {
   let cursor = surface;
   for (const key of path) {
-    if (!cursor || typeof cursor !== "object") return null;
+    // Own properties only: the pre-W3 walker used Object.entries, and a
+    // polluted Object.prototype must not be able to mint a boot entry.
+    if (!cursor || typeof cursor !== "object" || !Object.hasOwn(cursor, key)) return null;
     cursor = cursor[key];
   }
   return typeof cursor === "function" ? cursor : null;
