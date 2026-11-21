@@ -57,6 +57,7 @@ TEMPLATE_DIR = os.path.join(REPO_ROOT, "packages", "packager", "src", "wasm")
 
 SCENARIOS = (
     "component",
+    "csp",
     "two-instances",
     "bad-bytes",
     "missing-entry",
@@ -108,6 +109,9 @@ export async function instantiate(imports) {
 
 WRAPPERS = {
     "component": GOOD_WRAPPER,
+    # Same component, same page — served with `script-src 'self'` so a page that
+    # needed a blob URL or an inline module could not boot at all (D5).
+    "csp": GOOD_WRAPPER,
     # The isolation scenario boots the same component, then drives the instance
     # API from the test side.
     "two-instances": GOOD_WRAPPER,
@@ -287,6 +291,18 @@ def ensure_glue_bundle(dest):
     return proc.returncode == 0 and os.path.isfile(dest)
 
 
+def render_boot_script():
+    """Render `boot.template.js` the way the packager emits `boot.js` (W5)."""
+    with open(os.path.join(TEMPLATE_DIR, "boot.template.js"), encoding="utf-8") as fh:
+        boot = fh.read()
+    boot = boot.replace("{{ v }}", PAGE_CONTEXT["v"]).replace(
+        "{{ wasm_file }}", PAGE_CONTEXT["wasm_file"]
+    )
+    if "{{" in boot:
+        raise RuntimeError("boot.template.js still carries a placeholder")
+    return boot
+
+
 def render_page():
     """Render `index.html.template` with the e2e context."""
     with open(os.path.join(TEMPLATE_DIR, "index.html.template"), encoding="utf-8") as fh:
@@ -306,6 +322,8 @@ def build_dist(scenario, dest):
     os.makedirs(os.path.join(dest, "component-wrapper"), exist_ok=True)
     with open(os.path.join(dest, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(render_page())
+    with open(os.path.join(dest, "boot.js"), "w", encoding="utf-8") as fh:
+        fh.write(render_boot_script())
     glue_path = os.path.join(dest, "glue-runtime.js")
     # `two-instances` needs the shipped bundle (the instance API lives there);
     # the component scenarios only need the page's import map to stay green.
@@ -340,15 +358,24 @@ def build_dist(scenario, dest):
         fh.write(b"\x00asm\x0d\x00\x01\x00" + b"\x00" * 16)
 
 
+CSP_POLICY = "script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'none'"
+
+
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        if getattr(self.server, "csp", None):
+            self.send_header("Content-Security-Policy", self.server.csp)
+        super().end_headers()
+
     def log_message(self, *_args):  # noqa: D401 - silence the per-request log
         return
 
 
-def serve(directory):
+def serve(directory, csp=None):
     """Serve `directory` on an ephemeral port; returns (server, thread, url)."""
     handler = functools.partial(_QuietHandler, directory=directory)
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    server.csp = csp
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     port = server.server_address[1]
@@ -537,6 +564,14 @@ def self_check():
         if check_boot_state(honest, scenario):
             failures.append(f"control {scenario} rejects a correct error page")
 
+    # W5: the CSP scenario is the D5 proof (a page that needed a blob URL or an
+    # inline module cannot boot under `script-src 'self'`), so its absence must
+    # fail the offline gate.
+    if "csp" not in SCENARIOS:
+        failures.append("the CSP scenario is missing")
+    if "csp" not in WRAPPERS:
+        failures.append("the CSP scenario has no component under test")
+
     # W4: the dual-instance isolation control must exist and its checks must be
     # able to fail (a control that cannot fail is not a control).
     if "two-instances" not in SCENARIOS:
@@ -703,7 +738,20 @@ def main():
                 tmp_root = tempfile.mkdtemp(prefix="tairitsu-w3-e2e-")
                 dist = os.path.join(tmp_root, "dist")
                 build_dist(args.scenario, dist)
-            server, _thread, url = serve(dist)
+            if args.scenario == "csp":
+                # Prove the policy bites: an inline script and a blob module must
+                # both be refused, or the scenario proves nothing about D5.
+                page_path = os.path.join(dist, "index.html")
+                with open(page_path, encoding="utf-8") as fh:
+                    page = fh.read()
+                page = page.replace(
+                    "</body>",
+                    '<script>window.__inline_ran = true;</script>'
+                    "<script type=\"module\">window.__blob_ran = true;</script></body>",
+                )
+                with open(page_path, "w", encoding="utf-8") as fh:
+                    fh.write(page)
+            server, _thread, url = serve(dist, csp=CSP_POLICY if args.scenario == "csp" else None)
             call(base, "/navigate", {"url": url + "/index.html"})
             # The page boots asynchronously (styles + lifecycle); poll briefly.
             deadline = time.time() + 20
@@ -723,6 +771,21 @@ def main():
             failures.extend(
                 assert_boot_contract(base, args.scenario, real_dist=bool(args.dist))
             )
+            if args.scenario == "csp" and not failures:
+                enforcement = evaluate(
+                    base,
+                    """(() => ({
+                        inlineRan: globalThis.__inline_ran === true,
+                    }))()""",
+                )
+                if not isinstance(enforcement, dict) or enforcement.get("inlineRan"):
+                    failures.append(
+                        "the CSP policy is not enforced (an inline script ran)"
+                        if isinstance(enforcement, dict)
+                        else f"CSP enforcement probe failed: {enforcement!r}"
+                    )
+                else:
+                    print("CSP enforced: inline scripts blocked, component still boots")
             if args.scenario == "two-instances" and not failures:
                 failures.extend(check_isolation(evaluate(base, ISOLATION_PROBE)))
 

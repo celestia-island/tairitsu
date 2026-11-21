@@ -56,92 +56,9 @@ export const INTERFACES = {
   "@tairitsu-glue/wheel-event": wheelEvent_exports,
 };
 
-export function generateModuleCode(exports: Record<string, (...args: any[]) => any>) { // ts-escape-ok: retires with L40
-  const lines = [];
-
-  // Include helper functions needed by exports.
-  // IMPORTANT: Always access globalThis directly, never cache in local variables.
-  const helpers = `// Helper functions - always use globalThis directly
-function storeElement(el) {
-    if (!el) return undefined;
-    const handle = globalThis.__nextHandle++;
-    globalThis.__elementHandles.set(handle, el);
-    return handle;
-}
-
-function storeNode(node) {
-    if (!node) return undefined;
-    const handle = globalThis.__nextHandle++;
-    globalThis.__nodeHandles.set(handle, node);
-    return handle;
-}
-
-function storeText(text) {
-    if (!text) return undefined;
-    const handle = globalThis.__nextHandle++;
-    globalThis.__textHandles.set(handle, text);
-    return handle;
-}
-
-function lookupElement(handle) {
-    const el = globalThis.__elementHandles.get(handle);
-    if (!el) throw new Error("Element handle " + handle + " not found");
-    return el;
-}
-
-function lookupNode(handle) {
-    const node = globalThis.__nodeHandles.get(handle) || globalThis.__elementHandles.get(handle) || globalThis.__textHandles.get(handle);
-    if (!node) throw new Error("Node handle " + handle + " not found");
-    return node;
-}`;
-
-  // State initializers for modules that keep mutable state on globalThis.
-  // When generateModuleCode stringifies export functions into a blob module,
-  // the blob has its own scope — any closure variables from the original file
-  // W4: timer/animation state lives on the instance (`tables.timerState`),
-  // so the emitted module no longer seeds page-global copies.
-  const stateInit = '';;
-
-  lines.push(stateInit.trim());
-  lines.push(helpers.trim());
-
-  for (const [name, fn] of Object.entries(exports)) {
-    let fnStr = fn.toString();
-    // Ensure function syntax is complete (shorthand methods don't have 'function' keyword)
-    if (!fnStr.startsWith("function")) {
-      fnStr = "function " + fnStr;
-    }
-    lines.push("export const " + name + " = " + fnStr + ";");
-  }
-
-  return lines.join("\n");
-}
-
-export function registerImportMap() {
-  const imports: Record<string, string> = {};
-
-  for (const [ifacePath, exports] of Object.entries(INTERFACES)) {
-    const code = generateModuleCode(exports);
-    const blob = new Blob([code], { type: "application/javascript" });
-    const blobUrl = URL.createObjectURL(blob);
-    imports[ifacePath] = blobUrl;
-    const ifaceName = ifacePath.replace("@tairitsu-glue/", "");
-    imports[`tairitsu-browser:full/${ifaceName}@0.2.0`] = blobUrl;
-  }
-
-  const shimModules = ["cli", "filesystem", "io", "random", "clocks", "sockets"];
-  for (const mod of shimModules) {
-    const spec = `@bytecodealliance/preview2-shim/${mod}`;
-    imports[spec] = `/wasi-shim/${mod}.js`;
-  }
-
-  const existingMap = document.querySelector('script[type="importmap"]');
-  if (existingMap) {
-    existingMap.remove();
-  }
-
-  const script = document.createElement("script");
-  script.type = "importmap";
-  script.textContent = JSON.stringify({ imports });
-  document.head.prepend(script);
-}
+// W5: the import map and the stringified module code are gone. The interfaces
+// are emitted as REAL ESM files at build time (`scripts/emit-glue-esm.mjs`), the
+// packager copies them beside the page and rewrites the jco wrapper's
+// `@tairitsu-glue/<name>` specifiers to those files. Nothing is stringified at
+// runtime, no blob URL is created and no inline import map is injected — which
+// is what makes the page survive `script-src 'self'`.

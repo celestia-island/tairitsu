@@ -327,9 +327,13 @@ function defineDelegate(name: string, read: () => unknown, write: (value: unknow
  * create the tables (`handles.ts`, `eventTarget.ts`).
  */
 /**
- * Blob-safe handle to the current instance. `generateModuleCode` stringifies
- * function bodies into a separate module, where module-scope bindings do not
- * exist — those bodies must reach the instance through `globalThis`.
+ * The current instance, reachable from `globalThis`.
+ *
+ * W5 removed the stringified module code, so the glue's own functions could now
+ * import this directly; the global accessor stays because the build-time ESM
+ * modules (`dist/glue/*.js`) delegate through `globalThis.__TAIRITSU_GLUE__` and
+ * the registration sites are reachable from both, and because a host that swaps
+ * the runtime for one in another realm still needs the indirection.
  */
 export function installCurrentAccessor(): void {
   (globalThis as any).__TAIRITSU_CURRENT__ = () => currentInstance(); // ts-escape-ok: retires with L40

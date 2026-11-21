@@ -57,9 +57,16 @@ install-tools:
     {{python}} scripts/download_wasi_adapters.py
 
 # Build browser-glue runtime bundle (IIFE for HTML <script> tag)
-build-glue-runtime:
+build-glue-runtime: glue-esm
     mkdir -p packages/browser-glue/dist
     npx esbuild packages/browser-glue/src/runtime/index.ts --bundle --outfile=packages/browser-glue/dist/runtime.js --format=iife --platform=browser
+
+# W5: the interface modules the jco wrapper imports (`@tairitsu-glue/<name>`
+# rewritten to `../glue/<name>.js`) are REAL ESM files emitted at build time.
+# Without them the packager refuses to build (no glue = a page that cannot
+# instantiate).
+glue-esm:
+    node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs
 
 # Install tairitsu-packager CLI binary (tairitsu)
 install-packager: (build-glue-runtime)

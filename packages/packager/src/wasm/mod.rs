@@ -977,6 +977,8 @@ fn prepare_component_wrapper_fallback(
 ) -> crate::Result<()> {
     write_component_wrapper_loader(config, component_wasm_path, output_dir)?;
 
+    copy_glue_modules(config, output_dir)?;
+
     if !try_generate_component_wrapper(&config.manifest_dir, component_wasm_path, output_dir, pb)? {
         return Err(crate::TairitsuPackagerError::BuildError(
             "Component wrapper transpile produced no JS wrapper entry. \
@@ -1066,6 +1068,42 @@ fn bundle_local_wasi_shim(
     }
 }
 
+/// W5: copy `packages/browser-glue/dist/glue/` into the output. The wrapper's
+/// imports were rewritten to `../glue/<name>.js`, so a build without these files
+/// would 404 at load time — hence fail-loud rather than a partial dist.
+fn copy_glue_modules(_config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+    let source_dir =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../browser-glue/dist/glue");
+    if !source_dir.is_dir() {
+        return Err(crate::TairitsuPackagerError::BuildError(format!(
+            "the glue ESM modules are missing ({}). Run `node --experimental-strip-types \
+             packages/browser-glue/scripts/emit-glue-esm.mjs` (or `just build-glue-runtime`) before building.",
+            source_dir.display()
+        )));
+    }
+    let target_dir = output_dir.join("glue");
+    std::fs::create_dir_all(&target_dir)?;
+    let mut copied = 0usize;
+    for entry in std::fs::read_dir(&source_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("js") {
+            continue;
+        }
+        let name = path.file_name().ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError("glue module without a file name".into())
+        })?;
+        std::fs::copy(&path, target_dir.join(name))?;
+        copied += 1;
+    }
+    if copied == 0 {
+        return Err(crate::TairitsuPackagerError::BuildError(
+            "the glue ESM directory is empty — regenerate it with scripts/emit-glue-esm.mjs".into(),
+        ));
+    }
+    Ok(())
+}
+
 fn rewrite_wrapper_imports(output_dir: &std::path::Path) -> crate::Result<()> {
     let wrapper_dir = output_dir.join("component-wrapper");
     if !wrapper_dir.exists() {
@@ -1093,7 +1131,12 @@ fn rewrite_wrapper_imports(output_dir: &std::path::Path) -> crate::Result<()> {
             .replace("'@bytecodealliance/preview2-shim/", local_prefix)
             .replace("\"@bytecodealliance/preview2-shim/", local_prefix_dq);
 
+        // W5: the glue interfaces are real ESM files copied beside the page
+        // (`glue/<name>.js`), so the wrapper's bare specifiers become relative
+        // paths — statically resolvable at load time, no import map.
         patched = patched
+            .replace("from '@tairitsu-glue/", "from '../glue/")
+            .replace("from \"@tairitsu-glue/", "from \"../glue/")
             .replace("'/wasi-shim/io'", "'/wasi-shim/io.js'")
             .replace("'/wasi-shim/cli'", "'/wasi-shim/cli.js'")
             .replace("'/wasi-shim/random'", "'/wasi-shim/random.js'")
@@ -1107,12 +1150,31 @@ fn rewrite_wrapper_imports(output_dir: &std::path::Path) -> crate::Result<()> {
             .replace("\"/wasi-shim/filesystem\"", "\"/wasi-shim/filesystem.js\"")
             .replace("\"/wasi-shim/sockets\"", "\"/wasi-shim/sockets.js\"");
 
+        patched = glue_specifier_extension(&patched);
+
         if patched != content {
             std::fs::write(&path, patched)?;
         }
     }
 
     Ok(())
+}
+
+/// W5: `from '../glue/<name>'` → `from '../glue/<name>.js'` — a bare relative
+/// directory path is not a module specifier in the browser, the file extension
+/// is what makes the import static.
+fn glue_specifier_extension(source: &str) -> String {
+    let re =
+        regex::Regex::new(r#"((?:from|import)\s*\(?\s*['\"])(\.\./glue/[A-Za-z0-9._-]+)(['\"])"#)
+            .expect("static regex is valid");
+    re.replace_all(source, |caps: &regex::Captures| {
+        let spec = &caps[2];
+        if spec.ends_with(".js") {
+            return format!("{}{}{}", &caps[1], spec, &caps[3]);
+        }
+        format!("{}{}.js{}", &caps[1], spec, &caps[3])
+    })
+    .to_string()
 }
 
 fn write_component_wrapper_loader(
@@ -1159,6 +1221,9 @@ const WRAPPER_LOADER_TEMPLATE: &str = include_str!("component-wrapper-loader.tem
 /// W3 boot runtime: the page's boot lifecycle, emitted beside `index.html` on
 /// every build (it is not part of the wrapper pipeline, hence not in the key).
 const COMPONENT_BOOT_TEMPLATE: &str = include_str!("component-boot.template.js");
+
+/// W5: the page's own boot module (the module script that used to be inline).
+const COMPONENT_BOOT_PAGE_TEMPLATE: &str = include_str!("boot.template.js");
 
 /// SHA-256 of the wasm file's bytes, lower-case hex.
 fn wasm_content_hash(path: &std::path::Path) -> crate::Result<String> {
@@ -1674,6 +1739,14 @@ fn generate_component_html_with_output_dir(
             }
         }
     }
+
+    // W5: the page's boot module is a REAL file (no inline `<script>`), which is
+    // what lets it run under `script-src 'self'`. It carries the build's
+    // cache-buster and wasm file name, exactly like the loader's `?v=`.
+    let boot = COMPONENT_BOOT_PAGE_TEMPLATE
+        .replace("{{ v }}", &v.to_string())
+        .replace("{{ wasm_file }}", &wasm_file);
+    std::fs::write(output_dir.join("boot.js"), boot)?;
 
     // W3: the boot lifecycle (entry resolution, ready/error gating) is a
     // separate module the page imports unconditionally, so it is emitted next

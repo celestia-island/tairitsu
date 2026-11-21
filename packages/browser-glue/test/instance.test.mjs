@@ -8,8 +8,8 @@
 //      accessors to the current instance.
 
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { readdir, readFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -302,7 +302,7 @@ test("disposing the current instance clears the pointer, and counters reset to t
 });
 
 test("a refused boot is TERMINAL in the page template (source pin)", async () => {
-  const page = await readFile(resolve(here, "../../packager/src/wasm/index.html.template"), "utf8");
+  const page = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");
   assert.match(page, /guestRefused = claimErr/, "the refusal is not remembered");
   assert.match(page, /bootSurface\.fail\('guest-active'/, "the refusal is not reported");
   assert.match(
@@ -313,7 +313,7 @@ test("a refused boot is TERMINAL in the page template (source pin)", async () =>
 });
 
 test("the boot template disposes its instance on a failed boot (source pin)", async () => {
-  const page = await readFile(resolve(here, "../../packager/src/wasm/index.html.template"), "utf8");
+  const page = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");
   assert.match(page, /instanceApi\.dispose\(bootInstance\)/, "a failed boot no longer reclaims");
   assert.match(page, /instanceApi\.create\(\)/, "the boot no longer creates an instance");
 });
@@ -485,6 +485,72 @@ test("a second guest is refused, never silently pushed aside (the W4 contract)",
   claimGuest(second);
   assert.equal(globalThis.__TAIRITSU_INSTANCES__.active(), second);
   disposeInstance(second);
+});
+
+test("the glue ships no blob modules and no import map (W5 pin)", async () => {
+  // The retired path: stringify each interface, mint a blob URL per module and
+  // inject an inline `<script type="importmap">`. Under `script-src 'self'` that
+  // dies, and an import map cannot be declared twice. The interfaces are real
+  // ESM files at build time now, so none of these may come back.
+  const roots = [
+    resolve(here, "../src/runtime"),
+  ];
+  const forbidden = [/new\s+Blob\s*\(/, /createObjectURL/, /revokeObjectURL/, /importmap/i];
+  const offenders = [];
+  for (const root of roots) {
+    const walk = async (dir) => {
+      const entries = await readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const path = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          await walk(path);
+          continue;
+        }
+        if (!entry.name.endsWith(".ts")) continue;
+        const source = await readFile(path, "utf8");
+        for (const pattern of forbidden) {
+          if (pattern.test(source)) offenders.push(`${path}: ${pattern}`);
+        }
+      }
+    };
+    await walk(root);
+  }
+  assert.deepEqual(offenders, [], "the retired blob/import-map path reappeared");
+});
+
+test("the build-time glue modules are real ESM with named exports (W5)", async () => {
+  // The packager rewrites the wrapper's `@tairitsu-glue/<name>` specifiers to
+  // `../glue/<name>.js`, so those files must exist and export named bindings.
+  const { execFileSync } = await import("node:child_process");
+  const { mkdtemp, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const packageRoot = resolve(here, "..");
+  const emitter = resolve(packageRoot, "scripts/emit-glue-esm.mjs");
+  // Emit into a FRESH directory: stale artifacts in `dist/glue` would otherwise
+  // satisfy the assertions even when the emitter emits nothing.
+  const glueDir = await mkdtemp(join(tmpdir(), "w5-glue-"));
+  execFileSync(process.execPath, ["--experimental-strip-types", emitter], {
+    cwd: packageRoot,
+    stdio: "pipe",
+    env: { ...process.env, GLUE_ESM_OUT: glueDir },
+  });
+  const files = (await readdir(glueDir)).filter((name) => name.endsWith(".js"));
+  assert.ok(files.length >= 20, `expected the interface modules, got ${files.length}`);
+  const documentModule = await readFile(join(glueDir, "document.js"), "utf8");
+  assert.match(documentModule, /^export const createElement/m, "no named export emitted");
+  assert.equal(
+    /new\s+Blob\s*\(/.test(documentModule),
+    false,
+    "an emitted module still builds a blob",
+  );
+  const manifest = JSON.parse(await readFile(join(glueDir, "manifest.json"), "utf8"));
+  assert.ok(manifest.interfaces.length >= 20);
+  assert.equal(
+    manifest.interfaces.length,
+    files.length - 0,
+    "the manifest and the emitted module count disagree",
+  );
+  await rm(glueDir, { recursive: true, force: true });
 });
 
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {

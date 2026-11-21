@@ -1,15 +1,15 @@
 /**
  * Tairitsu Browser Glue - Runtime Entry Point
  *
- * Bootstraps the browser glue by registering all interface implementations as
- * importable ES modules via blob URLs and an import map.
+ * Bootstraps the browser glue: installs the per-instance runtime and exposes the
+ * interface table the build-time ESM modules delegate to (W5 removed the blob
+ * import map).
  *
  * Usage: <script type="module" src="/__tairitsu_glue__.js"></script>
  *
  * After loading, this module will:
  * 1. Initialize shared handle tables on globalThis
- * 2. Generate blob URLs for each interface implementation
- * 3. Register an import map mapping tairitsu-browser:full/* to those URLs
+ * 2. Expose the interface implementations for the emitted ESM modules
  */
 
 // Side-effect imports that initialize globalThis handle tables and helpers
@@ -17,11 +17,12 @@ import "./handles";
 import "./helpers";
 import "./wasmExports";
 
-import { INTERFACES, registerImportMap } from "./registry";
+import { INTERFACES } from "./registry";
 
-// Auto-register when loaded
-registerImportMap();
-console.log("[tairitsu] Import map registered with", Object.keys(INTERFACES).length, "interfaces");
+// W5: no import map. The interfaces are real ESM modules emitted at build time
+// and copied beside the page; this entry only installs the runtime they delegate
+// through.
+console.log("[tairitsu] Glue runtime loaded with", Object.keys(INTERFACES).length, "interfaces");
 
 // Export debug handle for diagnostics
 globalThis.__TAIRITSU_GLUE__ = {
