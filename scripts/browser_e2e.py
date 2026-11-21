@@ -217,18 +217,52 @@ globalThis.__TAIRITSU_GLUE__ = { INTERFACES: {} };
 GLUE_ENTRY = "packages/browser-glue/src/runtime/index.ts"
 
 
+def _source_hash():
+    """Content hash of the glue sources the bundle is built from."""
+    import hashlib
+
+    digest = hashlib.sha256()
+    roots = [
+        os.path.join(REPO_ROOT, "packages", "browser-glue", "src", "runtime"),
+        os.path.join(REPO_ROOT, "packages", "browser-glue", "src", "glue"),
+    ]
+    files = []
+    for root in roots:
+        for dirpath, _dirnames, filenames in os.walk(root):
+            for name in filenames:
+                if name.endswith((".ts", ".mjs", ".js")):
+                    files.append(os.path.join(dirpath, name))
+    for path in sorted(files):
+        digest.update(os.path.relpath(path, REPO_ROOT).encode())
+        try:
+            with open(path, "rb") as handle:
+                digest.update(handle.read())
+        except OSError:
+            digest.update(b"<unreadable>")
+    return digest.hexdigest()
+
+
 def ensure_glue_bundle(dest):
     """The REAL glue bundle, or None.
 
     The isolation scenario must drive the shipped instance API, not a copy of
     it: a stand-in would let the control pass while the real container is
-    broken (that exact divergence produced the W3 S1). Falls back to the
-    committed dist/build step when present, else builds it with esbuild.
+    broken (that exact divergence produced the W3 S1). A prebuilt
+    `packages/browser-glue/dist/runtime.js` is used ONLY when its stamp names the
+    CURRENT source hash — mtimes cannot tell "rebuilt after the edit" from
+    "built from other code". Otherwise the bundle is built from `src` here.
     """
-    committed = os.path.join(REPO_ROOT, "packages", "browser-glue", "dist", "runtime.js")
-    if os.path.isfile(committed):
-        shutil.copyfile(committed, dest)
-        return True
+    dist_dir = os.path.join(REPO_ROOT, "packages", "browser-glue", "dist")
+    committed = os.path.join(dist_dir, "runtime.js")
+    stamp = os.path.join(dist_dir, ".glue-src-hash")
+    if os.path.isfile(committed) and os.path.isfile(stamp):
+        try:
+            with open(stamp, encoding="utf-8") as handle:
+                if handle.read().strip() == _source_hash():
+                    shutil.copyfile(committed, dest)
+                    return True
+        except OSError:
+            pass
     entry = os.path.join(REPO_ROOT, GLUE_ENTRY)
     if not os.path.isfile(entry):
         return False

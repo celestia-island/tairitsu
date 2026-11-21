@@ -137,7 +137,16 @@
         // drives exactly that interposition; a second guest boot would not.
         const instanceApi = globalThis.__TAIRITSU_INSTANCES__;
         const bootInstance = instanceApi ? instanceApi.create() : null;
-        if (instanceApi && bootInstance) instanceApi.setCurrent(bootInstance);
+        // W4 contract: ONE active guest per page. `claim` refuses when another
+        // component already owns the glue surface, instead of silently
+        // displacing it; the refusal reaches the error surface below.
+        if (instanceApi && bootInstance) {
+            try {
+                instanceApi.claim(bootInstance);
+            } catch (claimErr) {
+                bootSurface.fail('guest-active', claimErr);
+            }
+        }
 
         const startBoot = async (result) => {
             if (globalThis.__setWasmExports && result) {

@@ -52,6 +52,8 @@ export interface InstanceTables {
 interface Reclaimables {
   timers: Set<ReturnType<typeof globalThis.setTimeout>>;
   intervals: Set<ReturnType<typeof globalThis.setInterval>>;
+  frames: Set<number>;
+  sockets: Set<{ close(): void }>;
   observers: Set<{ disconnect(): void }>;
   listeners: Set<{
     target: EventTarget;
@@ -113,6 +115,8 @@ export class TairitsuInstance {
   readonly reclaimables: Reclaimables = {
     timers: new Set(),
     intervals: new Set(),
+    frames: new Set(),
+    sockets: new Set(),
     observers: new Set(),
     listeners: new Set(),
   };
@@ -134,6 +138,14 @@ export class TairitsuInstance {
 
     for (const timer of this.reclaimables.timers) globalThis.clearTimeout(timer);
     for (const interval of this.reclaimables.intervals) globalThis.clearInterval(interval);
+    for (const frame of this.reclaimables.frames) globalThis.cancelAnimationFrame(frame);
+    for (const socket of this.reclaimables.sockets) {
+      try {
+        socket.close();
+      } catch {
+        // A socket that already closed must not block the rest of the reclaim.
+      }
+    }
     for (const observer of this.reclaimables.observers) {
       try {
         observer.disconnect();
@@ -151,6 +163,8 @@ export class TairitsuInstance {
 
     this.reclaimables.timers.clear();
     this.reclaimables.intervals.clear();
+    this.reclaimables.frames.clear();
+    this.reclaimables.sockets.clear();
     this.reclaimables.observers.clear();
     this.reclaimables.listeners.clear();
 
@@ -165,6 +179,41 @@ export class TairitsuInstance {
 /** Every instance the page has created and not yet disposed. */
 const instances = new Set<TairitsuInstance>();
 let current: TairitsuInstance | null = null;
+/**
+ * The instance currently OWNING the page's single global glue surface. W4's
+ * explicit contract: one active guest per page. A second `claimGuest` while
+ * another instance holds the surface is REFUSED — silently displacing the
+ * running component (which is what a bare `setCurrent` did) is a bug, not a
+ * behaviour. Per-call instance binding, which would lift this, is W6's input.
+ */
+let activeGuest: TairitsuInstance | null = null;
+
+export class GuestAlreadyActiveError extends Error {
+  constructor(active: TairitsuInstance, requested: TairitsuInstance) {
+    super(
+      `another component already owns this page's glue surface (instance ${active.id}); ` +
+        `refusing to boot instance ${requested.id} over it — dispose the running component first`,
+    );
+    this.name = "GuestAlreadyActiveError";
+  }
+}
+
+/** Take the page's glue surface for `instance`; throws if another holds it. */
+export function claimGuest(instance: TairitsuInstance): void {
+  if (activeGuest && activeGuest !== instance && !activeGuest.disposed) {
+    throw new GuestAlreadyActiveError(activeGuest, instance);
+  }
+  activeGuest = instance;
+  current = instance;
+}
+
+/** Give the surface back (called by dispose; idempotent). */
+export function releaseGuest(instance: TairitsuInstance): void {
+  if (activeGuest === instance) {
+    activeGuest = null;
+    if (current === instance) current = null;
+  }
+}
 
 export function createInstance(): TairitsuInstance {
   const instance = new TairitsuInstance();
@@ -204,6 +253,7 @@ export function withInstance<T>(instance: TairitsuInstance, fn: () => T): T {
 export function disposeInstance(instance: TairitsuInstance): boolean {
   if (!instances.delete(instance)) return false;
   if (current === instance) current = null;
+  releaseGuest(instance);
   instance.dispose();
   return true;
 }
@@ -315,6 +365,9 @@ export function installInstanceApi(): void {
     current: () => currentInstance(),
     setCurrent: (instance: TairitsuInstance | null) => setCurrentInstance(instance),
     withInstance,
+    claim: (instance: TairitsuInstance) => claimGuest(instance),
+    release: (instance: TairitsuInstance) => releaseGuest(instance),
+    active: () => activeGuest,
     list: () => listInstances(),
   };
 }

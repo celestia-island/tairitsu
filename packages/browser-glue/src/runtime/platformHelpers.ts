@@ -67,6 +67,8 @@ export const platformHelpers_exports = {
         (exp.onFrame || exp.on_animation_frame)?.(callbackId, timestamp);
       }
     });
+    // W4: owned by the instance, cancelled on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.frames.add(animationId);
     s.animationCallbacks.set(id, animationId);
     return id;
   },
@@ -862,6 +864,8 @@ export const platformHelpers_exports = {
 
   connectWebSocket(url: string) {
     const ws = new WebSocket(url);
+    // W4: owned by the instance, closed on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.sockets.add(ws);
     const handle = globalThis.__storeElement(ws);
 
     const s = globalThis.__TAIRITSU_CURRENT__().tables.wsState;

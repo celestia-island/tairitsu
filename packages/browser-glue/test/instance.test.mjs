@@ -17,6 +17,7 @@ const here = fileURLToPath(new URL(".", import.meta.url));
 const INSTANCE_MODULE = resolve(here, "../src/runtime/instance.ts");
 const {
   TairitsuInstance,
+  claimGuest,
   createInstance,
   currentInstance,
   disposeInstance,
@@ -304,6 +305,113 @@ test("the boot template disposes its instance on a failed boot (source pin)", as
   const page = await readFile(resolve(here, "../../packager/src/wasm/index.html.template"), "utf8");
   assert.match(page, /instanceApi\.dispose\(bootInstance\)/, "a failed boot no longer reclaims");
   assert.match(page, /instanceApi\.create\(\)/, "the boot no longer creates an instance");
+});
+
+test("every creation site registers, and dispose reclaims it", async () => {
+  // One table of (site, create, expected bucket). Each entry drives the REAL
+  // export against stubs and asserts the instance owns what it created — the
+  // registrations the review found ungated.
+  await import("../src/runtime/helpers.ts");
+  const instance = createInstance();
+  const previous = setCurrentInstance(instance);
+  claimGuest(instance);
+
+  const cleared = [];
+  const originalWindow = globalThis.window;
+  const originalRaf = globalThis.requestAnimationFrame;
+  const originalCancelRaf = globalThis.cancelAnimationFrame;
+  const originalClearTimeout = globalThis.clearTimeout;
+  const originalClearInterval = globalThis.clearInterval;
+  globalThis.window = {
+    setTimeout: () => 101,
+    setInterval: () => 202,
+    requestAnimationFrame: () => 303,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  };
+  globalThis.requestAnimationFrame = () => 303;
+  globalThis.cancelAnimationFrame = (id) => cleared.push(["raf", id]);
+  globalThis.clearTimeout = (id) => cleared.push(["timeout", id]);
+  globalThis.clearInterval = (id) => cleared.push(["interval", id]);
+
+  try {
+    const { platformHelpers_exports: ph } = await import("../src/runtime/platformHelpers.ts");
+
+    // timers / intervals / animation frames: registered AT CREATION
+    ph.setTimeout(1n, 10);
+    assert.ok(instance.reclaimables.timers.has(101), "setTimeout did not register its timer");
+    ph.setInterval(1n, 10);
+    assert.ok(instance.reclaimables.intervals.has(202), "setInterval did not register its interval");
+    ph.requestAnimationFrame(1n);
+    assert.ok(instance.reclaimables.frames.has(303), "rAF did not register its frame");
+
+    // the resize listener
+    ph.onResizeCallback?.(1n);
+    assert.ok(
+      instance.reclaimables.listeners.size >= 1,
+      "the resize callback did not register its listener",
+    );
+
+    // observers (stub constructors: node has neither)
+    const observers = [];
+    globalThis.ResizeObserver = class {
+      constructor() {
+        observers.push(this);
+      }
+      observe() {}
+      disconnect() {
+        this.disconnected = true;
+      }
+    };
+    globalThis.MutationObserver = globalThis.ResizeObserver;
+    ph.createResizeObserver(1n);
+    ph.createMutationObserver(1n);
+    const { resizeObserver_exports } = await import("../src/runtime/resizeObserver.ts");
+    const { mutationObserver_exports } = await import("../src/runtime/mutationObserver.ts");
+    const { observers_exports } = await import("../src/runtime/observers.ts");
+    const fakeEl = { nodeType: 1 };
+    instance.tables.elementHandles.set(9n, fakeEl);
+    resizeObserver_exports.create?.(1n);
+    mutationObserver_exports.create?.(1n);
+    observers_exports.create?.(1n);
+    assert.ok(
+      instance.reclaimables.observers.size >= 2,
+      `observers were not registered (size ${instance.reclaimables.observers.size})`,
+    );
+
+    // …and dispose reclaims all of them
+    const registeredObservers = [...instance.reclaimables.observers];
+    disposeInstance(instance);
+    assert.ok(cleared.some(([kind, id]) => kind === "timeout" && id === 101), "timer not cleared");
+    assert.ok(cleared.some(([kind, id]) => kind === "interval" && id === 202), "interval not cleared");
+    assert.ok(cleared.some(([kind, id]) => kind === "raf" && id === 303), "frame not cancelled");
+    assert.ok(
+      registeredObservers.every((observer) => observer.disconnected === true),
+      "an observer was not disconnected",
+    );
+  } finally {
+    globalThis.window = originalWindow;
+    globalThis.requestAnimationFrame = originalRaf;
+    globalThis.cancelAnimationFrame = originalCancelRaf;
+    globalThis.clearTimeout = originalClearTimeout;
+    globalThis.clearInterval = originalClearInterval;
+    setCurrentInstance(previous);
+  }
+});
+
+test("a second guest is refused, never silently pushed aside (the W4 contract)", () => {
+  const first = createInstance();
+  const second = createInstance();
+  claimGuest(first);
+  assert.equal(globalThis.__TAIRITSU_INSTANCES__.active(), first);
+  assert.throws(() => claimGuest(second), /already owns this page/);
+  // …and the first keeps the surface it took.
+  assert.equal(globalThis.__TAIRITSU_INSTANCES__.active(), first);
+  disposeInstance(first);
+  // After the owning guest is gone, the next one may claim it.
+  claimGuest(second);
+  assert.equal(globalThis.__TAIRITSU_INSTANCES__.active(), second);
+  disposeInstance(second);
 });
 
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {
