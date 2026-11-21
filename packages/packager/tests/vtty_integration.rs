@@ -255,9 +255,21 @@ fn test_multiple_sessions() {
 mod glue_modules {
     use std::path::Path;
 
-    /// The emitter's output directory (built by `just glue-esm`).
+    /// The directory the artifact tests read. Pinned, because these tests
+    /// validate whatever is in it: repointing them at swc's `dist/glue` (the
+    /// npm `exports` output) would silently validate the wrong artifact set.
     fn emitted_dir() -> std::path::PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../browser-glue/dist/glue-esm")
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../browser-glue/dist/glue-esm");
+        assert_eq!(
+            dir.file_name().and_then(|name| name.to_str()),
+            Some("glue-esm"),
+            "the artifact tests must read the emitter's directory"
+        );
+        assert!(
+            !dir.ends_with("dist/glue"),
+            "dist/glue is swc's npm output, not the emitted glue modules"
+        );
+        dir
     }
 
     #[test]

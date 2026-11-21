@@ -8,7 +8,7 @@
 // map), and an import map cannot be declared twice.
 //
 // This script runs at build time and writes one real `.js` file per interface
-// (`dist/glue/<name>.js`) whose named exports are the interface's functions.
+// (`dist/glue-esm/<name>.js`) whose named exports are the interface's functions.
 // The packager copies that directory into the output and rewrites the jco
 // wrapper's `@tairitsu-glue/<name>` specifiers to `../glue/<name>.js`, so the
 // wrapper's imports are statically resolvable at load time — no blob, no import

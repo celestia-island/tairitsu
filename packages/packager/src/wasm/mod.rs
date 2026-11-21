@@ -1089,7 +1089,9 @@ fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Re
         "../tairitsu/packages/browser-glue/dist/glue-esm",
         "../browser-glue/dist/glue-esm",
         "../../packages/browser-glue/dist/glue-esm",
-        "node_modules/@celestia/tairitsu-browser-glue/dist/glue-esm",
+        // The package that actually ships the glue (the same one the runtime
+        // bundle resolver probes). Its tarball must carry `dist/glue-esm/`.
+        "node_modules/@celestia-island/tairitsu-web-glue/dist/glue-esm",
         "node_modules/@celestia-island/tairitsu-browser-glue/dist/glue-esm",
     ] {
         candidates.push(project.join(relative));
