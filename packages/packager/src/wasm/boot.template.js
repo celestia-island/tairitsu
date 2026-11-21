@@ -56,25 +56,67 @@
             },
         };
 
-        // Build imports object from registered browser glue interfaces
-        // plus WASI preview2 shim (required for wasm32-wasip2 components).
-        const buildImports = async () => {
-            const imports = {};
+        // W6: the component's capability declaration decides what is injected.
+        // No declaration → the conservative default set the build emitted; a
+        // declaration → exactly that. Nothing else is provided.
+        const loadCapabilities = async () => {
+            try {
+                const response = await fetch('/tairitsu-capabilities.json', { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                throw new Error(
+                    'the capability declaration is missing or unreadable ' +
+                    '(/tairitsu-capabilities.json): ' + (error && error.message ? error.message : error),
+                );
+            }
+        };
 
-            // Browser glue interfaces
+        const normalizeInterface = (name) =>
+            String(name || '')
+                .replace(/^@tairitsu-glue\//, '')
+                .replace(/^tairitsu-browser:full\//, '')
+                .replace(/@\d+\.\d+\.\d+$/, '');
+
+        // Build imports object from the DECLARED capabilities only.
+        const buildImports = async (capabilities) => {
+            const imports = {};
+            const declaredInterfaces = new Set(
+                (capabilities.interfaces || []).map(normalizeInterface),
+            );
+            const declaredWasi = new Set(capabilities.wasiModules || []);
+            const skipped = [];
+
+            // Browser glue interfaces — injected only when declared.
             if (globalThis.__TAIRITSU_GLUE__ && globalThis.__TAIRITSU_GLUE__.INTERFACES) {
                 for (const [shortName, exports] of Object.entries(globalThis.__TAIRITSU_GLUE__.INTERFACES)) {
                     const ifaceName = shortName.replace('@tairitsu-glue/', '');
                     const fullName = `tairitsu-browser:full/${ifaceName}@0.2.0`;
+                    if (!declaredInterfaces.has(ifaceName)) {
+                        skipped.push(fullName);
+                        continue;
+                    }
                     imports[fullName] = exports;
+                    declaredInterfaces.delete(ifaceName);
                 }
             }
+            // Declared but the host does not provide it: fail BEFORE instantiate
+            // (a silently missing import would surface as an opaque LinkError).
+            if (declaredInterfaces.size > 0) {
+                throw new Error(
+                    'the component declares capabilities the host does not provide: ' +
+                    [...declaredInterfaces].sort().join(', '),
+                );
+            }
+            globalThis.__TAIRITSU_SKIPPED_IMPORTS__ = skipped;
 
             // WASI preview2 shim — always the locally bundled, pinned copy
             // (the build fails loudly when the shim is missing, so there is
             // no CDN fallback anymore: unversioned esm.sh imports are
             // unreproducible and would be blocked by the CSP posture anyway).
-            if (!globalThis.__wasiShimModules) {
+            if (declaredWasi.size > 0 && !globalThis.__wasiShimModules) {
                 try {
                     const shimModules = ['io', 'cli', 'random', 'clocks', 'filesystem', 'sockets'];
                     const localImports = await Promise.all(shimModules.map(m => import('/wasi-shim/' + m + '.js')));
@@ -88,24 +130,32 @@
                         'means the packaged output is incomplete; rebuild with `tairitsu build`.', e);
                 }
             }
-            if (globalThis.__wasiShimModules) {
+            const KNOWN_WASI = ['cli', 'clocks', 'filesystem', 'io', 'random', 'sockets'];
+            const unknownWasi = [...declaredWasi].filter((name) => !KNOWN_WASI.includes(name));
+            if (unknownWasi.length > 0) {
+                throw new Error(
+                    'the component declares WASI modules the host does not provide: ' +
+                    unknownWasi.sort().join(', '),
+                );
+            }
+            if (globalThis.__wasiShimModules && declaredWasi.size > 0) {
                 const s = globalThis.__wasiShimModules;
-                imports['wasi:cli/environment@0.2.0'] = s.wasiCli.environment;
-                imports['wasi:cli/exit@0.2.0'] = s.wasiCli.exit;
-                imports['wasi:cli/stdin@0.2.0'] = s.wasiCli.stdin;
-                imports['wasi:cli/stdout@0.2.0'] = s.wasiCli.stdout;
-                imports['wasi:cli/stderr@0.2.0'] = s.wasiCli.stderr;
-                imports['wasi:clocks/monotonic-clock@0.2.0'] = s.wasiClocks.monotonicClock;
-                imports['wasi:clocks/wall-clock@0.2.0'] = s.wasiClocks.wallClock;
-                imports['wasi:filesystem/preopens@0.2.0'] = s.wasiFilesystem.preopens;
-                imports['wasi:io/error@0.2.0'] = s.wasiIo.error;
-                imports['wasi:io/poll@0.2.0'] = s.wasiIo.poll;
-                imports['wasi:io/streams@0.2.0'] = s.wasiIo.streams;
-                imports['wasi:random/random@0.2.0'] = s.wasiRandom.random;
-                imports['wasi:sockets/tcp@0.2.0'] = s.wasiSockets.tcp;
-                imports['wasi:sockets/udp@0.2.0'] = s.wasiSockets.udp;
-                imports['wasi:sockets/network@0.2.0'] = s.wasiSockets.network;
-                imports['wasi:sockets/instance-network@0.2.0'] = s.wasiSockets.instanceNetwork;
+                if (declaredWasi.has('cli')) imports['wasi:cli/environment@0.2.0'] = s.wasiCli.environment;
+                if (declaredWasi.has('cli')) imports['wasi:cli/exit@0.2.0'] = s.wasiCli.exit;
+                if (declaredWasi.has('cli')) imports['wasi:cli/stdin@0.2.0'] = s.wasiCli.stdin;
+                if (declaredWasi.has('cli')) imports['wasi:cli/stdout@0.2.0'] = s.wasiCli.stdout;
+                if (declaredWasi.has('cli')) imports['wasi:cli/stderr@0.2.0'] = s.wasiCli.stderr;
+                if (declaredWasi.has('clocks')) imports['wasi:clocks/monotonic-clock@0.2.0'] = s.wasiClocks.monotonicClock;
+                if (declaredWasi.has('clocks')) imports['wasi:clocks/wall-clock@0.2.0'] = s.wasiClocks.wallClock;
+                if (declaredWasi.has('filesystem')) imports['wasi:filesystem/preopens@0.2.0'] = s.wasiFilesystem.preopens;
+                if (declaredWasi.has('io')) imports['wasi:io/error@0.2.0'] = s.wasiIo.error;
+                if (declaredWasi.has('io')) imports['wasi:io/poll@0.2.0'] = s.wasiIo.poll;
+                if (declaredWasi.has('io')) imports['wasi:io/streams@0.2.0'] = s.wasiIo.streams;
+                if (declaredWasi.has('random')) imports['wasi:random/random@0.2.0'] = s.wasiRandom.random;
+                if (declaredWasi.has('sockets')) imports['wasi:sockets/tcp@0.2.0'] = s.wasiSockets.tcp;
+                if (declaredWasi.has('sockets')) imports['wasi:sockets/udp@0.2.0'] = s.wasiSockets.udp;
+                if (declaredWasi.has('sockets')) imports['wasi:sockets/network@0.2.0'] = s.wasiSockets.network;
+                if (declaredWasi.has('sockets')) imports['wasi:sockets/instance-network@0.2.0'] = s.wasiSockets.instanceNetwork;
             }
 
             return imports;
@@ -155,7 +205,12 @@
         // the error. (A thrown refusal would land in the outermost catch and be
         // re-reported as a generic 'boot-failed'.)
         if (!guestRefused) try {
-            const imports = await buildImports();
+            const capabilities = await loadCapabilities();
+            // W6: the static glue modules check this before they hand out a
+            // function, so a declaration reaches them too (W5 made their imports
+            // static, invisible to the import filter below).
+            globalThis.__TAIRITSU_CAPABILITIES__ = capabilities;
+            const imports = await buildImports(capabilities);
             let wrapperErr = null;
             let wrapperResult = null;
             try {
@@ -168,7 +223,7 @@
             if (wrapperResult) {
                 await startBoot(wrapperResult);
             } else {
-                const directImports = await buildImports();
+                const directImports = await buildImports(capabilities);
                 const response = await fetch('/{{ wasm_file }}');
                 const bytes = await response.arrayBuffer();
                 const magic = new Uint8Array(bytes, 0, 8);
@@ -195,7 +250,18 @@
             // /component-boot.js is caught EARLIER, by the outermost catch —
             // both land on `markBootFailure`, so the attribute is always set.
             if (!document.documentElement.dataset.tairitsuError) {
-                bootSurface.fail('instantiate-failed', bootErr);
+                // W6: a capability problem must not read as a generic load
+                // failure — the operator needs to know the component asked for
+                // something the declaration does not allow.
+                const message = String((bootErr && bootErr.message) || bootErr || '');
+                // A dist that lacks the declaration is an incomplete build, not
+                // a grant decision — say so instead of blaming the component.
+                const kind = /capability declaration is missing/i.test(message)
+                    ? 'capability-declaration-missing'
+                    : /capabilit|not satisfied|missing import|WASI modules/i.test(message)
+                        ? 'capability-denied'
+                        : 'instantiate-failed';
+                bootSurface.fail(kind, bootErr);
             }
         }
 

@@ -574,6 +574,137 @@ test("the build-time glue modules are real ESM with named exports (W5)", async (
   await rm(glueDir, { recursive: true, force: true });
 });
 
+test("the default capability set is data, and it matches the registry (W6)", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const { mkdtemp, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const packageRoot = resolve(here, "..");
+  const glueDir = await mkdtemp(join(tmpdir(), "w6-caps-"));
+  execFileSync(process.execPath, ["--experimental-strip-types", resolve(packageRoot, "scripts/emit-glue-esm.mjs")], {
+    cwd: packageRoot,
+    stdio: "pipe",
+    env: { ...process.env, GLUE_ESM_OUT: glueDir },
+  });
+  const defaults = JSON.parse(
+    await readFile(join(glueDir, "default-capabilities.json"), "utf8"),
+  );
+  const registry = await readFile(resolve(packageRoot, "src/runtime/registry.ts"), "utf8");
+  const declared = [...registry.matchAll(/"@tairitsu-glue\/([a-z0-9-]+)"\s*:/g)]
+    .map((match) => match[1])
+    .sort();
+  assert.deepEqual(
+    defaults.interfaces,
+    declared,
+    "the default set drifted from the glue registry (silent capability growth)",
+  );
+  assert.deepEqual(
+    defaults.wasiModules,
+    ["cli", "clocks", "filesystem", "io", "random", "sockets"],
+    "the default WASI set changed",
+  );
+  assert.equal(defaults.interfaces.length, 25, "the default interface count changed");
+  await rm(glueDir, { recursive: true, force: true });
+});
+
+test("the boot filters imports by the declaration (W6 source pin)", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const { mkdtemp, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const packageRoot = resolve(here, "..");
+  // A FRESH emission: `dist/` is gitignored, so reading it makes the documented
+  // gate red on a clean checkout and decouples the pin from the emitter.
+  const emitterOut = await mkdtemp(join(tmpdir(), "w6-pin-"));
+  execFileSync(
+    process.execPath,
+    ["--experimental-strip-types", resolve(packageRoot, "scripts/emit-glue-esm.mjs")],
+    { cwd: packageRoot, stdio: "pipe", env: { ...process.env, GLUE_ESM_OUT: emitterOut } },
+  );
+  const boot = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");
+  assert.match(boot, /const declaredInterfaces = new Set/, "no declared-interface set");
+  assert.match(
+    boot,
+    /if \(!declaredInterfaces\.has\(ifaceName\)\) \{[\s\S]{0,120}?continue;/,
+    "the boot injects interfaces it was not authorized for",
+  );
+  assert.match(
+    boot,
+    /does not provide: /,
+    "a declared-but-missing interface is not reported before instantiate",
+  );
+  assert.equal(
+    /for \(const \[shortName, exports\] of Object\.entries\(globalThis\.__TAIRITSU_GLUE__\.INTERFACES\)\) \{\n\s*const ifaceName[\s\S]{0,80}?imports\[fullName\] = exports;\n\s*\}/.test(boot),
+    false,
+    "the pre-W6 unfiltered injection is back",
+  );
+  // The emitted modules enforce it too (W5 made their imports static).
+  const emitted = await readFile(join(emitterOut, "document.js"), "utf8");
+  assert.match(emitted, /capability denied/, "the emitted module does not check the declaration");
+  const defaults = JSON.parse(await readFile(join(emitterOut, "default-capabilities.json"), "utf8"));
+  assert.ok(
+    Array.isArray(defaults.interfaces) && defaults.interfaces.length === 25,
+    "the emitted default set is not usable as data",
+  );
+  await rm(emitterOut, { recursive: true, force: true });
+});
+
+test("buildImports injects only what the declaration names (behavioural)", async () => {
+  // Extract the real `buildImports` from the boot template and drive it: a
+  // source-grep pin cannot tell an unfiltered second loop from the filter.
+  const boot = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");
+  const start = boot.indexOf("const normalizeInterface = (name) =>");
+  assert.ok(start > 0, "normalizeInterface not found");
+  const start2 = boot.indexOf("const buildImports = async (capabilities) => {");
+  assert.ok(start > 0, "buildImports not found");
+  const end = boot.indexOf("\n        };", start2);
+  assert.ok(end > start, "buildImports does not end where expected");
+  const body = boot.slice(start, end + "\n        };".length);
+
+  const glue = {
+    INTERFACES: {
+      "@tairitsu-glue/document": { createElement: () => ({}) },
+      "@tairitsu-glue/element-css-inline-style": { getStyle: () => ({}) },
+    },
+  };
+  const calls = [];
+  globalThis.__TAIRITSU_GLUE__ = glue;
+  globalThis.__wasiShimModules = null;
+  globalThis.__TAIRITSU_CAPABILITIES__ = { interfaces: [], wasiModules: [] };
+  const originalFetch = globalThis.fetch;
+  const originalImport = globalThis.__w6_import_shim__;
+  try {
+    const factory = new Function(
+      "globalThis",
+      body + "\nreturn buildImports;",
+    );
+    const buildImports = factory(globalThis);
+    const declared = await buildImports({ interfaces: ["document"], wasiModules: [] });
+    const keys = Object.keys(declared);
+    assert.deepEqual(keys, ["tairitsu-browser:full/document@0.2.0"], "injected beyond the declaration");
+    assert.deepEqual(globalThis.__TAIRITSU_SKIPPED_IMPORTS__, [
+      "tairitsu-browser:full/element-css-inline-style@0.2.0",
+    ]);
+    // An unknown WASI module must fail like an unknown interface. The error KIND
+    // (capability-denied vs instantiate-failed) is asserted end-to-end by the
+    // `capability-wasi` browser scenario, which is where the classifier runs.
+    await assert.rejects(
+      () => buildImports({ interfaces: ["document"], wasiModules: ["nope"] }),
+      /WASI modules the host does not provide/,
+    );
+    // Declared but the host cannot provide it.
+    await assert.rejects(
+      () => buildImports({ interfaces: ["does-not-exist"], wasiModules: [] }),
+      /does not provide/,
+    );
+    calls.push(keys.length);
+  } finally {
+    globalThis.fetch = originalFetch;
+    globalThis.__w6_import_shim__ = originalImport;
+    delete globalThis.__TAIRITSU_GLUE__;
+    delete globalThis.__TAIRITSU_SKIPPED_IMPORTS__;
+  }
+  assert.deepEqual(calls, [1]);
+});
+
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {
   // The tables must be accessors whose storage is the instance, not data
   // properties holding Maps. A regression to `globalThis.__elementHandles =

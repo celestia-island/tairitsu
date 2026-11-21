@@ -978,6 +978,7 @@ fn prepare_component_wrapper_fallback(
     write_component_wrapper_loader(config, component_wasm_path, output_dir)?;
 
     copy_glue_modules(config, output_dir)?;
+    write_capabilities(config, output_dir)?;
 
     if !try_generate_component_wrapper(&config.manifest_dir, component_wasm_path, output_dir, pb)? {
         return Err(crate::TairitsuPackagerError::BuildError(
@@ -1119,7 +1120,12 @@ fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Re
     for entry in std::fs::read_dir(&source_dir)? {
         let entry = entry?;
         let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("js") {
+        // `.js` are the interface modules; `default-capabilities.json` is the
+        // default capability set `write_capabilities` needs — a copy that drops
+        // it makes every undeclared component unbuildable.
+        let wanted = path.extension().and_then(|s| s.to_str()) == Some("js")
+            || path.file_name().and_then(|s| s.to_str()) == Some("default-capabilities.json");
+        if !wanted {
             continue;
         }
         let name = path.file_name().ok_or_else(|| {
@@ -1133,6 +1139,75 @@ fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Re
             "the glue ESM directory is empty — regenerate it with scripts/emit-glue-esm.mjs".into(),
         ));
     }
+    Ok(())
+}
+
+/// W6: write the component's capability declaration into the dist.
+///
+/// A component without a declaration gets the conservative default the glue
+/// package emits (every interface the glue provides + the six bundled shim
+/// modules). A component WITH a declaration (`tairitsu-capabilities.json` beside
+/// its manifest) gets
+/// exactly that — the boot then injects nothing else.
+fn write_capabilities(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+    let declaration = config.manifest_dir.join("tairitsu-capabilities.json");
+    let body: serde_json::Value = if declaration.is_file() {
+        let text = std::fs::read_to_string(&declaration)?;
+        serde_json::from_str(&text).map_err(|error| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "{}: not valid JSON ({error})",
+                declaration.display()
+            ))
+        })?
+    } else {
+        // The default set ships with the glue modules; without it the build
+        // cannot say what a component is allowed to use.
+        let default_path = output_dir.join("glue").join("default-capabilities.json");
+        let text = std::fs::read_to_string(&default_path).map_err(|error| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "the default capability set is missing ({}): {error}",
+                default_path.display()
+            ))
+        })?;
+        serde_json::from_str(&text).map_err(|error| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "the default capability set is not valid JSON: {error}"
+            ))
+        })?
+    };
+    let Some(object) = body.as_object() else {
+        return Err(crate::TairitsuPackagerError::BuildError(
+            "tairitsu-capabilities.json must be an object with `interfaces` / `wasiModules`".into(),
+        ));
+    };
+    for (key, expected) in [
+        ("interfaces", "an array of interface names"),
+        ("wasiModules", "an array of module names"),
+    ] {
+        if let Some(value) = object.get(key) {
+            if !value.is_array() {
+                return Err(crate::TairitsuPackagerError::BuildError(format!(
+                    "tairitsu-capabilities.json: `{key}` must be {expected}"
+                )));
+            }
+        }
+    }
+    let mut body = body;
+    if let Some(object) = body.as_object_mut() {
+        // What the component declared, not where the builder kept it: an
+        // absolute path would leak the build host's layout into every page and
+        // make the dist non-reproducible.
+        object.insert(
+            "source".to_string(),
+            serde_json::Value::String(if declaration.is_file() {
+                "component".to_string()
+            } else {
+                "default".to_string()
+            }),
+        );
+    }
+    let capabilities = output_dir.join("tairitsu-capabilities.json");
+    std::fs::write(&capabilities, serde_json::to_string_pretty(&body)?)?;
     Ok(())
 }
 

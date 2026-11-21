@@ -206,6 +206,18 @@ async function main() {
       `// globalThis.__TAIRITSU_GLUE__; these named exports delegate to it, so a`,
       `// jco wrapper's static \`import { … } from "${spec}"\` resolves to this file`,
       `// at load time — no blob URL and no import map.`,
+      `// W6: the module itself enforces the declaration, because W5 made these`,
+      `// imports static — the boot's import filtering cannot see them.`,
+      `const isDeclared = () => {`,
+      `  const capabilities = globalThis.__TAIRITSU_CAPABILITIES__;`,
+      `  if (!capabilities) return true; // no declaration loaded yet: not our call`,
+      `  const declared = new Set((capabilities.interfaces || []).map((name) =>`,
+      `    String(name).replace(/^@tairitsu-glue\\//, "").replace(/^tairitsu-browser:full\\//, "").replace(/@\\d+\\.\\d+\\.\\d+$/, "")));`,
+      `  return declared.has(${JSON.stringify(iface)});`,
+      `};`,
+      `if (!isDeclared()) {`,
+      `  throw new Error("capability denied: " + ${JSON.stringify(spec)} + " is not declared");`,
+      `}`,
       `const iface = () => {`,
       `  const glue = globalThis.__TAIRITSU_GLUE__;`,
       `  if (!glue || !glue.INTERFACES) {`,
@@ -225,6 +237,22 @@ async function main() {
     await writeFile(file, lines.join("\n") + "\n", "utf8");
     written.push({ iface, keys: keys.length });
   }
+
+  // W6: the conservative DEFAULT capability set, derived from the registry so a
+  // new interface cannot silently become authorized for every component.
+  const defaultCapabilities = {
+    $comment:
+      "W6 default capability set for components without a declaration. " +
+      "Interfaces are the glue registry's own keys; wasiModules are the bundled " +
+      "preview2 shim modules the boot injects. Emitted by scripts/emit-glue-esm.mjs.",
+    interfaces: [...declared].sort(),
+    wasiModules: ["cli", "clocks", "filesystem", "io", "random", "sockets"],
+  };
+  await writeFile(
+    join(OUT_DIR, "default-capabilities.json"),
+    JSON.stringify(defaultCapabilities, null, 2) + "\n",
+    "utf8",
+  );
 
   // The packager copies this directory; a manifest makes the copy verifiable
   // (and its absence detectable) without parsing the JS.
