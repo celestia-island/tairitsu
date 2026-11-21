@@ -1676,7 +1676,10 @@ fn generate_component_html_with_output_dir(
     // W3: the boot lifecycle (entry resolution, ready/error gating) is a
     // separate module the page imports unconditionally, so it is emitted next
     // to the page for EVERY build — not only when the wrapper fallback runs.
-    std::fs::write(output_dir.join("component-boot.js"), COMPONENT_BOOT_TEMPLATE)?;
+    std::fs::write(
+        output_dir.join("component-boot.js"),
+        COMPONENT_BOOT_TEMPLATE,
+    )?;
 
     let html_path = output_dir.join("index.html");
     std::fs::write(&html_path, &html)?;

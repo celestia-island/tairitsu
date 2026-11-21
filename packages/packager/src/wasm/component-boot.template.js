@@ -3,27 +3,49 @@
 //
 // Before W3 the page fished for an entry point by name — a depth-3 walk over
 // `run` / `main` / `init` / `start` — invoked whatever it found, then reported
-// `data-tairitsu-ready=hydrated` whether or not anything had actually run. A
-// component with no entry, or whose entry threw, produced a "ready" page.
+// `data-tairitsu-ready=hydrated` whether or not anything had actually run.
 //
-// The contract here is explicit:
+// The contract here is explicit, and it matches what a REAL build produces: a
+// tairitsu component's WIT world exports the `lifecycle` interface, so a jco
+// wrapper namespace carries the entry at `lifecycle.start` (the transpiled
+// form may also namespace it as `tairitsu-browser:full/lifecycle@0.2.0`).
+// The legacy top-level names stay supported for hand-written wrappers and for
+// parity with the SSR host, which accepts the same list.
 //
-//   * the entry is one of ENTRY_NAMES, resolved from the four documented
-//     export surfaces only (no recursive probing);
-//   * the resolved name is logged, so a build's entry is auditable;
+//   * the entry is resolved from ENTRY_MANIFEST only — no recursive probing;
+//   * the resolved name (and its kind) is logged, so a build's entry is
+//     auditable;
 //   * no entry = BootError('no-entry') — a hard failure, never a blank page;
 //   * an entry that throws = BootError('entry-failed') with the cause kept;
 //   * the caller's `surface.ready()` runs ONLY after the entry returned, and
 //     `surface.fail()` runs instead on either failure.
 
-/** Export names a guest may use as its boot entry, most specific first. */
-export const ENTRY_NAMES = ['tairitsu_component_bootstrap', 'run', 'main', 'init'];
+/**
+ * The documented boot entries, most specific first.
+ *
+ * `top-level` entries live on the instance/exports; `wit` entries are the
+ * component's own WIT exports (one nesting level, exactly as jco emits them).
+ * `run` / `main` / `init` / `start` are the legacy names the browser page and
+ * the SSR host have always accepted (`packages/ssr/src/lib.rs`).
+ */
+export const ENTRY_MANIFEST = [
+  { path: ["tairitsu_component_bootstrap"], kind: "top-level" },
+  { path: ["run"], kind: "top-level" },
+  { path: ["main"], kind: "top-level" },
+  { path: ["init"], kind: "top-level" },
+  { path: ["start"], kind: "top-level" },
+  { path: ["lifecycle", "start"], kind: "wit" },
+  { path: ["tairitsu-browser:full/lifecycle@0.2.0", "start"], kind: "wit" },
+];
+
+/** Human-readable entry list for the "no entry" error. */
+export const ENTRY_NAMES = ENTRY_MANIFEST.map((entry) => entry.path.join("."));
 
 /** A boot failure with a machine-readable kind (`no-entry` / `entry-failed`). */
 export class BootError extends Error {
   constructor(kind, message, cause) {
     super(message);
-    this.name = 'BootError';
+    this.name = "BootError";
     this.kind = kind;
     this.cause = cause;
   }
@@ -37,15 +59,25 @@ const exportSurfaces = (result) => [
   result && result.instance,
 ];
 
+/** Follow `path` from one surface; a non-function leaf is not an entry. */
+function follow(surface, path) {
+  let cursor = surface;
+  for (const key of path) {
+    if (!cursor || typeof cursor !== "object") return null;
+    cursor = cursor[key];
+  }
+  return typeof cursor === "function" ? cursor : null;
+}
+
 /**
- * Resolve the guest entry from `result`: `{ name, fn }`, or `null` when the
- * component exports none of ENTRY_NAMES.
+ * Resolve the guest entry from `result`: `{ name, kind, fn }`, or `null` when
+ * the component matches none of ENTRY_MANIFEST.
  */
 export function resolveEntry(result) {
-  for (const name of ENTRY_NAMES) {
+  for (const entry of ENTRY_MANIFEST) {
     for (const surface of exportSurfaces(result)) {
-      const fn = surface ? surface[name] : undefined;
-      if (typeof fn === 'function') return { name, fn };
+      const fn = follow(surface, entry.path);
+      if (fn) return { name: entry.path.join("."), kind: entry.kind, fn };
     }
   }
   return null;
@@ -58,38 +90,38 @@ export function resolveEntry(result) {
  * `log` defaults to the console (the page passes its own so the entry choice
  * lands in the browser console).
  *
- * Resolves `{ entry }` after `surface.ready(...)` ran; throws a BootError
- * after `surface.fail(...)` ran.
+ * Resolves `{ entry, entryKind }` after `surface.ready(...)` ran; throws a
+ * BootError after `surface.fail(...)` ran.
  */
 export async function bootComponent({ result, surface, log = console }) {
   const entry = resolveEntry(result);
   if (!entry) {
     const error = new BootError(
-      'no-entry',
-      'component exports none of the boot entries: ' + ENTRY_NAMES.join(', '),
+      "no-entry",
+      "component exports none of the boot entries: " + ENTRY_NAMES.join(", "),
     );
-    if (log && typeof log.error === 'function') log.error('[tairitsu] boot failed:', error.message);
-    surface.fail('no-entry', error);
+    if (log && typeof log.error === "function") log.error("[tairitsu] boot failed:", error.message);
+    surface.fail("no-entry", error);
     throw error;
   }
 
-  if (log && typeof log.info === 'function') {
-    log.info('[tairitsu] boot entry: ' + entry.name);
+  if (log && typeof log.info === "function") {
+    log.info("[tairitsu] boot entry: " + entry.name + " (" + entry.kind + ")");
   }
 
   try {
     await entry.fn();
   } catch (cause) {
     const error = new BootError(
-      'entry-failed',
-      'boot entry ' + entry.name + ' threw: ' + (cause && cause.message ? cause.message : cause),
+      "entry-failed",
+      "boot entry " + entry.name + " threw: " + (cause && cause.message ? cause.message : cause),
       cause,
     );
-    if (log && typeof log.error === 'function') log.error('[tairitsu] boot failed:', error.message);
-    surface.fail('entry-failed', error);
+    if (log && typeof log.error === "function") log.error("[tairitsu] boot failed:", error.message);
+    surface.fail("entry-failed", error);
     throw error;
   }
 
   surface.ready(entry.name);
-  return { entry: entry.name };
+  return { entry: entry.name, entryKind: entry.kind };
 }

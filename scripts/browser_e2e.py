@@ -14,7 +14,7 @@ resolve. That is why this lane is not part of `just ci`; the browser-free
 half of the same contract lives in `just packager-js-test`
 (`packages/packager/test/`).
 
-W3 (fail-closed boot): the DEFAULT scenario now loads a real compone      # noqa: E501
+W3 (fail-closed boot): the DEFAULT scenario now loads a real component
 page — the packaged `index.html` (built from `index.html.template`), the
 real wrapper loader and the real boot runtime — and asserts the whole
 lifecycle: the component instantiates, its entry runs, and only then does
@@ -43,6 +43,7 @@ import http.server
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -89,7 +90,9 @@ export async function instantiate(imports) {
 # A component that reaches for an import the page does not provide.
 MISSING_IMPORT_WRAPPER = """
 export async function instantiate(imports) {
-  const need = imports['wasi:cli/does-not-exist@0.2.0'];
+  const name = 'wasi:cli/does-not-exist@0.2.0';
+  const need = imports[name];
+  if (!need) throw new Error('missing import: ' + name);
   return need.run();
 }
 """
@@ -102,6 +105,15 @@ WRAPPERS = {
 }
 
 FAILING = ("bad-bytes", "missing-entry", "missing-import")
+
+# What the visible card must say for each control: the same "an error card
+# exists" assertion would pass on a 404'd wrapper or a broken loader, so each
+# control names the failure it is supposed to exercise.
+EXPECTED_CARD = {
+    "bad-bytes": "not a valid WebAssembly binary",
+    "missing-entry": "none of the boot entries",
+    "missing-import": "missing import: wasi:cli/does-not-exist@0.2.0",
+}
 
 
 def call(base, path, body=None):
@@ -245,7 +257,7 @@ def serve(directory):
     return server, thread, f"http://127.0.0.1:{port}"
 
 
-def check_boot_state(state, scenario):
+def check_boot_state(state, scenario, *, real_dist=False):
     """The W3 assertions over ONE observed page state (pure: no browser).
 
     `state` = {ready, error, entryRan, appText}. Split out so `--self-check`
@@ -265,11 +277,18 @@ def check_boot_state(state, scenario):
             failures.append("failed component ran an entry")
         if "Tairitsu boot error" not in (state.get("appText") or ""):
             failures.append("no visible error card in #app")
+        expected = EXPECTED_CARD.get(scenario)
+        if expected and expected not in (state.get("appText") or ""):
+            failures.append(f"{scenario}: the card does not name the failure ({expected!r} missing)")
     else:
         if state.get("ready") != "hydrated":
             failures.append(f"good component not ready (ready={state.get('ready')!r})")
         if state.get("error"):
             failures.append(f"good component reported an error ({state['error']!r})")
+        if real_dist:
+            # A real build is not instrumented: ready + no error is the whole
+            # contract we can observe from the outside.
+            return failures
         if not state.get("entryRan"):
             failures.append("the component's boot entry never ran")
         if "component booted" not in (state.get("appText") or ""):
@@ -277,7 +296,7 @@ def check_boot_state(state, scenario):
     return failures
 
 
-def assert_boot_contract(base, scenario):
+def assert_boot_contract(base, scenario, *, real_dist=False):
     """Observe the live page, then apply the W3 assertions."""
     state = evaluate(
         base,
@@ -292,7 +311,7 @@ def assert_boot_contract(base, scenario):
             };
         })()""",
     )
-    return check_boot_state(state, scenario)
+    return check_boot_state(state, scenario, real_dist=real_dist)
 
 
 GOOD_STATE = {
@@ -334,8 +353,18 @@ def self_check():
             failures.append(f"control {scenario} would pass a page with no error attribute")
         if not check_boot_state(dict(BAD_STATE, appText=""), scenario):
             failures.append(f"control {scenario} would pass a page with no visible error")
-        # ... and the honest failure state must pass it.
-        if check_boot_state(BAD_STATE, scenario):
+        if not check_boot_state(dict(BAD_STATE, entryRan=True), scenario):
+            failures.append(f"control {scenario} would pass a page whose entry ran")
+        card = EXPECTED_CARD[scenario]
+        generic = {"ready": None, "error": "instantiate-failed", "entryRan": False,
+                   "appText": "Tairitsu boot error: something else failed"}
+        if not check_boot_state(generic, scenario):
+            failures.append(
+                f"control {scenario} would pass a card that does not name {card!r}"
+            )
+        # ... and the honest failure state (card naming THIS failure) must pass.
+        honest = dict(BAD_STATE, appText="Tairitsu boot error\n" + EXPECTED_CARD[scenario])
+        if check_boot_state(honest, scenario):
             failures.append(f"control {scenario} rejects a correct error page")
 
     # The good-component assertions must bite in both directions too.
@@ -402,11 +431,6 @@ def main():
     ap.add_argument("--expect-text", default=None, help="fixture mode: text that must appear")
     ap.add_argument("--screenshot", default=None, help="save a PNG screenshot here")
     ap.add_argument(
-        "--only-fail",
-        action="store_true",
-        help="run the negative controls and skip the good component",
-    )
-    ap.add_argument(
         "--self-check",
         action="store_true",
         help="offline: prove the negative controls can fail (no browser needed)",
@@ -424,11 +448,15 @@ def main():
     # closing somebody else's tabs; the instance is torn down below.
     env = dict(os.environ)
     env.setdefault("SHIRABE_MAX_TABS", "8")
+    # `shirabe` is a node shim over a native binary: terminating the shim
+    # leaves the native process (and its tab slot) behind, so the harness owns
+    # a process GROUP and kills the group.
     proc = subprocess.Popen(
         [args.shirabe_bin, "debug", "--port", str(port)],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         env=env,
+        start_new_session=True,
     )
     failures = []
     tmp_root = None
@@ -477,7 +505,9 @@ def main():
                 if ready is True:
                     break
                 time.sleep(0.1)
-            failures.extend(assert_boot_contract(base, args.scenario))
+            failures.extend(
+                assert_boot_contract(base, args.scenario, real_dist=bool(args.dist))
+            )
 
         if args.screenshot:
             data = call(base, "/screenshot", {})
@@ -499,11 +529,17 @@ def main():
             server.server_close()
         if tmp_root is not None:
             shutil.rmtree(tmp_root, ignore_errors=True)
-        proc.terminate()
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+        except (ProcessLookupError, PermissionError):
+            pass
         try:
             proc.wait(timeout=10)
         except subprocess.TimeoutExpired:
-            proc.kill()
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                proc.kill()
 
     if failures:
         print("FAIL:", "; ".join(failures), file=sys.stderr)

@@ -159,7 +159,10 @@
             }
         } catch (bootErr) {
             // The lifecycle already reported through `bootSurface.fail` when it
-            // got that far; this covers the paths that never reached it.
+            // got that far; this covers the paths that never reached it (a
+            // stale dist whose /component-boot.js is missing, a fetch failure,
+            // a bad magic header). Everything lands on the SAME surface so the
+            // error attribute is set by every failure path, not just some.
             if (!document.documentElement.dataset.tairitsuError) {
                 bootSurface.fail('instantiate-failed', bootErr);
             }

@@ -15,7 +15,9 @@ import { fileURLToPath } from "node:url";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const BOOT_MODULE = resolve(here, "../src/wasm/component-boot.template.js");
-const { bootComponent, resolveEntry, ENTRY_NAMES, BootError } = await import(BOOT_MODULE);
+const { bootComponent, resolveEntry, ENTRY_MANIFEST, ENTRY_NAMES, BootError } = await import(
+  BOOT_MODULE,
+);
 
 /** The page adapter, recorded so a test can assert what the lifecycle said. */
 function recorder() {
@@ -33,7 +35,38 @@ function recorder() {
 const noop = () => {};
 
 test("the entry contract is explicit and ordered", () => {
-  assert.deepEqual(ENTRY_NAMES, ["tairitsu_component_bootstrap", "run", "main", "init"]);
+  assert.deepEqual(ENTRY_NAMES, [
+    "tairitsu_component_bootstrap",
+    "run",
+    "main",
+    "init",
+    "start",
+    "lifecycle.start",
+    "tairitsu-browser:full/lifecycle@0.2.0.start",
+  ]);
+  assert.ok(
+    ENTRY_MANIFEST.some((entry) => entry.kind === "wit"),
+    "the component's own WIT lifecycle is part of the documented ABI",
+  );
+});
+
+test("a REAL jco wrapper namespace resolves its WIT lifecycle entry", () => {
+  // The shape `tairitsu build` produces: jco emits no top-level `run`; the
+  // component's WIT export is the entry. (Without this the whole page fails
+  // with `no-entry` on every real build.)
+  const namespace = {
+    lifecycle: { start: noop },
+    "tairitsu-browser:full/lifecycle@0.2.0": { start: noop },
+    _util: {},
+  };
+  const entry = resolveEntry(namespace);
+  assert.ok(entry, "a real wrapper namespace must resolve an entry");
+  assert.equal(entry.name, "lifecycle.start");
+  assert.equal(entry.kind, "wit");
+});
+
+test("the legacy top-level `start` stays accepted (SSR parity)", () => {
+  assert.equal(resolveEntry({ start: noop }).name, "start");
 });
 
 test("the documented bootstrap export wins over run/main/init", () => {
@@ -167,5 +200,16 @@ test("the page template no longer fishes for names by depth (source check)", asy
     "the soft 'nothing found' path is gone",
   );
   assert.match(page, /component-boot\.js/, "the page imports the boot runtime");
-  assert.match(page, /bootSettled/, "ready is gated on the lifecycle");
+  // An identifier merely EXISTING is not gating: the ready write must sit
+  // behind `await bootSettled` (a mutation that drops the await keeps a bare
+  // `/bootSettled/` match and used to survive every offline gate).
+  assert.match(page, /await bootSettled/, "ready is gated on the lifecycle");
+  const settle = page.indexOf("await bootSettled");
+  const readyWrite = page.indexOf("dataset.tairitsuReady='hydrated'");
+  assert.ok(settle > 0 && readyWrite > settle, "the only ready write follows the settle");
+  assert.equal(
+    (page.match(/dataset\.tairitsuReady/g) || []).length,
+    1,
+    "exactly one ready write exists",
+  );
 });
