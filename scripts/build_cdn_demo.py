@@ -12,6 +12,7 @@ Usage:
 import argparse
 import json
 import shutil
+import re
 import sys
 from pathlib import Path
 
@@ -357,6 +358,13 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
                     if terminator in tail:
                         tail = tail[: tail.index(terminator)]
                         break
+                # The CDN module never defines `bootSettled` (that is the W3
+                # gate inside boot.js), so the copied tail must not reference it.
+                tail = re.sub(
+                    r"\n\s*try \{\s*\n\s*await bootSettled;\s*\n\s*\} catch \(_bootFailure\) \{\s*\n\s*return;\s*\n\s*\}",
+                    "",
+                    tail,
+                )
                 post_boot_code = tail
                 print(f"CDN boot: post-boot utilities read from {boot_file.name}")
         if not post_boot_code:
