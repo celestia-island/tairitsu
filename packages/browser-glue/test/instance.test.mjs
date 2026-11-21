@@ -761,11 +761,15 @@ test("the mount root is a host container, and the default path is unchanged (W8 
   // The card must not replace a host container's children.
   assert.match(
     boot,
-    /if \(appRoot && !mountState\.host\) appRoot\.innerHTML/,
-    "the failure card replaces a host container's children",
+    /const cardTarget = mountState\.shellOwned \|\| !mountState\.host \? appRoot : null;/,
+    "the failure card can write where the host owns the element",
   );
   // The message sink is innerHTML: the host's own text must be escaped.
   assert.match(boot, /replace\(\/&\/g, '&amp;'\)/, "the card does not escape its message");
+  // The two refusals and the kind preservation are behaviour-tested by the
+  // browser lane (`mount-conflict-shell` / `mount-conflict-page` /
+  // `mount-missing`); these assert the shapes still exist for it to hit.
+  assert.match(boot, /kind: mount\.kind|kind: topErr\.kind|reported: true/, "no refusal kind");
 });
 
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {

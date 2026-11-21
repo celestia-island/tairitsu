@@ -374,6 +374,9 @@ browser-e2e: glue-esm
     {{python}} scripts/browser_e2e.py --scenario capability-overreach
     {{python}} scripts/browser_e2e.py --scenario capability-wasi
     {{python}} scripts/browser_e2e.py --scenario custom-root
+    {{python}} scripts/browser_e2e.py --scenario mount-conflict-shell
+    {{python}} scripts/browser_e2e.py --scenario mount-conflict-page
+    {{python}} scripts/browser_e2e.py --scenario mount-missing
     {{python}} scripts/browser_e2e.py --scenario worker-boot
     {{python}} scripts/browser_e2e.py --scenario worker-terminate
     {{python}} scripts/browser_e2e.py --scenario worker-refused

@@ -62,6 +62,9 @@ SCENARIOS = (
     "capability-undeclared",
     "capability-overreach",
     "worker-refused",
+    "mount-conflict-shell",
+    "mount-conflict-page",
+    "mount-missing",
     "worker-kill",
     "capability-wasi",
     "worker-boot",
@@ -196,6 +199,9 @@ WRAPPERS = {
     "capability-overreach": GLUE_IMPORT_WRAPPER,
     "capability-wasi": GLUE_IMPORT_WRAPPER,
     "custom-root": CUSTOM_ROOT_WRAPPER,
+    "mount-conflict-shell": CUSTOM_ROOT_WRAPPER,
+    "mount-conflict-page": CUSTOM_ROOT_WRAPPER,
+    "mount-missing": CUSTOM_ROOT_WRAPPER,
     "worker-boot": WORKER_WRAPPER,
     "worker-refused": WORKER_WRAPPER,
     "worker-terminate": WORKER_WRAPPER,
@@ -209,6 +215,9 @@ WRAPPERS = {
 }
 
 FAILING = (
+    "mount-conflict-shell",
+    "mount-conflict-page",
+    "mount-missing",
     "bad-bytes",
     "missing-entry",
     "missing-import",
@@ -229,6 +238,9 @@ EXPECTED_CARD = {
     "capability-undeclared": "is not declared",
     "capability-wasi": "WASI modules the host does not provide",
     "worker-refused": "this lane cannot provide",
+    "mount-conflict-shell": "mount-root-conflict",
+    "mount-conflict-page": "mount-root-conflict",
+    "mount-missing": "mount-root-missing",
 }
 
 
@@ -437,6 +449,9 @@ def capability_declaration(scenario):
         # The one control that makes the worker host's refusal observable: it
         # declares an interface the lane cannot provide (it has no DOM).
         return {"interfaces": ["document"], "wasiModules": []}
+    if scenario in ("mount-conflict-shell", "mount-conflict-page", "mount-missing"):
+        # These exercise the mount check; a declaration failure would mask it.
+        return {"interfaces": [], "wasiModules": []}
     if scenario in STUB_SCENARIOS or scenario in WORKER_SCENARIOS:
         return {"interfaces": [], "wasiModules": []}
     if scenario == "capability-exact":
@@ -489,6 +504,19 @@ def render_page(scenario=None):
             1,
         )
         page = page.replace("<html ", '<html data-tairitsu-root="host-panel" ', 1)
+    if scenario in ("mount-conflict-shell", "mount-conflict-page", "mount-missing"):
+        page = page.replace(
+            '<div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>',
+            '<div id="panel"><p id="host-child">keep</p></div>'
+            '<div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>',
+            1,
+        )
+        root = {
+            "mount-conflict-shell": "app",
+            "mount-conflict-page": "panel",
+            "mount-missing": "no-such-panel",
+        }[scenario]
+        page = page.replace("<html ", '<html data-tairitsu-root="' + root + '" ', 1)
     if scenario in WORKER_SCENARIOS:
         # W7: the worker lane is opt-in through this attribute; without it the
         # page boots on the main thread and a "worker" scenario would pass for
@@ -653,6 +681,11 @@ def check_boot_state(state, scenario, *, real_dist=False):
             "a capability mismatch was not reported as capability-denied "
             f"(got {state.get('error')!r})"
         )
+    if scenario.startswith("mount-"):
+        # A refused mount root has no guest shell to write a card into: the
+        # machine signal is the kind, and the run loop asserts it (plus that the
+        # host's own content survived).
+        return failures
     if scenario in FAILING:
         if state.get("ready") is not None:
             failures.append(f"failed component reported ready ({state['ready']!r})")
@@ -1118,6 +1151,34 @@ def main():
                 elif state.get("pageRanEntry") is True:
                     failures.append("the entry ran on the page: this is the main-thread lane")
 
+            if args.scenario.startswith("mount-") and not failures:
+                state = evaluate(
+                    base,
+                    "(() => ({"
+                    " err: document.documentElement.dataset.tairitsuError || null,"
+                    " ready: document.documentElement.dataset.tairitsuReady || null,"
+                    " hostChild: !!document.getElementById('host-child'),"
+                    " pageApp: (document.getElementById('app') || {}).textContent || '',"
+                    " booted: !!document.getElementById('guest-content')"
+                    "}))()",
+                )
+                expected_kind = (
+                    "mount-root-missing" if args.scenario == "mount-missing" else "mount-root-conflict"
+                )
+                if not isinstance(state, dict):
+                    failures.append("mount refusal state unreadable: " + repr(state))
+                else:
+                    if state.get("err") != expected_kind:
+                        failures.append(
+                            "the refusal kind was not preserved (got "
+                            + repr(state.get("err")) + ", expected " + expected_kind + ")"
+                        )
+                    if state.get("booted"):
+                        failures.append("the component booted despite a refused mount root")
+                    if not state.get("hostChild"):
+                        failures.append("the host's node was lost")
+                    if state.get("ready") is not None:
+                        failures.append("a refused boot still reported ready")
             if args.scenario == "custom-root":
                 state = evaluate(
                     base,

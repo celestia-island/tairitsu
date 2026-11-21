@@ -12,7 +12,8 @@
             console.error('[tairitsu] Boot failed:', msg, err || '');
             const mountState = globalThis.__TAIRITSU_MOUNT_ROOT__ || {};
             const appRoot = mountState.element || document.getElementById('app');
-            if (appRoot && !mountState.host) appRoot.innerHTML =
+            const cardTarget = mountState.shellOwned || !mountState.host ? appRoot : null;
+            if (cardTarget) cardTarget.innerHTML =
                 '<div style="padding:2em;font-family:monospace;color:#e06c75">' +
                 '<b>Tairitsu boot error</b><br><pre style="margin-top:.5em;white-space:pre-wrap">' +
                 // Escaped: a message can carry the host's own text (the mount
@@ -53,7 +54,7 @@
         };
 
         const resolveMountRoot = () => {
-            const named = document.documentElement.dataset.tairitsuRoot;
+            const named = (document.documentElement.dataset.tairitsuRoot || '').trim();
             if (!named) {
                 let fallback = document.getElementById('app');
                 if (!fallback) {
@@ -61,23 +62,13 @@
                     fallback.id = 'app';
                     document.body.appendChild(fallback);
                 }
-                return { element: fallback, host: false, missing: null };
+                return { element: fallback, host: false, shellOwned: true, missing: null };
             }
             const container = document.getElementById(named);
             if (!container) {
                 return mountError(
                     'mount-root-missing',
                     'data-tairitsu-root="' + named + '" matches no element',
-                );
-            }
-            const existing = document.getElementById('app');
-            if (existing && existing !== container && !container.contains(existing)) {
-                // A shell that lives elsewhere would be cleared and the component
-                // would render outside the container the host named. Refuse
-                // rather than silently pick one.
-                return mountError(
-                    'mount-root-conflict',
-                    'the page already has an #app outside "' + named + '"',
                 );
             }
             if (container.id === 'app') {
@@ -88,18 +79,45 @@
                     'the mount root must be a container, not the #app shell itself',
                 );
             }
+            const existing = document.getElementById('app');
+            if (existing && container.contains(existing)) {
+                // The container already holds an #app: that one is the host's
+                // (server-rendered HTML, typically), and the guest would clear it.
+                // Give the component its own shell instead of adopting it.
+                const shell = document.createElement('div');
+                shell.id = 'app';
+                existing.removeAttribute('id');
+                container.appendChild(shell);
+                return { element: shell, host: true, shellOwned: true, missing: null, container };
+            }
+            if (existing && existing !== container && !container.contains(existing)) {
+                // A shell that lives elsewhere would be cleared and the component
+                // would render outside the container the host named. Refuse
+                // rather than silently pick one.
+                return mountError(
+                    'mount-root-conflict',
+                    'the page already has an #app outside "' + named + '"',
+                );
+            }
             if (!existing) {
                 const shell = document.createElement('div');
                 shell.id = 'app';
                 container.appendChild(shell);
-                return { element: shell, host: true, missing: null, container };
+                return { element: shell, host: true, shellOwned: true, missing: null, container };
             }
-            return { element: existing, host: true, missing: null, container };
+            return { element: existing, host: true, shellOwned: true, missing: null, container };
         };
 
-        const mount = resolveMountRoot();
+        // The worker lane mounts nothing (no DOM): resolving a root there could
+        // refuse a worker-only boot over a DOM conflict it never has.
+        const wantsWorker =
+            document.documentElement.dataset.tairitsuWorker !== undefined &&
+            typeof Worker === 'function';
+        const mount = wantsWorker
+            ? { element: null, host: false, shellOwned: false, missing: null, skipped: true }
+            : resolveMountRoot();
         const appRoot = mount.element;
-        if (!appRoot) {
+        if (!appRoot && !mount.skipped) {
             // Fail closed with a kind the page can read; nothing is invented and
             // no host content is touched.
             throw Object.assign(new Error(mount.kind + ': mount root unusable'), {
@@ -107,7 +125,11 @@
                 reported: true,
             });
         }
-        globalThis.__TAIRITSU_MOUNT_ROOT__ = { element: appRoot, host: mount.host };
+        globalThis.__TAIRITSU_MOUNT_ROOT__ = {
+            element: appRoot,
+            host: mount.host,
+            shellOwned: mount.shellOwned === true,
+        };
         // W3: `data-tairitsu-ready` is set ONLY after the guest's boot entry
         // returned. Failures go to `data-tairitsu-error` + the visible card
         // and never set the ready attribute.
@@ -138,9 +160,6 @@
         // component is instantiated and run in a dedicated Worker, so a
         // component that never yields can be terminated without killing the
         // page. The default (no attribute) is unchanged — main thread.
-        const wantsWorker =
-            document.documentElement.dataset.tairitsuWorker !== undefined &&
-            typeof Worker === 'function';
         let workerHost = null;
         let workerCancelled = false;
 
