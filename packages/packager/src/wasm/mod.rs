@@ -1072,15 +1072,35 @@ fn bundle_local_wasi_shim(
 /// imports were rewritten to `../glue/<name>.js`, so a build without these files
 /// would 404 at load time — hence fail-loud rather than a partial dist.
 fn copy_glue_modules(_config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
-    let source_dir =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../browser-glue/dist/glue");
-    if !source_dir.is_dir() {
-        return Err(crate::TairitsuPackagerError::BuildError(format!(
-            "the glue ESM modules are missing ({}). Run `node --experimental-strip-types \
-             packages/browser-glue/scripts/emit-glue-esm.mjs` (or `just build-glue-runtime`) before building.",
-            source_dir.display()
-        )));
-    }
+    // The emitted modules sit in the glue package, which may live beside this
+    // crate (workspace build) or be reached from the project being built — the
+    // same candidate-probing the glue *runtime* bundle uses. A compile-time
+    // absolute path would make every installed binary fail on other machines.
+    let candidates: Vec<std::path::PathBuf> = std::env::var("TAIRITSU_GLUE_ESM_DIR")
+        .map(std::path::PathBuf::from)
+        .into_iter()
+        .chain(
+            [
+                "../../../tairitsu/packages/browser-glue/dist/glue-esm",
+                "../../packages/browser-glue/dist/glue-esm",
+                "../browser-glue/dist/glue-esm",
+            ]
+            .iter()
+            .map(std::path::PathBuf::from),
+        )
+        .collect();
+    let source_dir = candidates
+        .iter()
+        .find(|path| path.is_dir())
+        .cloned()
+        .ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError(
+                "the glue ESM modules are missing (searched for browser-glue/dist/glue-esm). Run \
+                 `node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs` \
+                 (or `just build-glue-runtime`) before building, or set TAIRITSU_GLUE_ESM_DIR."
+                    .to_string(),
+            )
+        })?;
     let target_dir = output_dir.join("glue");
     std::fs::create_dir_all(&target_dir)?;
     let mut copied = 0usize;
@@ -1165,7 +1185,7 @@ fn rewrite_wrapper_imports(output_dir: &std::path::Path) -> crate::Result<()> {
 /// is what makes the import static.
 fn glue_specifier_extension(source: &str) -> String {
     let re =
-        regex::Regex::new(r#"((?:from|import)\s*\(?\s*['\"])(\.\./glue/[A-Za-z0-9._-]+)(['\"])"#)
+        regex::Regex::new(r#"((?:from|import)\s*\(?\s*['\"])(\.\./glue/[A-Za-z0-9._@-]+)(['\"])"#)
             .expect("static regex is valid");
     re.replace_all(source, |caps: &regex::Captures| {
         let spec = &caps[2];

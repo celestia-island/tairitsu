@@ -289,19 +289,29 @@ mod glue_modules {
             );
             modules += 1;
         }
-        assert!(modules >= 20, "expected the interface modules, got {modules}");
+        assert!(
+            modules >= 20,
+            "expected the interface modules, got {modules}"
+        );
     }
 
     #[test]
     fn the_manifest_lists_every_interface() {
         let manifest = emitted_dir().join("manifest.json");
         if !manifest.is_file() {
-            eprintln!("skipping: {} has not been generated yet", manifest.display());
+            eprintln!(
+                "skipping: {} has not been generated yet",
+                manifest.display()
+            );
             return;
         }
         let text = std::fs::read_to_string(&manifest).expect("readable");
         let value: serde_json::Value = serde_json::from_str(&text).expect("valid json");
         let interfaces = value["interfaces"].as_array().expect("interfaces array");
-        assert!(interfaces.len() >= 20, "manifest lists {} interfaces", interfaces.len());
+        assert!(
+            interfaces.len() >= 20,
+            "manifest lists {} interfaces",
+            interfaces.len()
+        );
     }
 }

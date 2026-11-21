@@ -543,6 +543,18 @@ test("the build-time glue modules are real ESM with named exports (W5)", async (
     false,
     "an emitted module still builds a blob",
   );
+  // Every interface the registry declares must have a file — the check that
+  // catches a wrong name (once shipped `css-inline-style` instead of
+  // `element-css-inline-style`, so a real wrapper's import 404'd).
+  const registry = await readFile(resolve(packageRoot, "src/runtime/registry.ts"), "utf8");
+  const declared = [...registry.matchAll(/"@tairitsu-glue\/([a-z0-9-]+)"\s*:/g)].map((m) => m[1]);
+  assert.ok(declared.length >= 20, `registry declares ${declared.length} interfaces`);
+  for (const name of declared) {
+    assert.ok(
+      files.includes(`${name}.js`),
+      `no emitted module for @tairitsu-glue/${name}`,
+    );
+  }
   const manifest = JSON.parse(await readFile(join(glueDir, "manifest.json"), "utf8"));
   assert.ok(manifest.interfaces.length >= 20);
   assert.equal(

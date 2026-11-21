@@ -328,12 +328,10 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
 
     post_boot_code = ""
     if post_boot_idx != -1:
-        # Find the end of the module script
+        # Pre-W5 dist: the boot block is inline in index.html.
         module_close = html.rfind('</script>', post_boot_idx, module_end + len('</script>'))
         if module_close != -1:
-            # Extract from stylesReady to end of script
             raw_post = html[post_boot_idx:module_close]
-            # Dedent by 8 spaces (the module script indentation)
             lines = raw_post.split('\n')
             dedented = []
             for line in lines:
@@ -342,6 +340,23 @@ def generate_cdn_html(dist_dir: Path, import_map: dict, cdn_mode: str):
                 else:
                     dedented.append(line)
             post_boot_code = '\n'.join(dedented)
+
+    if not post_boot_code:
+        # W5 dist: the boot module is a real file next to the page. Without this
+        # fallback the CDN demo silently shipped WITHOUT the post-boot utilities.
+        boot_file = dist_dir / "boot.js"
+        if boot_file.is_file():
+            boot_source = boot_file.read_text(encoding="utf-8")
+            boot_idx = boot_source.find(post_boot_marker)
+            if boot_idx != -1:
+                post_boot_code = boot_source[boot_idx:]
+                print(f"CDN boot: post-boot utilities read from {boot_file.name}")
+        if not post_boot_code:
+            print(
+                "Error: could not find the post-boot utilities (neither an inline boot block "
+                "nor boot.js with the stylesReady marker)"
+            )
+            sys.exit(1)
 
     cdn_boot = f'''    <!-- CDN Boot Mode: Static import map + modular glue packages -->
     <script type="importmap">

@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = resolve(here, "..");
 const RUNTIME_DIR = join(PACKAGE_ROOT, "src", "runtime");
-const OUT_DIR = process.env.GLUE_ESM_OUT || join(PACKAGE_ROOT, "dist", "glue");
+const OUT_DIR = process.env.GLUE_ESM_OUT || join(PACKAGE_ROOT, "dist", "glue-esm");
 
 /** Interface name (as the wrapper imports it) → the module that defines it. */
 const EXPORT_SOURCES = {
@@ -41,7 +41,7 @@ const EXPORT_SOURCES = {
   "resize-observer-size": "resizeObserverSize",
   "resize-observer": "resizeObserver",
   "css-style-declaration": "cssStyleDeclaration",
-  "css-inline-style": "elementCssInlineStyle",
+  "element-css-inline-style": "elementCssInlineStyle",
   "event-target": "eventTarget",
   "dom-token-list": "domTokenList",
   "node-list": "nodeList",
@@ -83,6 +83,7 @@ async function moduleExports(moduleName) {
 
   const keys = [];
   let depth = 0;
+  let parens = 0;
   let i = start + marker.length - 1;
   let expectKey = true;
   let pending = "";
@@ -114,6 +115,8 @@ async function moduleExports(moduleName) {
       i++;
       continue;
     }
+    if (char === "(") parens++;
+    if (char === ")") parens--;
     if (char === "{") {
       const openedObject = depth === 0;
       depth++;
@@ -131,7 +134,7 @@ async function moduleExports(moduleName) {
       if (depth === 0) break;
     }
     if (depth === 1) {
-      if (char === "," || char === "\n") {
+      if ((char === "," || char === "\n") && parens <= 0) {
         if (pending.trim()) {
           const match = pending.trim().match(/^["']?([A-Za-z_$][A-Za-z0-9_$]*)/);
           if (match) keys.push(match[1]);
@@ -157,9 +160,36 @@ async function moduleExports(moduleName) {
   return { name, keys: unique };
 }
 
+/**
+ * The registry is the source of truth for interface names. Reading its keys from
+ * source keeps this script from silently emitting a differently-named file (the
+ * bug that shipped once: `css-inline-style` vs `element-css-inline-style`).
+ */
+async function registryInterfaceNames() {
+  const source = await readFile(join(RUNTIME_DIR, "registry.ts"), "utf8");
+  const names = new Set();
+  const re = /"@tairitsu-glue\/([a-z0-9-]+)"\s*:/g;
+  let match;
+  while ((match = re.exec(source)) !== null) names.add(match[1]);
+  if (names.size === 0) throw new Error("registry.ts declares no @tairitsu-glue interfaces");
+  return names;
+}
+
 async function main() {
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(OUT_DIR, { recursive: true });
+
+  // The emitted names must be the registry's names, one for one.
+  const declared = await registryInterfaceNames();
+  const mapped = new Set(Object.keys(EXPORT_SOURCES));
+  const missing = [...declared].filter((name) => !mapped.has(name)).sort();
+  const extra = [...mapped].filter((name) => !declared.has(name)).sort();
+  if (missing.length || extra.length) {
+    throw new Error(
+      `interface map does not match registry.ts — missing: ${JSON.stringify(missing)}, ` +
+        `not-in-registry: ${JSON.stringify(extra)}`,
+    );
+  }
 
   const written = [];
   for (const [iface, moduleName] of Object.entries(EXPORT_SOURCES)) {

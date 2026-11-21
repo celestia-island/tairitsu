@@ -58,6 +58,7 @@ TEMPLATE_DIR = os.path.join(REPO_ROOT, "packages", "packager", "src", "wasm")
 SCENARIOS = (
     "component",
     "csp",
+    "glue-imports",
     "two-instances",
     "bad-bytes",
     "missing-entry",
@@ -67,6 +68,26 @@ SCENARIOS = (
 
 # The entry the good synthetic component exports: it records that it ran and
 # mutates the page, so "the entry was invoked" is observable from the DOM.
+# A wrapper shaped like the packager's post-rewrite output: it imports the glue
+# interfaces from the real emitted modules (`../glue/<name>.js`). This is what
+# makes the glue scenario able to catch a wrong/missing interface file — the
+# other scenarios use a glue-less wrapper and cannot.
+GLUE_IMPORT_WRAPPER = """
+import { createElement } from "../glue/document.js";
+import { getStyle } from "../glue/element-css-inline-style.js";
+
+const entry = () => {
+  globalThis.__w3_entry_ran = true;
+  const el = createElement("div");
+  globalThis.__w3_glue_probe = { element: typeof el, style: typeof getStyle };
+  const app = document.getElementById("app");
+  if (app) app.textContent = "component booted";
+};
+
+const lifecycle = { start: entry };
+export { lifecycle, lifecycle as "tairitsu-browser:full/lifecycle@0.2.0" };
+"""
+
 GOOD_WRAPPER = """
 // The shape `jco transpile` actually emits for a tairitsu component: a module
 // namespace that exposes the WIT interfaces (no `instantiate` export), so the
@@ -112,6 +133,8 @@ WRAPPERS = {
     # Same component, same page — served with `script-src 'self'` so a page that
     # needed a blob URL or an inline module could not boot at all (D5).
     "csp": GOOD_WRAPPER,
+    # Serves the REAL emitted glue modules and a wrapper that imports them.
+    "glue-imports": GLUE_IMPORT_WRAPPER,
     # The isolation scenario boots the same component, then drives the instance
     # API from the test side.
     "two-instances": GOOD_WRAPPER,
@@ -324,10 +347,21 @@ def build_dist(scenario, dest):
         fh.write(render_page())
     with open(os.path.join(dest, "boot.js"), "w", encoding="utf-8") as fh:
         fh.write(render_boot_script())
+    if scenario == "glue-imports":
+        # The real build-time modules, copied exactly as the packager does.
+        source = os.path.join(REPO_ROOT, "packages", "browser-glue", "dist", "glue-esm")
+        if not os.path.isdir(source):
+            raise RuntimeError(
+                "the glue-imports control needs the emitted glue modules; run "
+                "`node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs`"
+            )
+        shutil.copytree(source, os.path.join(dest, "glue"))
+        # The wrapper sits in component-wrapper/, so `../glue/` resolves to the
+        # copy above — the same path the packager rewrites to.
     glue_path = os.path.join(dest, "glue-runtime.js")
     # `two-instances` needs the shipped bundle (the instance API lives there);
     # the component scenarios only need the page's import map to stay green.
-    if scenario == "two-instances":
+    if scenario in ("two-instances", "glue-imports"):
         if not ensure_glue_bundle(glue_path):
             raise RuntimeError(
                 "the two-instances control needs the real glue bundle "
@@ -569,6 +603,8 @@ def self_check():
     # fail the offline gate.
     if "csp" not in SCENARIOS:
         failures.append("the CSP scenario is missing")
+    if "glue-imports" not in SCENARIOS:
+        failures.append("the glue-imports scenario is missing (static resolution is unproven)")
     if "csp" not in WRAPPERS:
         failures.append("the CSP scenario has no component under test")
 
@@ -771,6 +807,20 @@ def main():
             failures.extend(
                 assert_boot_contract(base, args.scenario, real_dist=bool(args.dist))
             )
+            if args.scenario == "glue-imports" and not failures:
+                probe = evaluate(
+                    base,
+                    """(() => ({
+                        probe: globalThis.__w3_glue_probe || null,
+                    }))()""",
+                )
+                state = (probe or {}).get("probe") if isinstance(probe, dict) else None
+                if state is None:
+                    failures.append("the wrapper's glue imports did not run")
+                elif state.get("element") != "bigint" or state.get("style") != "function":
+                    failures.append(f"the glue modules did not provide their exports: {state!r}")
+                else:
+                    print("glue imports resolved statically:", state)
             if args.scenario == "csp" and not failures:
                 enforcement = evaluate(
                     base,
