@@ -79,17 +79,27 @@ A page can opt into running the component in a dedicated Worker
 
 * The worker host has **no DOM**, so it can provide no glue interface and no WASI
   module: a capability declaration that names any of them is refused there with
-  `capability-denied`. Components that touch the DOM stay on the main thread —
-  that is the boundary, not a gap.
+  `capability-denied`, and the refusal is the same one the page would report.
+  The declaration travels to the Worker as part of the boot message (the page
+  fetches it once) and is published **inside the Worker realm** before the
+  wrapper is imported, so the emitted glue modules' guard is active there too.
+  Components that touch the DOM stay on the main thread — that is the boundary,
+  not a gap.
 * `globalThis.__TAIRITSU_WORKER__.terminate()` is the hard kill: it drops the
   Worker, disposes the page's W4 instance and reports whether anything was
   running. It is the only way to stop a component that never yields; the
   cooperative stop still exists for components that do.
 * **The facade is async in this lane.** Post-message is asynchronous by nature,
   and a synchronous facade would need `Atomics.wait`, which blocks the main
-  thread — contradicting the reason the lane exists. Callers get an async entry
-  (`boot` resolves on `ready`/`error`); the four hikari components are pure
-  compute and fit it without changes.
+  thread — contradicting the reason the lane exists. The page's surface is the
+  same one it always had (`data-tairitsu-ready` / `data-tairitsu-error`), and
+  `globalThis.__TAIRITSU_WORKER__` is the programmatic handle (`terminate()`,
+  `active()`); a per-call promise-based API is what the DOM bridge will add. The
+  four hikari components are pure compute and fit the existing surface without
+  changes.
+* `ready` means the entry **returned**: the Worker reports the wrapper's own
+  post-entry marker with it, and the browser lane asserts that marker, so a host
+  that announces ready early cannot pass.
 
 ## Not in this cut
 

@@ -92,7 +92,10 @@ async function boot({ capabilities }) {
   const surface = {
     ready: (entry) => {
       entryName = entry;
-      post({ type: "ready", entry });
+      // `bootComponent` calls this only after the entry returned; the wrapper's
+      // own marker travels with it so the page can tell "ready" from "ready
+      // before the entry ran".
+      post({ type: "ready", entry, compute: globalThis.__w7_compute });
     },
     fail: (kind, error) => fail(kind, error),
   };

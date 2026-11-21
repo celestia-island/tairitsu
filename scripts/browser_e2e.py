@@ -62,11 +62,12 @@ SCENARIOS = (
     "capability-undeclared",
     "capability-overreach",
     "worker-refused",
+    "worker-kill",
     "capability-wasi",
     "worker-boot",
     "worker-refused",
-    "worker-terminate",
     "worker-kill",
+    "worker-terminate",
     "glue-imports",
     "two-instances",
     "bad-bytes",
@@ -620,14 +621,15 @@ def check_boot_state(state, scenario, *, real_dist=False):
         if expected and expected not in (state.get("appText") or ""):
             failures.append(f"{scenario}: the card does not name the failure ({expected!r} missing)")
     else:
+        if scenario == "worker-kill":
+            # The page is stuck on purpose (the component never returns); its
+            # step-by-step probe owns the assertions. This must come BEFORE the
+            # generic ready check, or the control could never pass.
+            return failures
         if state.get("ready") != "hydrated":
             failures.append(f"good component not ready (ready={state.get('ready')!r})")
         if state.get("error"):
             failures.append(f"good component reported an error ({state['error']!r})")
-        if scenario == "worker-kill":
-            # Handled by its own step-by-step probe: the page is stuck on
-            # purpose, so "not ready" is the expected state.
-            return failures
         if scenario in WORKER_SCENARIOS:
             # The entry runs in the Worker: this pure check only sees ready/no
             # error; the "was it really the Worker" half lives in the run loop
@@ -792,14 +794,22 @@ def self_check():
     # fail the offline gate.
     if "csp" not in SCENARIOS:
         failures.append("the CSP scenario is missing")
-    for capability_scenario in (
+    # Listed once, here. An earlier version iterated the same tuple it was
+    # verifying, so deleting a scenario from SCENARIOS also deleted it from the
+    # check.
+    REQUIRED_CONTROLS = (
         "capability-exact",
         "capability-undeclared",
         "capability-overreach",
         "capability-wasi",
-    ):
+        "worker-boot",
+        "worker-terminate",
+        "worker-refused",
+        "worker-kill",
+    )
+    for capability_scenario in REQUIRED_CONTROLS:
         if capability_scenario not in SCENARIOS:
-            failures.append(f"the {capability_scenario} control is missing (W6)")
+            failures.append(f"the {capability_scenario} control is missing")
     if "glue-imports" not in SCENARIOS:
         failures.append("the glue-imports scenario is missing (static resolution is unproven)")
     if "csp" not in WRAPPERS:
@@ -1038,7 +1048,9 @@ def main():
                     failures.append(f"the glue modules did not provide their exports: {state!r}")
                 else:
                     print("glue imports resolved statically:", state)
-            if args.scenario in WORKER_SCENARIOS and not failures:
+            # Only the scenarios that must reach ready can prove the entry ran;
+            # `worker-refused` is an expected failure.
+            if args.scenario in ("worker-boot", "worker-terminate") and not failures:
                 # Prove the lane: the Worker is live and the page's own realm
                 # never ran the entry. Without this the scenario passes on the
                 # main-thread lane too (it did once).
@@ -1046,7 +1058,8 @@ def main():
                     base,
                     "(() => ({ workerActive: !!(globalThis.__TAIRITSU_WORKER__ && "
                     "globalThis.__TAIRITSU_WORKER__.active()), "
-                    "pageRanEntry: globalThis.__w3_entry_ran === true }))()",
+                    "pageRanEntry: globalThis.__w3_entry_ran === true, "
+                    "compute: globalThis.__TAIRITSU_WORKER_RESULT__ }))()",
                 )
                 if not isinstance(state, dict):
                     failures.append("worker state unreadable: " + repr(state))
@@ -1054,6 +1067,11 @@ def main():
                     failures.append("the component did not boot in a Worker")
                 elif state.get("pageRanEntry") is True:
                     failures.append("the entry ran on the page: this is the main-thread lane")
+                elif state.get("compute") != 42:
+                    failures.append(
+                        "ready did not carry the entry's result: the Worker reported ready "
+                        "before the entry ran (compute=" + repr(state.get("compute")) + ")"
+                    )
             if args.scenario == "worker-terminate":
                 # The kill path without a spinning worker: boot normally, then
                 # terminate and check both halves of the reclaim — the Worker is

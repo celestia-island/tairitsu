@@ -77,6 +77,7 @@
                     if (settledFlag) return;
                     if (message.type === 'ready') {
                         settledFlag = true;
+                        globalThis.__TAIRITSU_WORKER_RESULT__ = message.compute;
                         bootSurface.ready(message.entry);
                         resolve({ ok: true });
                     } else if (message.type === 'error') {
