@@ -1137,12 +1137,6 @@ fn write_component_wrapper_loader(
 
     let loader_path = output_dir.join("component-wrapper-loader.js");
     std::fs::write(loader_path, loader)?;
-
-    // W3: the boot lifecycle (entry resolution, ready/error gating) lives in
-    // its own module so the page stays a thin adapter and so tests can drive
-    // it without a browser.
-    let boot_path = output_dir.join("component-boot.js");
-    std::fs::write(boot_path, COMPONENT_BOOT_TEMPLATE)?;
     Ok(())
 }
 
@@ -1678,6 +1672,11 @@ fn generate_component_html_with_output_dir(
             }
         }
     }
+
+    // W3: the boot lifecycle (entry resolution, ready/error gating) is a
+    // separate module the page imports unconditionally, so it is emitted next
+    // to the page for EVERY build — not only when the wrapper fallback runs.
+    std::fs::write(output_dir.join("component-boot.js"), COMPONENT_BOOT_TEMPLATE)?;
 
     let html_path = output_dir.join("index.html");
     std::fs::write(&html_path, &html)?;
