@@ -10,7 +10,7 @@
         const bootError = (msg, err, kind) => {
             if (kind) markBootFailure(kind);
             console.error('[tairitsu] Boot failed:', msg, err || '');
-            const appRoot = document.getElementById('app');
+            const appRoot = (globalThis.__TAIRITSU_MOUNT_ROOT__ || {}).element || document.getElementById('app');
             if (appRoot) appRoot.innerHTML =
                 '<div style="padding:2em;font-family:monospace;color:#e06c75">' +
                 '<b>Tairitsu boot error</b><br><pre style="margin-top:.5em;white-space:pre-wrap">' +
@@ -29,7 +29,61 @@
         const { instantiateWithWrapper } = await import('/component-wrapper-loader.js?v={{ v }}');
         const { bootComponent } = await import('/component-boot.js?v={{ v }}');
 
-        const appRoot = document.getElementById('app');
+        // W8: the mount root is the HOST's choice. `<html data-tairitsu-root="id">`
+        // names an element the host owns; the guest patches inside it and must
+        // not clear it. Without the attribute the page keeps its old shape: the
+        // `#app` element, created if the page has none.
+        const resolveMountRoot = () => {
+            const named = document.documentElement.dataset.tairitsuRoot;
+            if (named) {
+                const hostRoot = document.getElementById(named);
+                if (!hostRoot) {
+                    // The host named it, so a missing one is a wiring error, not
+                    // something to paper over with a fresh element.
+                    return { element: null, host: true, missing: named };
+                }
+                // The guest mounts through `get_element_by_id("app")`. The host
+                // root keeps every attribute it has (its id included): when it is
+                // not itself `#app`, the guest's own shell is MOVED inside it, so
+                // the guest clears its own element and never the host's children.
+                if (hostRoot.id === 'app') {
+                    hostRoot.setAttribute('data-tairitsu-host-root', '');
+                    return { element: hostRoot, host: true, missing: null };
+                }
+                let shell = document.getElementById('app');
+                if (!shell) {
+                    shell = document.createElement('div');
+                    shell.id = 'app';
+                }
+                if (shell.parentNode !== hostRoot) hostRoot.appendChild(shell);
+                return { element: shell, host: true, missing: null, hostRoot };
+            }
+            let fallback = document.getElementById('app');
+            if (!fallback) {
+                fallback = document.createElement('div');
+                fallback.id = 'app';
+                document.body.appendChild(fallback);
+            }
+            return { element: fallback, host: false, missing: null };
+        };
+
+        const mount = resolveMountRoot();
+        const appRoot = mount.element;
+        if (mount.missing) {
+            // Fail closed: the host asked for a root that is not there.
+            markBootFailure('mount-root-missing');
+            document.body.removeAttribute('data-booting');
+            console.error(
+                '[tairitsu] the host declared data-tairitsu-root="' + mount.missing +
+                '" but no element has that id',
+            );
+            throw new Error('mount-root-missing: ' + mount.missing);
+        }
+        // W4/W6/W7 read the root too; publish the decision once.
+        globalThis.__TAIRITSU_MOUNT_ROOT__ = {
+            element: appRoot,
+            host: mount.host,
+        };
         // W3: `data-tairitsu-ready` is set ONLY after the guest's boot entry
         // returned. Failures go to `data-tairitsu-error` + the visible card
         // and never set the ready attribute.
@@ -443,14 +497,14 @@
         (async () => {
             await stylesReady();
 
-            const appRoot = document.getElementById('app');
+            const appRoot = (globalThis.__TAIRITSU_MOUNT_ROOT__ || {}).element || document.getElementById('app');
             if (appRoot) {
                 await waitForDomSettle(appRoot, 2000);
             }
 
             fixSvgNamespaces();
 
-            const appEl = document.getElementById('app');
+            const appEl = (globalThis.__TAIRITSU_MOUNT_ROOT__ || {}).element || document.getElementById('app');
             if (appEl) appEl.classList.remove('tairitsu-boot-screen');
 
             // Sync data-theme attribute so CSS custom properties resolve

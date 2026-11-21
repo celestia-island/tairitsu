@@ -739,6 +739,33 @@ test("the worker lane exists and terminate is the hard kill (W7 pin)", async () 
   assert.match(host, /kind: "capability-denied"/, "the refusal is not a capability failure");
 });
 
+test("the mount root is the host's, and the default path is unchanged (W8 pin)", async () => {
+  const boot = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");
+  assert.match(boot, /tairitsuRoot/, "no host mount-root channel");
+  assert.match(
+    boot,
+    /hostRoot\.id === 'app'[\s\S]{0,200}?data-tairitsu-host-root/,
+    "a host-supplied root is not handled as the host's own",
+  );
+  assert.match(
+    boot,
+    /hostRoot\.appendChild\(shell\)/,
+    "the guest shell is not moved into the host root",
+  );
+  assert.match(
+    boot,
+    /fallback = document\.createElement\('div'\)/,
+    "the default path no longer creates #app",
+  );
+  // The guest side must not clear a root the host marked as its own.
+  const platform = await readFile(resolve(here, "../../web/src/wit_platform.rs"), "utf8");
+  assert.match(
+    platform,
+    /data-tairitsu-host-root[\s\S]{0,400}?if !host_owned \{[\s\S]{0,200}?set_text_content/,
+    "the guest clears a host-owned root",
+  );
+});
+
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {
   // The tables must be accessors whose storage is the instance, not data
   // properties holding Maps. A regression to `globalThis.__elementHandles =

@@ -72,7 +72,24 @@ SCENARIOS = (
     "missing-entry",
     "missing-import",
     "fixture",
+    "custom-root",
 )
+
+# W8: a component that patches inside whatever root the host mounted it into.
+CUSTOM_ROOT_WRAPPER = """
+const entry = () => {
+  globalThis.__w3_entry_ran = true;
+  const root = (globalThis.__TAIRITSU_MOUNT_ROOT__ || {}).element;
+  if (!root) return;
+  const guest = document.createElement('div');
+  guest.id = 'guest-content';
+  guest.textContent = 'component booted';
+  root.appendChild(guest);
+};
+
+const lifecycle = { start: entry };
+export { lifecycle, lifecycle as "tairitsu-browser:full/lifecycle@0.2.0" };
+"""
 
 # W7: a compute-only component — no DOM, so the worker lane can host it.
 WORKER_WRAPPER = """
@@ -178,6 +195,7 @@ WRAPPERS = {
     "capability-undeclared": GLUE_IMPORT_WRAPPER,
     "capability-overreach": GLUE_IMPORT_WRAPPER,
     "capability-wasi": GLUE_IMPORT_WRAPPER,
+    "custom-root": CUSTOM_ROOT_WRAPPER,
     "worker-boot": WORKER_WRAPPER,
     "worker-refused": WORKER_WRAPPER,
     "worker-terminate": WORKER_WRAPPER,
@@ -458,6 +476,18 @@ def render_page(scenario=None):
     """Render `index.html.template` with the e2e context."""
     with open(os.path.join(TEMPLATE_DIR, "index.html.template"), encoding="utf-8") as fh:
         page = fh.read()
+    if scenario == "custom-root":
+        # W8: the host owns a panel and declares it as the mount root. The `#app`
+        # the template ships must lose to it, and the host node inside must
+        # survive the boot.
+        page = page.replace(
+            '<div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>',
+            '<div id="host-panel"><p id="host-child">host owns this</p></div>'
+            '<div id="app" class="tairitsu-boot-screen"><div>Loading…</div></div>'
+            '<p id="outside">untouched</p>',
+            1,
+        )
+        page = page.replace("<html ", '<html data-tairitsu-root="host-panel" ', 1)
     if scenario in WORKER_SCENARIOS:
         # W7: the worker lane is opt-in through this attribute; without it the
         # page boots on the main thread and a "worker" scenario would pass for
@@ -525,7 +555,7 @@ def build_dist(scenario, dest):
     glue_path = os.path.join(dest, "glue-runtime.js")
     # `two-instances` needs the shipped bundle (the instance API lives there);
     # the component scenarios only need the page's import map to stay green.
-    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi", "worker-terminate"):
+    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi", "worker-terminate", "custom-root"):
         if not ensure_glue_bundle(glue_path):
             raise RuntimeError(
                 "the two-instances control needs the real glue bundle "
@@ -820,6 +850,8 @@ def self_check():
         "worker-terminate",
         "worker-refused",
         "worker-kill",
+        # W8: the host-owned mount root has no other browser-level control.
+        "custom-root",
     )
     for capability_scenario in REQUIRED_CONTROLS:
         if capability_scenario not in SCENARIOS:
@@ -1085,6 +1117,38 @@ def main():
                 elif state.get("pageRanEntry") is True:
                     failures.append("the entry ran on the page: this is the main-thread lane")
 
+            if args.scenario == "custom-root":
+                state = evaluate(
+                    base,
+                    "(() => ({"
+                    " rootExists: !!document.getElementById('host-panel'),"
+                    " hostNodeKept: !!document.getElementById('host-child'),"
+                    " guestInsideRoot: !!(document.getElementById('host-panel') || {}).querySelector"
+                    "   && !!document.getElementById('host-panel').querySelector('#guest-content'),"
+                    " outsideUntouched: (document.getElementById('outside') || {}).textContent === 'untouched',"
+                    " shellInsideRoot: !!document.getElementById('host-panel') &&"
+                    "   (document.getElementById('host-panel').contains(document.getElementById('app'))),"
+                    " hostIdKept: (document.getElementById('host-panel') || {}).id === 'host-panel',"
+                    " mountHost: !!(globalThis.__TAIRITSU_MOUNT_ROOT__ || {}).host"
+                    "}))()",
+                )
+                if not isinstance(state, dict):
+                    failures.append("custom-root state unreadable: " + repr(state))
+                else:
+                    if not state.get("rootExists"):
+                        failures.append("the host root was removed")
+                    if not state.get("hostNodeKept"):
+                        failures.append("the guest cleared the host node inside its root")
+                    if not state.get("guestInsideRoot"):
+                        failures.append("the guest content is not inside the host root")
+                    if not state.get("outsideUntouched"):
+                        failures.append("the boot touched content outside the mount root")
+                    if not state.get("hostIdKept"):
+                        failures.append("the boot changed the host root's own id")
+                    if not state.get("shellInsideRoot"):
+                        failures.append("the guest shell is not inside the host root")
+                    if not state.get("mountHost"):
+                        failures.append("the boot did not record the host root as host-owned")
             if args.scenario == "worker-terminate":
                 # The kill path without a spinning worker: boot normally, then
                 # terminate and check both halves of the reclaim — the Worker is
