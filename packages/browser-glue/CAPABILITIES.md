@@ -25,16 +25,20 @@ lives in three places:
   `@tairitsu-glue/` / `tairitsu-browser:full/` prefix and without the version
   suffix (`document`, `element-css-inline-style`, …).
 * `wasiModules` — a subset of `cli`, `clocks`, `filesystem`, `io`, `random`,
-  `sockets`. An **empty list means no WASI shim at all**, which is how a
-  pure-function world gets built and served without the `wasi:cli/clocks` stub
-  the toolchain links in. (Removing those stubs from the *artifact* is a
+  `sockets`. Anything else is a build/boot error, exactly like an unknown
+  interface. An **empty list means nothing from WASI is injected and the shim
+  modules are not even fetched** — how a pure-function world is served without
+  the `wasi:cli/clocks` stub at runtime. (Removing those stubs from the *artifact* is a
   separate, build-side job — see "Not in this cut" below.)
 
 A component without a declaration gets the default set: every interface the glue
-registry provides (25 today) plus all six shim modules. The default is emitted
-from the registry, so adding an interface to the registry changes the default in
-the same commit — the test in `packages/browser-glue/test/instance.test.mjs`
-pins both the list and the count, and fails if the data file is edited by hand.
+registry provides (25 today) plus all six shim modules. The default is **emitted
+from the registry** (`registryInterfaceNames()`), and the test in
+`packages/browser-glue/test/instance.test.mjs` re-emits into a fresh directory
+and compares the emitted list with the registry's keys, the shim list with the
+six modules, and the count with 25 — so a hand edit of the emitter's map, a
+dropped interface or a new one without a matching registry entry all fail. The
+data file itself is a build artifact; it is not shipped as a source of truth.
 
 ## Denial semantics
 
@@ -49,6 +53,17 @@ Both directions are errors, and both are reported before anything runs:
 Either failure sets `data-tairitsu-error="capability-denied"` (not the generic
 `instantiate-failed`), so a page can tell "the component asked for something it
 was not granted" apart from "the wasm would not load".
+
+## When the declaration is not loaded
+
+The emitted interface modules check the declaration at import time and **fail
+open** when `globalThis.__TAIRITSU_CAPABILITIES__` is unset: "no declaration
+loaded yet" is not the same as "not granted". That state is only reachable when a
+page imports a `/glue/<interface>.js` module directly (the URL is public): the
+boot always loads the declaration and publishes it *before* the wrapper — and
+therefore the glue modules — is imported. A component cannot trigger it; a page
+that does so is the host acting on its own behalf, which is the boundary this
+grant draws.
 
 ## Scope of the grant
 
