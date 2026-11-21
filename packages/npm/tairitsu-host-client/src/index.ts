@@ -209,6 +209,163 @@ interface Instantiable {
  * `instantiate(imports)` and the jco-style `instantiate(resolveCoreModule,
  * imports)`), because both ship in the wild and the page loader supports both.
  */
+
+/**
+ * Build the surface from a module the consumer has ALREADY imported.
+ *
+ * This is the synchronous door: a wrapper in the consumer's static module graph
+ * has its exports callable immediately, which is what a sync facade needs.
+ * Capability enforcement is the same as `loadComponent` (the declaration is
+ * checked before anything is handed over); the lifecycle is identical.
+ *
+ * ```ts
+ * import * as wrapper from "./component/wrapper.js";
+ * publishCapabilities({ interfaces: [], wasiModules: [] });
+ * const component = createSurface(wrapper, { interfaces: [], wasiModules: [] });
+ * ```
+ *
+ * A module that needs instantiating (an `instantiate`/`default`/`init` export)
+ * must go through `loadComponent` instead — this door is for namespaces that are
+ * already a component.
+ */
+export function createSurface(
+  module: Record<string, unknown>,
+  capabilities: CapabilityDeclaration = {},
+  glue: Record<string, unknown> = {},
+  wasi: Record<string, unknown> = {},
+): HostComponent {
+  const instance = ensureSurface(module, "the wrapper namespace");
+  if (
+    typeof instance.instantiate === "function" ||
+    typeof instance.default === "function" ||
+    typeof instance.init === "function"
+  ) {
+    throw new HostClientError(
+      "needs-loading",
+      "this wrapper needs instantiation; use loadComponent (or loadComponent({ module })) instead",
+    );
+  }
+  // Same gate as the async door: refuse a declaration the host cannot satisfy
+  // before handing out any call surface.
+  buildImports(capabilities, glue, wasi);
+  return makeSurface(instance);
+}
+
+/**
+ * Build the call surface for an already-instantiated component.
+ *
+ * Synchronous by construction — this is what a sync facade over a component
+ * needs (the wrapper is in the consumer's module graph, so its exports are
+ * callable immediately). `loadComponent` uses it after instantiating.
+ */
+function ensureSurface(value: unknown, shape: string): Record<string, unknown> {
+  if (value === null || typeof value !== "object") {
+    throw new HostClientError(
+      "instantiate-failed",
+      `${shape} resolved to ${value === null ? "null" : typeof value} ` +
+        "a component must resolve to an object of exports",
+    );
+  }
+  return value as Record<string, unknown>;
+};
+
+function makeSurface(instance: Record<string, unknown>): HostComponent {
+let stopped = false;
+let inFlight = 0;
+let idleWaiters: Array<() => void> = [];
+
+const settleIdle = () => {
+  const waiters = idleWaiters;
+  idleWaiters = [];
+  for (const resolve of waiters) resolve();
+};
+
+// Every holder `pickExport` can resolve must be behind the same gate, or
+// `exports.<holder>.<fn>()` walks around `stop()`.
+const guardedView = (holder: Record<string, unknown>): Record<string, unknown> =>
+  new Proxy(holder, {
+    get(target, property) {
+      if (typeof property !== "string") return Reflect.get(target, property);
+      // Resolve WITHIN this holder first: `exports.instance.encode` must call
+      // the instance-shaped export, not the first holder that happens to carry
+      // the same name.
+      const own = hasOwn(target, property) ? Reflect.get(target, property) : undefined;
+      if (typeof own === "function") {
+        return (...args: unknown[]) => surface.invoke(property, own as (...a: unknown[]) => unknown, args);
+      }
+      if (own && typeof own === "object" && !Array.isArray(own)) {
+        return guardedView(own as Record<string, unknown>);
+      }
+      const exported = pickExport(instance, property);
+      if (typeof exported === "function") {
+        return (...args: unknown[]) => surface.call(property, ...args);
+      }
+      return own;
+    },
+  });
+const exportsView = guardedView(instance);
+
+const invoke = <T = unknown>(
+  name: string,
+  resolved: (...args: unknown[]) => unknown,
+  args: unknown[],
+): T => {
+  if (stopped) {
+    throw new HostClientError("stopped", `this component was stopped; "${name}" is not callable`);
+  }
+  inFlight += 1;
+  try {
+    const value = resolved(...args);
+    if (value !== null && typeof (value as { then?: unknown })?.then === "function") {
+      void Promise.resolve(value as PromiseLike<unknown>).catch(() => {});
+      throw new HostClientError(
+        "async-export",
+        `"${name}" returned a thenable; this client exposes a synchronous surface only`,
+      );
+    }
+    return value as T;
+  } finally {
+    inFlight -= 1;
+    if (inFlight === 0) settleIdle();
+  }
+};
+
+const surface: HostComponent & {
+  invoke: (name: string, resolved: (...a: unknown[]) => unknown, args: unknown[]) => unknown;
+} = {
+  exports: exportsView,
+  invoke,
+  get stopped() {
+    return stopped;
+  },
+  call<T = unknown>(name: string, ...args: unknown[]): T {
+    if (stopped) {
+      throw new HostClientError("stopped", `this component was stopped; "${name}" is not callable`);
+    }
+    const resolved = pickExport(instance, name);
+    if (typeof resolved !== "function") {
+      throw new HostClientError("no-export", `the component exports no "${name}"`);
+    }
+    return invoke<T>(name, resolved as (...callArgs: unknown[]) => unknown, args);
+  },
+  async stop(): Promise<void> {
+    // Mark first (no new calls), let the guest wind down its own state if it
+    // exposes the cooperative hook, then drain.
+    stopped = true;
+    const guestStop = pickExport(instance, "stop");
+    if (typeof guestStop === "function") {
+      await (guestStop as () => Promise<void> | void)();
+    }
+    await surface.whenIdle();
+  },
+  whenIdle(): Promise<void> {
+    if (inFlight === 0) return Promise.resolve();
+    return new Promise<void>((resolve) => idleWaiters.push(resolve));
+  },
+};
+return surface;
+}
+
 export async function loadComponent(options: LoadComponentOptions): Promise<HostComponent> {
   const { wrapper, capabilities = {}, glue = {}, wasi = {}, loaders } = options;
   const imports = buildImports(capabilities, glue, wasi);
@@ -254,16 +411,6 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
     (module.default as Instantiable["default"]) ??
     (module.init as Instantiable["init"]);
 
-  const ensureSurface = (value: unknown, shape: string): Record<string, unknown> => {
-    if (value === null || typeof value !== "object") {
-      throw new HostClientError(
-        "instantiate-failed",
-        `the component wrapper ${url} resolved to ${value === null ? "null" : typeof value} ` +
-          `through ${shape}; a component must resolve to an object of exports`,
-      );
-    }
-    return value as Record<string, unknown>;
-  };
 
   let instance: Record<string, unknown>;
   if (typeof candidate === "function") {
@@ -302,98 +449,5 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
     instance = ensureSurface(module, "the wrapper namespace");
   }
 
-  let stopped = false;
-  let inFlight = 0;
-  let idleWaiters: Array<() => void> = [];
-
-  const settleIdle = () => {
-    const waiters = idleWaiters;
-    idleWaiters = [];
-    for (const resolve of waiters) resolve();
-  };
-
-  // Every holder `pickExport` can resolve must be behind the same gate, or
-  // `exports.<holder>.<fn>()` walks around `stop()`.
-  const guardedView = (holder: Record<string, unknown>): Record<string, unknown> =>
-    new Proxy(holder, {
-      get(target, property) {
-        if (typeof property !== "string") return Reflect.get(target, property);
-        // Resolve WITHIN this holder first: `exports.instance.encode` must call
-        // the instance-shaped export, not the first holder that happens to carry
-        // the same name.
-        const own = hasOwn(target, property) ? Reflect.get(target, property) : undefined;
-        if (typeof own === "function") {
-          return (...args: unknown[]) => surface.invoke(property, own as (...a: unknown[]) => unknown, args);
-        }
-        if (own && typeof own === "object" && !Array.isArray(own)) {
-          return guardedView(own as Record<string, unknown>);
-        }
-        const exported = pickExport(instance, property);
-        if (typeof exported === "function") {
-          return (...args: unknown[]) => surface.call(property, ...args);
-        }
-        return own;
-      },
-    });
-  const exportsView = guardedView(instance);
-
-  const invoke = <T = unknown>(
-    name: string,
-    resolved: (...args: unknown[]) => unknown,
-    args: unknown[],
-  ): T => {
-    if (stopped) {
-      throw new HostClientError("stopped", `this component was stopped; "${name}" is not callable`);
-    }
-    inFlight += 1;
-    try {
-      const value = resolved(...args);
-      if (value !== null && typeof (value as { then?: unknown })?.then === "function") {
-        void Promise.resolve(value as PromiseLike<unknown>).catch(() => {});
-        throw new HostClientError(
-          "async-export",
-          `"${name}" returned a thenable; this client exposes a synchronous surface only`,
-        );
-      }
-      return value as T;
-    } finally {
-      inFlight -= 1;
-      if (inFlight === 0) settleIdle();
-    }
-  };
-
-  const surface: HostComponent & {
-    invoke: (name: string, resolved: (...a: unknown[]) => unknown, args: unknown[]) => unknown;
-  } = {
-    exports: exportsView,
-    invoke,
-    get stopped() {
-      return stopped;
-    },
-    call<T = unknown>(name: string, ...args: unknown[]): T {
-      if (stopped) {
-        throw new HostClientError("stopped", `this component was stopped; "${name}" is not callable`);
-      }
-      const resolved = pickExport(instance, name);
-      if (typeof resolved !== "function") {
-        throw new HostClientError("no-export", `the component exports no "${name}"`);
-      }
-      return invoke<T>(name, resolved as (...callArgs: unknown[]) => unknown, args);
-    },
-    async stop(): Promise<void> {
-      // Mark first (no new calls), let the guest wind down its own state if it
-      // exposes the cooperative hook, then drain.
-      stopped = true;
-      const guestStop = pickExport(instance, "stop");
-      if (typeof guestStop === "function") {
-        await (guestStop as () => Promise<void> | void)();
-      }
-      await surface.whenIdle();
-    },
-    whenIdle(): Promise<void> {
-      if (inFlight === 0) return Promise.resolve();
-      return new Promise<void>((resolve) => idleWaiters.push(resolve));
-    },
-  };
-  return surface;
+  return makeSurface(instance);
 }

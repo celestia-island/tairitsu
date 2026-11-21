@@ -26,6 +26,22 @@ import * as wrapper from "./qr/wrapper.js"; // static: bundlers see it
 const qr = await loadComponent({ module: wrapper, capabilities: { interfaces: [], wasiModules: [] } });
 ```
 
+For a **synchronous** facade (`qrMatrix` is the first), build the surface from
+the statically imported module — no await anywhere in the call path:
+
+```ts
+import * as wrapper from "./qr/wrapper.js";
+import { createSurface, publishCapabilities } from "@celestia-island/tairitsu-host-client";
+
+const CAPABILITIES = { interfaces: [], wasiModules: [] };
+publishCapabilities(CAPABILITIES);          // before the import evaluates the glue modules
+const qr = createSurface(wrapper, CAPABILITIES);
+const matrix = qr.call<boolean[][]>("encode", text, opts);   // synchronous
+```
+
+`createSurface` refuses a wrapper that needs instantiating (`needs-loading`) and
+applies the same capability gate as `loadComponent`.
+
 For a dynamic load, `loadComponent` orders the publish itself:
 
 ```ts

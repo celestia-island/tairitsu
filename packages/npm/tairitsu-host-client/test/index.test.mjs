@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildImports, HostClientError, loadComponent, publishCapabilities } from "../src/index.ts";
+import { buildImports, createSurface, HostClientError, loadComponent, publishCapabilities } from "../src/index.ts";
 
 const fakeGlue = { document: { createElement: () => "el" }, element: { setAttribute: () => {} } };
 
@@ -277,4 +277,35 @@ test("the bundler-safe route hands in an already-imported module", async () => {
   assert.equal(component.call("encode"), "from-module");
   assert.equal(globalThis.__TAIRITSU_CAPABILITIES__, undefined, "declaration restored after the module route");
   assert.equal(seenDuringImport, undefined);
+});
+
+test("createSurface is the synchronous door for a static import", () => {
+  const component = createSurface({ encode: (text) => `encoded:${text}` }, {
+    interfaces: [],
+    wasiModules: [],
+  });
+  const result = component.call("encode", "hi");
+  assert.equal(result, "encoded:hi");
+  assert.equal(typeof result.then, "undefined");
+});
+
+test("createSurface refuses a declaration the host cannot satisfy", () => {
+  assert.throws(
+    () => createSurface({ encode: () => 1 }, { interfaces: ["document"] }),
+    (error) => error instanceof HostClientError && error.kind === "capability-denied",
+  );
+});
+
+test("createSurface points an instantiable module at loadComponent", () => {
+  assert.throws(
+    () => createSurface({ instantiate: () => ({}) }),
+    (error) => error instanceof HostClientError && error.kind === "needs-loading",
+  );
+});
+
+test("createSurface's surface is gated by stop() like the async door", async () => {
+  const component = createSurface({ encode: () => "ok" });
+  assert.equal(component.call("encode"), "ok");
+  await component.stop();
+  assert.throws(() => component.call("encode"), (error) => error.kind === "stopped");
 });
