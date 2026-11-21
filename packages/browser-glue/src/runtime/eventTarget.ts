@@ -1,4 +1,4 @@
-import { currentInstance, installGlobalDelegates } from "./instance.ts";
+import { installGlobalDelegates } from "./instance.ts";
 
 // W4: listener/event tables belong to the current instance (see instance.ts).
 installGlobalDelegates();
@@ -124,7 +124,7 @@ export const eventTarget_exports = {
 
       element.addEventListener(eventType, listener, useCapture);
       // W4: the listener belongs to this instance; dispose() removes it.
-      currentInstance().reclaimables.listeners.add({
+      globalThis.__TAIRITSU_CURRENT__().reclaimables.listeners.add({
         target: element,
         type: eventType,
         handler: listener,

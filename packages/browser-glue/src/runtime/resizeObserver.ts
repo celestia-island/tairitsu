@@ -1,4 +1,3 @@
-import { currentInstance } from "./instance.ts";
 
 export const resizeObserver_exports = {
   observe(self: bigint, target: bigint, options: any) { // ts-escape-ok: retires with L40
@@ -7,7 +6,7 @@ export const resizeObserver_exports = {
     if (observer && el) {
       observer.observe(el, options);
       // W4: reclaimed by dispose().
-      currentInstance().reclaimables.observers.add(observer);
+      globalThis.__TAIRITSU_CURRENT__().reclaimables.observers.add(observer);
     }
   },
   unobserve(self: bigint, target: bigint) {

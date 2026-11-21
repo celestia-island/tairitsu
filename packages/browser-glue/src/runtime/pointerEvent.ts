@@ -24,15 +24,15 @@ function eventOf(self: bigint): Partial<PointerEvent> {
  * entries to `__eventHandles` per call, forever — multiplying the pre-existing
  * (never-deleted) per-dispatch growth. One handle per sub-event object instead.
  */
-const subEventHandles = new WeakMap<Event, bigint>();
+// W4: per-instance (delegate), see instance.ts.
 
 /** Register a sub-event once and return its stable handle. */
 function storeEvent(event: Event): bigint {
-  const cached = subEventHandles.get(event);
+  const cached = globalThis.__subEventHandles.get(event);
   if (cached !== undefined) return cached;
   const handle = globalThis.__nextEventHandle++;
   globalThis.__eventHandles.set(handle, event);
-  subEventHandles.set(event, handle);
+  globalThis.__subEventHandles.set(event, handle);
   return handle;
 }
 

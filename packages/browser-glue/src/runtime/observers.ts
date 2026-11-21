@@ -1,4 +1,3 @@
-import { currentInstance } from "./instance.ts";
 
 export const observers_exports = {
   getBoundingClientRect(element: bigint) {
@@ -15,7 +14,7 @@ export const observers_exports = {
     if (observer && el) {
       observer.observe(el, options || { childList: true, subtree: true });
       // W4: reclaimed by dispose().
-      currentInstance().reclaimables.observers.add(observer);
+      globalThis.__TAIRITSU_CURRENT__().reclaimables.observers.add(observer);
     }
   },
 };

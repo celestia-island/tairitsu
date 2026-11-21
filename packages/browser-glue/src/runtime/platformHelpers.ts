@@ -39,6 +39,8 @@ export const platformHelpers_exports = {
       ) {
         const exp = globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"];
         (exp.onTimeout || exp.on_timeout)?.(callbackId);
+    // W4: owned by the instance, cleared on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.timers.add(timeoutId);
       }
     }, ms);
     s.timeoutCallbacks.set(id, timeoutId);
@@ -61,6 +63,8 @@ export const platformHelpers_exports = {
       ) {
         const exp = globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"];
         (exp.onInterval || exp.on_interval)?.(callbackId);
+    // W4: owned by the instance, cleared on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.intervals.add(intervalId);
       }
     }, ms);
     s.intervalCallbacks.set(id, intervalId);
@@ -119,6 +123,8 @@ export const platformHelpers_exports = {
         ]?.on_resize?.(callbackId, entryHandles);
       }
     });
+    // W4: owned by the instance, disconnected on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.observers.add(observer);
     return globalThis.__storeElement(observer);
   },
   observeResize(observer: bigint, element: bigint) {
@@ -157,6 +163,8 @@ export const platformHelpers_exports = {
         ]?.on_mutation?.(callbackId, recordHandles);
       }
     });
+    // W4: owned by the instance, disconnected on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.observers.add(observer);
     return globalThis.__storeElement(observer);
   },
   observeMutations(observer: bigint, target: bigint, _options: any) { // ts-escape-ok: retires with L40
@@ -419,6 +427,13 @@ export const platformHelpers_exports = {
       }
     };
     window.addEventListener("resize", handler);
+    // W4: owned by the instance, removed on dispose.
+    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.listeners.add({
+      target: window,
+      type: "resize",
+      handler,
+      options: undefined,
+    });
     const handle = g.__nextHandle++;
     g.__tairitsuResizeListeners.set(handle, handler);
     return handle;

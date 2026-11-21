@@ -30,7 +30,15 @@ export interface InstanceTables {
   nodeListHandles: Map<bigint, unknown>;
   cssStyleDeclarationHandles: Map<bigint, unknown>;
   listenerHandles: Map<bigint, unknown>;
-  scrollListeners: Map<bigint, unknown>;
+  tairitsuScrollListeners: Map<bigint, unknown>;
+  // Page-global indexes that hand handles between instances if they stay
+  // shared: the element→handle reverse index and the (element,type)→listener
+  // cache used by the dispatch bridge.
+  elementReverseMap: Map<unknown, unknown>;
+  listenerByElement: Map<unknown, unknown>;
+  tairitsuResizeListeners: Map<bigint, unknown>;
+  tairitsuWsCallbacks: Map<bigint, unknown>;
+  subEventHandles: WeakMap<object, bigint>;
   eventHandles: Map<bigint, unknown>;
   dispatchingEvents: Set<string>;
 }
@@ -64,7 +72,12 @@ export class TairitsuInstance {
     nodeListHandles: new Map(),
     cssStyleDeclarationHandles: new Map(),
     listenerHandles: new Map(),
-    scrollListeners: new Map(),
+    tairitsuScrollListeners: new Map(),
+    elementReverseMap: new Map(),
+    listenerByElement: new Map(),
+    tairitsuResizeListeners: new Map(),
+    tairitsuWsCallbacks: new Map(),
+    subEventHandles: new WeakMap(),
     eventHandles: new Map(),
     dispatchingEvents: new Set(),
   };
@@ -76,16 +89,17 @@ export class TairitsuInstance {
    * A's object of the same number instead of failing as "not found". Handles
    * stay bigints; the seed is module state, not `globalThis` state.
    */
+  readonly seed: bigint = BigInt(this.id) << 32n;
   counters = {
-    nextHandle: BigInt(this.id) << 32n,
-    nextMutationRecord: 1n,
-    nextResizeObserverEntry: 1n,
-    nextResizeObserverSizeHandle: 1n,
-    nextDomRectHandle: 1n,
-    nextNodeList: 1n,
-    nextCssStyleDeclarationHandle: 1n,
-    nextListenerHandle: 1n,
-    nextEventHandle: 1n,
+    nextHandle: this.seed,
+    nextMutationRecord: this.seed,
+    nextResizeObserverEntry: this.seed,
+    nextResizeObserverSizeHandle: this.seed,
+    nextDomRectHandle: this.seed,
+    nextNodeList: this.seed,
+    nextCssStyleDeclarationHandle: this.seed,
+    nextListenerHandle: this.seed,
+    nextEventHandle: this.seed,
   };
 
   readonly reclaimables: Reclaimables = {
@@ -103,8 +117,10 @@ export class TairitsuInstance {
     this.disposed = true;
 
     for (const table of Object.values(this.tables)) {
-      if (table instanceof Map) table.clear();
-      else table.clear();
+      // WeakMaps cannot be cleared; dropping the instance drops them.
+      if (typeof (table as { clear?: () => void }).clear === "function") {
+        (table as { clear: () => void }).clear();
+      }
     }
 
     for (const timer of this.reclaimables.timers) globalThis.clearTimeout(timer);
@@ -129,11 +145,10 @@ export class TairitsuInstance {
     this.reclaimables.observers.clear();
     this.reclaimables.listeners.clear();
 
-    // Reset to the instance's own seed, so a disposed instance cannot hand out
-    // a handle number another instance already used.
-    this.counters.nextHandle = BigInt(this.id) << 32n;
+    // Every counter resets to the instance's own seed, so a disposed instance
+    // cannot hand out a number another instance already used.
     for (const key of Object.keys(this.counters) as (keyof typeof this.counters)[]) {
-      if (key !== "nextHandle") this.counters[key] = 1n;
+      this.counters[key] = this.seed;
     }
   }
 }
@@ -208,6 +223,11 @@ const TABLE_NAMES = [
   "__cssStyleDeclarationHandles",
   "__listenerHandles",
   "__tairitsuScrollListeners",
+  "__elementReverseMap",
+  "__listenerByElement",
+  "__tairitsuResizeListeners",
+  "__tairitsuWsCallbacks",
+  "__subEventHandles",
   "__eventHandles",
   "__dispatchingEvents",
 ] as const;
@@ -268,7 +288,17 @@ export function installGlobalDelegates(): void {
  * Public API for the page / the browser e2e: create, inspect and dispose
  * instances. The W4 isolation test drives exactly these.
  */
+/**
+ * Blob-safe handle to the current instance. `generateModuleCode` stringifies
+ * function bodies into a separate module, where module-scope bindings do not
+ * exist — those bodies must reach the instance through `globalThis`.
+ */
+export function installCurrentAccessor(): void {
+  (globalThis as any).__TAIRITSU_CURRENT__ = () => currentInstance(); // ts-escape-ok: retires with L40
+}
+
 export function installInstanceApi(): void {
+  installCurrentAccessor();
   (globalThis as any).__TAIRITSU_INSTANCES__ = { // ts-escape-ok: retires with L40
     create: () => createInstance(),
     dispose: (instance: TairitsuInstance) => disposeInstance(instance),

@@ -63,16 +63,41 @@ test("handles are stored per instance, not per page", () => {
   disposeInstance(b);
 });
 
-test("the handle counters are per instance and never collide", () => {
+test("EVERY handle counter is per instance and never collides", () => {
   const a = createInstance();
   const b = createInstance();
-  const firstA = store(a, "a1");
-  const firstB = store(b, "b1");
-  assert.ok(firstA >= 0n && firstB >= 0n);
-  assert.notEqual(firstA, firstB, "the two instances share a handle space");
-  assert.equal(typeof firstA, "bigint");
+  const names = [
+    "nextHandle",
+    "nextMutationRecord",
+    "nextResizeObserverEntry",
+    "nextResizeObserverSizeHandle",
+    "nextDomRectHandle",
+    "nextNodeList",
+    "nextCssStyleDeclarationHandle",
+    "nextListenerHandle",
+    "nextEventHandle",
+  ];
+  for (const name of names) {
+    assert.notEqual(a.counters[name], b.counters[name], `${name} is shared across instances`);
+    assert.equal(typeof a.counters[name], "bigint", `${name} is not a bigint counter`);
+  }
   disposeInstance(a);
   disposeInstance(b);
+});
+
+test("the page-global indexes are delegated too", () => {
+  for (const name of [
+    "__elementReverseMap",
+    "__listenerByElement",
+    "__tairitsuResizeListeners",
+    "__tairitsuScrollListeners",
+    "__tairitsuWsCallbacks",
+    "__subEventHandles",
+  ]) {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
+    assert.ok(descriptor, `${name} is not defined`);
+    assert.equal(typeof descriptor.get, "function", `${name} is not a delegating accessor`);
+  }
 });
 
 test("disposing an instance clears its handles (old handles stop resolving)", () => {
@@ -187,6 +212,62 @@ test("currentInstance() creates the page default on first use", () => {
   assert.ok(implicit instanceof TairitsuInstance);
   assert.equal(implicit.disposed, false);
   assert.ok(listInstances().includes(implicit));
+});
+
+test("every delegate name maps to a real table (the scroll regression)", async () => {
+  // The first version shipped `__tairitsuScrollListeners` pointing at a table
+  // key that did not exist (the field was `scrollListeners`), so the getter was
+  // undefined and `onScroll` threw on every guest call. Every delegate must
+  // resolve to a Map/Set/WeakMap, never undefined.
+  await import("../src/runtime/helpers.ts");
+  const instance = createInstance();
+  const previous = setCurrentInstance(instance);
+  const originalWindow = globalThis.window;
+  try {
+    const names = [
+      "__elementHandles",
+      "__documentHandles",
+      "__nodeHandles",
+      "__textHandles",
+      "__mutationRecordHandles",
+      "__resizeObserverEntryHandles",
+      "__resizeObserverSizeHandles",
+      "__domRectHandles",
+      "__listenerHandles",
+      "__eventHandles",
+      "__dispatchingEvents",
+      "__tairitsuScrollListeners",
+      "__elementReverseMap",
+      "__listenerByElement",
+      "__tairitsuResizeListeners",
+      "__tairitsuWsCallbacks",
+      "__subEventHandles",
+    ];
+    for (const name of names) {
+      const value = globalThis[name];
+      assert.ok(
+        value instanceof Map || value instanceof Set || value instanceof WeakMap,
+        `${name} resolves to ${typeof value} instead of a table`,
+      );
+    }
+    // …and the guest-facing port that used it still works (node has no
+    // `window`, so give it the two methods the port calls).
+    const windowCalls = [];
+    globalThis.window = {
+      addEventListener: (type) => windowCalls.push(["add", type]),
+      removeEventListener: (type) => windowCalls.push(["remove", type]),
+    };
+    const { platformHelpers_exports } = await import("../src/runtime/platformHelpers.ts");
+    const handle = platformHelpers_exports.onScroll(1n);
+    assert.equal(typeof handle, "bigint", "onScroll no longer returns a handle");
+    assert.equal(instance.tables.tairitsuScrollListeners.size, 1, "the scroll handler was not stored");
+    assert.deepEqual(windowCalls[0], ["add", "scroll"]);
+    disposeInstance(instance);
+    assert.deepEqual(windowCalls.at(-1), ["remove", "scroll"], "dispose did not remove the listener");
+  } finally {
+    globalThis.window = originalWindow;
+    setCurrentInstance(previous);
+  }
 });
 
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {
