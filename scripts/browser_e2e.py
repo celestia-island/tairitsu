@@ -63,6 +63,7 @@ SCENARIOS = (
     "capability-overreach",
     "capability-wasi",
     "worker-boot",
+    "worker-terminate",
     "worker-kill",
     "glue-imports",
     "two-instances",
@@ -177,6 +178,7 @@ WRAPPERS = {
     "capability-overreach": GLUE_IMPORT_WRAPPER,
     "capability-wasi": GLUE_IMPORT_WRAPPER,
     "worker-boot": WORKER_WRAPPER,
+    "worker-terminate": WORKER_WRAPPER,
     "worker-kill": DEAD_LOOP_WRAPPER,
     # The isolation scenario boots the same component, then drives the instance
     # API from the test side.
@@ -438,13 +440,18 @@ def render_boot_script():
     return boot
 
 
-WORKER_SCENARIOS = {"worker-boot", "worker-kill"}
+WORKER_SCENARIOS = {"worker-boot", "worker-terminate", "worker-kill"}
 
 
-def render_page():
+def render_page(scenario=None):
     """Render `index.html.template` with the e2e context."""
     with open(os.path.join(TEMPLATE_DIR, "index.html.template"), encoding="utf-8") as fh:
         page = fh.read()
+    if scenario in WORKER_SCENARIOS:
+        # W7: the worker lane is opt-in through this attribute; without it the
+        # page boots on the main thread and a "worker" scenario would pass for
+        # the wrong reason.
+        page = page.replace("<html ", "<html data-tairitsu-worker ", 1)
     for key, value in PAGE_CONTEXT.items():
         page = page.replace("{{ " + key + " }}", value)
         page = page.replace("{{" + key + "}}", value)
@@ -484,7 +491,7 @@ def build_dist(scenario, dest):
     """A dist-shaped tree: the real page, the real loader, a stub component."""
     os.makedirs(os.path.join(dest, "component-wrapper"), exist_ok=True)
     with open(os.path.join(dest, "index.html"), "w", encoding="utf-8") as fh:
-        fh.write(render_page())
+        fh.write(render_page(scenario))
     with open(os.path.join(dest, "boot.js"), "w", encoding="utf-8") as fh:
         fh.write(render_boot_script())
     with open(os.path.join(dest, "glue-worker.js"), "w", encoding="utf-8") as fh:
@@ -507,7 +514,7 @@ def build_dist(scenario, dest):
     glue_path = os.path.join(dest, "glue-runtime.js")
     # `two-instances` needs the shipped bundle (the instance API lives there);
     # the component scenarios only need the page's import map to stay green.
-    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
+    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi", "worker-terminate"):
         if not ensure_glue_bundle(glue_path):
             raise RuntimeError(
                 "the two-instances control needs the real glue bundle "
@@ -1019,6 +1026,46 @@ def main():
                     failures.append(f"the glue modules did not provide their exports: {state!r}")
                 else:
                     print("glue imports resolved statically:", state)
+            if args.scenario == "worker-terminate":
+                # The kill path without a spinning worker: boot normally, then
+                # terminate and check both halves of the reclaim — the Worker is
+                # gone AND the page's W4 instance was disposed.
+                active_before = evaluate(
+                    base,
+                    "!!(globalThis.__TAIRITSU_WORKER__ && globalThis.__TAIRITSU_WORKER__.active())",
+                )
+                instances_before = evaluate(
+                    base,
+                    "globalThis.__TAIRITSU_INSTANCES__ ? globalThis.__TAIRITSU_INSTANCES__.list().length : -1",
+                )
+                killed = evaluate(
+                    base,
+                    "globalThis.__TAIRITSU_WORKER__ ? globalThis.__TAIRITSU_WORKER__.terminate() : 'missing'",
+                )
+                active_after = evaluate(
+                    base,
+                    "!!(globalThis.__TAIRITSU_WORKER__ && globalThis.__TAIRITSU_WORKER__.active())",
+                )
+                instances_after = evaluate(
+                    base,
+                    "globalThis.__TAIRITSU_INSTANCES__ ? globalThis.__TAIRITSU_INSTANCES__.list().length : -1",
+                )
+                if active_before is not True:
+                    failures.append("the worker was not running before terminate")
+                if killed is not True:
+                    failures.append(f"terminate() did not report a kill ({killed!r})")
+                if active_after is not False:
+                    failures.append("the worker was still active after terminate")
+                if not (instances_before >= 1 and instances_after == 0):
+                    failures.append(
+                        "terminate() did not dispose the page's W4 instance "
+                        f"({instances_before} -> {instances_after})"
+                    )
+                if not failures:
+                    print(
+                        "worker terminated; W4 instance disposed "
+                        f"({instances_before} -> {instances_after})"
+                    )
             if args.scenario == "worker-kill":
                 # The page is stuck by design; drive terminate + re-boot from
                 # here (an async in-page probe would never resolve).

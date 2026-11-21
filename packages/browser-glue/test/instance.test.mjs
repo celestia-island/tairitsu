@@ -705,6 +705,28 @@ test("buildImports injects only what the declaration names (behavioural)", async
   assert.deepEqual(calls, [1]);
 });
 
+test("the worker lane exists and terminate is the hard kill (W7 pin)", async () => {
+  const boot = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");
+  // opt-in only: the default must stay the main thread
+  assert.match(boot, /tairitsuWorker/, "no worker opt-in attribute");
+  assert.match(boot, /new Worker\('\/glue-worker\.js'/, "no worker host");
+  assert.match(boot, /const terminateWorkerHost = \(\) => \{/, "no terminate path");
+  assert.match(
+    boot,
+    /workerHost\.terminate\(\)[\s\S]{0,200}?instanceApi\.dispose\(bootInstance\)/,
+    "terminate does not dispose the W4 instance",
+  );
+  assert.match(
+    boot,
+    /globalThis\.__TAIRITSU_WORKER__ = \{/,
+    "the hard kill is not exposed",
+  );
+  // the worker host refuses DOM-capability declarations (it has no DOM)
+  const host = await readFile(resolve(here, "../../packager/src/wasm/worker.template.js"), "utf8");
+  assert.match(host, /this lane cannot provide/, "the worker host does not refuse DOM capabilities");
+  assert.match(host, /kind: "capability-denied"/, "the refusal is not a capability failure");
+});
+
 test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {
   // The tables must be accessors whose storage is the instance, not data
   // properties holding Maps. A regression to `globalThis.__elementHandles =
