@@ -296,3 +296,36 @@ jobs:
         run: |
           cd packages/npm/celestia-tairitsu-web-glue
           npm publish --access public --provenance
+
+      # ── @celestia-island/tairitsu-host-client ───────────────────────
+      # Source package (tsc -> dist): install devDeps and let prepublishOnly
+      # build it, the same shape as transport.
+      - name: Skip host-client if already published
+        id: host-client-exists
+        run: |
+          PKG=packages/npm/tairitsu-host-client
+          NAME=$(node -p "require('./${PKG}/package.json').name")
+          VERSION=$(node -p "require('./${PKG}/package.json').version")
+          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/${NAME}/${VERSION}" || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "::warning::${NAME}@${VERSION} already published — skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify host-client dist
+        if: steps.host-client-exists.outputs.skip != 'true'
+        run: |
+          cd packages/npm/tairitsu-host-client
+          npm install --no-audit --no-fund
+          npm run build
+          if [ ! -f "dist/index.js" ] || [ ! -f "dist/index.d.ts" ]; then
+            echo "::error::dist/index.js or dist/index.d.ts missing — build failed"
+            exit 1
+          fi
+          npm pack --dry-run 2>&1 | grep -E "npm notice (name|version|total files|package size)"
+
+      - name: Publish host-client
+        if: steps.host-client-exists.outputs.skip != 'true'
+        run: |
+          cd packages/npm/tairitsu-host-client
+          npm publish --access public --provenance
