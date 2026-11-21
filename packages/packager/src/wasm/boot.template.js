@@ -56,6 +56,72 @@
             },
         };
 
+        // W7: the worker lane is OPT-IN (`<html data-tairitsu-worker>`): the
+        // component is instantiated and run in a dedicated Worker, so a
+        // component that never yields can be terminated without killing the
+        // page. The default (no attribute) is unchanged — main thread.
+        const wantsWorker =
+            document.documentElement.dataset.tairitsuWorker !== undefined &&
+            typeof Worker === 'function';
+        let workerHost = null;
+        let workerCancelled = false;
+
+        const startWorkerBoot = async (capabilities) => {
+            if (workerCancelled) return;
+            // Relative to THIS module, like the loader's own resolution: a page
+            // served from a sub-path gets its own host (and its own wrapper).
+            const worker = new Worker(
+                new URL('glue-worker.js', import.meta.url),
+                { type: 'module' },
+            );
+            workerHost = worker;
+            let settledFlag = false;
+            const settled = new Promise((resolve) => {
+                worker.onmessage = (event) => {
+                    const message = event.data || {};
+                    if (settledFlag) return;
+                    if (message.type === 'ready') {
+                        settledFlag = true;
+                        bootSurface.ready(message.entry);
+                        resolve({ ok: true });
+                    } else if (message.type === 'error') {
+                        settledFlag = true;
+                        bootSurface.fail(message.kind || 'boot-failed', new Error(message.message));
+                        resolve({ ok: false });
+                    }
+                };
+                worker.onerror = (event) => {
+                    // Only while the boot is still undecided: a late uncaught
+                    // error must not tear down a page that already reported
+                    // ready (and leave ready + error set at once).
+                    if (settledFlag) return;
+                    settledFlag = true;
+                    bootSurface.fail('instantiate-failed', new Error(event.message || 'worker error'));
+                    resolve({ ok: false });
+                };
+            });
+            worker.postMessage({ type: 'boot', capabilities });
+            await settled;
+        };
+
+        // The hard kill. `stop` asks a yielding component to wind down; only
+        // `terminate()` can interrupt a synchronous loop, so that is what this
+        // does — plus the main-thread half of the reclaim (the W4 instance).
+        const terminateWorkerHost = () => {
+            // Before the host exists there is nothing to kill, but the boot must
+            // still be cancelled — otherwise a "killed" page boots afterwards.
+            workerCancelled = true;
+            if (!workerHost) return false;
+            workerHost.terminate();
+            workerHost = null;
+            if (instanceApi && bootInstance) instanceApi.dispose(bootInstance);
+            return true;
+        };
+        globalThis.__TAIRITSU_WORKER__ = {
+            terminate: terminateWorkerHost,
+            active: () => workerHost !== null,
+        };
+
         // W6: the component's capability declaration decides what is injected.
         // No declaration → the conservative default set the build emitted; a
         // declaration → exactly that. Nothing else is provided.
@@ -204,7 +270,20 @@
         // Nothing below may run after a refusal: the surface already carries
         // the error. (A thrown refusal would land in the outermost catch and be
         // re-reported as a generic 'boot-failed'.)
-        if (!guestRefused) try {
+        if (!guestRefused && wantsWorker) {
+            // Detached on purpose: the component may never return (that is what
+            // this lane is for), so the page's own module must finish evaluating
+            // — otherwise the `load` event never fires and the page looks hung.
+            void (async () => {
+                try {
+                    const capabilities = await loadCapabilities();
+                    globalThis.__TAIRITSU_CAPABILITIES__ = capabilities;
+                    await startWorkerBoot(capabilities);
+                } catch (error) {
+                    bootSurface.fail('worker-boot-failed', error);
+                }
+            })();
+        } else if (!guestRefused) try {
             const capabilities = await loadCapabilities();
             // W6: the static glue modules check this before they hand out a
             // function, so a declaration reaches them too (W5 made their imports

@@ -61,7 +61,11 @@ SCENARIOS = (
     "capability-exact",
     "capability-undeclared",
     "capability-overreach",
+    "worker-refused",
+    "worker-kill",
     "capability-wasi",
+    "worker-boot",
+    "worker-terminate",
     "glue-imports",
     "two-instances",
     "bad-bytes",
@@ -69,6 +73,32 @@ SCENARIOS = (
     "missing-import",
     "fixture",
 )
+
+# W7: a compute-only component — no DOM, so the worker lane can host it.
+WORKER_WRAPPER = """
+const entry = () => {
+  globalThis.__w3_entry_ran = true;
+  globalThis.__w7_compute = 6 * 7;
+};
+
+const lifecycle = { start: entry };
+export { lifecycle, lifecycle as "tairitsu-browser:full/lifecycle@0.2.0" };
+"""
+
+# The negative control: an entry that never yields. On the main thread this
+# hangs the page; in the worker lane `terminate()` kills it.
+DEAD_LOOP_WRAPPER = """
+const entry = () => {
+  globalThis.__w3_entry_ran = true;
+  while (true) {
+    // A synchronous wasm loop looks exactly like this to the host: it never
+    // returns, so no cooperative stop can reach it.
+  }
+};
+
+const lifecycle = { start: entry };
+export { lifecycle, lifecycle as "tairitsu-browser:full/lifecycle@0.2.0" };
+"""
 
 # The entry the good synthetic component exports: it records that it ran and
 # mutates the page, so "the entry was invoked" is observable from the DOM.
@@ -148,6 +178,10 @@ WRAPPERS = {
     "capability-undeclared": GLUE_IMPORT_WRAPPER,
     "capability-overreach": GLUE_IMPORT_WRAPPER,
     "capability-wasi": GLUE_IMPORT_WRAPPER,
+    "worker-boot": WORKER_WRAPPER,
+    "worker-refused": WORKER_WRAPPER,
+    "worker-terminate": WORKER_WRAPPER,
+    "worker-kill": DEAD_LOOP_WRAPPER,
     # The isolation scenario boots the same component, then drives the instance
     # API from the test side.
     "two-instances": GOOD_WRAPPER,
@@ -162,6 +196,7 @@ FAILING = (
     "missing-import",
     "capability-undeclared",
     "capability-overreach",
+    "worker-refused",
     "capability-wasi",
 )
 
@@ -175,6 +210,7 @@ EXPECTED_CARD = {
     "capability-overreach": "does not provide",
     "capability-undeclared": "is not declared",
     "capability-wasi": "WASI modules the host does not provide",
+    "worker-refused": "this lane cannot provide",
 }
 
 
@@ -379,7 +415,11 @@ def capability_declaration(scenario):
         "missing-import",
         "fixture",
     }
-    if scenario in STUB_SCENARIOS:
+    if scenario == "worker-refused":
+        # The one control that makes the worker host's refusal observable: it
+        # declares an interface the lane cannot provide (it has no DOM).
+        return {"interfaces": ["document"], "wasiModules": []}
+    if scenario in STUB_SCENARIOS or scenario in WORKER_SCENARIOS:
         return {"interfaces": [], "wasiModules": []}
     if scenario == "capability-exact":
         # Exactly what the wrapper imports — the positive control.
@@ -388,6 +428,14 @@ def capability_declaration(scenario):
             "wasiModules": [],
         }
     return default
+
+
+def render_worker_script():
+    """Render `worker.template.js` the way the packager emits `glue-worker.js`."""
+    with open(os.path.join(TEMPLATE_DIR, "worker.template.js"), encoding="utf-8") as fh:
+        # The packager substitutes the build stamp; the harness must too, or the
+        # worker dies on a ReferenceError that looks like a component failure.
+        return fh.read().replace("__TAIRITSU_BUILD__", "e2e")
 
 
 def render_boot_script():
@@ -402,10 +450,19 @@ def render_boot_script():
     return boot
 
 
-def render_page():
+WRAPPER_STEM = "tairitsu_fixture"
+WORKER_SCENARIOS = {"worker-boot", "worker-terminate", "worker-refused", "worker-kill"}
+
+
+def render_page(scenario=None):
     """Render `index.html.template` with the e2e context."""
     with open(os.path.join(TEMPLATE_DIR, "index.html.template"), encoding="utf-8") as fh:
         page = fh.read()
+    if scenario in WORKER_SCENARIOS:
+        # W7: the worker lane is opt-in through this attribute; without it the
+        # page boots on the main thread and a "worker" scenario would pass for
+        # the wrong reason.
+        page = page.replace("<html ", "<html data-tairitsu-worker ", 1)
     for key, value in PAGE_CONTEXT.items():
         page = page.replace("{{ " + key + " }}", value)
         page = page.replace("{{" + key + "}}", value)
@@ -445,9 +502,11 @@ def build_dist(scenario, dest):
     """A dist-shaped tree: the real page, the real loader, a stub component."""
     os.makedirs(os.path.join(dest, "component-wrapper"), exist_ok=True)
     with open(os.path.join(dest, "index.html"), "w", encoding="utf-8") as fh:
-        fh.write(render_page())
+        fh.write(render_page(scenario))
     with open(os.path.join(dest, "boot.js"), "w", encoding="utf-8") as fh:
         fh.write(render_boot_script())
+    with open(os.path.join(dest, "glue-worker.js"), "w", encoding="utf-8") as fh:
+        fh.write(render_worker_script())
     with open(
         os.path.join(dest, "tairitsu-capabilities.json"), "w", encoding="utf-8"
     ) as fh:
@@ -466,7 +525,7 @@ def build_dist(scenario, dest):
     glue_path = os.path.join(dest, "glue-runtime.js")
     # `two-instances` needs the shipped bundle (the instance API lives there);
     # the component scenarios only need the page's import map to stay green.
-    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
+    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi", "worker-terminate"):
         if not ensure_glue_bundle(glue_path):
             raise RuntimeError(
                 "the two-instances control needs the real glue bundle "
@@ -480,13 +539,33 @@ def build_dist(scenario, dest):
     with open(loader_src, encoding="utf-8") as fh:
         loader = fh.read()
     # The dist's wasm stem is `component` (see PAGE_CONTEXT["wasm_file"]).
-    loader = loader.replace("__WASM_STEM__", "component")
+    # A REAL build names the wrapper after the wasm stem. Using a stem that is
+    # not `component` is what makes a hardcoded wrapper path impossible to miss.
+    loader = loader.replace("__WASM_STEM__", WRAPPER_STEM)
     with open(os.path.join(dest, "component-wrapper-loader.js"), "w", encoding="utf-8") as fh:
         fh.write(loader)
     shutil.copyfile(
         os.path.join(TEMPLATE_DIR, "component-boot.template.js"),
         os.path.join(dest, "component-boot.js"),
     )
+    if scenario == "worker-kill":
+        # The re-boot half needs a HEALTHY page in the same dist: the killed
+        # component never returns, and the loader resolves the wrapper from the
+        # stem, so a second directory is the honest way to serve both.
+        healthy = os.path.join(dest, "healthy")
+        os.makedirs(os.path.join(healthy, "component-wrapper"), exist_ok=True)
+        with open(os.path.join(healthy, "component-wrapper", WRAPPER_STEM + ".js"), "w", encoding="utf-8") as fh:
+            fh.write(WRAPPERS["worker-boot"])
+        for name in ("boot.js", "component-boot.js", "component-wrapper-loader.js", "glue-worker.js", "glue-runtime.js"):
+            source = os.path.join(dest, name)
+            if os.path.isfile(source):
+                shutil.copy2(source, os.path.join(healthy, name))
+        with open(os.path.join(healthy, "index.html"), "w", encoding="utf-8") as fh:
+            # The template points at the absolute /boot.js (W5, for route pages);
+            # this sibling lives one level down and must load its OWN copy.
+            fh.write(render_page("worker-boot").replace('src="/boot.js', 'src="boot.js'))
+        with open(os.path.join(healthy, "tairitsu-capabilities.json"), "w", encoding="utf-8") as fh:
+            json.dump({"interfaces": [], "wasiModules": []}, fh)
     wrapper_source = WRAPPERS[scenario]
     if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
         rewritten = rewrite_glue_specifiers(wrapper_source)
@@ -494,7 +573,7 @@ def build_dist(scenario, dest):
             raise RuntimeError("the glue specifier rewrite left a bare specifier")
         wrapper_source = rewritten
     with open(
-        os.path.join(dest, "component-wrapper", "component.js"), "w", encoding="utf-8"
+        os.path.join(dest, "component-wrapper", WRAPPER_STEM + ".js"), "w", encoding="utf-8"
     ) as fh:
         fh.write(wrapper_source)
     # A placeholder core module: the synthetic wrappers never fetch it, but the
@@ -556,10 +635,20 @@ def check_boot_state(state, scenario, *, real_dist=False):
         if expected and expected not in (state.get("appText") or ""):
             failures.append(f"{scenario}: the card does not name the failure ({expected!r} missing)")
     else:
+        if scenario == "worker-kill":
+            # The page is stuck on purpose (the component never returns); its
+            # step-by-step probe owns the assertions. This must come BEFORE the
+            # generic ready check, or the control could never pass.
+            return failures
         if state.get("ready") != "hydrated":
             failures.append(f"good component not ready (ready={state.get('ready')!r})")
         if state.get("error"):
             failures.append(f"good component reported an error ({state['error']!r})")
+        if scenario in WORKER_SCENARIOS:
+            # The entry runs in the Worker: this pure check only sees ready/no
+            # error; the "was it really the Worker" half lives in the run loop
+            # (it needs the page).
+            return failures
         if real_dist:
             # A real build is not instrumented: ready + no error is the whole
             # contract we can observe from the outside.
@@ -719,14 +808,25 @@ def self_check():
     # fail the offline gate.
     if "csp" not in SCENARIOS:
         failures.append("the CSP scenario is missing")
-    for capability_scenario in (
+    # Listed once, here. An earlier version iterated the same tuple it was
+    # verifying, so deleting a scenario from SCENARIOS also deleted it from the
+    # check.
+    REQUIRED_CONTROLS = (
         "capability-exact",
         "capability-undeclared",
         "capability-overreach",
         "capability-wasi",
-    ):
+        "worker-boot",
+        "worker-terminate",
+        "worker-refused",
+        "worker-kill",
+    )
+    for capability_scenario in REQUIRED_CONTROLS:
         if capability_scenario not in SCENARIOS:
-            failures.append(f"the {capability_scenario} control is missing (W6)")
+            failures.append(f"the {capability_scenario} control is missing")
+    if len(SCENARIOS) != len(set(SCENARIOS)):
+        duplicates = sorted({name for name in SCENARIOS if SCENARIOS.count(name) > 1})
+        failures.append(f"SCENARIOS has duplicates: {duplicates}")
     if "glue-imports" not in SCENARIOS:
         failures.append("the glue-imports scenario is missing (static resolution is unproven)")
     if "csp" not in WRAPPERS:
@@ -833,6 +933,12 @@ def main():
         "(the error attribute lands before the deferred boot IIFE settles)",
     )
     ap.add_argument(
+        "--force-worker-kill",
+        action="store_true",
+        help="run the dead-loop kill control even on a single-process browser "
+        "(it will hang: the worker shares the browser process)",
+    )
+    ap.add_argument(
         "--self-check",
         action="store_true",
         help="offline: prove the negative controls can fail (no browser needed)",
@@ -841,6 +947,21 @@ def main():
 
     if args.self_check:
         return self_check()
+
+    if args.scenario == "worker-kill" and not args.force_worker_kill:
+        # Checked before anything is loaded: on this lane's browser (shirabe
+        # starts Chrome with `--single-process`) a spinning Worker blocks the
+        # browser process, so navigation itself never returns — the control
+        # cannot even reach its own assertions. A multi-process browser runs it.
+        print(
+            "SKIP worker-kill: this lane's browser runs --single-process (shirabe), "
+            "where a spinning Worker blocks the browser process — the exact property "
+            "this control asserts. Re-run it against a multi-process browser with "
+            "--force-worker-kill (SHIRABE_BIN may point at any shim that speaks the "
+            "same debug HTTP contract); it passes there — see the PR's 复跑 paragraph.",
+            file=sys.stderr,
+        )
+        return 0
 
     port = args.port or _free_port()
     base = f"http://127.0.0.1:{port}"
@@ -945,6 +1066,110 @@ def main():
                     failures.append(f"the glue modules did not provide their exports: {state!r}")
                 else:
                     print("glue imports resolved statically:", state)
+            # Only the scenarios that must reach ready can prove the entry ran;
+            # `worker-refused` is an expected failure.
+            if args.scenario in ("worker-boot", "worker-terminate") and not failures:
+                # Prove the lane: the Worker is live and the page's own realm
+                # never ran the entry. Without this the scenario passes on the
+                # main-thread lane too (it did once).
+                state = evaluate(
+                    base,
+                    "(() => ({ workerActive: !!(globalThis.__TAIRITSU_WORKER__ && "
+                    "globalThis.__TAIRITSU_WORKER__.active()), "
+                    "pageRanEntry: globalThis.__w3_entry_ran === true }))()",
+                )
+                if not isinstance(state, dict):
+                    failures.append("worker state unreadable: " + repr(state))
+                elif state.get("workerActive") is not True:
+                    failures.append("the component did not boot in a Worker")
+                elif state.get("pageRanEntry") is True:
+                    failures.append("the entry ran on the page: this is the main-thread lane")
+
+            if args.scenario == "worker-terminate":
+                # The kill path without a spinning worker: boot normally, then
+                # terminate and check both halves of the reclaim — the Worker is
+                # gone AND the page's W4 instance was disposed.
+                active_before = evaluate(
+                    base,
+                    "!!(globalThis.__TAIRITSU_WORKER__ && globalThis.__TAIRITSU_WORKER__.active())",
+                )
+                instances_before = evaluate(
+                    base,
+                    "globalThis.__TAIRITSU_INSTANCES__ ? globalThis.__TAIRITSU_INSTANCES__.list().length : -1",
+                )
+                killed = evaluate(
+                    base,
+                    "globalThis.__TAIRITSU_WORKER__ ? globalThis.__TAIRITSU_WORKER__.terminate() : 'missing'",
+                )
+                active_after = evaluate(
+                    base,
+                    "!!(globalThis.__TAIRITSU_WORKER__ && globalThis.__TAIRITSU_WORKER__.active())",
+                )
+                instances_after = evaluate(
+                    base,
+                    "globalThis.__TAIRITSU_INSTANCES__ ? globalThis.__TAIRITSU_INSTANCES__.list().length : -1",
+                )
+                if active_before is not True:
+                    failures.append("the worker was not running before terminate")
+                if killed is not True:
+                    failures.append(f"terminate() did not report a kill ({killed!r})")
+                if active_after is not False:
+                    failures.append("the worker was still active after terminate")
+                if not (instances_before >= 1 and instances_after == 0):
+                    failures.append(
+                        "terminate() did not dispose the page's W4 instance "
+                        f"({instances_before} -> {instances_after})"
+                    )
+                if not failures:
+                    print(
+                        "worker terminated; W4 instance disposed "
+                        f"({instances_before} -> {instances_after})"
+                    )
+            if args.scenario == "worker-kill":
+                # The page is stuck by design; drive terminate + re-boot from
+                # here (an async in-page probe would never resolve).
+                started = time.time()
+                while time.time() - started < 10:
+                    if evaluate(base, "!!(globalThis.__TAIRITSU_WORKER__ && globalThis.__TAIRITSU_WORKER__.active())") is True:
+                        break
+                    time.sleep(0.2)
+                active_before = evaluate(
+                    base, "!!(globalThis.__TAIRITSU_WORKER__ && globalThis.__TAIRITSU_WORKER__.active())"
+                )
+                killed = evaluate(base, "globalThis.__TAIRITSU_WORKER__ ? globalThis.__TAIRITSU_WORKER__.terminate() : 'missing'")
+                active_after = evaluate(
+                    base, "!!(globalThis.__TAIRITSU_WORKER__ && globalThis.__TAIRITSU_WORKER__.active())"
+                )
+                if active_before is not True:
+                    failures.append("the dead-loop worker was not running before terminate")
+                # `ready` may only follow a returned entry: this page's entry
+                # never returns, so announcing ready before the kill would be a
+                # host claiming success it never observed.
+                premature = evaluate(
+                    base, "document.documentElement.dataset.tairitsuReady || null"
+                )
+                if premature is not None:
+                    failures.append(
+                        "the page reported ready although the entry never returned "
+                        "(" + repr(premature) + ")"
+                    )
+                if killed is not True:
+                    failures.append(f"terminate() did not report a kill ({killed!r})")
+                if active_after is not False:
+                    failures.append("the worker was still active after terminate")
+                # A fresh component must boot in the same, still-alive browser:
+                # load the healthy sibling page and require it to reach ready.
+                call(base, "/navigate", {"url": url + "/healthy/index.html"})
+                started = time.time()
+                while time.time() - started < 15:
+                    fresh = evaluate(base, "document.documentElement.dataset.tairitsuReady || null")
+                    if fresh == "hydrated":
+                        break
+                    time.sleep(0.3)
+                if fresh != "hydrated":
+                    failures.append("a fresh component could not boot after the kill (" + repr(fresh) + ")")
+                if not failures:
+                    print("worker killed; main thread alive; a fresh component booted ready")
             if args.scenario == "csp" and not failures:
                 enforcement = evaluate(
                     base,
@@ -998,6 +1223,9 @@ def main():
     if failures:
         print("FAIL:", "; ".join(failures), file=sys.stderr)
         return 1
+    if args.scenario == "worker-kill-skipped":
+        print("SKIPPED: worker-kill needs a multi-process browser (see stderr)")
+        return 0
     print(f"OK: boot e2e passed (scenario={args.scenario})")
     return 0
 
