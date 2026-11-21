@@ -1,0 +1,280 @@
+// W4: handle state is PER INSTANCE, not per page.
+//
+// Before W4 every handle table (`__elementHandles`, `__eventHandles`, the
+// `__next*` counters, …) lived on `globalThis` as a mutable Map/Set. Two
+// components booted on one page then shared one table: handles crossed
+// instances, a destroyed instance left its listeners/observers/timers behind,
+// and nothing could be authorized per instance (§0 B1).
+//
+// The migration keeps the *call sites* unchanged: the glue (and the code
+// `generateModuleCode` emits) still writes `globalThis.__elementHandles.set(…)`,
+// but those names are now ACCESSOR PROPERTIES that forward to the current
+// instance's own tables. Nothing mutable is stored on `globalThis` any more —
+// it only holds the pointer to the current instance and the instance registry.
+//
+// Lifecycle: `createInstance()` → `setCurrentInstance()` → the guest runs →
+// `disposeInstance()` clears the tables, the timers, the observers and the
+// listeners, so any handle from that instance stops resolving (the existing
+// lookups throw "…handle N not found", which is the contract W4 pins).
+
+/** The mutable tables one instance owns. */
+export interface InstanceTables {
+  elementHandles: Map<bigint, unknown>;
+  documentHandles: Map<bigint, unknown>;
+  nodeHandles: Map<bigint, unknown>;
+  textHandles: Map<bigint, unknown>;
+  mutationRecordHandles: Map<bigint, unknown>;
+  resizeObserverEntryHandles: Map<bigint, unknown>;
+  resizeObserverSizeHandles: Map<bigint, unknown>;
+  domRectHandles: Map<bigint, unknown>;
+  nodeListHandles: Map<bigint, unknown>;
+  cssStyleDeclarationHandles: Map<bigint, unknown>;
+  listenerHandles: Map<bigint, unknown>;
+  scrollListeners: Map<bigint, unknown>;
+  eventHandles: Map<bigint, unknown>;
+  dispatchingEvents: Set<string>;
+}
+
+/** Anything the instance owns that must be undone / cleared on dispose. */
+interface Reclaimables {
+  timers: Set<ReturnType<typeof globalThis.setTimeout>>;
+  intervals: Set<ReturnType<typeof globalThis.setInterval>>;
+  observers: Set<{ disconnect(): void }>;
+  listeners: Set<{
+    target: EventTarget;
+    type: string;
+    handler: EventListener;
+    options?: boolean | AddEventListenerOptions;
+  }>;
+}
+
+export class TairitsuInstance {
+  static nextId = 1;
+
+  readonly id: number = TairitsuInstance.nextId++;
+  readonly tables: InstanceTables = {
+    elementHandles: new Map(),
+    documentHandles: new Map(),
+    nodeHandles: new Map(),
+    textHandles: new Map(),
+    mutationRecordHandles: new Map(),
+    resizeObserverEntryHandles: new Map(),
+    resizeObserverSizeHandles: new Map(),
+    domRectHandles: new Map(),
+    nodeListHandles: new Map(),
+    cssStyleDeclarationHandles: new Map(),
+    listenerHandles: new Map(),
+    scrollListeners: new Map(),
+    eventHandles: new Map(),
+    dispatchingEvents: new Set(),
+  };
+
+  /**
+   * The `__next*` counters, also per instance. `nextHandle` is seeded from the
+   * instance id so handle NUMBERS never collide across instances: with a bare
+   * per-instance `1n` counter, a handle minted by B would silently resolve to
+   * A's object of the same number instead of failing as "not found". Handles
+   * stay bigints; the seed is module state, not `globalThis` state.
+   */
+  counters = {
+    nextHandle: BigInt(this.id) << 32n,
+    nextMutationRecord: 1n,
+    nextResizeObserverEntry: 1n,
+    nextResizeObserverSizeHandle: 1n,
+    nextDomRectHandle: 1n,
+    nextNodeList: 1n,
+    nextCssStyleDeclarationHandle: 1n,
+    nextListenerHandle: 1n,
+    nextEventHandle: 1n,
+  };
+
+  readonly reclaimables: Reclaimables = {
+    timers: new Set(),
+    intervals: new Set(),
+    observers: new Set(),
+    listeners: new Set(),
+  };
+
+  /** Set by `disposeInstance`; a disposed instance is never usable again. */
+  disposed = false;
+
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+
+    for (const table of Object.values(this.tables)) {
+      if (table instanceof Map) table.clear();
+      else table.clear();
+    }
+
+    for (const timer of this.reclaimables.timers) globalThis.clearTimeout(timer);
+    for (const interval of this.reclaimables.intervals) globalThis.clearInterval(interval);
+    for (const observer of this.reclaimables.observers) {
+      try {
+        observer.disconnect();
+      } catch {
+        // A disconnect that throws must not block the rest of the reclaim.
+      }
+    }
+    for (const { target, type, handler, options } of this.reclaimables.listeners) {
+      try {
+        target.removeEventListener(type, handler, options);
+      } catch {
+        // Same: a stale target must not abort the reclaim.
+      }
+    }
+
+    this.reclaimables.timers.clear();
+    this.reclaimables.intervals.clear();
+    this.reclaimables.observers.clear();
+    this.reclaimables.listeners.clear();
+
+    // Reset to the instance's own seed, so a disposed instance cannot hand out
+    // a handle number another instance already used.
+    this.counters.nextHandle = BigInt(this.id) << 32n;
+    for (const key of Object.keys(this.counters) as (keyof typeof this.counters)[]) {
+      if (key !== "nextHandle") this.counters[key] = 1n;
+    }
+  }
+}
+
+/** Every instance the page has created and not yet disposed. */
+const instances = new Set<TairitsuInstance>();
+let current: TairitsuInstance | null = null;
+
+export function createInstance(): TairitsuInstance {
+  const instance = new TairitsuInstance();
+  instances.add(instance);
+  return instance;
+}
+
+export function currentInstance(): TairitsuInstance {
+  if (!current) {
+    // A glue call before any instance exists (e.g. a module imported for its
+    // side effects) still needs tables; give it the page's default instance.
+    current = createInstance();
+  }
+  return current;
+}
+
+export function setCurrentInstance(instance: TairitsuInstance | null): TairitsuInstance | null {
+  const previous = current;
+  current = instance;
+  return previous;
+}
+
+/** Run `fn` with `instance` as the current one (restores the previous). */
+export function withInstance<T>(instance: TairitsuInstance, fn: () => T): T {
+  const previous = setCurrentInstance(instance);
+  try {
+    return fn();
+  } finally {
+    setCurrentInstance(previous);
+  }
+}
+
+/**
+ * Dispose one instance. Returns false when it was already gone, so callers can
+ * report a double-stop instead of silently succeeding.
+ */
+export function disposeInstance(instance: TairitsuInstance): boolean {
+  if (!instances.delete(instance)) return false;
+  if (current === instance) current = null;
+  instance.dispose();
+  return true;
+}
+
+/** The live instances (diagnostics / the isolation test). */
+export function listInstances(): TairitsuInstance[] {
+  return [...instances];
+}
+
+// ── compat surface ─────────────────────────────────────────────────────────
+//
+// Names the glue and the generated module code keep using. They are defined as
+// accessors so a read or a write lands in the CURRENT instance's tables: the
+// call sites stay untouched, and `globalThis` holds no mutable handle state.
+
+const TABLE_NAMES = [
+  "__elementHandles",
+  "__documentHandles",
+  "__nodeHandles",
+  "__textHandles",
+  "__mutationRecordHandles",
+  "__resizeObserverEntryHandles",
+  "__resizeObserverSizeHandles",
+  "__domRectHandles",
+  "__nodeListHandles",
+  "__cssStyleDeclarationHandles",
+  "__listenerHandles",
+  "__tairitsuScrollListeners",
+  "__eventHandles",
+  "__dispatchingEvents",
+] as const;
+
+const COUNTER_NAMES = [
+  "__nextHandle",
+  "__nextMutationRecord",
+  "__nextResizeObserverEntry",
+  "__nextResizeObserverSizeHandle",
+  "__nextDomRectHandle",
+  "__nextNodeList",
+  "__nextCssStyleDeclarationHandle",
+  "__nextListenerHandle",
+  "__nextEventHandle",
+] as const;
+
+function defineDelegate(name: string, read: () => unknown, write: (value: unknown) => void): void {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
+  if (descriptor && descriptor.get && descriptor.set) return; // already installed
+  Object.defineProperty(globalThis, name, {
+    configurable: true,
+    enumerable: false,
+    get: read,
+    set: write,
+  });
+}
+
+/**
+ * Install the compat accessors. Idempotent; called by the modules that used to
+ * create the tables (`handles.ts`, `eventTarget.ts`).
+ */
+export function installGlobalDelegates(): void {
+  for (const name of TABLE_NAMES) {
+    defineDelegate(
+      name,
+      () => (currentInstance().tables as unknown as Record<string, unknown>)[name.slice(2)],
+      // Assigning a table replaces it on the CURRENT instance only, so code
+      // that swaps a table wholesale (tests do) keeps its meaning without
+      // putting state back on `globalThis`.
+      (value) => {
+        (currentInstance().tables as unknown as Record<string, unknown>)[name.slice(2)] = value;
+      },
+    );
+  }
+  for (const name of COUNTER_NAMES) {
+    const key = name.slice("__".length);
+    defineDelegate(
+      name,
+      () => (currentInstance().counters as unknown as Record<string, unknown>)[key],
+      (value) => {
+        (currentInstance().counters as unknown as Record<string, unknown>)[key] = value;
+      },
+    );
+  }
+}
+
+/**
+ * Public API for the page / the browser e2e: create, inspect and dispose
+ * instances. The W4 isolation test drives exactly these.
+ */
+export function installInstanceApi(): void {
+  (globalThis as any).__TAIRITSU_INSTANCES__ = { // ts-escape-ok: retires with L40
+    create: () => createInstance(),
+    dispose: (instance: TairitsuInstance) => disposeInstance(instance),
+    current: () => currentInstance(),
+    setCurrent: (instance: TairitsuInstance | null) => setCurrentInstance(instance),
+    withInstance,
+    list: () => listInstances(),
+  };
+}

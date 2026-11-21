@@ -110,10 +110,6 @@ export const platformHelpers_exports = {
         globalThis.__wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"]
       ) {
         const entryHandles = entries.map((entry) => {
-          if (!globalThis.__resizeObserverEntryHandles) {
-            globalThis.__resizeObserverEntryHandles = new Map();
-            globalThis.__nextResizeObserverEntry = 1n;
-          }
           const handle = globalThis.__nextResizeObserverEntry++;
           globalThis.__resizeObserverEntryHandles.set(handle, entry);
           return handle;
@@ -152,10 +148,6 @@ export const platformHelpers_exports = {
         globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]
       ) {
         const recordHandles = records.map((record) => {
-          if (!globalThis.__mutationRecordHandles) {
-            globalThis.__mutationRecordHandles = new Map();
-            globalThis.__nextMutationRecord = 1n;
-          }
           const handle = globalThis.__nextMutationRecord++;
           globalThis.__mutationRecordHandles.set(handle, record);
           return handle;
@@ -210,9 +202,7 @@ export const platformHelpers_exports = {
 
   clipboardWriteTextPromise(text: string) {
     if (!navigator.clipboard?.writeText) return 0n;
-    const id = globalThis.__nextHandle
-      ? globalThis.__nextHandle++
-      : ((globalThis.__nextHandle = 1n), 1n);
+    const id = globalThis.__nextHandle++;
     navigator.clipboard
       .writeText(text)
       .then(() => {
@@ -240,9 +230,7 @@ export const platformHelpers_exports = {
 
   clipboardReadTextPromise() {
     if (!navigator.clipboard?.readText) return 0n;
-    const id = globalThis.__nextHandle
-      ? globalThis.__nextHandle++
-      : ((globalThis.__nextHandle = 1n), 1n);
+    const id = globalThis.__nextHandle++;
     navigator.clipboard
       .readText()
       .then((text) => {
@@ -269,9 +257,7 @@ export const platformHelpers_exports = {
   },
 
   fetchPromise(url: string, options: string | null) {
-    const id = globalThis.__nextHandle
-      ? globalThis.__nextHandle++
-      : ((globalThis.__nextHandle = 1n), 1n);
+    const id = globalThis.__nextHandle++;
     let opts: RequestInit | undefined;
     if (options) {
       try {
@@ -393,9 +379,7 @@ export const platformHelpers_exports = {
 
   onScroll(callbackId: bigint) {
     const g = globalThis as any; // ts-escape-ok: retires with L40
-    if (!g.__tairitsuScrollListeners) {
-      g.__tairitsuScrollListeners = new Map();
-    }
+    // W4: the scroll-listener table belongs to the current instance.
     const handler = () => {
       if (g.__wasmExports && g.__wasmExports["tairitsu-browser:full/scroll-callbacks@0.2.0"]) {
         const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -410,7 +394,7 @@ export const platformHelpers_exports = {
       }
     };
     window.addEventListener("scroll", handler, { passive: true });
-    const handle = g.__nextHandle ? g.__nextHandle++ : ((g.__nextHandle = 1n), 1n);
+    const handle = g.__nextHandle++;
     g.__tairitsuScrollListeners.set(handle, handler);
     return handle;
   },
@@ -426,7 +410,7 @@ export const platformHelpers_exports = {
       }
     };
     window.addEventListener("resize", handler);
-    const handle = g.__nextHandle ? g.__nextHandle++ : ((g.__nextHandle = 1n), 1n);
+    const handle = g.__nextHandle++;
     g.__tairitsuResizeListeners.set(handle, handler);
     return handle;
   },

@@ -30,8 +30,6 @@ const subEventHandles = new WeakMap<Event, bigint>();
 function storeEvent(event: Event): bigint {
   const cached = subEventHandles.get(event);
   if (cached !== undefined) return cached;
-  if (!globalThis.__eventHandles) globalThis.__eventHandles = new Map();
-  if (!globalThis.__nextEventHandle) globalThis.__nextEventHandle = 1n;
   const handle = globalThis.__nextEventHandle++;
   globalThis.__eventHandles.set(handle, event);
   subEventHandles.set(event, handle);

@@ -10,8 +10,6 @@ export const resizeObserverEntry_exports = {
     const entry = globalThis.__resizeObserverEntryHandles.get(self);
     if (!entry) return 0n;
     if (!globalThis.__domRectHandles) {
-      globalThis.__domRectHandles = new Map();
-      globalThis.__nextDomRectHandle = 1n;
     }
     const handle = globalThis.__nextDomRectHandle++;
     globalThis.__domRectHandles.set(handle, entry.contentRect);
@@ -22,8 +20,6 @@ export const resizeObserverEntry_exports = {
     const entry = globalThis.__resizeObserverEntryHandles.get(self);
     if (!entry) return [];
     if (!globalThis.__resizeObserverSizeHandles) {
-      globalThis.__resizeObserverSizeHandles = new Map();
-      globalThis.__nextResizeObserverSizeHandle = 1n;
     }
     return [...entry.borderBoxSize].map(function (size) {
       const handle = globalThis.__nextResizeObserverSizeHandle++;
@@ -36,8 +32,6 @@ export const resizeObserverEntry_exports = {
     const entry = globalThis.__resizeObserverEntryHandles.get(self);
     if (!entry) return [];
     if (!globalThis.__resizeObserverSizeHandles) {
-      globalThis.__resizeObserverSizeHandles = new Map();
-      globalThis.__nextResizeObserverSizeHandle = 1n;
     }
     return [...entry.contentBoxSize].map(function (size) {
       const handle = globalThis.__nextResizeObserverSizeHandle++;

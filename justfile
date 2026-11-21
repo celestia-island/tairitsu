@@ -360,6 +360,7 @@ packager-js-test:
 # is NOT part of `just ci` — `packager-js-test` covers the browser-free half.
 browser-e2e:
     {{python}} scripts/browser_e2e.py --scenario component
+    {{python}} scripts/browser_e2e.py --scenario two-instances
     {{python}} scripts/browser_e2e.py --scenario bad-bytes
     {{python}} scripts/browser_e2e.py --scenario missing-entry
     {{python}} scripts/browser_e2e.py --scenario missing-import

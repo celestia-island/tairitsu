@@ -1,0 +1,214 @@
+// W4: per-instance handle tables, dispose-time reclaim, and instance isolation.
+//
+// The three regressions these pin, in the order the task names them:
+//   1. two instances on one page must not see each other's handles;
+//   2. a disposed instance's handles must stop resolving (the table is
+//      cleared), and its listeners/observers/timers must be reclaimed;
+//   3. `globalThis` must carry no mutable handle state — only delegating
+//      accessors to the current instance.
+
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const here = fileURLToPath(new URL(".", import.meta.url));
+const INSTANCE_MODULE = resolve(here, "../src/runtime/instance.ts");
+const {
+  TairitsuInstance,
+  createInstance,
+  currentInstance,
+  disposeInstance,
+  installGlobalDelegates,
+  installInstanceApi,
+  listInstances,
+  setCurrentInstance,
+  withInstance,
+} = await import(INSTANCE_MODULE);
+
+installGlobalDelegates();
+installInstanceApi();
+
+/** Store a value the way the generated glue does, on a chosen instance. */
+function store(instance, value) {
+  return withInstance(instance, () => {
+    const handle = globalThis.__nextHandle++;
+    globalThis.__elementHandles.set(handle, value);
+    return handle;
+  });
+}
+
+test("handles are stored per instance, not per page", () => {
+  const a = createInstance();
+  const b = createInstance();
+
+  const fromA = store(a, { owner: "a" });
+  const fromB = store(b, { owner: "b" });
+
+  // Handle numbers are instance-scoped (`nextHandle` is seeded from the
+  // instance id), so a handle minted by B never resolves in A — it fails as
+  // "not found" instead of silently naming A's object with the same number.
+  assert.notEqual(fromA, fromB, "two instances minted the same handle number");
+  assert.equal(a.tables.elementHandles.get(fromA).owner, "a");
+  assert.equal(b.tables.elementHandles.get(fromB).owner, "b");
+  assert.equal(a.tables.elementHandles.get(fromB), undefined, "B's handle resolved in A");
+  assert.equal(b.tables.elementHandles.get(fromA), undefined, "A's handle resolved in B");
+
+  // … and the delegating accessor follows the current instance.
+  assert.equal(withInstance(a, () => globalThis.__elementHandles.get(fromA).owner), "a");
+  assert.equal(withInstance(b, () => globalThis.__elementHandles.get(fromB).owner), "b");
+
+  disposeInstance(a);
+  disposeInstance(b);
+});
+
+test("the handle counters are per instance and never collide", () => {
+  const a = createInstance();
+  const b = createInstance();
+  const firstA = store(a, "a1");
+  const firstB = store(b, "b1");
+  assert.ok(firstA >= 0n && firstB >= 0n);
+  assert.notEqual(firstA, firstB, "the two instances share a handle space");
+  assert.equal(typeof firstA, "bigint");
+  disposeInstance(a);
+  disposeInstance(b);
+});
+
+test("disposing an instance clears its handles (old handles stop resolving)", () => {
+  const instance = createInstance();
+  const handle = store(instance, { owner: "gone" });
+  assert.equal(instance.tables.elementHandles.has(handle), true);
+
+  assert.equal(disposeInstance(instance), true);
+  assert.equal(instance.disposed, true);
+  assert.equal(instance.tables.elementHandles.has(handle), false, "handle survived dispose");
+  // The contract W4 pins: the existing lookups throw for an unknown handle.
+  withInstance(instance, () => {
+    assert.throws(
+      () => {
+        const el = globalThis.__elementHandles.get(handle);
+        if (!el) throw new Error(`Element handle ${handle} not found`);
+      },
+      /not found/,
+    );
+  });
+});
+
+test("dispose reclaims listeners, observers, timers and intervals", () => {
+  const instance = createInstance();
+
+  const listeners = [];
+  const fakeTarget = {
+    removeEventListener(type, handler) {
+      listeners.push([type, handler]);
+    },
+  };
+  const handler = () => {};
+  instance.reclaimables.listeners.add({ target: fakeTarget, handler, type: "click" });
+
+  let disconnected = 0;
+  instance.reclaimables.observers.add({ disconnect: () => disconnected++ });
+
+  const cleared = [];
+  const originalClearTimeout = globalThis.clearTimeout;
+  const originalClearInterval = globalThis.clearInterval;
+  globalThis.clearTimeout = (id) => cleared.push(["timeout", id]);
+  globalThis.clearInterval = (id) => cleared.push(["interval", id]);
+  try {
+    instance.reclaimables.timers.add(11);
+    instance.reclaimables.intervals.add(22);
+    disposeInstance(instance);
+  } finally {
+    globalThis.clearTimeout = originalClearTimeout;
+    globalThis.clearInterval = originalClearInterval;
+  }
+
+  assert.deepEqual(listeners, [["click", handler]], "the listener was not removed");
+  assert.equal(disconnected, 1, "the observer was not disconnected");
+  assert.deepEqual(cleared, [["timeout", 11], ["interval", 22]]);
+  assert.equal(instance.reclaimables.listeners.size, 0);
+  assert.equal(instance.reclaimables.timers.size, 0);
+});
+
+test("disposing twice is reported, not silently repeated", () => {
+  const instance = createInstance();
+  assert.equal(disposeInstance(instance), true);
+  assert.equal(disposeInstance(instance), false);
+});
+
+test("disposing one instance never touches another", () => {
+  const a = createInstance();
+  const b = createInstance();
+  const keepB = store(b, { owner: "survivor" });
+
+  disposeInstance(a);
+  assert.equal(b.disposed, false);
+  assert.equal(b.tables.elementHandles.get(keepB).owner, "survivor");
+  assert.equal(withInstance(b, () => globalThis.__elementHandles.get(keepB).owner), "survivor");
+  disposeInstance(b);
+});
+
+test("currentInstance() creates the page default on first use", () => {
+  setCurrentInstance(null);
+  const implicit = currentInstance();
+  assert.ok(implicit instanceof TairitsuInstance);
+  assert.equal(implicit.disposed, false);
+  assert.ok(listInstances().includes(implicit));
+});
+
+test("NEGATIVE CONTROL — globalThis holds no mutable handle tables", async () => {
+  // The tables must be accessors whose storage is the instance, not data
+  // properties holding Maps. A regression to `globalThis.__elementHandles =
+  // new Map()` (the pre-W4 shape) fails here.
+  for (const name of [
+    "__elementHandles",
+    "__nodeHandles",
+    "__eventHandles",
+    "__listenerHandles",
+    "__tairitsuScrollListeners",
+    "__dispatchingEvents",
+  ]) {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
+    assert.ok(descriptor, `${name} is not defined`);
+    assert.equal(typeof descriptor.get, "function", `${name} is not a delegating accessor`);
+    assert.equal(typeof descriptor.set, "function", `${name} cannot be assigned`);
+    assert.equal("value" in descriptor, false, `${name} is still a data property`);
+  }
+  // Writing through the compat name lands in the instance.
+  const instance = createInstance();
+  const previous = setCurrentInstance(instance);
+  try {
+    globalThis.__elementHandles = new Map([["k", "v"]]);
+    assert.equal(instance.tables.elementHandles.get("k"), "v");
+  } finally {
+    setCurrentInstance(previous);
+    disposeInstance(instance);
+  }
+});
+
+test("the glue sources no longer initialise handle tables on globalThis", async () => {
+  // Source-level half of the same pin: a fresh `globalThis.__xHandles =
+  // new Map()` initialiser is exactly the pre-W4 shape.
+  const sources = [
+    "../src/runtime/handles.ts",
+    "../src/runtime/eventTarget.ts",
+    "../src/runtime/helpers.ts",
+    "../src/runtime/elementCssInlineStyle.ts",
+    "../src/runtime/platformHelpers.ts",
+    "../src/runtime/parentNode.ts",
+    "../src/runtime/pointerEvent.ts",
+    "../src/runtime/node.ts",
+    "../src/runtime/resizeObserverEntry.ts",
+  ];
+  for (const relative of sources) {
+    const source = await readFile(resolve(here, relative), "utf8");
+    // Both pre-W4 shapes: `globalThis.__x = new Map()` and the lazy
+    // `globalThis.__x = globalThis.__x || new Map()`.
+    const eager =
+      source.match(
+        /globalThis\.__\w*Handles\s*=\s*(?:globalThis\.__\w*\s*\|\||new Map\()/g,
+      ) ?? [];
+    assert.deepEqual(eager, [], `${relative} still creates a global handle table`);
+  }
+});

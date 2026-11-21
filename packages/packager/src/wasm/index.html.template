@@ -57,6 +57,9 @@
                 settleBoot.resolve(entryName);
             },
             fail: (kind, error) => {
+                // W4: a failed boot reclaims its instance (handles, listeners,
+                // observers, timers) instead of leaving them on the page.
+                if (instanceApi && bootInstance) instanceApi.dispose(bootInstance);
                 bootError('Component ' + kind.replace('-', ' '), error, kind);
                 settleBoot.reject(error);
             },
@@ -125,6 +128,13 @@
         // path produced the instance, the SAME boot lifecycle decides the
         // entry, the ready attribute and the error surface — and a failure on
         // either path is terminal (never a blank page).
+        // W4: the guest's handle tables belong to THIS boot's instance. The
+        // glue bundle defines the API; without it (a page built before W4) the
+        // boot still works, it just has no per-instance container to own.
+        const instanceApi = globalThis.__TAIRITSU_INSTANCES__;
+        const bootInstance = instanceApi ? instanceApi.create() : null;
+        if (instanceApi && bootInstance) instanceApi.setCurrent(bootInstance);
+
         const startBoot = async (result) => {
             if (globalThis.__setWasmExports && result) {
                 globalThis.__setWasmExports(result);
@@ -309,6 +319,8 @@
             } catch (_bootFailure) {
                 return;
             }
+            // The successful instance stays current until the page goes away;
+            // the dual-instance test drives the API to add and dispose peers.
             document.body.removeAttribute('data-booting');
             document.documentElement.dataset.tairitsuReady='hydrated';
         })();

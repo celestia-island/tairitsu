@@ -1,13 +1,13 @@
+import { installGlobalDelegates } from './instance.ts';
+
+// W4: listener/event tables belong to the current instance (see instance.ts).
+installGlobalDelegates();
+
 // Initialize global handle tables for event listeners
-globalThis.__listenerHandles = globalThis.__listenerHandles || new Map();
-globalThis.__nextListenerHandle = globalThis.__nextListenerHandle || 1n;
 // Event handles
-globalThis.__eventHandles = globalThis.__eventHandles || new Map();
-globalThis.__nextEventHandle = globalThis.__nextEventHandle || 1n;
 
 // Re-entrancy guard: track which (element, eventType) pairs are currently being dispatched
 // to WASM to prevent infinite recursion when a handler triggers the same event type.
-globalThis.__dispatchingEvents = globalThis.__dispatchingEvents || new Set<string>();
 
 export const eventTarget_exports = {
   /**
