@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildImports, HostClientError, loadComponent, publishCapabilities } from "../src/index.ts";
+import { buildImports, createSurface, HostClientError, loadComponent, publishCapabilities } from "../src/index.ts";
 
 const fakeGlue = { document: { createElement: () => "el" }, element: { setAttribute: () => {} } };
 
@@ -277,4 +277,82 @@ test("the bundler-safe route hands in an already-imported module", async () => {
   assert.equal(component.call("encode"), "from-module");
   assert.equal(globalThis.__TAIRITSU_CAPABILITIES__, undefined, "declaration restored after the module route");
   assert.equal(seenDuringImport, undefined);
+});
+
+test("createSurface is the synchronous door for a static import", () => {
+  const component = createSurface({ encode: (text) => `encoded:${text}` }, {
+    interfaces: [],
+    wasiModules: [],
+  });
+  const result = component.call("encode", "hi");
+  assert.equal(result, "encoded:hi");
+  assert.equal(typeof result.then, "undefined");
+});
+
+test("createSurface refuses a declaration it cannot provide, and says so", () => {
+  // A statically imported wrapper binds its imports before this call: the sync
+  // door can only refuse a capability, never provide one.
+  for (const declaration of [
+    { interfaces: ["document"] },
+    { wasiModules: ["clocks"] },
+  ]) {
+    assert.throws(
+      () => createSurface({ encode: () => 1 }, declaration),
+      (error) => error instanceof HostClientError && error.kind === "sync-door-cannot-provide",
+    );
+  }
+  assert.throws(
+    () => createSurface({ encode: () => 1 }, {}, { document: {} }),
+    (error) => error instanceof HostClientError && error.kind === "sync-door-cannot-provide",
+  );
+});
+
+test("every instantiate ABI name is refused by the sync door", () => {
+  for (const name of ["instantiate", "default", "init"]) {
+    assert.throws(
+      () => createSurface({ [name]: () => ({}) }),
+      (error) => error instanceof HostClientError && error.kind === "needs-loading",
+    );
+  }
+});
+
+test("the sync door rejects a non-object module like the async one", () => {
+  for (const value of [null, 42, "text"]) {
+    assert.throws(
+      () => createSurface(value),
+      (error) => error instanceof HostClientError && error.kind === "instantiate-failed",
+    );
+  }
+});
+
+test("the sync door's exports view is behind the same stop gate", async () => {
+  const component = createSurface({ encode: () => "ok" });
+  assert.equal(component.exports.encode(), "ok");
+  await component.stop();
+  assert.throws(
+    () => component.exports.encode(),
+    (error) => error instanceof HostClientError && error.kind === "stopped",
+  );
+});
+
+test("the sync door refuses a thenable export", () => {
+  const component = createSurface({ encode: async () => "late" });
+  assert.throws(
+    () => component.call("encode"),
+    (error) => error instanceof HostClientError && error.kind === "async-export",
+  );
+});
+
+test("createSurface points an instantiable module at loadComponent", () => {
+  assert.throws(
+    () => createSurface({ instantiate: () => ({}) }),
+    (error) => error instanceof HostClientError && error.kind === "needs-loading",
+  );
+});
+
+test("createSurface's surface is gated by stop() like the async door", async () => {
+  const component = createSurface({ encode: () => "ok" });
+  assert.equal(component.call("encode"), "ok");
+  await component.stop();
+  assert.throws(() => component.call("encode"), (error) => error.kind === "stopped");
 });

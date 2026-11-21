@@ -202,106 +202,96 @@ interface Instantiable {
   init?: (imports: Record<string, unknown>) => unknown;
 }
 
+
+
 /**
- * Load a component and return its synchronous call surface.
+ * Build the surface from a module the consumer has ALREADY imported.
  *
- * Both instantiate ABI shapes are accepted (the wrapper's own
- * `instantiate(imports)` and the jco-style `instantiate(resolveCoreModule,
- * imports)`), because both ship in the wild and the page loader supports both.
+ * This is the synchronous door: a wrapper in the consumer's static module graph
+ * has its exports callable immediately, which is what a sync facade needs.
+ * Capability enforcement is the same as `loadComponent` (the declaration is
+ * checked before anything is handed over); the lifecycle is identical.
+ *
+ * ```ts
+ * import * as wrapper from "./component/wrapper.js";
+ * publishCapabilities({ interfaces: [], wasiModules: [] });
+ * const component = createSurface(wrapper, { interfaces: [], wasiModules: [] });
+ * ```
+ *
+ * A module that needs instantiating (an `instantiate`/`default`/`init` export)
+ * must go through `loadComponent` instead — this door is for namespaces that are
+ * already a component.
  */
-export async function loadComponent(options: LoadComponentOptions): Promise<HostComponent> {
-  const { wrapper, capabilities = {}, glue = {}, wasi = {}, loaders } = options;
-  const imports = buildImports(capabilities, glue, wasi);
-  // W6's guard inside the emitted glue modules reads the declaration from the
-  // realm that imports them — that is this one. A consumer that imports the
-  // wrapper statically must call `declareCapabilities` BEFORE that import; a
-  // dynamic import through this function is ordered for it.
-  const previousDeclaration = publishCapabilities(capabilities);
-  // The glue plane the W5 modules read. Providers passed here are visible to a
-  // statically imported glue module for the duration of the import.
-  const previousGlue = globalThis.__TAIRITSU_GLUE__;
-  globalThis.__TAIRITSU_GLUE__ = { INTERFACES: glue };
-
-  const url = wrapper === undefined ? "<module>" : typeof wrapper === "string" ? wrapper : wrapper.href;
-  const importModule =
-    options.module !== undefined
-      ? async () => options.module as Record<string, unknown>
-      : (loaders?.importModule ?? ((target: string) => import(/* @vite-ignore */ target)));
-
-  let module: Record<string, unknown>;
-  try {
-    module = await importModule(url);
-  } catch (error) {
-    if (previousDeclaration === undefined) delete globalThis.__TAIRITSU_CAPABILITIES__;
-    else globalThis.__TAIRITSU_CAPABILITIES__ = previousDeclaration;
-    globalThis.__TAIRITSU_GLUE__ = previousGlue;
-    // A glue module refusing an undeclared interface is a capability failure, not
-    // a missing wrapper — keep the two diagnosable.
-    const message = String((error as Error)?.message ?? error);
-    const kind = /capability denied|is not declared/.test(message)
-      ? "capability-denied"
-      : "wrapper-not-found";
-    throw new HostClientError(kind, `could not load the component wrapper ${url}: ${message}`);
+export function createSurface(
+  module: Record<string, unknown>,
+  capabilities: CapabilityDeclaration = {},
+  glue: Record<string, unknown> = {},
+  wasi: Record<string, unknown> = {},
+): HostComponent {
+  const declared = capabilities.interfaces ?? [];
+  if (declared.length > 0) {
+    // Parity with the async door: the capability verdict comes first.
+    throw new HostClientError(
+      "sync-door-cannot-provide",
+      "createSurface cannot provide capabilities (the wrapper is already evaluated); " +
+        "it serves compute-only components — use loadComponent for anything else",
+    );
   }
-
-  // The modules a wrapper statically imports have been evaluated by now.
-  if (previousDeclaration === undefined) delete globalThis.__TAIRITSU_CAPABILITIES__;
-  else globalThis.__TAIRITSU_CAPABILITIES__ = previousDeclaration;
-  globalThis.__TAIRITSU_GLUE__ = previousGlue;
-
-  const candidate =
-    (module.instantiate as Instantiable["instantiate"]) ??
-    (module.default as Instantiable["default"]) ??
-    (module.init as Instantiable["init"]);
-
-  const ensureSurface = (value: unknown, shape: string): Record<string, unknown> => {
-    if (value === null || typeof value !== "object") {
-      throw new HostClientError(
-        "instantiate-failed",
-        `the component wrapper ${url} resolved to ${value === null ? "null" : typeof value} ` +
-          `through ${shape}; a component must resolve to an object of exports`,
-      );
-    }
-    return value as Record<string, unknown>;
-  };
-
-  let instance: Record<string, unknown>;
-  if (typeof candidate === "function") {
-    try {
-      instance = ensureSurface(await candidate(imports), "instantiate(imports)");
-    } catch (firstError) {
-      // The jco shape: instantiate(resolveCoreModule, imports).
-      try {
-        instance = ensureSurface(await (
-          candidate as unknown as (
-            resolve: (path: string) => Promise<unknown>,
-            imports: Record<string, unknown>,
-          ) => unknown
-        )(
-          async (path: string) => {
-            const resolved = new URL(path, url === "<module>" ? import.meta.url : url);
-            const response = await fetch(resolved);
-            if (!response.ok) {
-              throw new Error(`failed to fetch core module ${path}: HTTP ${response.status}`);
-            }
-            return WebAssembly.compileStreaming(response);
-          },
-          imports,
-        ), "instantiate(resolveCoreModule, imports)");
-      } catch (secondError) {
-        throw new HostClientError(
-          "instantiate-failed",
-          `the component wrapper ${url} could not be instantiated ` +
-            `(instantiate(imports): ${(firstError as Error)?.message ?? firstError}; ` +
-            `instantiate(resolveCoreModule, imports): ${(secondError as Error)?.message ?? secondError})`,
-        );
-      }
-    }
-  } else {
-    // A wrapper that is a plain namespace of exports needs no instantiation.
-    instance = ensureSurface(module, "the wrapper namespace");
+  const instance = ensureSurface(module, "the wrapper namespace");
+  if (
+    typeof instance.instantiate === "function" ||
+    typeof instance.default === "function" ||
+    typeof instance.init === "function"
+  ) {
+    throw new HostClientError(
+      "needs-loading",
+      "this wrapper needs instantiation; use loadComponent (or loadComponent({ module })) instead",
+    );
   }
+  // A statically imported wrapper was evaluated BEFORE this call, so the glue
+  // plane and the import table are already bound: this door cannot provide a
+  // capability, only refuse one. Say that instead of pretending to gate it.
+  const declaredInterfaces = capabilities.interfaces ?? [];
+  const declaredWasi = capabilities.wasiModules ?? [];
+  if (declaredInterfaces.length > 0 || declaredWasi.length > 0) {
+    throw new HostClientError(
+      "sync-door-cannot-provide",
+      "createSurface cannot provide capabilities (the wrapper is already evaluated); " +
+        "it serves compute-only components — use loadComponent for anything else",
+    );
+  }
+  if (Object.keys(glue).length > 0 || Object.keys(wasi).length > 0) {
+    throw new HostClientError(
+      "sync-door-cannot-provide",
+      "createSurface takes no providers: a statically imported wrapper binds its imports before this call",
+    );
+  }
+  return makeSurface(instance);
+}
 
+/**
+ * Build the call surface for an already-instantiated component.
+ *
+ * Synchronous by construction — this is what a sync facade over a component
+ * needs (the wrapper is in the consumer's module graph, so its exports are
+ * callable immediately). `loadComponent` uses it after instantiating.
+ */
+function ensureSurface(
+  value: unknown,
+  shape: string,
+  subject = "the component wrapper",
+): Record<string, unknown> {
+  if (value === null || typeof value !== "object") {
+    throw new HostClientError(
+      "instantiate-failed",
+      `${subject} ${shape} resolved to ${value === null ? "null" : typeof value}; ` +
+        "a component must resolve to an object of exports",
+    );
+  }
+  return value as Record<string, unknown>;
+}
+
+function makeSurface(instance: Record<string, unknown>): HostComponent {
   let stopped = false;
   let inFlight = 0;
   let idleWaiters: Array<() => void> = [];
@@ -396,4 +386,97 @@ export async function loadComponent(options: LoadComponentOptions): Promise<Host
     },
   };
   return surface;
+}
+
+/**
+ * Load a component and return its synchronous call surface.
+ *
+ * Both instantiate ABI shapes are accepted (the wrapper's own
+ * `instantiate(imports)` and the jco-style `instantiate(resolveCoreModule,
+ * imports)`), because both ship in the wild and the page loader supports both.
+ */
+export async function loadComponent(options: LoadComponentOptions): Promise<HostComponent> {
+  const { wrapper, capabilities = {}, glue = {}, wasi = {}, loaders } = options;
+  const imports = buildImports(capabilities, glue, wasi);
+  // W6's guard inside the emitted glue modules reads the declaration from the
+  // realm that imports them — that is this one. A consumer that imports the
+  // wrapper statically must call `declareCapabilities` BEFORE that import; a
+  // dynamic import through this function is ordered for it.
+  const previousDeclaration = publishCapabilities(capabilities);
+  // The glue plane the W5 modules read. Providers passed here are visible to a
+  // statically imported glue module for the duration of the import.
+  const previousGlue = globalThis.__TAIRITSU_GLUE__;
+  globalThis.__TAIRITSU_GLUE__ = { INTERFACES: glue };
+
+  const url = wrapper === undefined ? "<module>" : typeof wrapper === "string" ? wrapper : wrapper.href;
+  const importModule =
+    options.module !== undefined
+      ? async () => options.module as Record<string, unknown>
+      : (loaders?.importModule ?? ((target: string) => import(/* @vite-ignore */ target)));
+
+  let module: Record<string, unknown>;
+  try {
+    module = await importModule(url);
+  } catch (error) {
+    if (previousDeclaration === undefined) delete globalThis.__TAIRITSU_CAPABILITIES__;
+    else globalThis.__TAIRITSU_CAPABILITIES__ = previousDeclaration;
+    globalThis.__TAIRITSU_GLUE__ = previousGlue;
+    // A glue module refusing an undeclared interface is a capability failure, not
+    // a missing wrapper — keep the two diagnosable.
+    const message = String((error as Error)?.message ?? error);
+    const kind = /capability denied|is not declared/.test(message)
+      ? "capability-denied"
+      : "wrapper-not-found";
+    throw new HostClientError(kind, `could not load the component wrapper ${url}: ${message}`);
+  }
+
+  // The modules a wrapper statically imports have been evaluated by now.
+  if (previousDeclaration === undefined) delete globalThis.__TAIRITSU_CAPABILITIES__;
+  else globalThis.__TAIRITSU_CAPABILITIES__ = previousDeclaration;
+  globalThis.__TAIRITSU_GLUE__ = previousGlue;
+
+  const candidate =
+    (module.instantiate as Instantiable["instantiate"]) ??
+    (module.default as Instantiable["default"]) ??
+    (module.init as Instantiable["init"]);
+
+
+  let instance: Record<string, unknown>;
+  if (typeof candidate === "function") {
+    try {
+      instance = ensureSurface(await candidate(imports), "through instantiate(imports)", url);
+    } catch (firstError) {
+      // The jco shape: instantiate(resolveCoreModule, imports).
+      try {
+        instance = ensureSurface(await (
+          candidate as unknown as (
+            resolve: (path: string) => Promise<unknown>,
+            imports: Record<string, unknown>,
+          ) => unknown
+        )(
+          async (path: string) => {
+            const resolved = new URL(path, url === "<module>" ? import.meta.url : url);
+            const response = await fetch(resolved);
+            if (!response.ok) {
+              throw new Error(`failed to fetch core module ${path}: HTTP ${response.status}`);
+            }
+            return WebAssembly.compileStreaming(response);
+          },
+          imports,
+        ), "through instantiate(resolveCoreModule, imports)", url);
+      } catch (secondError) {
+        throw new HostClientError(
+          "instantiate-failed",
+          `the component wrapper ${url} could not be instantiated ` +
+            `(instantiate(imports): ${(firstError as Error)?.message ?? firstError}; ` +
+            `instantiate(resolveCoreModule, imports): ${(secondError as Error)?.message ?? secondError})`,
+        );
+      }
+    }
+  } else {
+    // A wrapper that is a plain namespace of exports needs no instantiation.
+    instance = ensureSurface(module, "through the wrapper namespace", url);
+  }
+
+  return makeSurface(instance);
 }
