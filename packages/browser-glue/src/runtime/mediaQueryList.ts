@@ -33,22 +33,16 @@ export function requireMediaQueryList(handle: bigint): MediaQueryList {
  * `on_change`. Verified with `jco types` on a two-parameter
  * `on-change: func(callback-id: u64, matches: bool)` world:
  * `export function onChange(callbackId: bigint, matches: boolean): void;`.
- * The sibling bridges in `platformHelpers.ts` had the same defect: sixteen
- * property names — the 42 reads that were wrong when this change started —
- * `on_mutation` for the WIT func `on-mutate` among them. They now read the jco
- * name, with the func's own snake spelling as a fallback, and
- * `scripts/check_wit_ops.py` walks every `__wasmExports[…]?.<prop>` dispatch so
- * the next wrong name fails a gate instead of quietly dropping a callback.
- *
- * Both spellings are accepted on read, camelCase first, the way
- * `platformHelpers.ts` reads `onTimeout ?? on_timeout`: a host that swaps in a
- * wrapper with the other convention keeps working, and a rename on the jco side
- * cannot make this bridge a silent no-op — which is the failure mode of the
- * defect this file exists to fix.
+ * The sibling bridges in `platformHelpers.ts` had the same defect: 42 reads were
+ * wrong when this change started, `on_mutation` for the WIT func `on-mutate`
+ * among them. They now read the jco name and nothing else — a snake fallback was
+ * removed tree-wide because jco never emits one, so every `?? on_snake` arm was
+ * text that could not run. `scripts/check_wit_ops.py` walks every
+ * `__wasmExports[…]?.<prop>` dispatch so the next wrong name fails a gate
+ * instead of quietly dropping a callback.
  */
 interface MediaQueryListCallbacks {
   onChange?: (callbackId: bigint, matches: boolean) => void;
-  on_change?: (callbackId: bigint, matches: boolean) => void;
 }
 
 function callbacks(): MediaQueryListCallbacks | undefined {
@@ -64,7 +58,9 @@ function callbacks(): MediaQueryListCallbacks | undefined {
  */
 function dispatchChange(callbackId: bigint, matches: boolean): void {
   const guest = callbacks();
-  const handler = guest?.onChange ?? guest?.on_change;
+  // `onChange` only: jco emits the camelCase of `on-change` and nothing else, so
+  // an `?? on_change` arm here would be text that can never run.
+  const handler = guest?.onChange;
   if (!handler) return;
   try {
     handler(callbackId, matches);

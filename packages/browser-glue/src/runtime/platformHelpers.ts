@@ -116,12 +116,11 @@ export const platformHelpers_exports = {
         globalThis.__wasmExports?.["tairitsu-browser:full/resize-observer-callbacks@0.2.0"];
       // WIT declares `on-resize(callback-id, entries: list<resize-entry>)`; jco
       // emits `onResize(callbackId: bigint, entries: Array<ResizeEntry>)` — the
-      // same identifier this read already used (one-segment kebab names
-      // camelCase to themselves), so the NAME was never the bug here. The VALUE
-      // was: the bridge handed over `u64` table handles for a
-      // `list<resize-entry>`, which the wrapper cannot convert. Both halves are
-      // fixed; the snake fallback stays for a wrapper built with that
-      // convention.
+      // same identifier this read already used, so the NAME was never the bug
+      // here. The VALUE was: the bridge handed over `u64` table handles for a
+      // `list<resize-entry>`, which the wrapper cannot convert. No fallback is
+      // carried: jco emits one identifier per func, so a second candidate would
+      // be text that can never run.
       const handler = guest?.onResize;
       if (handler) {
         // A throwing guest must not escape into the DOM observer loop — same

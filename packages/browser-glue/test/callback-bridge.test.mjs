@@ -34,7 +34,7 @@ import assert from "node:assert/strict";
 import { register } from "node:module";
 import { dirname, join } from "node:path";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 register("./ts-resolve-hook.mjs", import.meta.url);
@@ -670,9 +670,15 @@ test("every bridge reads the jco name alone (no fallback that nobody emits)", ()
   // them — the naming gate refuses such a pair anyway, and this is the
   // behavioural side of the same statement.
   // MUT: bridge-carries-dead-fallback
-  const source = readFileSync(join(RUNTIME, "platformHelpers.ts"), "utf8");
-  const pairs = [
-    ...source.matchAll(/(\w+)\?\.(on[A-Z][A-Za-z]*) \?\? \1\?\.(on_[a-z_]+)/g),
-  ].map((m) => `${m.group(2)} ?? ${m.group(3)}`);
-  assert.deepEqual(pairs, [], `dead fallbacks in the tree: ${pairs.join(", ")}`);
+  // EVERY runtime file, not just the one that used to carry them — a fallback
+  // added back to `mediaQueryList.ts` slipped past an earlier version of this.
+  const files = readdirSync(RUNTIME).filter((name) => name.endsWith(".ts"));
+  const offenders = [];
+  for (const name of files) {
+    const source = readFileSync(join(RUNTIME, name), "utf8");
+    for (const match of source.matchAll(/(\w+)\?\.(on[A-Z][A-Za-z]*) \?\? \1\?\.(on_[a-z_]+)/g)) {
+      offenders.push(`${name}: ${match.group(2)} ?? ${match.group(3)}`);
+    }
+  }
+  assert.deepEqual(offenders, [], `dead fallbacks in the tree: ${offenders.join(", ")}`);
 });

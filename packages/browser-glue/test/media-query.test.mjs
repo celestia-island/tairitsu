@@ -297,8 +297,7 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   // with no error — which is the same failure class as the missing
   // `match-media` op this PR fixes. A stub written to the provider's own
   // spelling would have gone green on the bug.
-  // MUT: bridge-name-only-snake (reading only `on_change` reds this test; the
-  // snake_case arm below still passes, which is why both arms exist).
+  // MUT: bridge-name-only-snake (reading only `on_change` reds the first arm).
   const { media } = installDom({ reduce: false });
   const handle = window_exports.matchMedia("(prefers-reduced-motion: reduce)");
   const list = globalThis.__mediaQueryListHandles.get(handle);
@@ -322,9 +321,10 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   );
   mediaQueryList_exports.removeListener(handle, 1n);
 
-  // (b) the snake_case spelling keeps working as a fallback (the sibling
-  //     bridge in platformHelpers.ts accepts `onTimeout || on_timeout`), so a
-  //     wrapper built with the other convention is not a silent no-op either.
+  // (b) there is NO snake fallback: jco emits `onChange` and nothing else, so a
+  //     stub exposing `on_change` must receive nothing. (This used to assert the
+  //     opposite — that the fallback delivers — which was only true in a world
+  //     where a wrapper speaks snake, and none does.)
   const snake = [];
   globalThis.__wasmExports = {
     "tairitsu-browser:full/media-query-list-callbacks@0.2.0": {
@@ -334,7 +334,12 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   mediaQueryList_exports.addListener(handle, 2n);
   media.reduce = false;
   list.flip();
-  assert.deepEqual(snake, [[2n, false]], "the snake_case fallback must also deliver");
+  assert.deepEqual(
+    snake,
+    [],
+    "`on_change` is not a name the wrapper emits; dispatching to it would be a fallback that cannot run",
+  );
+  mediaQueryList_exports.removeListener(handle, 2n);
 
   // (c) neither name present: no throw, no delivery — the bridge is inert
   //     rather than crashing the DOM event loop.
@@ -851,6 +856,22 @@ test("check_wit_ops.py: a MISSPELLED fallback next to the right name turns RED",
     /platformHelpers\.ts:\d+.*`(?:exp\.)?on_timout`/,
     `got: ${out}`,
   );
+});
+
+test("check_wit_ops.py: an INDIRECT bridge (`const guest = callbacks()`) is in range", () => {
+  // `mediaQueryList.ts` hands the guest object back from a helper, so a scan
+  // anchored on `const x = __wasmExports…` saw ZERO bindings there and the file
+  // was outside direction 3 entirely — `onChange ?? on_chang` read green.
+  // MUT: helper-indirection-invisible
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "mediaQueryList.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onChange;";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch");
+    writeFileSync(path, source.replace(needle, "const handler = guest?.onChange ?? guest?.on_chang;"));
+  });
+  assert.equal(rc, 1, "a wrong read behind a helper must fail the gate");
+  assert.match(out, /mediaQueryList\.ts:\d+.*`(?:guest\.)?on_chang`/, `got: ${out}`);
 });
 
 test("check_wit_ops.py: the WRAPPED inline shape (the form the defect shipped in) turns RED", () => {

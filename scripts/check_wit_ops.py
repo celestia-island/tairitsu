@@ -435,6 +435,17 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
         r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)(?:\?\.|\.)\s*"
         r"(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)"
     )
+    # A helper that hands the guest object back (`function callbacks() { return
+    # globalThis.__wasmExports?.[…]; }`) puts the lookup one indirection away from
+    # the binding, and a scan anchored on `const x = __wasmExports…` misses the
+    # whole file — `mediaQueryList.ts` had ZERO bindings that way, so its bridge
+    # was outside direction 3. These helpers are collected per file and treated as
+    # the same root: `const guest = callbacks(); guest?.onChange`.
+    helper_re = re.compile(
+        r"function\s+(?P<name>[A-Za-z_$][\w$]*)\s*\([^)]*\)[^{]*\{[^}]{0,400}?"
+        r"__wasmExports\s*\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]",
+        re.DOTALL,
+    )
     for path in sorted(RUNTIME_DIR.glob("*.ts")):
         # Whole-line comments are dropped BEFORE the window is cut: a comment that
         # mentions a bad spelling is not a read of it.
@@ -446,6 +457,15 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
         ]
         text = "\n".join(kept)
         lines = text.split("\n")
+        helpers = {m.group("name"): m.group("key") for m in helper_re.finditer(text)}
+        helper_bindings = []
+        if helpers:
+            for call in re.finditer(
+                r"const\s+(?P<local>[A-Za-z_$][\w$]*)\s*=\s*(?P<helper>[A-Za-z_$][\w$]*)\(\)",
+                text,
+            ):
+                if call.group("helper") in helpers:
+                    helper_bindings.append((call, helpers[call.group("helper")]))
         # Line numbers are reported against the FILE, not this filtered text: a
         # reported line that drifts with every comment edit sends the reader to
         # the wrong place (measured: 381 reported for a binding on line 473).
@@ -455,8 +475,12 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
             for index, line in enumerate(stripped_source_lines)
             if line.strip() and not line.strip().startswith("//")
         ]
-        for binding in bound_re.finditer(text):
-            keyed = _CALLBACK_KEY_RE.match(binding.group("key"))
+        direct_bindings = [(m, m.group("key")) for m in bound_re.finditer(text)]
+        for binding, raw_key in direct_bindings + helper_bindings:
+            # A helper-derived binding carries the KEY (the helper returned it);
+            # a direct binding carries it in `binding.group("key")`.
+            key_text = raw_key
+            keyed = _CALLBACK_KEY_RE.match(key_text)
             if keyed is None:
                 continue
             bindings += 1
@@ -564,76 +588,19 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                     continue
                 if prop in accepted:
                     continue
-                # A fallback (`a ?? b`) is allowed ONLY when the OTHER side of
-                # the same `??` is a name the guest really exports. Deciding that
-                # by "is any accepted name in this statement" is not enough — a
-                # chain whose wrong halves come first
-                # (`on_mutated ?? on_mutation ?? onMutate`) would read green, and
-                # that is a shape a "compat" repair actually produces. So the
-                # chain is split into operands and each wrong operand must be
-                # adjacent to a wrong/right pair that contains a declared name.
-                statement = _statement_around(window, position_of)
-                segments = statement.split("??")
-                names = []
-                for segment in segments:
-                    found = _MEMBER_RE.findall(segment)
-                    names.append(found[-1] if found else None)
-                # ORDER matters: the first operand is what actually gets used
-                # when the guest exports it, so a chain that only lands on a
-                # declared name in a LATER operand still drops the callback
-                # whenever an earlier wrong name is present. (`on_mutation ??
-                # onMutate` never reaches `onMutate` if the wrapper has
-                # `on_mutation`… which it does not; but `onMutated ?? onMutate`
-                # would silently take `onMutated`.) Only a declared name in the
-                # FIRST operand, or the wrong name being the immediate fallback
-                # of one, counts.
-                # The fallback itself must be a SPELLING of a declared func, not
-                # merely adjacent to one. `on_web_socket_open ?? on_web_socket_messag`
-                # used to pass because the neighbour was declared; the neighbour
-                # being right does not make the fallback anything.
-                # A fallback is the raw WIT kebab with its hyphens turned into
-                # underscores (`on-timeout` → `on_timeout`). That is what a
-                # wrapper built to the literal WIT spelling would read. It is
-                # NOT a promise that every name has such an alias:
-                # `on-mutate`'s would be `on_muta_te`, so `on_mutate` is not a
-                # spelling of anything and is a finding wherever it appears.
-                # ONLY single-segment names have a usable alias: `on-timeout` → a
-                # WIT-spelling wrapper reads `on_timeout`, the same letters under
-                # another convention. A multi-segment name's "alias" is
-                # `on_muta_te` for `on-mutate` — nobody emits that — so
-                # `on_mutate` is not a spelling of anything and is a finding.
-                fallbacks = {
-                    name.replace("-", "_"): camel(name)
-                    for name in declared
-                    if name.count("-") == 0
-                }
-                # (No declared callback name is single-segment today — `on-mutate`
-                # has "on-", `on-resize` has "on-" too — so this set is empty and
-                # every bridge reads the jco name alone. The mechanism stays for
-                # a future `timeout: func()`-style declaration, where the camel and
-                # snake forms ARE the same letters.)
-                # The ONLY acceptable shape is `<declared camel> ?? <that func's
-                # own snake spelling>`, adjacent, in that order:
-                #   on_timeout  ← fallbacks["on_timeout"] == "onTimeout" ✔
-                #   on_mutate   ← not a spelling of on-mutate ✘ (and no bridge has it)
-                # Any other wrong name — a misspelling, a spelling of a DIFFERENT
-                # func, or the snake side first — is a finding.
-                has_partner = False
-                for index, name in enumerate(names):
-                    if index == 0 or name != prop:
-                        continue
-                    neighbour = names[index - 1]
-                    if neighbour in accepted and fallbacks.get(prop) == neighbour:
-                        has_partner = True
-                        break
-                if has_partner:
-                    continue
+                # NO fallback is accepted: jco emits exactly one identifier per
+                # func — the camelCase of its kebab name — and nothing else, so a
+                # second candidate (`onChange ?? on_change`) is text that can
+                # never run. Every read of a property the guest does not export is
+                # a finding; that is this whole direction. (The rule went through
+                # four rounds — neighbour check, spelling check, an alias table,
+                # a chain parse — before the alias table turned out to be empty
+                # for every declared name; the honest answer is "one candidate".)
                 problems.append(
                     f"callback site {path.name}:{line_index + 1} binds `{local}` to "
                     f"`{keyed.group('iface')}@{keyed.group('ver')}` and reads `{local}.{prop}`, "
-                    f"which the guest does not export (declared: {', '.join(declared)}) and which "
-                    "no other candidate on that local repairs — the callback is dropped with no "
-                    "error"
+                    f"which the guest does not export (declared: {', '.join(declared)}) — the "
+                    "callback is dropped with no error"
                 )
             # "Used" = the local (or a local assigned from it) is invoked, passed
             # on, or read from (`callbacks.onMouseEvent(…)` is a read of
