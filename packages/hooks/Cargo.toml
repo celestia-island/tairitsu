@@ -19,10 +19,11 @@ default = []
 
 [dependencies]
 
-anyhow = { workspace = true }
 tairitsu-vdom = { workspace = true }
-tracing = { workspace = true }
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
+# `anyhow` is the `use_resource` future's error type; that item is absent on
+# wasm (no host executor), so the dependency is scoped to the native targets.
+anyhow = { workspace = true }
 tokio = { workspace = true, default-features = false, features = [
   "sync",
   "macros",

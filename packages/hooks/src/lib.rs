@@ -7,7 +7,7 @@
 //!
 //! - **State**: [`use_signal`], [`use_state`], [`use_ref`]
 //! - **Side Effects**: [`use_effect`], [`use_memo`], [`use_callback`]
-//! - **Async**: [`use_suspense`], [`use_resource`]
+//! - **Async**: [`use_suspense`], `use_resource` (non-wasm targets only)
 //! - **DOM**: [`use_dom_ref`], [`use_element_ref`]
 //! - **Animation**: [`use_animation`], [`use_simple_animation`]
 //! - **Context**: [`provide_context`], [`use_context`]
@@ -55,9 +55,13 @@ pub use state_machine::{
 };
 pub use store::{register_store, Store, StoreId};
 pub use suspense::{
-    resource_state, use_resource, use_suspense, Resource, ResourceState, ResourceStatus, Suspense,
+    resource_state, use_suspense, Resource, ResourceState, ResourceStatus, Suspense,
     SuspenseBoundary,
 };
+// `use_resource` needs an executor to drive the future and is therefore absent
+// on wasm (no host executor); everything else in `suspense` is target-neutral.
+#[cfg(not(target_family = "wasm"))]
+pub use suspense::use_resource;
 
 // Re-export Event types from vdom for convenience
 pub use tairitsu_vdom::{Event, GenericEvent};

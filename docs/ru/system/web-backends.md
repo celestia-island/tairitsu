@@ -1,8 +1,66 @@
-# Dual Web Backends
+# Web-бэкенд: единственный путь — контракт WIT + JS-реализация хоста
 
-The web crate supports two backend strategies:
-- web: wasm-bindgen + web-sys
-- wit-bindings: wit-bindgen + tairitsu-browser:full
+В `packages/web` ровно **один** путь Web-бэкенда. «Двойной бэкенд», который описывали ранние
+документы — `web` (`wasm-bindgen` / `web-sys`) наряду с `wit-bindings` — больше не существует:
+у стороны `web` не было потребителей, её зависимости и `cfg`-ветви выведены из эксплуатации.
 
-Choose based on target ABI and host capability.
+## Что это за путь
 
+| Пункт | Значение |
+| --- | --- |
+| Цель компиляции | `wasm32-wasip2` (WASI 0.2 / 0.3, Component Model) |
+| Контракт | Миры WIT `tairitsu-browser:*` (`packages/browser-worlds/wit/`) |
+| Привязки на стороне guest | `wit-bindgen` (feature `wit-bindings`) |
+| Реализация на стороне браузера | JS-хост (`packages/browser-glue/`) |
+| Браузерные возможности guest | Component Model host, через imports, внедряемые хостом |
+
+Точка входа — `WitPlatform` (`packages/web/src/wit_platform.rs`, feature `wit-bindings`).
+`BrowserPlatform` (`packages/web/src/browser.rs`) — заглушка: немедленные колбэки, прямоугольники
+по умолчанию; это не бэкенд на web-sys.
+
+## Почему остался только этот путь
+
+1. **Component Model меняет способ доставки «возможностей».** `wasm32-unknown-unknown` +
+   `web-sys` компилирует браузерные возможности прямо в секцию imports гостя, поэтому нельзя
+   объявить ни то, кто является хостом, ни то, какие возможности выданы. Контракт WIT описывает
+   поверхность возможностей как проверяемые и версионируемые интерфейсы imports, а хост
+   авторизует их для каждого экземпляра.
+2. **Трансляция на этапе сборки, а не самоподъём во время выполнения.** jco при сборке
+   транслирует component в core wasm плюс JS-рантайм canonical ABI; встроенного
+   `WebAssembly.Component` в браузерах **нет**. Поэтому «контракт в WIT, реализация в JS» —
+   единственная работоспособная форма сегодня, а не компромисс.
+3. **Ответственность хоста становится явной.** Создание экземпляров, авторизация возможностей,
+   асинхронное планирование и жизненный цикл (включая жёсткое завершение) принадлежат хосту
+   tairitsu; guest лишь описывает, что ему нужно.
+
+## Уровни миров
+
+Миры WIT разделены на пакеты с именами `tairitsu-browser:{domain}` в
+`packages/browser-worlds/wit/` (`browser-full.wit` и пакеты по доменам, сгенерированные в
+`generated/`). Список пакетов определяется этим каталогом.
+
+## Сборка и упаковка
+
+CLI `tairitsu build` из `packages/packager` поддерживает **только цель `component`**
+(`wasm32-wasip2` + путь browser-glue). Любая другая цель завершается ошибкой
+`Unknown build target … Only 'component' is supported.`
+
+Шаги сборки компонента:
+
+1. Убедиться, что установлен toolchain `wasm32-wasip2`
+2. `cargo build --target wasm32-wasip2 --lib`
+3. Скопировать компонент `.wasm` в `output_dir`
+4. Скопировать рантайм browser-glue в `output_dir/browser-glue/`
+5. Сгенерировать `index.html` хоста (загружает компонент через browser-glue)
+
+> **Требование**: сначала выполните `npm run build` в `packages/browser-glue/`, чтобы
+> скомпилировать TypeScript-код glue.
+
+## Рекомендации
+
+- Новые проекты пишите сразу под `wit-bindings` и миры WIT; унаследованного пути «сначала
+  остаться на `web`, потом мигрировать» нет.
+- Когда нужна новая браузерная возможность, сначала объявите интерфейс на стороне WIT, а затем
+  реализуйте его в JS-хосте — не тяните библиотеку DOM-привязок в guest.
+- Форма контрактов асинхронных API определяется текущими объявлениями в
+  `packages/browser-worlds/wit/`; эта страница не повторяет отдельные сигнатуры функций.

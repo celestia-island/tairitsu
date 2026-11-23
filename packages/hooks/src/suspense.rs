@@ -2,7 +2,7 @@
 //!
 //! This module provides:
 //! - `Resource<T>`: Async data that can be in Loading, Ready, or Error states
-//! - `use_resource`: Hook for creating async resources
+//! - `use_resource`: Hook for creating async resources (non-wasm targets only)
 //! - `use_suspense`: Hook for Suspense boundary components
 //! - `Suspense`: Component-based Suspense boundary
 //!
@@ -44,11 +44,13 @@
 //! - Automatic re-rendering via the runtime
 //! - Thread-safe state updates for async operations
 
+#[cfg(not(target_family = "wasm"))]
+use std::future::Future;
+
 use std::{
     cell::RefCell,
     collections::{HashMap, HashSet},
     fmt,
-    future::Future,
     rc::Rc,
     sync::Arc,
 };
@@ -103,7 +105,8 @@ thread_local! {
 /// Global registry for tracking all resources and suspense boundaries.
 #[derive(Default)]
 struct ResourceRegistry {
-    /// Next available resource ID
+    /// Next available resource ID (only handed out by `use_resource`)
+    #[cfg(not(target_family = "wasm"))]
     next_id: ResourceId,
     /// Map of resource ID to resource state (thread-safe for cross-thread updates)
     resources: HashMap<ResourceId, Arc<std::sync::Mutex<ResourceStateOp>>>,
@@ -131,6 +134,7 @@ enum ResourceStateOp {
 impl ResourceRegistry {
     fn new() -> Self {
         Self {
+            #[cfg(not(target_family = "wasm"))]
             next_id: 1,
             resources: HashMap::new(),
             resource_dependencies: HashMap::new(),
@@ -140,6 +144,7 @@ impl ResourceRegistry {
         }
     }
 
+    #[cfg(not(target_family = "wasm"))]
     fn register_resource(&mut self) -> ResourceId {
         let id = self.next_id;
         self.next_id += 1;
@@ -400,6 +405,13 @@ impl<T> Resource<T> {
 /// The resource starts in the `Loading` state and updates to `Ready` or `Error`
 /// when the future completes.
 ///
+/// # Availability
+///
+/// Only compiled for non-wasm targets. On wasm there is no executor to drive
+/// the future — the host (the tairitsu browser glue) does not provide one — so
+/// the item is absent rather than silently returning a resource that never
+/// leaves `Loading`.
+///
 /// # Example
 ///
 /// ```rust,ignore
@@ -411,8 +423,9 @@ impl<T> Resource<T> {
 /// });
 /// ```
 ///
-/// Note: This is a synchronous wrapper. For true async support in WASM,
-/// you would need to integrate with a runtime like tokio or wasm-bindgen-futures.
+/// Note: This is a synchronous wrapper; the returned `Resource` reads
+/// `Loading` until the background thread publishes a result.
+#[cfg(not(target_family = "wasm"))]
 pub fn use_resource<T, F, Fut>(fetcher: F) -> Resource<T>
 where
     T: Clone + 'static + std::marker::Send,
@@ -439,61 +452,49 @@ where
         component_id,
     };
 
-    // Spawn the async operation
-    // Non-WASM targets: spawn a thread with a tokio runtime to execute the future.
-    // WASM targets: the future is discarded (requires wasm-bindgen-futures or similar).
-    #[cfg(not(target_family = "wasm"))]
-    {
-        let (tx, rx) = std::sync::mpsc::channel();
+    // Spawn the async operation: a thread with its own tokio runtime drives the
+    // future and publishes the result back through the global resource registry.
+    let (tx, rx) = std::sync::mpsc::channel();
 
-        let thread_safe_state = Arc::clone(&inner.thread_safe_state);
+    let thread_safe_state = Arc::clone(&inner.thread_safe_state);
 
-        std::thread::spawn(move || {
-            let rt = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .expect("failed to build tokio runtime");
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("failed to build tokio runtime");
 
-            let result = rt.block_on(fetcher());
+        let result = rt.block_on(fetcher());
 
-            let _ = tx.send(result);
-        });
+        let _ = tx.send(result);
+    });
 
-        std::thread::spawn(move || {
-            if let Ok(result) = rx.recv() {
-                let new_state = match result {
-                    Ok(value) => ResourceState::Ready(value),
-                    Err(err) => ResourceState::Error(err.to_string()),
-                };
-                *thread_safe_state.lock().unwrap_or_else(|e| e.into_inner()) = new_state.clone();
+    std::thread::spawn(move || {
+        if let Ok(result) = rx.recv() {
+            let new_state = match result {
+                Ok(value) => ResourceState::Ready(value),
+                Err(err) => ResourceState::Error(err.to_string()),
+            };
+            *thread_safe_state.lock().unwrap_or_else(|e| e.into_inner()) = new_state.clone();
 
-                let registry_state = match new_state {
-                    ResourceState::Loading => ResourceStateOp::Loading,
-                    ResourceState::Ready(_) => ResourceStateOp::Ready,
-                    ResourceState::Error(_) => ResourceStateOp::Error,
-                };
+            let registry_state = match new_state {
+                ResourceState::Loading => ResourceStateOp::Loading,
+                ResourceState::Ready(_) => ResourceStateOp::Ready,
+                ResourceState::Error(_) => ResourceStateOp::Error,
+            };
 
-                let affected = RESOURCE_REGISTRY.with(|registry| {
-                    registry
-                        .borrow_mut()
-                        .update_resource(resource_id, registry_state)
-                });
+            let affected = RESOURCE_REGISTRY.with(|registry| {
+                registry
+                    .borrow_mut()
+                    .update_resource(resource_id, registry_state)
+            });
 
-                for comp_id in affected {
-                    runtime::mark_dirty(comp_id);
-                }
-                runtime::flush_render();
+            for comp_id in affected {
+                runtime::mark_dirty(comp_id);
             }
-        });
-    }
-
-    #[cfg(target_family = "wasm")]
-    {
-        let _ = fetcher;
-        tracing::warn!(
-            "use_resource: async execution not supported on WASM targets without wasm-bindgen-futures. Resource will remain in Loading state."
-        );
-    }
+            runtime::flush_render();
+        }
+    });
 
     resource
 }
@@ -753,6 +754,9 @@ mod tests {
         assert!(!boundary.has_pending());
     }
 
+    // MUT: `use_resource` is compiled out on wasm, so these executors tests are
+    // non-wasm only; removing this cfg turns the wasm build red (E0425).
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_use_resource_sync() {
         // Test with an immediately-ready future
@@ -766,6 +770,26 @@ mod tests {
             ResourceState::Loading => panic!("Resource should be ready"),
             ResourceState::Error(e) => panic!("Unexpected error: {}", e),
         }
+    }
+
+    // MUT: `use_resource` is compiled out on wasm, so these executors tests are
+    // non-wasm only; removing this cfg turns the wasm build red (E0425).
+    #[cfg(not(target_family = "wasm"))]
+    // MUT: pins module location of `use_resource` on non-wasm (delete the item
+    // -> E0432). The wasm half pins that it is absent: re-adding the item
+    // unconditionally -> duplicate definition -> E0428. Both directions are
+    // compile-time, so this test also runs on `cargo check --target wasm32-wasip2`.
+    #[cfg(not(target_family = "wasm"))]
+    #[test]
+    fn test_use_resource_is_exported_on_native() {
+        // MUT: rename the item (or hide it behind a wasm cfg) -> E0433 here.
+        let _ = crate::suspense::use_resource::<u8, _, _>(|| async { Ok(1u8) });
+    }
+
+    #[cfg(target_family = "wasm")]
+    #[test]
+    fn test_use_resource_absent_on_wasm() {
+        use crate::suspense::use_resource as _;
     }
 
     #[test]
