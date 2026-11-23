@@ -782,6 +782,7 @@ mod tests {
         let _ = crate::suspense::use_resource::<u8, _, _>(|| async { Ok(1u8) });
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_use_resource_error() {
         let resource = use_resource(|| async { Err::<(), _>(anyhow::anyhow!("fetch failed")) });
@@ -807,6 +808,7 @@ mod tests {
         assert_eq!(result, VNode::Text(tairitsu_vdom::VText::new("Done!")));
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_resource_clone() {
         let resource = use_resource(|| async { Ok::<_, anyhow::Error>(42) });
@@ -822,6 +824,7 @@ mod tests {
         }
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_resource_id() {
         let resource1 = use_resource(|| async { Ok::<_, anyhow::Error>(1) });
@@ -832,6 +835,7 @@ mod tests {
         assert_ne!(resource1.id(), resource2.id());
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_suspense_with_loading_resource() {
         // Create a resource that will take time to load
@@ -890,6 +894,7 @@ mod tests {
         assert!(!boundary.has_pending());
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_multiple_reads_same_resource() {
         let resource = use_resource(|| async { Ok::<_, anyhow::Error>(42) });
@@ -904,6 +909,7 @@ mod tests {
         assert_eq!(val2, ResourceState::Ready(42));
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_resource_peek() {
         let resource = use_resource(|| async {
