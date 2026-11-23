@@ -32,6 +32,7 @@ import assert from "node:assert/strict";
 import { register } from "node:module";
 import { dirname, join } from "node:path";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 register("./ts-resolve-hook.mjs", import.meta.url);
@@ -455,6 +456,35 @@ test("geolocation bridge binds `onPositionSuccess` / `onPositionError`", () => {
     if (originalNavigator) Object.defineProperty(globalThis, "navigator", originalNavigator);
     else delete globalThis.navigator;
     delete globalThis.__wasmExports;
+  }
+});
+
+test("every promise-callback dispatch passes the arity the WIT declares", () => {
+  // `on-promise-resolved(promise-id, value: string)` and
+  // `on-promise-rejected(promise-id, error: string)` both take a second,
+  // REQUIRED string. Six arms dispatch into them (clipboard write, clipboard
+  // read, `fetchPromise` resolve, and the fetch rejection arms); a per-arm test
+  // would leave five of them pinned only by inspection, so this one walks the
+  // source and asserts the CALL SHAPE at every site.
+  // MUT: promise-arm-rejects-without-error
+  const source = readFileSync(join(RUNTIME, "platformHelpers.ts"), "utf8");
+  const calls = [...source.matchAll(/if \(handler\) handler\(([^)]*)\)/gs)].map((m) =>
+    m[1].replace(/\s+/g, " ").trim(),
+  );
+  const promiseArms = calls.filter((args) => args === "id" || args.startsWith("id,"));
+  // Seven: clipboard write + clipboard read + `fetchPromise` = 3 resolve arms,
+  // and 4 rejection arms (write, read, JSON-parse, fetch).
+  assert.equal(
+    promiseArms.length,
+    7,
+    `the seven promise arms (3 resolve + 4 rejection) were expected, saw ${promiseArms.length}: ${promiseArms.join(" | ")}`,
+  );
+  for (const args of promiseArms) {
+    assert.notEqual(
+      args,
+      "id",
+      "a promise callback called with only the id cannot be lowered (the WIT requires a value/error string)",
+    );
   }
 });
 
