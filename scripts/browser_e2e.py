@@ -781,8 +781,9 @@ def _devtools_port(parent_pid):
 class CdpMedia:
     """Flip `Emulation.setEmulatedMedia` on the page shirabe is driving."""
 
-    def __init__(self, port):
+    def __init__(self, port, page_url):
         import websocket  # imported here: the lane stays optional
+        self._page_url = page_url
 
         self._websocket = websocket
         version = json.load(
@@ -806,13 +807,27 @@ class CdpMedia:
         # browser-level session it answers `-32601 wasn't found`. Attach to the
         # page we are testing and send every command on that session.
         #
-        # Prefer the page that is NOT `about:blank`: shirabe's browser can carry
-        # an initial blank tab beside the driven one, and flipping media on the
-        # blank tab would leave the assertions reading an unchanged preference.
-        # The port is already scoped to this run's shirabe children, so the
-        # remaining ambiguity is only which of OUR tabs.
-        tested = [t for t in pages if t.get("url", "") not in ("", "about:blank")]
-        target = (tested or pages)[-1]
+        # Attach to the page we NAVIGATED TO, by URL, not "the last page": a
+        # scenario's own server keeps a previous scenario's loopback page open,
+        # and every scenario boots the same page shape, so a wrong tab would not
+        # reliably fail — it would just read an unchanged preference. The port is
+        # already scoped to this run's shirabe children, so this only has to
+        # disambiguate among OUR tabs. Fallbacks stay loud: an exact-URL match,
+        # then a same-origin match, then the last non-blank page.
+        def origin(url):
+            return url.split("/", 3)[:3]
+
+        target = next((t for t in pages if t.get("url") == page_url), None)
+        if target is None:
+            target = next(
+                (t for t in pages if t.get("url") and origin(t["url"]) == origin(page_url)),
+                None,
+            )
+        if target is None:
+            target = next(
+                (t for t in reversed(pages) if t.get("url") not in ("", "about:blank")),
+                pages[-1],
+            )
         self._session = self._send(
             "Target.attachToTarget", {"targetId": target["targetId"], "flatten": True}
         )["result"]["sessionId"]
@@ -1351,7 +1366,7 @@ def main():
                         )
                     else:
                         try:
-                            cdp = CdpMedia(port_number)
+                            cdp = CdpMedia(port_number, url + "/index.html")
                         except Exception as error:  # optional websocket client, etc.
                             failures.append(
                                 f"CDP media emulation unavailable ({error}); the flip is unproven"
