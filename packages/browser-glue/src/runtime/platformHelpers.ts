@@ -1,6 +1,11 @@
 
 
-import { mutationEntryValue, resizeEntryValue } from "./callbackValues";
+import {
+  geoPositionErrorValue,
+  geoPositionValue,
+  mutationEntryValue,
+  resizeEntryValue,
+} from "./callbackValues";
 
 export const platformHelpers_exports = {
   innerWidth() {
@@ -337,7 +342,10 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/geolocation-callbacks@0.2.0"];
           const handler = guest?.onPositionSuccess ?? guest?.on_position_success;
-          if (handler) handler(successCallbackId, pos.coords.latitude, pos.coords.longitude);
+          // `on-position-success(callback-id, position: geo-position)` — the
+          // WHOLE record, not two loose numbers. Built inside the guard so the
+          // record is only materialised when a guest is there to take it.
+          if (handler) handler(successCallbackId, geoPositionValue(pos));
         }
       },
       (err) => {
@@ -348,7 +356,7 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/geolocation-callbacks@0.2.0"];
           const handler = guest?.onPositionError ?? guest?.on_position_error;
-          if (handler) handler(errorCallbackId, err.code, err.message);
+          if (handler) handler(errorCallbackId, geoPositionErrorValue(err));
         }
       },
       { enableHighAccuracy, timeout, maximumAge },

@@ -102,3 +102,38 @@ export function mutationEntryValue(record: unknown, sink: RecordSink): Record<st
     oldValue: typed.oldValue ?? NONE,
   };
 }
+
+/**
+ * One DOM `GeolocationPosition` → the `geo-position` record jco expects.
+ *
+ * `on-position-success(callback-id, position: geo-position)` takes the WHOLE
+ * record (`jco types`: `onPositionSuccess(callbackId: bigint, position:
+ * GeoPosition)`), not two loose numbers. `option<f64>` fields become optional
+ * properties — `accuracy` is the only one the WIT declares as required.
+ */
+export function geoPositionValue(position: unknown): Record<string, unknown> {
+  const coords = (position as { coords?: Partial<GeolocationCoordinates> }).coords ?? {};
+  const optional = (value: unknown): number | undefined =>
+    typeof value === "number" && Number.isFinite(value) ? value : NONE;
+  return {
+    latitude: Number(coords.latitude ?? 0),
+    longitude: Number(coords.longitude ?? 0),
+    altitude: optional(coords.altitude),
+    accuracy: Number(coords.accuracy ?? 0),
+    altitudeAccuracy: optional(coords.altitudeAccuracy),
+    heading: optional(coords.heading),
+    speed: optional(coords.speed),
+  };
+}
+
+/**
+ * One `GeolocationPositionError` → the `geo-position-error` record.
+ * (`onPositionError(callbackId: bigint, error: GeoPositionError)`, `code: u8`.)
+ */
+export function geoPositionErrorValue(error: unknown): Record<string, unknown> {
+  const failure = error as Partial<GeolocationPositionError>;
+  return {
+    code: Number(failure.code ?? 0),
+    message: String(failure.message ?? ""),
+  };
+}

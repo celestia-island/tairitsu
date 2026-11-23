@@ -369,7 +369,16 @@ test("geolocation bridge binds `onPositionSuccess` / `onPositionError`", () => {
     });
     withInstance(() => platformHelpers.getCurrentPosition(0n, 33n, 34n, false, 1000, 0));
     assert.deepEqual(calls.map(([, name]) => name), ["onPositionSuccess"]);
-    assert.deepEqual(Array.from(calls[0][2]), [33n, 12.5, -7.25]);
+    // `on-position-success(callback-id, position: geo-position)` — the whole
+    // record, not two loose numbers (`jco types`: `position: GeoPosition`).
+    // MUT: geolocation-bridge-sends-loose-numbers
+    const [callbackId, position] = calls[0][2];
+    assert.equal(callbackId, 33n);
+    assert.equal(typeof position, "object", "the position is a record, not a number");
+    assert.equal(position.latitude, 12.5);
+    assert.equal(position.longitude, -7.25);
+    assert.equal(position.accuracy, 0, "required field is always present");
+    assert.ok("altitude" in position && position.altitude === undefined);
   } finally {
     if (originalNavigator) Object.defineProperty(globalThis, "navigator", originalNavigator);
     else delete globalThis.navigator;
