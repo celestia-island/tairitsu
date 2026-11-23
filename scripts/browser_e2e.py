@@ -1329,8 +1329,11 @@ def main():
                 # reduced-motion users silently kept the full animation set.
                 # Two things must hold on a REAL browser:
                 #   1. the read returns a real boolean (not undefined/throw);
-                #   2. it TRACKS the preference — false, then true, then false —
-                #      when CDP flips Emulation.setEmulatedMedia.
+                #   2. it TRACKS the preference when CDP flips
+                #      Emulation.setEmulatedMedia: the three asserted deltas are
+                #      reduce -> true, no-preference -> false, reduce -> true.
+                #      The FIRST sample is the host's own default and is recorded
+                #      but not asserted, because it is not ours to fix.
                 read = (
                     "(() => {"
                     " try { return JSON.stringify(globalThis.__match_media.read()); }"
