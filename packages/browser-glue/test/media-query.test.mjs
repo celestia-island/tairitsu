@@ -370,21 +370,61 @@ test("media-query-list: re-adding a callback id does not stack DOM listeners", (
   delete globalThis.__wasmExports;
 });
 
-test("media-query-list: re-registering an id does not grow the reclaim set", () => {
-  // `reclaimables.listeners` is walked on EVERY dispose, so an entry per
-  // add-listener call would grow unbounded for a long-lived component and hold
-  // stale handlers alive. One list owns at most one reclaim entry. MUT: reclaim-per-add
+test("media-query-list: reclaim entries are one per (list, callback id)", () => {
+  // Both failure modes at once, because a fix for one caused the other:
+  //   * an entry PER CALL grows the set without bound (walked on every dispose);
+  //   * an entry per (target, type) COLLAPSES distinct ids, so the second
+  //     listener is never detached and a disposed instance keeps receiving
+  //     change callbacks.
+  // The identity is (list, callback id): 3 distinct ids -> 3 entries, and
+  // re-registering one of them leaves the count unchanged.
+  // MUT: reclaim-per-add | MUT: reclaim-collapsed-by-list
   installDom({ reduce: false });
   const handle = window_exports.matchMedia("(prefers-reduced-motion: reduce)");
+  const list = globalThis.__mediaQueryListHandles.get(handle);
   const before = countChangeReclaimables();
-  for (let i = 0; i < 5; i += 1) mediaQueryList_exports.addListener(handle, 3n);
-  mediaQueryList_exports.setOnchange(handle, 4n);
-  mediaQueryList_exports.setOnchange(handle, 5n);
-  const after = countChangeReclaimables();
+
+  mediaQueryList_exports.addListener(handle, 1n);
+  mediaQueryList_exports.addListener(handle, 2n);
+  mediaQueryList_exports.addListener(handle, 3n);
   assert.equal(
-    after - before,
-    1,
-    `re-registering listeners must keep one reclaim entry per list, not ${after - before}`,
+    countChangeReclaimables() - before,
+    3,
+    "each distinct callback id must have its own reclaim entry",
+  );
+
+  // Re-registering an existing id replaces its entry (no growth, no collapse).
+  mediaQueryList_exports.addListener(handle, 2n);
+  mediaQueryList_exports.setOnchange(handle, 3n);
+  assert.equal(
+    countChangeReclaimables() - before,
+    3,
+    "re-registering an id must replace its entry, not add or collapse one",
+  );
+
+  // The real invariant: dispose detaches EVERY attached handler, so a disposed
+  // instance receives nothing more.
+  const detached = [];
+  const originalRemove = list.removeEventListener.bind(list);
+  list.removeEventListener = (type, fn, opts) => {
+    detached.push(fn);
+    return originalRemove(type, fn, opts);
+  };
+  const current = globalThis.__TAIRITSU_CURRENT__();
+  // The suite runs on the page's default instance, which must stay alive, so
+  // this checks the reclaimed set directly instead of disposing it.
+  const attachedForList = [...current.reclaimables.listeners].filter(
+    (entry) => entry.target === list && entry.type === "change",
+  );
+  assert.equal(
+    attachedForList.length,
+    3,
+    "every id attached to this list must be reclaimable, or dispose leaves a live handler",
+  );
+  assert.equal(
+    new Set(attachedForList.map((entry) => entry.callbackId)).size,
+    3,
+    "the entries must be distinguishable by callback id",
   );
 });
 

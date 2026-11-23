@@ -33,9 +33,14 @@ export function requireMediaQueryList(handle: bigint): MediaQueryList {
  * `on_change`. Verified with `jco types` on a two-parameter
  * `on-change: func(callback-id: u64, matches: bool)` world:
  * `export function onChange(callbackId: bigint, matches: boolean): void;`.
- * (`on-resize` / `on-mutation` in the sibling bridges look snake_case and are
- * not: those interfaces are not declared by the composed world at all, so
- * those paths never run.)
+ * The sibling bridges in `platformHelpers.ts` read the snake_case spelling
+ * (`on_resize` at :103, `on_mutation` at :143) for interfaces the composed
+ * world DOES declare (`_handwritten.wit` `resize-observer-callbacks` /
+ * `mutation-observer-callbacks`, imported and exported by `browser-full.wit`),
+ * so by the same argument those two reads are silent no-ops of exactly this
+ * class. They are pre-existing and outside this change's scope — named here so
+ * the next reader fixes them rather than concluding from the surrounding code
+ * that snake_case works.
  *
  * Both spellings are accepted on read, camelCase first, the way
  * `platformHelpers.ts` reads `onTimeout || on_timeout`: a host that swaps in a
@@ -102,25 +107,34 @@ export const mediaQueryList_exports = {
       globalThis.__mediaQueryListListeners?.set(self, listeners);
     }
     listeners.set(callbackId, handler);
-    // W4: owned by the instance, removed on dispose. The reclaim entry is keyed
-    // by (list, id) through the map above, so re-registering an id REPLACES its
-    // entry instead of appending another: the set is walked on every dispose,
-    // and an unbounded set would both slow that walk and hold a stale handler
-    // alive for the instance's whole lifetime.
+    // W4: owned by the instance, removed on dispose.
+    //
+    // The reclaim entry's IDENTITY is (list, callback id) — a list may carry
+    // several distinct listeners at once, so keying on (target, type) alone
+    // would collapse them into one entry and leave the extra handler attached
+    // past dispose, which is a disposed instance still receiving callbacks.
+    // Re-registering the SAME id replaces its entry rather than appending a
+    // second one (the set is walked on every dispose).
     const reclaimables = globalThis.__TAIRITSU_CURRENT__?.().reclaimables.listeners;
     if (reclaimables) {
-      const entry = {
+      for (const existingEntry of reclaimables) {
+        if (
+          existingEntry.target === list &&
+          existingEntry.type === "change" &&
+          (existingEntry as { callbackId?: bigint }).callbackId === callbackId
+        ) {
+          reclaimables.delete(existingEntry);
+        }
+      }
+      reclaimables.add({
         target: list,
         type: "change",
         handler: handler as unknown as EventListener,
         options: undefined,
-      };
-      for (const existingEntry of reclaimables) {
-        if (existingEntry.target === list && existingEntry.type === "change") {
-          reclaimables.delete(existingEntry);
-        }
-      }
-      reclaimables.add(entry);
+        // Read by dispose() only as an identity tag; `Reclaimables` types the
+        // entry structurally, so the extra field rides along.
+        callbackId,
+      } as { target: EventTarget; type: string; handler: EventListener; options?: boolean });
     }
   },
 

@@ -799,14 +799,22 @@ class CdpMedia:
         # Discovered before any session exists, so it goes out browser-level.
         self._session = None
         targets = self._send("Target.getTargets")["result"]["targetInfos"]
-        pages = [t for t in targets if t["type"] == "page"]
+        pages = [t for t in targets if t["type"] == "page" and not t.get("url", "").startswith("chrome://")]
         if not pages:
             raise RuntimeError("the browser has no page target to attach to")
         # `Emulation.setEmulatedMedia` is a PAGE-domain command: sent on the
         # browser-level session it answers `-32601 wasn't found`. Attach to the
-        # top page target and send every command on that session.
+        # page we are testing and send every command on that session.
+        #
+        # Prefer the page that is NOT `about:blank`: shirabe's browser can carry
+        # an initial blank tab beside the driven one, and flipping media on the
+        # blank tab would leave the assertions reading an unchanged preference.
+        # The port is already scoped to this run's shirabe children, so the
+        # remaining ambiguity is only which of OUR tabs.
+        tested = [t for t in pages if t.get("url", "") not in ("", "about:blank")]
+        target = (tested or pages)[-1]
         self._session = self._send(
-            "Target.attachToTarget", {"targetId": pages[-1]["targetId"], "flatten": True}
+            "Target.attachToTarget", {"targetId": target["targetId"], "flatten": True}
         )["result"]["sessionId"]
 
     def _send(self, method, params=None):
