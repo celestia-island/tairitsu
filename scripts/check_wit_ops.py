@@ -330,25 +330,6 @@ def declared_funcs(iface: str) -> list[str]:
     return []
 
 
-def snake(kebab: str) -> str:
-    """`on-mutate` → `on_mutate`. The fallback spelling a site may use.
-
-    `packages/browser-glue/src/runtime/platformHelpers.ts` reads
-    `guest?.onTimeout ?? guest?.on_timeout`: the first is what jco emits, the
-    second keeps a wrapper built to the WIT spelling working.
-
-    Only a SINGLE-SEGMENT WIT name has an underscore spelling that could ever be
-    real (`on-timeout` → `onTimeout` / `on_timeout`); a multi-segment one never
-    does — `on-mutate` would have to be `on_muta_te` here, and no wrapper emits
-    that. So the fallback is not a promise that every WIT name HAS an underscore
-    alias: it is the one spelling a hypothetical WIT-convention wrapper would
-    pick, accepted only when the jco name is also present. That is what lets
-    this check catch the defect that motivated it: `on_mutation` is neither the
-    jco name nor the fallback of one.
-    """
-    return kebab.replace("-", "_")
-
-
 def _all_callback_lookups(text: str) -> list[re.Match[str]]:
     """Every `__wasmExports[...]` lookup, string-keyed or template-keyed."""
     found = [*_CALLBACK_KEYED.finditer(text), *_CALLBACK_KEYED_TEMPLATE.finditer(text)]
@@ -606,20 +587,24 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                 # would silently take `onMutated`.) Only a declared name in the
                 # FIRST operand, or the wrong name being the immediate fallback
                 # of one, counts.
+                # The fallback itself must be a SPELLING of a declared func, not
+                # merely adjacent to one. `on_web_socket_open ?? on_web_socket_messag`
+                # used to pass because the neighbour was declared; the neighbour
+                # being right does not make the fallback anything.
+                fallbacks = {
+                    name.replace("-", "_"): camel(name)  # noqa: B902 — the WIT kebab
+                    for name in declared
+                }
                 has_partner = False
                 for index, name in enumerate(names):
                     if name != prop:
                         continue
-                    if index > 0 and names[index - 1] in accepted:
-                        # `declared ?? this` — this only runs when the guest
-                        # lacks the declared name, i.e. never for a real wrapper.
+                    if index > 0 and names[index - 1] in accepted and prop in fallbacks:
+                        # `declared ?? this` where `this` IS that func's snake
+                        # spelling: the only shape that can ever run.
                         has_partner = True
                         break
-                    if index == 0 and index + 1 < len(names) and names[index + 1] in accepted:
-                        # `this ?? declared` with `this` first: still wrong, since
-                        # `this` shadows the declared name whenever it exists.
-                        has_partner = False
-                        break
+                    # `this ?? declared` is never acceptable: `this` shadows.
                 if has_partner:
                     continue
                 problems.append(

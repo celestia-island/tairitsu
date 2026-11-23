@@ -674,9 +674,9 @@ test("check_wit_ops.py: a callback bridge reading a property jco never emits tur
   const { rc, out } = runGateAgainst((root) => {
     const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
     const source = readFileSync(path, "utf8");
-    const needle = "guest?.onMutate ?? guest?.on_mutation";
+    const needle = "const handler = guest?.onMutate;";
     assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to break");
-    writeFileSync(path, source.replace(needle, "guest?.on_mutation"));
+    writeFileSync(path, source.replace(needle, "const handler = guest?.on_mutation;"));
   });
   assert.equal(rc, 1, "a callback property the guest does not export must fail the gate");
   // File + line + the offending read: a reworded finding must not turn this
@@ -801,15 +801,35 @@ test("check_wit_ops.py: a fallback chain whose wrong halves come first still tur
   const { rc, out } = runGateAgainst((root) => {
     const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
     const source = readFileSync(path, "utf8");
-    const needle = "guest?.onMutate ?? guest?.on_mutation";
+    const needle = "exp?.onTimeout ?? exp?.on_timeout";
     assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to break");
-    writeFileSync(path, source.replace(needle, "guest?.on_mutated ?? guest?.on_mutation ?? guest?.onMutate"));
+    writeFileSync(path, source.replace(needle, "exp?.on_time_out ?? exp?.on_timeout ?? exp?.onTimeout"));
   });
   assert.equal(rc, 1, "a chain whose wrong halves come first must fail the gate");
   assert.match(
     out,
-    /platformHelpers\.ts:\d+.*`(?:guest\.)?on_mutated`/,
+    /platformHelpers\.ts:\d+.*`(?:exp\.)?on_time_out`/,
     `the gate must name the file, a line, and the wrong read; got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: a MISSPELLED fallback next to the right name turns RED", () => {
+  // `onWebSocketOpen ?? on_web_socket_open` is a legitimate pair; the fallback is
+  // the snake spelling of the WIT func. `?? on_web_socket_opn` is not — and it
+  // used to pass, because the rule only asked whether the NEIGHBOUR was declared.
+  // MUT: callback-fallback-spelling-unchecked
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "guest?.onWebSocketOpen ?? guest?.on_web_socket_open";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch");
+    writeFileSync(path, source.replace(needle, "guest?.onWebSocketOpen ?? guest?.on_web_socket_opn"));
+  });
+  assert.equal(rc, 1, "a fallback that is not a spelling of a declared func must fail the gate");
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+.*`(?:guest\.)?on_web_socket_opn`/,
+    `got: ${out}`,
   );
 });
 

@@ -662,20 +662,27 @@ test("a throwing guest callback does not escape into the DOM observer loop", () 
   }
 });
 
-test("every bridge answers under the snake_case spelling too (fallback kept)", () => {
+test("a snake spelling that IS a declared func keeps working (fallback kept)", async () => {
   // The jco name is the contract, but a wrapper built with the WIT spelling (or
   // a future jco) must keep working — the same belt-and-braces the media-query
   // bridge uses. This drives the mutation bridge with `on_mutation` only and
   // asserts it still fires, which is what proves the `??` fallback is wired and
   // not dead text.
-  // MUT: mutation-bridge-drops-fallback (`guest?.onMutate` alone reds this)
-  const calls = installGuest({ "mutation-observer-callbacks": ["on_mutation"] });
+  // MUT: timer-bridge-drops-fallback (`exp?.onTimeout` alone reds this)
+  // The mutation bridge no longer HAS a fallback: `on_mutation` is not a spelling
+  // of the WIT func `on-mutate` under any convention, so it was dead text and the
+  // gate refuses it. `on_timeout` IS the snake spelling of `on-timeout`, so the
+  // timer bridge is where the fallback is real.
+  const calls = installGuest({ "timer-callbacks": ["on_timeout"] });
+  const originalWindow = globalThis.window;
   try {
-    withInstance(() => platformHelpers.createMutationObserver(2n));
-    const observer = globalThis.MutationObserver.instances.at(-1);
-    observer.callback([fakeMutationRecord()], observer);
+    globalThis.window = { setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout };
+    withInstance(() => platformHelpers.setTimeout(5n, 0));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     assert.equal(calls.length, 1, "the snake_case fallback must still deliver");
+    assert.equal(calls[0][1], "on_timeout");
   } finally {
+    globalThis.window = originalWindow;
     delete globalThis.__wasmExports;
   }
 });

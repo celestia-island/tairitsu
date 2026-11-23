@@ -178,7 +178,7 @@ export const platformHelpers_exports = {
       // callback that never ran and never logged. The argument had the same
       // problem as the resize bridge: `u64` handles for a
       // `list<mutation-entry>`.
-      const handler = guest?.onMutate ?? guest?.on_mutation;
+      const handler = guest?.onMutate;
       if (handler) {
         // Same guard as the resize bridge and `mediaQueryList.ts`: a guest that
         // throws must not escape into the MutationObserver callback.
@@ -450,7 +450,7 @@ export const platformHelpers_exports = {
       // emits `onScrollEvent` taking TWO coordinates. The old read passed
       // `on_scroll` (a name the wrapper never has) with three derived numbers
       // (top / height / client height) — neither the name nor the arity matched.
-      const onScrollEvent = guest?.onScrollEvent ?? guest?.on_scroll;
+      const onScrollEvent = guest?.onScrollEvent;
       if (onScrollEvent) {
         const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
         const scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;

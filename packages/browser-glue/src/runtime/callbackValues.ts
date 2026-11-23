@@ -98,10 +98,15 @@ export function resizeEntryValue(entry: unknown, sink: EntrySink): Record<string
  *
  * `added-nodes` / `removed-nodes` are `option<u64>`: ONE handle or `undefined`,
  * never a list (`jco types` emits `addedNodes?: bigint`). They carry the first
- * node of each NodeList. The record handle minted below is stored so that a
- * `mutation-record` handle minted elsewhere (the `MutationObserver` op path)
- * resolves the same object; the callback itself carries no record handle, so a
- * guest that wants every added node asks through the handle it was given.
+ * node of each NodeList.
+ *
+ * The record handle minted below is stored in the instance's
+ * `mutationRecordHandles` table so that `mutation-record`'s getters can resolve
+ * it — but the callback carries **no record handle** (the WIT `mutation-entry`
+ * has nine fields and none of them is one), so a guest receiving this payload
+ * cannot reach the full lists from it. That gap is a WIT shape, not a bridge
+ * choice: closing it needs the entry record to carry the handle (or the
+ * unimplemented `take-records` op).
  *
  * Handle DOMAINS: `target` is minted with `__storeElement` (matches
  * `mutation-record`'s `get-target`), while the sibling and node-list fields are

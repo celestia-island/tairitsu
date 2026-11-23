@@ -40,7 +40,7 @@ export function requireMediaQueryList(handle: bigint): MediaQueryList {
  * the next wrong name fails a gate instead of quietly dropping a callback.
  *
  * Both spellings are accepted on read, camelCase first, the way
- * `platformHelpers.ts` reads `onTimeout || on_timeout`: a host that swaps in a
+ * `platformHelpers.ts` reads `onTimeout ?? on_timeout`: a host that swaps in a
  * wrapper with the other convention keeps working, and a rename on the jco side
  * cannot make this bridge a silent no-op — which is the failure mode of the
  * defect this file exists to fix.
