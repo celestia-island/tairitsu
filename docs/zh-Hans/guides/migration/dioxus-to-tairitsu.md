@@ -45,7 +45,7 @@ Tairitsu 应用 (WASM 组件)
 VDOM + 平台抽象
     |
     v
-平台层 (WebPlatform/WitPlatform)
+平台层 (WitPlatform)
     |
     v
 浏览器主机 (browser-glue) 或原生主机

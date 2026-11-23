@@ -10,7 +10,7 @@
 
 1. Cargo 特性切换：`web` → `wit-bindings`
 2. 编译目标切换：`wasm32-unknown-unknown` → `wasm32-wasip2`
-3. 平台实例化切换：`WebPlatform::new()` → `WitPlatform::new()?`
+3. 平台实例化：`WebPlatform` 已不存在，直接构造 `WitPlatform`
 4. 确认宿主具备 `tairitsu-browser:full` 所需导入（通常由 `browser-glue` 提供）
 
 ## 检查命令
