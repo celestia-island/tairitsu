@@ -157,8 +157,24 @@ def check(cargo: str) -> int:
     for crate in DELIVERY_CRATES:
         try:
             text = run_tree(cargo, crate)
+            # Cross-check against a second, independent invocation. A review
+            # round showed the whole guard chain is only as good as `text`: one
+            # line filtering `text` (or `run_tree`'s return) shrinks both the
+            # expectation and the parse together, and they agree by construction.
+            # Two separate `cargo tree` runs cannot shrink consistently unless
+            # the *sources* agree, so filtering state has to be carried across
+            # invocations to survive — which is a much narrower surface.
+            second = run_tree(cargo, crate)
         except GateError as exc:
             print(f"wasip2 closure gate could not run: {exc}", file=sys.stderr)
+            return 2
+        if text != second:
+            print(
+                f"wasip2 closure gate could not run: two independent `cargo tree` "
+                f"runs for {crate} disagreed ({len(text.splitlines())} vs "
+                f"{len(second.splitlines())} lines)",
+                file=sys.stderr,
+            )
             return 2
         members = parse_members(text)
 
@@ -207,6 +223,16 @@ def check(cargo: str) -> int:
 
         for pkg in forbidden_in(members):
             present.append((crate, pkg))
+
+        # Belt and braces, computed straight off both raw texts: a search that
+        # does not go through `parse_members` / `forbidden_in` at all.
+        for pkg in FORBIDDEN:
+            needle = pkg + " v"
+            raw_hit = any(
+                ln.strip().startswith(needle) for ln in text.splitlines()
+            ) or any(ln.strip().startswith(needle) for ln in run_tree(cargo, crate).splitlines())
+            if raw_hit and (crate, pkg) not in present:
+                present.append((crate, pkg))
 
     if present:
         summary = ", ".join(f"{pkg} (via {crate})" for crate, pkg in present)
