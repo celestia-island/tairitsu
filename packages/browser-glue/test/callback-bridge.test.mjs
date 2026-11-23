@@ -73,6 +73,7 @@ globalThis.ResizeObserver = RecordingObserver;
 
 const platformHelpers = (await import(join(RUNTIME, "platformHelpers.ts"))).platformHelpers_exports;
 const { mutationRecord_exports } = await import(join(RUNTIME, "mutationRecord.ts"));
+const { eventTarget_exports } = await import(join(RUNTIME, "eventTarget.ts"));
 const { resizeObserverEntry_exports } = await import(join(RUNTIME, "resizeObserverEntry.ts"));
 
 /** The guest, as jco builds it: one object per interface, camelCase keys. */
@@ -656,6 +657,41 @@ test("a throwing guest callback does not escape into the DOM observer loop", () 
     assert.match(String(logged[0][0]), /resize-observer dispatch error/);
     assert.match(String(logged[1][0]), /mutation-observer dispatch error/);
     void throwing;
+  } finally {
+    console.error = originalError;
+    delete globalThis.__wasmExports;
+  }
+});
+
+test("a throwing guest callback does not escape the EVENT bridge either", () => {
+  // `eventTarget.ts`'s catch was only claimed, never covered: replacing it with a
+  // no-op kept the suite green. Drive the listener SYNCHRONOUSLY (the file's own
+  // `addEventListener`) and assert the throw is logged rather than propagated.
+  // MUT: event-bridge-unwrapped
+  const originalError = console.error;
+  const logged = [];
+  console.error = (...args) => logged.push(args);
+  const listeners = [];
+  const fakeElement = {
+    addEventListener: (type, handler) => listeners.push([type, handler]),
+    removeEventListener: () => {},
+  };
+  try {
+    globalThis.__wasmExports = {
+      "tairitsu-browser:full/event-callbacks@0.2.0": {
+        onMouseEvent() {
+          throw new Error("guest exploded");
+        },
+      },
+    };
+    const instance = currentInstance();
+    instance.tables.elementHandles.set(77n, fakeElement);
+    instance.tables.listenerHandles.set(88n, { element: fakeElement, type: "click", listener() {} });
+    eventTarget_exports.addEventListener(77n, "click", false);
+    const [, listener] = listeners.find(([type]) => type === "click");
+    assert.doesNotThrow(() => listener({ type: "click", preventDefault() {} }));
+    assert.equal(logged.length, 1, `the throw must be logged, saw ${logged.length}`);
+    assert.match(String(logged[0][0]), /event dispatch error/);
   } finally {
     console.error = originalError;
     delete globalThis.__wasmExports;

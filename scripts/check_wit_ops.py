@@ -330,77 +330,45 @@ def declared_funcs(iface: str) -> list[str]:
     return []
 
 
-def per_file_binding_problems(declared_by_iface: dict[str, list[str]]) -> list[str]:
+# Files that mention the namespace without reading a guest export: the ambient
+# declaration and the installer. The exclusion is PRINTED by the gate (see
+# `findings`) — a silent exclusion list is a place a bridge can be hidden.
+CALLBACK_SCAN_EXCLUDED = ("global.d.ts", "wasmExports.ts")
+
+
+def per_file_binding_problems(
+    counted_by_file: dict[str, int], declared_by_iface: dict[str, list[str]]
+) -> list[str]:
     """Every runtime file that TOUCHES `__wasmExports` must yield a binding.
 
-    The scan recognises three shapes (inline, bound, helper-returned). Each is a
-    regex, so a refactor — `const callbacks = () => …`, or a guard with its own
-    braces inside the helper body — can make a whole file produce ZERO bindings
-    while the global floor stays green at 47 (measured: `mediaQueryList.ts` drops
-    out and `onChange ?? on_chang` reads clean again).
+    The scan recognises three shapes (direct, bound, helper-returned), each by
+    regex. An ordinary refactor — an arrow-function helper, a guarded helper body,
+    a renamed local — can make a whole file produce ZERO bindings while the global
+    floor stays green at 47 (measured: `mediaQueryList.ts` drops out and a wrong
+    read inside it reads clean again). Worse, a file could keep a handful of
+    bindings and lose the rest.
 
-    This does not try to parse those shapes; it notices that the SHAPE CHANGED.
-    A file that mentions `__wasmExports` and contributes no binding is a red gate
-    with a message that names the file and the scan to look at.
+    So the floor is judged on the SAME numbers direction 3b used
+    (`counted_by_file` comes from `bound_bridge_problems`), per file: zero
+    bindings in a file that mentions the namespace is a red gate. It notices that
+    the SHAPE CHANGED; it does not try to parse arrow functions or nested braces,
+    which would drag this regex gate toward a JS parser.
     """
     problems: list[str] = []
-    contributing: set[str] = set()
-    sites, _ = callback_sites()
-    for site in sites:
-        contributing.add(site[0])
-    for binding in bound_binding_files(declared_by_iface):
-        contributing.add(binding)
-    for binding in helper_binding_files():
-        contributing.add(binding)
     for path in sorted(RUNTIME_DIR.glob("*.ts")):
-        # Declarations only (`global.d.ts`) and the installer itself are not
-        # bridges — they mention the namespace without reading from it.
-        if path.name.endswith(".d.ts") or path.name == "wasmExports.ts":
+        if path.name in CALLBACK_SCAN_EXCLUDED:
             continue
         text = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
         if "__wasmExports" not in text:
             continue
-        if path.name in contributing:
+        if counted_by_file.get(path.name, 0) > 0:
             continue
         problems.append(
             f"{path.name} references `__wasmExports` but the scan produced 0 bindings — "
             "the bridge shape changed (an arrow-function helper, a guarded helper body, a "
-            "renamed local) or the scanner broke; check `helper_re` and `bound_re`"
+            "renamed local) or the scanner broke; check guest_bindings"
         )
     return problems
-
-
-def bound_binding_files(declared_by_iface: dict[str, list[str]]) -> set[str]:
-    """Files the BOUND scan found at least one guest-object binding in."""
-    bound_re = re.compile(
-        r"(?<![.A-Za-z0-9_$])const\s+(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*\n?"
-        r"\s*(?:globalThis|g)\.__wasmExports\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]\s*\]"
-    )
-    found: set[str] = set()
-    for path in sorted(RUNTIME_DIR.glob("*.ts")):
-        text = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
-        if bound_re.search(text):
-            found.add(path.name)
-    return found
-
-
-def helper_binding_files() -> set[str]:
-    """Files whose guest object reaches a local through a helper."""
-    helper_re = re.compile(
-        r"function\s+(?P<name>[A-Za-z_$][\w$]*)\s*\([^)]*\)[^{]*\{[^}]{0,400}?"
-        r"__wasmExports\s*\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]",
-        re.DOTALL,
-    )
-    call_re = re.compile(
-        r"const\s+[A-Za-z_$][\w$]*\s*=\s*(?P<helper>[A-Za-z_$][\w$]*)\(\)"
-    )
-    found: set[str] = set()
-    for path in sorted(RUNTIME_DIR.glob("*.ts")):
-        text = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
-        helpers = {match.group("name") for match in helper_re.finditer(text)}
-        if any(call.group("helper") in helpers for call in call_re.finditer(text)):
-            found.add(path.name)
-    return found
 
 
 def _all_callback_lookups(text: str) -> list[re.Match[str]]:
@@ -464,6 +432,57 @@ def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
     return sites, lookups
 
 
+# ONE definition per shape, used by every scan: `bound_binding_files` and
+# `bound_bridge_problems` used to carry separate copies of `bound_re`, which is
+# the "same shape implemented twice" drift this file has been bitten by before.
+_BOUND_RE = re.compile(
+    r"(?<![.A-Za-z0-9_$])const\s+(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*\n?"
+    r"\s*(?:globalThis|g)\.__wasmExports\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]\s*\]"
+)
+# A helper that hands the guest namespace back:
+#   function callbacks() { return globalThis.__wasmExports?.["<key>"]; }
+# matched as a UNIT so the helper NAME and the KEY stay paired.
+_HELPER_DECL_RE = re.compile(
+    r"function\s+(?P<name>[A-Za-z_$][\w$]*)\s*\([^)]*\)[^{]*\{[^}]{0,400}?"
+    r"__wasmExports\s*\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]",
+    re.DOTALL,
+)
+_HELPER_CALL_RE = re.compile(
+    r"const\s+(?P<local>[A-Za-z_$][\w$]*)\s*=\s*(?P<helper>[A-Za-z_$][\w$]*)\(\)"
+)
+
+
+def guest_bindings(text: str) -> list[tuple[str, str, int]]:
+    """`(local, key, offset)` for every way a runtime file reaches the guest.
+
+    Three shapes, all resolved here so no two scans can drift apart:
+
+    * `const guest = globalThis.__wasmExports?.["<key>"]` — direct;
+    * `const guest = helper()` where `function helper() { … __wasmExports["<key>"] … }`
+      — the helper NAME and its KEY must be the SAME pair (a call to one helper
+      and a declaration of another used to count as a hit);
+    * both tolerate a template-literal key.
+
+    A key that is not a `<ns>/<iface>@<ver>` callback key is skipped: this
+    direction is about the browser world, not about WASI.
+    """
+    bindings: list[tuple[str, str, int]] = []
+    for match in _BOUND_RE.finditer(text):
+        bindings.append((match.group("local"), match.group("key"), match.start()))
+    helpers = {
+        match.group("name"): match.group("key") for match in _HELPER_DECL_RE.finditer(text)
+    }
+    for call in _HELPER_CALL_RE.finditer(text):
+        key = helpers.get(call.group("helper"))
+        if key is not None:
+            bindings.append((call.group("local"), key, call.start()))
+    return [
+        (local, key, offset)
+        for local, key, offset in bindings
+        if _CALLBACK_KEY_RE.match(key) is not None
+    ]
+
+
 _MEMBER_RE = re.compile(
     r"(?<![A-Za-z0-9_$])[A-Za-z_$][\w$]*\??\.(?P<prop>[A-Za-z_$][\w$]*)"
 )
@@ -478,119 +497,69 @@ def _statement_around(text: str, position: int) -> str:
     return text[start + 1 : end]
 
 
-def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list[str], int]:
+def bound_bridge_problems(
+    declared_by_iface: dict[str, list[str]], counted_by_file: dict[str, int] | None = None
+) -> tuple[list[str], int]:
     """Direction 3b: a lookup bound to a local must be CALLED through that local.
 
     The inline form is named by `callback_sites`; the bound form
     (`const guest = …["<key>"];` … `guest?.<prop>(…)`) is not, so without this the
     whole `platformHelpers.ts` rewrite could be reverted to `guest?.on_wrong` and
-    stay green. For every bound local: each property read off it must be an
-    accepted spelling of the interface's declared funcs, and the local (or the
-    slot it was stored into) must actually be used.
+    stay green. Every binding comes from `guest_bindings` — the one place that
+    knows the three shapes. A second copy of that knowledge is how the file-level
+    floor and this scan drifted apart. `counted_by_file`, when passed, receives
+    the per-file binding counts so the floor judges on THIS scan's numbers.
     """
     problems: list[str] = []
     bindings = 0
-    # Accepts a WRAPPED binding (`const guest =\n  globalThis.__wasmExports?.[…]`),
-    # which is how the longer interface names fit the line budget.
-    # `(?<!\.)` keeps `guest?.onMutate` and, crucially, `(guest?.onMutate ?? guest?.
-    # on_mutation)?.` — the shape the inline dispatch is rewritten into — out.
-    bound_re = re.compile(
-        r"(?<![.A-Za-z0-9_$])const\s+(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*\n?"
-        # Quoted OR template-literal key: a bridge rewritten into the template
-        # form must not fall out of the scan (the "silently smaller report"
-        # failure the count floor cannot see).
-        r"\s*(?:globalThis|g)\.__wasmExports\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]\s*\]"
-    )
-    # `<local>?.<prop>` / `<local>.<prop>` ONLY. A looser pattern scans for a bare
-    # identifier, and a preceding `??` supplies one (`?? guest?.onX`), so the
-    # property list comes back empty and a wrong name reads green.
+    # `<local>?.<prop>` / `<local>.<prop>` ONLY: a looser pattern scans for a bare
+    # identifier, and a preceding `??` supplies one, so the property list comes
+    # back empty and a wrong name reads green.
     read_re = re.compile(
         r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)(?:\?\.|\.)\s*"
         r"(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)"
-    )
-    # A helper that hands the guest object back (`function callbacks() { return
-    # globalThis.__wasmExports?.[…]; }`) puts the lookup one indirection away from
-    # the binding, and a scan anchored on `const x = __wasmExports…` misses the
-    # whole file — `mediaQueryList.ts` had ZERO bindings that way, so its bridge
-    # was outside direction 3. These helpers are collected per file and treated as
-    # the same root: `const guest = callbacks(); guest?.onChange`.
-    helper_re = re.compile(
-        r"function\s+(?P<name>[A-Za-z_$][\w$]*)\s*\([^)]*\)[^{]*\{[^}]{0,400}?"
-        r"__wasmExports\s*\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]",
-        re.DOTALL,
     )
     for path in sorted(RUNTIME_DIR.glob("*.ts")):
         # Whole-line comments are dropped BEFORE the window is cut: a comment that
         # mentions a bad spelling is not a read of it.
         source = path.read_text(encoding="utf-8", errors="replace")
-        kept = [
-            line
-            for line in strip_comments(source).split("\n")
-            if line.strip() and not line.strip().startswith("//")
-        ]
-        text = "\n".join(kept)
-        lines = text.split("\n")
-        helpers = {m.group("name"): m.group("key") for m in helper_re.finditer(text)}
-        helper_bindings = []
-        if helpers:
-            for call in re.finditer(
-                r"const\s+(?P<local>[A-Za-z_$][\w$]*)\s*=\s*(?P<helper>[A-Za-z_$][\w$]*)\(\)",
-                text,
-            ):
-                if call.group("helper") in helpers:
-                    helper_bindings.append((call, helpers[call.group("helper")]))
-        # Line numbers are reported against the FILE, not this filtered text: a
-        # reported line that drifts with every comment edit sends the reader to
-        # the wrong place (measured: 381 reported for a binding on line 473).
         stripped_source_lines = strip_comments(source).split("\n")
         kept_positions = [
             index
             for index, line in enumerate(stripped_source_lines)
             if line.strip() and not line.strip().startswith("//")
         ]
-        direct_bindings = [(m, m.group("key")) for m in bound_re.finditer(text)]
-        for binding, raw_key in direct_bindings + helper_bindings:
-            # A helper-derived binding carries the KEY (the helper returned it);
-            # a direct binding carries it in `binding.group("key")`.
-            key_text = raw_key
+        lines = [stripped_source_lines[index] for index in kept_positions]
+        text = "\n".join(lines)
+        file_bindings = guest_bindings(text)
+        if counted_by_file is not None:
+            counted_by_file[path.name] = len(file_bindings)
+        for local, key_text, offset in file_bindings:
             keyed = _CALLBACK_KEY_RE.match(key_text)
             if keyed is None:
                 continue
             bindings += 1
             iface = keyed.group("iface")
-            # Line numbers are settled BEFORE any branch reports. Two of them:
-            #  * the READ line (where the property is used) — property findings;
-            #  * the DECLARATION line (one up, when the lookup is wrapped as
-            #    `const guest =\n  globalThis.__wasmExports?.[…]`) — findings about
-            #    the lookup itself (an undeclared interface).
-            # Both are mapped back to FILE lines: whole comment lines are dropped
-            # before windowing, so an index into `text` is not a file line.
-            filtered_index = text[: binding.start()].count("\n")
+            filtered_index = text[:offset].count("\n")
             previous = lines[filtered_index - 1].strip() if filtered_index > 0 else ""
             wrapped = bool(re.fullmatch(r"const\s+[A-Za-z_$][\w$]*\s*=", previous))
-            # The property may be read several lines below a wrapped lookup (a
-            # doc comment sits between them), so the read line is the first line
-            # at or after the binding that actually mentions the local.
+            # The property may be read several lines below a wrapped lookup (a doc
+            # comment sits between them), so the read line is the first line at or
+            # after the binding that mentions the local.
             read_line_index = kept_positions[filtered_index]
             for probe_index in range(filtered_index, min(filtered_index + 12, len(lines))):
-                if re.search(r"(?<![A-Za-z0-9_$])" + re.escape(binding.group("local")) + r"\s*\?\.", lines[probe_index]):
+                if re.search(
+                    r"(?<![A-Za-z0-9_$])" + re.escape(local) + r"\s*\?\.", lines[probe_index]
+                ):
                     read_line_index = kept_positions[probe_index]
                     break
-            # For an unwrapped binding (`const guest = g.__wasmExports?.[…]` on one
-            # line) the declaration line IS the read line.
             declaration_line_index = (
-                kept_positions[filtered_index - 1]
-                if wrapped
-                else kept_positions[filtered_index]
+                kept_positions[filtered_index - 1] if wrapped else kept_positions[filtered_index]
             )
-            # For a wrapped lookup the property is read on the line after the
-            # declaration head; that is where the reader wants to land.
-            line_index = read_line_index
-            declared = declared_by_iface[iface] if iface in declared_by_iface else declared_funcs(iface)
+            declared = declared_by_iface.get(iface) if iface in declared_by_iface else declared_funcs(iface)
             if not declared:
                 # The inline pass only sees the INLINE form, so a bound lookup
-                # into an undeclared interface would otherwise be lost — which
-                # is how `resize-callbacks` survived being rewired away.
+                # into an undeclared interface would otherwise be lost.
                 if iface not in callback_allowances():
                     problems.append(
                         f"callback site {path.name}:{declaration_line_index + 1} binds a guest export of "
@@ -598,28 +567,15 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                         "declare — no guest can receive it"
                     )
                 continue
-            # The jco camelCase only. A snake spelling is a legitimate
-            # `??` FALLBACK, never a candidate on its own — resolving it to the
-            # accepted set would make a lone wrong name read green.
             accepted = {camel(name) for name in declared}
-            local = binding.group("local")
-            # The window: the rest of the binding's line plus the following lines,
-            # stopping at the next binding or at the end of the method. A bounded
-            # count on purpose — a dedented brace is not a reliable stop once whole
-            # comment lines are removed — and an overrun can only add reads of the
-            # SAME local, which are that bridge's own.
-            # The window is the ENCLOSING BLOCK, ended by the first line that
-            # closes it: the binding's own indentation minus four (`eventTarget`'s
-            # `const callbacks` sits at 10 and its `if` block closes at 8 with
-            # `}`), or a bare `};` that ends the object/module literal. A fixed
-            # line count both missed `eventTarget.ts`'s five dispatches (30–80
-            # lines below the binding) and overran into the next method.
-            head_line = lines[filtered_index]
-            base_indent = len(head_line) - len(head_line.lstrip())
-            tail = text[binding.end() :].split("\n")
+            # The window runs to the end of the enclosing block (the binding's
+            # indentation minus four), not a fixed line count: the first draft
+            # missed `eventTarget.ts`'s five dispatches 30–80 lines below.
+            base_indent = len(lines[filtered_index]) - len(lines[filtered_index].lstrip())
+            tail = text[offset:].split("\n")
             window = tail[0] + "\n"
             for probe in tail[1 : 1 + _WINDOW_LINES]:
-                if bound_re.search(probe):
+                if _BOUND_RE.search(probe) or _HELPER_CALL_RE.search(probe):
                     break
                 indent = len(probe) - len(probe.lstrip())
                 if probe.strip() and probe.strip().startswith("}") and (
@@ -627,57 +583,24 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                 ):
                     break
                 window += probe + "\n"
-            # (local, prop) pairs this binding's window reads. A guarded read can be
-            # split from its local by the pre-pass, which removes whole COMMENT
-            # lines: `const guest = …;` then a five-line comment then
-            # `guest?.onScrollEvent`. A bare property on a line whose only other
-            # content is a local (or a local assigned from it) is the same read.
-            reads = [(read.group("local"), read.group("prop")) for read in read_re.finditer(window)]
-            # Where each read sits, to tell a first candidate from a guarded one.
-            spans = [(read.group("local"), read.group("prop"), read.end()) for read in read_re.finditer(window)]
-            aliases = {local} | {
-                assigned.group("name")
-                for assigned in re.finditer(
-                    r"const\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*[^;]*\b"
-                    + re.escape(local)
-                    + r"\b[^;]*;",
-                    window,
-                )
-            }
-            for probe in tail[1 : 1 + _WINDOW_LINES]:
-                stripped = strip_comments(probe).strip()
-                if not stripped or bound_re.search(probe):
+            for read in read_re.finditer(window):
+                if read.group("local") != local:
                     continue
-                for head in aliases:
-                    if head not in stripped:
-                        continue
-                    rest = stripped.replace(head, "", 1).lstrip().lstrip("?.").lstrip()
-                    if re.fullmatch(r"[A-Za-z_$][A-Za-z0-9_$]*", rest):
-                        reads.append((local, rest))
-                        spans.append((local, rest, -1))
-                        break
-            for owner, prop, position_of in spans:
-                if owner != local:
-                    continue
+                prop = read.group("prop")
                 if prop in accepted:
                     continue
                 # NO fallback is accepted: jco emits exactly one identifier per
-                # func — the camelCase of its kebab name — and nothing else, so a
-                # second candidate (`onChange ?? on_change`) is text that can
-                # never run. Every read of a property the guest does not export is
-                # a finding; that is this whole direction. (The rule went through
-                # four rounds — neighbour check, spelling check, an alias table,
-                # a chain parse — before the alias table turned out to be empty
-                # for every declared name; the honest answer is "one candidate".)
+                # func, so a second candidate can never run. (Four rounds of the
+                # rule taught that the hard way — neighbour check, spelling check,
+                # alias table, chain parse — before the alias table turned out to
+                # be empty for every declared name.)
                 problems.append(
-                    f"callback site {path.name}:{line_index + 1} binds `{local}` to "
-                    f"`{keyed.group('iface')}@{keyed.group('ver')}` and reads `{local}.{prop}`, "
-                    f"which the guest does not export (declared: {', '.join(declared)}) — the "
-                    "callback is dropped with no error"
+                    f"callback site {path.name}:{read_line_index + 1} binds `{local}` to "
+                    f"`{iface}@{keyed.group('ver')}` and reads `{local}.{prop}`, which the "
+                    f"guest does not export (declared: {', '.join(declared)}) — the callback "
+                    "is dropped with no error"
                 )
-            # "Used" = the local (or a local assigned from it) is invoked, passed
-            # on, or read from (`callbacks.onMouseEvent(…)` is a read of
-            # `callbacks`). A binding that is stored and never mentioned stays dead.
+            # "Used": a binding that is stored and never mentioned stays dead weight.
             names = {local}
             for assigned in re.finditer(
                 r"const\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*[^;]*\b"
@@ -686,9 +609,11 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                 window,
             ):
                 names.add(assigned.group("name"))
-            named = r"(?<![.A-Za-z0-9_$])(?:" + "|".join(re.escape(n) for n in sorted(names)) + r")"
-            # A binding with NOTHING after it on its line (`if (…) { if (guest) {`)
-            # has its uses inside the block, so a bare mention is enough there.
+            named = (
+                r"(?<![.A-Za-z0-9_$])(?:"
+                + "|".join(re.escape(name) for name in sorted(names))
+                + r")"
+            )
             stored = tail[0].strip() != ""
             used = (
                 bool(re.search(named + r"\s*(?:[,(]|\.|\?\.)", window))
@@ -697,9 +622,8 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
             )
             if not used:
                 problems.append(
-                    f"callback site {path.name}:{line_index + 1} binds `{local}` to "
-                    f"`{keyed.group('iface')}@{keyed.group('ver')}` and never uses it — the "
-                    "bridge is dead weight"
+                    f"callback site {path.name}:{read_line_index + 1} binds `{local}` to "
+                    f"`{iface}@{keyed.group('ver')}` and never uses it — the bridge is dead weight"
                 )
     return problems, bindings
 
@@ -999,8 +923,9 @@ def findings() -> tuple[list[Finding], int, int, int, int, int]:
     for problem in callback_findings:
         results.append(Finding("callback-mismatch", problem, ""))
     declared_by_iface = {iface: declared_funcs(iface) for iface in interfaces}
-    bound_findings, bound_total = bound_bridge_problems(declared_by_iface)
-    for problem in per_file_binding_problems(declared_by_iface):
+    counted_by_file: dict[str, int] = {}
+    bound_findings, bound_total = bound_bridge_problems(declared_by_iface, counted_by_file)
+    for problem in per_file_binding_problems(counted_by_file, declared_by_iface):
         results.append(Finding("callback-mismatch", problem, ""))
     for problem in bound_findings:
         results.append(Finding("callback-mismatch", problem, ""))
@@ -1080,7 +1005,9 @@ def main() -> int:
         f"{declared_total} declared ops "
         f"({declared_total - unimplemented} implemented, {unimplemented} allowed), "
         f"{dispatched_total} dispatched, {invented} runtime-only exports listed, "
-        f"{callback_total} guest-export lookups ({bound_total} bound) named correctly"
+        f"{callback_total} guest-export lookups ({bound_total} bound) named correctly, "
+        f"callback scan skips {len(CALLBACK_SCAN_EXCLUDED)} non-bridge files "
+        f"({', '.join(CALLBACK_SCAN_EXCLUDED)})"
     )
     return 0
 

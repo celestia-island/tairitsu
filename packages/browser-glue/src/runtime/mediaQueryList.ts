@@ -57,7 +57,7 @@ function callbacks(): MediaQueryListCallbacks | undefined {
  * turn one component bug into an unhandled page error on every media flip. It
  * is logged instead, matching the event bridge in `eventTarget.ts`.
  */
-function dispatchChange(callbackId: bigint, matches: boolean): void {
+export function dispatchChange(callbackId: bigint, matches: boolean): void {
   const guest = callbacks();
   // `onChange` only: jco emits the camelCase of `on-change` and nothing else, so
   // an `?? on_change` arm here would be text that can never run.

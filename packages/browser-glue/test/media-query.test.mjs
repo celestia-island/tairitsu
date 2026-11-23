@@ -130,6 +130,9 @@ installDom();
 const { INTERFACES } = await import(join(PKG, "src", "runtime", "registry.ts"));
 const window_exports = INTERFACES["@tairitsu-glue/window"];
 const mediaQueryList_exports = INTERFACES["@tairitsu-glue/media-query-list"];
+// The bridge's dispatch entry point, exported so the "does not escape" tests can
+// drive it directly (`dispatchEvent` swallows listener throws asynchronously).
+const { dispatchChange } = await import(join(PKG, "src", "runtime", "mediaQueryList.ts"));
 
 /** The func names a WIT interface declares (single source = browser-worlds). */
 function declaredFunctions(file, interfaceName) {
@@ -348,7 +351,11 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   };
   mediaQueryList_exports.addListener(handle, 3n);
   media.reduce = true;
-  assert.doesNotThrow(() => list.flip());
+  // Drive the DISPATCH, not the DOM event: an `EventTarget` listener that throws
+  // reports asynchronously (`uncaughtException`) and never reaches the caller of
+  // `dispatchEvent`, so `doesNotThrow(() => list.flip())` is vacuously true — a
+  // `catch` body changed to `throw` would still read green. MUT: media-bridge-rethrows
+  assert.doesNotThrow(() => dispatchChange(1n, true));
   delete globalThis.__wasmExports;
 });
 
@@ -462,7 +469,11 @@ test("media-query-list: a throwing guest callback does not escape into the event
   console.error = () => {};
   try {
     // One component bug must not become an unhandled page error on every flip.
-    assert.doesNotThrow(() => list.flip());
+    // Drive the DISPATCH, not the DOM event: an `EventTarget` listener that throws
+  // reports asynchronously (`uncaughtException`) and never reaches the caller of
+  // `dispatchEvent`, so `doesNotThrow(() => list.flip())` is vacuously true — a
+  // `catch` body changed to `throw` would still read green. MUT: media-bridge-rethrows
+  assert.doesNotThrow(() => dispatchChange(1n, true));
   } finally {
     console.error = originalError;
     delete globalThis.__wasmExports;
@@ -871,6 +882,23 @@ test("check_wit_ops.py: an INDIRECT bridge (`const guest = callbacks()`) is in r
   });
   assert.equal(rc, 1, "a wrong read behind a helper must fail the gate");
   assert.match(out, /mediaQueryList\.ts:\d+.*`(?:guest\.)?on_chang`/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: a call to one helper is not satisfied by another's declaration", () => {
+  // The first version of the helper detection asked "does this file declare ANY
+  // helper?" and "does this file make ANY `const x = helper()` call?" — two
+  // questions that can be answered by different helpers. Renaming the call while
+  // the declaration keeps its old name must not count as a binding.
+  // MUT: helper-pairing-loose
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "mediaQueryList.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const guest = callbacks();";
+    assert.ok(source.includes(needle), "the fixture must find the helper call");
+    writeFileSync(path, source.replace(needle, "const guest = otherCallbacks();"));
+  });
+  assert.equal(rc, 1, "an unpaired helper call must leave the file with 0 bindings and red");
+  assert.match(out, /mediaQueryList\.ts references `__wasmExports` but the scan produced 0 bindings/, `got: ${out}`);
 });
 
 test("check_wit_ops.py: a refactor that hides a bridge turns RED (per-file floor)", () => {
