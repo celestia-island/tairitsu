@@ -278,6 +278,22 @@ test("resize observer: the bridge binds `onResize` and passes resize-entry recor
     assert.equal(iface, "resize-observer-callbacks");
     assert.equal(name, "onResize");
     assert.equal(callbackId, 4n);
+    assert.equal(entries.length, 1);
+    // DOMAIN, not (only) shape: `resize-observer-entry`'s `get-target` resolves
+    // through `__storeElement`, so `target` must land in the ELEMENT table. An
+    // earlier version of this assertion compared `target` with itself
+    // (`target: entries[0].target`), which stays green when the handle is
+    // minted into the node table instead — the same domain defect the mutation
+    // entry had. MUT: resize-bridge-target-in-node-table
+    assert.ok(
+      currentInstance().tables.elementHandles.has(entries[0].target),
+      "`target` must be an ELEMENT handle (resize-observer-entry.get-target reads that table)",
+    );
+    assert.equal(
+      currentInstance().tables.nodeHandles.has(entries[0].target),
+      false,
+      "`target` must not be a node handle — the two tables are different domains",
+    );
     assert.deepEqual(
       entries,
       [{ target: entries[0].target, contentRect: { x: 1, y: 2, width: 640, height: 480 } }],

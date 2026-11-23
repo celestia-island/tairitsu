@@ -76,6 +76,13 @@ function nodeHandle(node: unknown): bigint | undefined {
  * table is cleared on dispose, like every other per-instance handle table); for
  * the callback itself nothing hands that handle to the guest, so it is table
  * growth proportional to callbacks, not a per-call leak a caller can observe.
+ *
+ * Handle DOMAIN: `target` is minted with `__storeElement`, because that is the
+ * table `resize-observer-entry`'s `get-target` reads (the same choice the
+ * mutation entry makes for its `target`, and the same one `mutationRecord`
+ * makes). Minting it as a node handle yields a bigint the guest can hold and
+ * never resolve, and both tables answer `bigint`, so only an assertion on the
+ * TABLE — not on the type — can catch it (`callback-bridge.test.mjs`).
  */
 export function resizeEntryValue(entry: unknown, sink: EntrySink): Record<string, unknown> {
   const handle = globalThis.__nextResizeObserverEntry++;
