@@ -41,6 +41,7 @@ const EXPORT_SOURCES = {
   "resize-observer-size": "resizeObserverSize",
   "resize-observer": "resizeObserver",
   "css-style-declaration": "cssStyleDeclaration",
+  "media-query-list": "mediaQueryList",
   "element-css-inline-style": "elementCssInlineStyle",
   "event-target": "eventTarget",
   "dom-token-list": "domTokenList",

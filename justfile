@@ -255,7 +255,7 @@ wasip2-closure-check:
     {{python}} scripts/check_wasip2_closure.py --check
 
 # CI checks (format check + clippy + test)
-ci: wit-sync-check wit-surface-check wit-generator-check wasip2-closure-check browser-glue-test host-client-test packager-js-test fmt-check clippy test
+ci: wit-sync-check wit-surface-check wit-ops-check wit-generator-check wasip2-closure-check browser-glue-test host-client-test packager-js-test fmt-check clippy test
     @echo "✅ CI checks passed"
 
 # ------
@@ -403,6 +403,15 @@ browser-e2e: glue-esm
 # browser-glue or carries an explicit, justified allowance.
 wit-surface-check:
     {{python}} scripts/check_wit_surface.py --check
+
+# Gate: op-level companion to wit-surface-check. An interface can be wired while
+# one of its declared ops has no host export — that is how `window.match-media`
+# went missing with every interface-level count green, and how reduced-motion
+# users silently lost their preference. Every declared op of a wired interface
+# must be exported by the runtime table or carry a reason in
+# packages/browser-glue/wit-op-allow.tsv.
+wit-ops-check:
+    {{python}} scripts/check_wit_ops.py --check
 
 # Step 1: Fetch W3C/WHATWG WebIDL spec files into target/tairitsu-wit/webidl-cache/
 wit-fetch-idl:

@@ -43,6 +43,12 @@ declare global {
   var __resizeObserverSizeHandles: Map<bigint, ResizeObserverSize>;
   var __domRectHandles: Map<bigint, DOMRect>;
   var __cssStyleDeclarationHandles: Map<bigint, CSSStyleDeclaration>;
+  var __mediaQueryListHandles: Map<bigint, MediaQueryList>;
+  var __mediaQueryListListeners: Map<
+    bigint,
+    Map<bigint, (event: MediaQueryListEvent) => void>
+  >;
+  var __mediaQueryListOnchange: Map<bigint, bigint>;
   var __nodeListHandles: Map<bigint, NodeList>;
   var __listenerHandles: Map<
     bigint,
@@ -67,6 +73,7 @@ declare global {
   var __nextResizeObserverSizeHandle: bigint;
   var __nextDomRectHandle: bigint;
   var __nextCssStyleDeclarationHandle: bigint;
+  var __nextMediaQueryListHandle: bigint;
   var __nextNodeList: bigint;
   var __nextListenerHandle: bigint;
   var __nextEventHandle: bigint;

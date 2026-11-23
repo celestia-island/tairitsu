@@ -1,0 +1,344 @@
+# Host ops `browser-glue` does not implement, for interfaces it WIRES.
+#
+# One entry per line: <kebab-interface>.<kebab-op><TAB><reason>
+#
+# `scripts/check_wit_ops.py --check` fails when an op a wired interface
+# declares is neither exported by the runtime registry nor listed here, when
+# a line here names an interface / op the WIT does not declare, and when a
+# line here names an op the runtime ALREADY implements (the allowance has
+# served its purpose and must shrink).
+#
+# Why this file exists: `check_wit_surface.py` is interface-level, and `window`
+# being wired hid `window.match-media` having no host export at all. The guest
+# then read `(prefers-reduced-motion: reduce)` as `false` on every page, so
+# hikari's AnimationProvider never suppressed animation. The lines below are
+# the same class of hole, listed honestly rather than left silent.
+#
+# The interface-level inventory next to it (wit-surface-allow.tsv) says which
+# interfaces are absent altogether; this file says which declared ops of an
+# interface that IS wired have no implementation.
+document.adopt-node	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.capture-events	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.caret-position-from-point	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.clear	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.close	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-attribute	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-attribute-ns	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-cdata-section	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-comment	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-document-fragment	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-element-ns	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-event	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-node-iterator	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-processing-instruction	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-range	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.create-tree-walker	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.element-from-point	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.elements-from-point	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.exec-command	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.exit-fullscreen	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-alink-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-all	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-anchors	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-applets	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-bg-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-character-set	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-charset	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-compat-mode	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-content-type	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-cookie	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-current-script	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-default-view	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-design-mode	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-dir	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-doctype	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-document-element	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-document-uri	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-domain	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-elements-by-class-name	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-elements-by-name	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-elements-by-tag-name	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-elements-by-tag-name-ns	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-embeds	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-fg-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-forms	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-fullscreen	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-fullscreen-enabled	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-head	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-hidden	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-images	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-implementation	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-input-encoding	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-last-modified	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-link-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-links	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-location	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-onfullscreenchange	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-onfullscreenerror	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-onreadystatechange	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-onvisibilitychange	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-plugins	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-ready-state	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-referrer	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-root-element	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-scripts	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-scrolling-element	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-selection	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-title	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-url	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-visibility-state	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.get-vlink-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.has-focus	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.import-node	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.object	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.open	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.parse-html	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.parse-html-unsafe	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.query-command-enabled	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.query-command-indeterm	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.query-command-state	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.query-command-supported	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.query-command-value	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.release-events	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-alink-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-bg-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-body	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-cookie	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-design-mode	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-dir	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-domain	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-fg-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-link-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-onfullscreenchange	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-onfullscreenerror	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-onreadystatechange	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-onvisibilitychange	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-title	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.set-vlink-color	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.write	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+document.writeln	the runtime `document` object implements the vdom path only (createElement / createTextNode / getBody); the rest of the Document surface has no host implementation
+dom-token-list.get-length	the runtime drives classList through element get/setAttribute ops instead of a separate token-list handle
+dom-token-list.get-value	the runtime drives classList through element get/setAttribute ops instead of a separate token-list handle
+dom-token-list.item	the runtime drives classList through element get/setAttribute ops instead of a separate token-list handle
+dom-token-list.replace	the runtime drives classList through element get/setAttribute ops instead of a separate token-list handle
+dom-token-list.set-value	the runtime drives classList through element get/setAttribute ops instead of a separate token-list handle
+dom-token-list.supports	the runtime drives classList through element get/setAttribute ops instead of a separate token-list handle
+dom-token-list.toggle	the runtime drives classList through element get/setAttribute ops instead of a separate token-list handle
+element.attach-shadow	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.check-visibility	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.closest	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-attribute-names	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-attribute-node	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-attribute-node-ns	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-attribute-ns	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-attributes	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-class-name	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-client-left	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-client-rects	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-client-top	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-client-width	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-current-css-zoom	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-custom-element-registry	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-elements-by-class-name	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-elements-by-tag-name	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-elements-by-tag-name-ns	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-html	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-id	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-inner-html	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-local-name	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-namespace-uri	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-onfullscreenchange	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-onfullscreenerror	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-outer-html	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-prefix	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-scroll-left	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-scroll-width	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-shadow-root	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.get-slot	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.has-attribute	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.has-attribute-ns	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.has-attributes	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.has-pointer-capture	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.insert-adjacent-element	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.insert-adjacent-html	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.insert-adjacent-text	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.matches	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.release-pointer-capture	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.remove-attribute-node	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.remove-attribute-ns	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.request-fullscreen	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.scroll	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.scroll-by	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.scroll-into-view	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.scroll-to	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-attribute-node	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-attribute-node-ns	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-attribute-ns	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-class-name	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-html	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-html-unsafe	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-id	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-onfullscreenchange	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-onfullscreenerror	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-outer-html	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-pointer-capture	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-scroll-left	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.set-slot	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.toggle-attribute	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+element.webkit-matches-selector	the runtime `element` object implements the vdom subset (attributes, innerHTML, class list, scrollTop); the rest of Element / HTMLOrSVGElement is not wired
+event.get-composed	the runtime `event` object covers the vdom event bridge; these declared ops are not exported
+event.get-return-value	the runtime `event` object covers the vdom event bridge; these declared ops are not exported
+event.get-type	the runtime `event` object covers the vdom event bridge; these declared ops are not exported
+event.init-event	the runtime `event` object covers the vdom event bridge; these declared ops are not exported
+event.prevent-default	the runtime `event` object covers the vdom event bridge; these declared ops are not exported
+event.set-return-value	the runtime `event` object covers the vdom event bridge; these declared ops are not exported
+event.stop-propagation	the runtime `event` object covers the vdom event bridge; these declared ops are not exported
+html-input-element.get-files	the input surface is a deliberate subset; these ops need host objects the runtime has no table for (FileList: get-files/set-files, HTMLFormElement: get-form, ValidityState: get-validity, NodeList: get-labels, HTMLDataListElement: get-list)
+html-input-element.get-form	the input surface is a deliberate subset; these ops need host objects the runtime has no table for (FileList: get-files/set-files, HTMLFormElement: get-form, ValidityState: get-validity, NodeList: get-labels, HTMLDataListElement: get-list)
+html-input-element.get-labels	the input surface is a deliberate subset; these ops need host objects the runtime has no table for (FileList: get-files/set-files, HTMLFormElement: get-form, ValidityState: get-validity, NodeList: get-labels, HTMLDataListElement: get-list)
+html-input-element.get-list	the input surface is a deliberate subset; these ops need host objects the runtime has no table for (FileList: get-files/set-files, HTMLFormElement: get-form, ValidityState: get-validity, NodeList: get-labels, HTMLDataListElement: get-list)
+html-input-element.get-validity	the input surface is a deliberate subset; these ops need host objects the runtime has no table for (FileList: get-files/set-files, HTMLFormElement: get-form, ValidityState: get-validity, NodeList: get-labels, HTMLDataListElement: get-list)
+html-input-element.set-files	the input surface is a deliberate subset; these ops need host objects the runtime has no table for (FileList: get-files/set-files, HTMLFormElement: get-form, ValidityState: get-validity, NodeList: get-labels, HTMLDataListElement: get-list)
+mouse-event.init-mouse-event	the runtime forwards the coordinate / modifier fields the vdom bridge reads; the rest of MouseEvent is not wired
+mutation-observer.take-records	the runtime drives mutation observation through platformHelpers (createMutationObserver / observeMutations), not through the WIT ops
+mutation-record.get-added-nodes	the runtime stores records for the callback bridge; the record getters are not exposed
+mutation-record.get-removed-nodes	the runtime stores records for the callback bridge; the record getters are not exposed
+node.clone-node	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.compare-document-position	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.contains	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-base-uri	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-is-connected	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-last-child	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-next-sibling	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-node-name	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-node-value	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-owner-document	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-parent-node	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-previous-sibling	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.get-root-node	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.has-child-nodes	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.is-default-namespace	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.is-equal-node	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.is-same-node	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.lookup-namespace-uri	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.lookup-prefix	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.normalize	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+node.set-node-value	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
+parent-node.append	the runtime appends through node.appendChild rather than the ParentNode interface
+parent-node.get-child-element-count	the runtime appends through node.appendChild rather than the ParentNode interface
+parent-node.get-children	the runtime appends through node.appendChild rather than the ParentNode interface
+parent-node.get-first-element-child	the runtime appends through node.appendChild rather than the ParentNode interface
+parent-node.get-last-element-child	the runtime appends through node.appendChild rather than the ParentNode interface
+parent-node.move-before	the runtime appends through node.appendChild rather than the ParentNode interface
+parent-node.prepend	the runtime appends through node.appendChild rather than the ParentNode interface
+parent-node.replace-children	the runtime appends through node.appendChild rather than the ParentNode interface
+resize-observer-entry.get-device-pixel-content-box-size	the runtime stores entries for the callback bridge; the box-size getters need a serialisable box handle
+window.alert	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.blur	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.capture-events	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.close	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.confirm	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.fetch-later	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.focus	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-client-information	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-closed	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-custom-elements	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-device-pixel-ratio	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-document	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-event	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-external	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-frame-element	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-frames	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-history	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-length	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-location	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-locationbar	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-menubar	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-name	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-navigation	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-navigator	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-opener	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-origin-agent-cluster	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-outer-height	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-outer-width	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-page-x-offset	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-page-y-offset	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-parent	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-personalbar	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-screen	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-screen-left	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-screen-top	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-screen-x	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-screen-y	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-scroll-x	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-scroll-y	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-scrollbars	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-selection	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-self	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-speech-synthesis	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-status	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-statusbar	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-toolbar	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-top	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-visual-viewport	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.get-window	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.move-by	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.move-to	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.object	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.open	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.post-message	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.print	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.prompt	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.release-events	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.resize-by	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.resize-to	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.scroll	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.scroll-by	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.scroll-to	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.set-name	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.set-opener	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.set-status	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+window.stop	the runtime `window` object exposes the dimensions / computed-style / matchMedia path; the rest of the Window surface is host-owned or not implemented
+
+# ── Listed on the other side: runtime exports the WIT does not declare ───────
+#
+# These are op keys the runtime REALLY exports (`src/runtime/*.ts`) that the
+# composed WIT declares no `func` for. They are not guest-callable — a guest can
+# only import what the WIT declares — so they are dead weight in the interface
+# object, not a user-visible hole. They are allowed by explicit line (not by a
+# blanket "extra keys are fine" rule) so the same snapshot cannot absorb a NEW
+# invented op silently.
+#
+# Found while adding this gate; they predate it and none of them is touched by
+# the match-media change. Naming them here is the honest inventory the gate is
+# supposed to produce — the fix (rename to the WIT op, or delete) is a separate
+# change, since `event.Event` / `eventTarget` call these names directly.
+#
+# Format for this section: <iface>.<exported-key><TAB><reason>
+# ── The other direction: runtime exports the WIT does not declare ───────────
+#
+# `<iface>.<runtimeKey>` entries below name op keys the runtime REALLY exports
+# (`src/runtime/*.ts`) that the composed WIT declares no `func` for.
+#
+# They are not guest-callable — a guest can only import what the WIT declares —
+# so they are dead weight in the interface object rather than a user-visible
+# hole. They are listed one by one (not exempted by a blanket "extra keys are
+# fine" rule) so the same snapshot cannot absorb a NEW invented op silently.
+#
+# Found while adding this gate; all of them predate it and none is touched by
+# the match-media change. The fix (rename to the WIT op, or delete from the
+# interface object) is a separate change: `eventTarget.ts` calls
+# `eventStopPropagation` / `getEventType` by name.
+#
+# Format: <iface>.<exported-key><TAB><reason>
+event.eventStopPropagation	runtime-only export; the WIT declares `stop-propagation`, which the runtime does not export
+event.getEventType	runtime-only export; the WIT declares `get-type`, which the runtime does not export
+location.getInnerWidth	copied from window_exports; WIT location declares no such func
+platform-helpers.innerWidth	runtime-only helper; WIT declares no window-dimension op on platform-helpers
+platform-helpers.innerHeight	runtime-only helper; same as innerWidth
+platform-helpers.getBoundingClientRect	runtime-only helper (observers carries the same function)
+platform-helpers.observeResize	the WIT resize-observer ops live on resize-observer, not here
+platform-helpers.unobserveResize	same as observeResize
+platform-helpers.disconnectResize	same as observeResize
+platform-helpers.observeMutations	the WIT mutation-observer ops live on mutation-observer, not here
+platform-helpers.disconnectMutation	same as observeMutations

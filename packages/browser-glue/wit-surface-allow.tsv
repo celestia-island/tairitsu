@@ -15,5 +15,5 @@ canvas-fill-stroke-styles	canvas host path is not wired; imported together with 
 html-media-element	media element host path is not wired; audio/video playback is not part of the browser host yet
 audio-context	Web Audio host path is not wired (no AudioContext construction in the runtime registry)
 base-audio-context	Web Audio host path is not wired; imported together with audio-context
-media-query-list	matchMedia host path is not wired; window currently exposes dimensions only
+
 web-socket	WebSocket host path is not wired; platform-helpers exposes connect-web-socket instead and the callback world is exported by the guest

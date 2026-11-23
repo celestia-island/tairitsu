@@ -70,6 +70,7 @@ SCENARIOS = (
     "worker-boot",
     "worker-terminate",
     "glue-imports",
+    "match-media",
     "two-instances",
     "bad-bytes",
     "missing-entry",
@@ -151,6 +152,35 @@ const lifecycle = { start: entry };
 export { lifecycle, lifecycle as "tairitsu-browser:full/lifecycle@0.2.0" };
 """
 
+# The match-media control: imports the two interfaces the guest uses to honour
+# `prefers-reduced-motion` and reads the simulated preference through them.
+# `@tairitsu-glue/window` has to export `matchMedia` and
+# `@tairitsu-glue/media-query-list` has to export `getMatches` — when either is
+# missing the page's `buildImports` hands jco an object without the key and the
+# read traps, which is exactly the defect this scenario pins.
+MATCH_MEDIA_WRAPPER = """
+import { matchMedia } from "@tairitsu-glue/window";
+import { getMatches, getMedia } from "@tairitsu-glue/media-query-list";
+
+const QUERY = "(prefers-reduced-motion: reduce)";
+
+const entry = () => {
+  globalThis.__w3_entry_ran = true;
+  globalThis.__match_media = {
+    // The REAL glue implementations, reached through the emitted modules.
+    read() {
+      const handle = matchMedia(QUERY);
+      return { matches: getMatches(handle), media: getMedia(handle) };
+    },
+  };
+  const app = document.getElementById("app");
+  if (app) app.textContent = "component booted";
+};
+
+const lifecycle = { start: entry };
+export { lifecycle, lifecycle as "tairitsu-browser:full/lifecycle@0.2.0" };
+"""
+
 GOOD_WRAPPER = """
 // The shape `jco transpile` actually emits for a tairitsu component: a module
 // namespace that exposes the WIT interfaces (no `instantiate` export), so the
@@ -198,6 +228,7 @@ WRAPPERS = {
     "csp": GOOD_WRAPPER,
     # Serves the REAL emitted glue modules and a wrapper that imports them.
     "glue-imports": GLUE_IMPORT_WRAPPER,
+    "match-media": MATCH_MEDIA_WRAPPER,
     "capability-exact": GLUE_IMPORT_WRAPPER,
     "capability-undeclared": GLUE_IMPORT_WRAPPER,
     "capability-overreach": GLUE_IMPORT_WRAPPER,
@@ -459,6 +490,15 @@ def capability_declaration(scenario):
         return {"interfaces": [], "wasiModules": []}
     if scenario in STUB_SCENARIOS or scenario in WORKER_SCENARIOS:
         return {"interfaces": [], "wasiModules": []}
+    if scenario == "match-media":
+        # Exactly the interfaces the wrapper imports. `window` and
+        # `media-query-list` must both be provided or the boot refuses BEFORE
+        # instantiate — which would hide the op-level defect this scenario is
+        # for, so the declaration is minimal on purpose.
+        return {
+            "interfaces": ["window", "media-query-list"],
+            "wasiModules": [],
+        }
     if scenario == "capability-exact":
         # Exactly what the wrapper imports — the positive control.
         return {
@@ -584,7 +624,7 @@ def build_dist(scenario, dest):
         os.path.join(dest, "tairitsu-capabilities.json"), "w", encoding="utf-8"
     ) as fh:
         json.dump(capability_declaration(scenario), fh)
-    if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
+    if scenario in ("glue-imports", "match-media", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
         # The real build-time modules, copied exactly as the packager does.
         source = os.path.join(REPO_ROOT, "packages", "browser-glue", "dist", "glue-esm")
         if not os.path.isdir(source):
@@ -598,7 +638,7 @@ def build_dist(scenario, dest):
     glue_path = os.path.join(dest, "glue-runtime.js")
     # `two-instances` needs the shipped bundle (the instance API lives there);
     # the component scenarios only need the page's import map to stay green.
-    if scenario in ("two-instances", "glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi", "worker-terminate", "custom-root"):
+    if scenario in ("two-instances", "glue-imports", "match-media", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi", "worker-terminate", "custom-root"):
         if not ensure_glue_bundle(glue_path):
             raise RuntimeError(
                 "the two-instances control needs the real glue bundle "
@@ -640,7 +680,7 @@ def build_dist(scenario, dest):
         with open(os.path.join(healthy, "tairitsu-capabilities.json"), "w", encoding="utf-8") as fh:
             json.dump({"interfaces": [], "wasiModules": []}, fh)
     wrapper_source = WRAPPERS[scenario]
-    if scenario in ("glue-imports", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
+    if scenario in ("glue-imports", "match-media", "capability-exact", "capability-undeclared", "capability-overreach", "capability-wasi"):
         rewritten = rewrite_glue_specifiers(wrapper_source)
         if "@tairitsu-glue/" in rewritten:
             raise RuntimeError("the glue specifier rewrite left a bare specifier")
@@ -677,6 +717,128 @@ def serve(directory, csp=None):
     thread.start()
     port = server.server_address[1]
     return server, thread, f"http://127.0.0.1:{port}"
+
+
+# ── CDP media emulation (the match-media scenario) ──────────────────────────
+#
+# shirabe's debug API deliberately exposes no raw CDP surface: it speaks only
+# the handful of domains the scenarios need. Simulating a media preference
+# (`Emulation.setEmulatedMedia`) is not one of them, and adding a debug endpoint
+# for one scenario would widen that API for every caller.
+#
+# shirabe DOES launch Chromium with `--remote-debugging-port=<free port>`, so the
+# browser-level websocket is reachable on loopback; this helper finds that port
+# from the running process table and drives the one command it needs. It is
+# opt-in per scenario and skipped (not failed) when the websocket client is
+# absent, so the scenario degrades to "matches is a real boolean" on a host
+# without `websocket-client`.
+MEDIA_FEATURE = "prefers-reduced-motion"
+
+
+def _devtools_port(parent_pid):
+    """The Chromium devtools port the browser child of `parent_pid` opened, or None.
+
+    Scoping to the CHILD processes of the shirabe instance this run started is
+    not a detail. A plain `ps` scan for `--remote-debugging-port` finds the
+    machine's other Chrome instances first — this host has a persistent
+    profile browser on a fixed port (AGENTS §10.6: reuse the existing CDP
+    endpoint, never spawn a second profile), and driving THAT one would flip a
+    media preference in somebody else's browser while the shirabe page under
+    test never changed. Only the children of our own debug server are ours.
+    """
+    def children(pid):
+        try:
+            out = subprocess.run(
+                ["ps", "-o", "pid=", "--ppid", str(pid)], capture_output=True, text=True, timeout=10
+            ).stdout
+            return [int(line) for line in out.split() if line.strip().isdigit()]
+        except (OSError, subprocess.TimeoutExpired):
+            return []
+
+    frontier = children(parent_pid)
+    seen = set()
+    while frontier:
+        pid = frontier.pop()
+        if pid in seen:
+            continue
+        seen.add(pid)
+        try:
+            args = subprocess.run(
+                ["ps", "-o", "args=", "-p", str(pid)], capture_output=True, text=True, timeout=10
+            ).stdout
+        except (OSError, subprocess.TimeoutExpired):
+            continue
+        for token in args.split():
+            if token.startswith("--remote-debugging-port="):
+                try:
+                    return int(token.split("=", 1)[1])
+                except ValueError:
+                    return None
+        frontier.extend(children(pid))
+    return None
+
+
+class CdpMedia:
+    """Flip `Emulation.setEmulatedMedia` on the page shirabe is driving."""
+
+    def __init__(self, port):
+        import websocket  # imported here: the lane stays optional
+
+        self._websocket = websocket
+        version = json.load(
+            urllib.request.urlopen(
+                f"http://127.0.0.1:{port}/json/version", timeout=10
+            )
+        )
+        # Chromium rejects a websocket whose Origin it does not allow; the lane
+        # is a local driver, not a web page, so the origin is suppressed.
+        self._ws = websocket.create_connection(
+            version["webSocketDebuggerUrl"], timeout=20, suppress_origin=True
+        )
+        self._id = 0
+        # Discovered before any session exists, so it goes out browser-level.
+        self._session = None
+        targets = self._send("Target.getTargets")["result"]["targetInfos"]
+        pages = [t for t in targets if t["type"] == "page"]
+        if not pages:
+            raise RuntimeError("the browser has no page target to attach to")
+        # `Emulation.setEmulatedMedia` is a PAGE-domain command: sent on the
+        # browser-level session it answers `-32601 wasn't found`. Attach to the
+        # top page target and send every command on that session.
+        self._session = self._send(
+            "Target.attachToTarget", {"targetId": pages[-1]["targetId"], "flatten": True}
+        )["result"]["sessionId"]
+
+    def _send(self, method, params=None):
+        self._id += 1
+        message = {"id": self._id, "method": method}
+        if self._session:
+            message["sessionId"] = self._session
+        if params:
+            message["params"] = params
+        self._ws.send(json.dumps(message))
+        while True:
+            reply = json.loads(self._ws.recv())
+            if reply.get("id") == self._id:
+                return reply
+
+    def set_feature(self, value):
+        """`reduce` / `no-preference` for prefers-reduced-motion; raises on refusal."""
+        reply = self._send(
+            "Emulation.setEmulatedMedia",
+            {"features": [{"name": MEDIA_FEATURE, "value": value}]},
+        )
+        if "error" in reply:
+            # A silent no-op here would make the assertions below pass on an
+            # unchanged preference, so a refusal is a hard error.
+            raise RuntimeError(f"Emulation.setEmulatedMedia({value}) refused: {reply['error']}")
+        return reply
+
+    def close(self):
+        try:
+            self._ws.close()
+        except OSError:
+            pass
 
 
 def check_boot_state(state, scenario, *, real_dist=False):
@@ -1137,6 +1299,81 @@ def main():
             failures.extend(
                 assert_boot_contract(base, args.scenario, real_dist=bool(args.dist))
             )
+            if args.scenario == "match-media" and not failures:
+                # The defect this scenario exists for: `window.match-media` had
+                # no host implementation, so a guest reading
+                # `(prefers-reduced-motion: reduce)` got nothing at all and
+                # reduced-motion users silently kept the full animation set.
+                # Two things must hold on a REAL browser:
+                #   1. the read returns a real boolean (not undefined/throw);
+                #   2. it TRACKS the preference — false, then true, then false —
+                #      when CDP flips Emulation.setEmulatedMedia.
+                read = (
+                    "(() => {"
+                    " try { return JSON.stringify(globalThis.__match_media.read()); }"
+                    " catch (e) { return JSON.stringify({ error: String(e) }); }"
+                    " })()"
+                )
+
+                def read_list():
+                    raw = evaluate(base, read)
+                    if not isinstance(raw, str):
+                        return {"error": f"unreadable probe result: {raw!r}"}
+                    return json.loads(raw)
+
+                first = read_list()
+                if first.get("error"):
+                    failures.append(
+                        "the match-media read threw in the page (the guest has no "
+                        f"host implementation for it): {first['error']}"
+                    )
+                elif not isinstance(first.get("matches"), bool):
+                    failures.append(
+                        "matches is not a boolean (got "
+                        f"{first.get('matches')!r}) — the op does not reach the browser"
+                    )
+                elif first.get("media") != "(prefers-reduced-motion: reduce)":
+                    failures.append(f"the list does not echo its query: {first.get('media')!r}")
+                else:
+                    port_number = _devtools_port(proc.pid)
+                    if port_number is None:
+                        failures.append(
+                            "could not locate the browser devtools port; the media flip "
+                            "cannot be simulated (matches was only proven to be a boolean)"
+                        )
+                    else:
+                        try:
+                            cdp = CdpMedia(port_number)
+                        except Exception as error:  # optional websocket client, etc.
+                            failures.append(
+                                f"CDP media emulation unavailable ({error}); the flip is unproven"
+                            )
+                            cdp = None
+                        if cdp is not None:
+                            try:
+                                observed = [first["matches"]]
+                                # The browser's default is whatever the host
+                                # reports; the DELTAS are what must hold.
+                                for value in ("reduce", "no-preference", "reduce"):
+                                    cdp.set_feature(value)
+                                    time.sleep(0.35)
+                                    observed.append(read_list().get("matches"))
+                            finally:
+                                cdp.close()
+                            if observed[1] is not True:
+                                failures.append(
+                                    f"matches did not become true under emulated reduce: {observed!r}"
+                                )
+                            elif observed[2] is not False:
+                                failures.append(
+                                    f"matches did not become false again: {observed!r}"
+                                )
+                            elif observed[3] is not True:
+                                failures.append(
+                                    f"matches did not follow the second flip: {observed!r}"
+                                )
+                            else:
+                                print("match-media tracked the emulated preference:", observed)
             if args.scenario == "glue-imports" and not failures:
                 probe = evaluate(
                     base,
