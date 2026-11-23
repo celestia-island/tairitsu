@@ -851,7 +851,18 @@ def findings() -> tuple[list[Finding], int, int, int, int, int]:
                     "the composed WIT declares this interface now — drop the line",
                 )
             )
-        elif not any(site[2] == name for site in callback_sites()[0]):
+        elif not any(
+            # A BOUND lookup into an undeclared interface is reported by
+            # `bound_bridge_problems`, never by `callback_sites` (which only names
+            # the inline form) — so the staleness test has to look at the raw
+            # lookups, or a legitimate allowance for a bound site reads as stale.
+            name == _CALLBACK_KEY_RE.match(lookup.group("key")).group("iface")
+            for path in RUNTIME_DIR.glob("*.ts")
+            for lookup in _all_callback_lookups(
+                strip_comments(path.read_text(encoding="utf-8", errors="replace"))
+            )
+            if _CALLBACK_KEY_RE.match(lookup.group("key"))
+        ):
             results.append(
                 Finding(
                     "stale-allowance",

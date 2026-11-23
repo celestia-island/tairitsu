@@ -415,9 +415,9 @@ wit-surface-check:
 # `__wasmExports["<ns>/<iface>@<ver>"]?.<prop>`, and a property jco never emits
 # evaluates to `undefined` — the notification is dropped with no error. That is
 # how a guest's MutationObserver callback never ran (the bridge read
-# `on_mutation` for a WIT func named `on-mutate`). Fifteen wrong property names
-# across 41 dispatch sites (one more name, `on_timeout`-family, was already
-# correct and normalised to the same `jco ?? snake` read);
+# `on_mutation` for a WIT func named `on-mutate`). Sixteen wrong property names
+# across 42 dispatch sites (the extra name and site are the window-resize bridge:
+# `resize-callbacks`/`on_resize` -> `window-resize-callbacks`/`on-window-resize`);
 # the reasons for the one deliberately left alone live in
 # packages/browser-glue/wit-callback-allow.tsv.
 wit-ops-check:

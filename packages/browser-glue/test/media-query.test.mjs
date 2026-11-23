@@ -714,6 +714,51 @@ test("check_wit_ops.py: an unexplained dead-interface bridge turns the gate RED"
   assert.equal(allowed.rc, 0, `an allowance must make the same site acceptable; got: ${allowed.out}`);
 });
 
+test("check_wit_ops.py: a BOUND lookup into an undeclared interface turns the gate RED", () => {
+  // The inline pass only sees `<key>"]?.<prop>`; a bound lookup
+  // (`const guest = __wasmExports[...]`) into an interface the composed WIT does
+  // not declare has to be reported by the BOUND pass, or the site is lost — that
+  // is how `resize-callbacks` survived being rewired away.
+  // This control exists because the branch was previously unpinned: reverting it
+  // to `continue` left the gate green and only the behavioural suite noticed.
+  // MUT: bound-pass-undeclared-continue
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = `      const guest = g.__wasmExports?.["tairitsu-browser:full/window-resize-callbacks@0.2.0"];`;
+    assert.ok(source.includes(needle), "the fixture must find the bound lookup");
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        `      const guest = g.__wasmExports?.["tairitsu-browser:full/resize-callbacks@0.2.0"];`,
+      ),
+    );
+  });
+  assert.equal(rc, 1, "a bound lookup into an undeclared interface must fail the gate");
+  assert.match(
+    out,
+    /binds a guest export of `resize-callbacks@0\.2\.0`/,
+    `the BOUND branch must be the one that fires; got: ${out}`,
+  );
+  // …and the same site is acceptable once an allowance line explains it, which
+  // proves the finding is the allowance channel and not a stray error.
+  const allowed = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(
+        `      const guest = g.__wasmExports?.["tairitsu-browser:full/window-resize-callbacks@0.2.0"];`,
+        `      const guest = g.__wasmExports?.["tairitsu-browser:full/resize-callbacks@0.2.0"];`,
+      ),
+    );
+    const allow = join(root, "packages", "browser-glue", "wit-callback-allow.tsv");
+    writeFileSync(allow, readFileSync(allow, "utf8") + "resize-callbacks\ttest injection\n");
+  });
+  assert.equal(allowed.rc, 0, `an allowance must accept it; got: ${allowed.out}`);
+});
+
 test("check_wit_ops.py: a callback scan that stops matching fails on the floor", () => {
   // The scan's own negative control. Deleting every bridge would empty the site
   // list, and an empty list would read green — the floor is what turns "the scan

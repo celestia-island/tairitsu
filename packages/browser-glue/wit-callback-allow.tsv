@@ -11,3 +11,8 @@
 # Kept apart from `wit-interface-allow.tsv` (wired host interfaces) and
 # `wit-op-allow.tsv` (declared-but-unimplemented host ops) because this is the
 # third direction: the host calling INTO the guest.
+#
+# EMPTY ON PURPOSE: every bridge this list used to excuse has been repaired —
+# `resize-callbacks` is now `window-resize-callbacks` / `on-window-resize` and
+# the glue dispatches it. A line here is the sanctioned way to record a dead
+# bridge; there are none left in the tree.
