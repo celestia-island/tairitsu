@@ -623,6 +623,45 @@ test("window resize: onResizeCallback answers through `on-window-resize`", () =>
   }
 });
 
+test("a throwing guest callback does not escape into the DOM observer loop", () => {
+  // The media-query bridge has wrapped its dispatch since #156; the resize and
+  // mutation bridges were rewritten here without one, so a component bug became
+  // an unhandled page error on every resize / mutation. Both are guarded now,
+  // and the guard is what this pins — the sibling paths (`eventTarget.ts`,
+  // `mediaQueryList.ts`) keep the same shape: log, do not propagate.
+  // MUT: observer-bridge-unwrapped
+  const originalError = console.error;
+  const logged = [];
+  console.error = (...args) => logged.push(args);
+  try {
+    const throwing = installGuest({
+      "resize-observer-callbacks": ["onResize"],
+      "mutation-observer-callbacks": ["onMutate"],
+    });
+    globalThis.__wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"].onResize = () => {
+      throw new Error("guest exploded");
+    };
+    globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"].onMutate = () => {
+      throw new Error("guest exploded");
+    };
+    withInstance(() => platformHelpers.createResizeObserver(1n));
+    withInstance(() => platformHelpers.createMutationObserver(2n));
+    const resizeObserver = globalThis.ResizeObserver.instances.at(-2);
+    const mutationObserver = globalThis.ResizeObserver.instances.at(-1);
+    assert.doesNotThrow(() =>
+      resizeObserver.callback([fakeResizeEntry({ x: 0, y: 0, width: 1, height: 1 })], resizeObserver),
+    );
+    assert.doesNotThrow(() => mutationObserver.callback([fakeMutationRecord()], mutationObserver));
+    assert.equal(logged.length, 2, `both throws must be logged, saw ${logged.length}`);
+    assert.match(String(logged[0][0]), /resize-observer dispatch error/);
+    assert.match(String(logged[1][0]), /mutation-observer dispatch error/);
+    void throwing;
+  } finally {
+    console.error = originalError;
+    delete globalThis.__wasmExports;
+  }
+});
+
 test("every bridge answers under the snake_case spelling too (fallback kept)", () => {
   // The jco name is the contract, but a wrapper built with the WIT spelling (or
   // a future jco) must keep working — the same belt-and-braces the media-query

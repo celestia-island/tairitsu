@@ -124,15 +124,23 @@ export const platformHelpers_exports = {
       // convention.
       const handler = guest?.onResize ?? guest?.on_resize;
       if (handler) {
-        handler(
-          callbackId,
-          entries.map((entry) =>
-            resizeEntryValue(entry, {
-              store: (handle, value) =>
-                globalThis.__resizeObserverEntryHandles.set(handle, value as never),
-            }),
-          ),
-        );
+        // A throwing guest must not escape into the DOM observer loop — same
+        // shape as `mediaQueryList.ts`'s `dispatchChange` (log, do not propagate):
+        // one component bug would otherwise become an unhandled page error on
+        // every resize of every element.
+        try {
+          handler(
+            callbackId,
+            entries.map((entry) =>
+              resizeEntryValue(entry, {
+                store: (handle, value) =>
+                  globalThis.__resizeObserverEntryHandles.set(handle, value as never),
+              }),
+            ),
+          );
+        } catch (error) {
+          console.error("[tairitsu-glue] resize-observer dispatch error:", error);
+        }
       }
     });
     // W4: owned by the instance, disconnected on dispose.
@@ -172,15 +180,21 @@ export const platformHelpers_exports = {
       // `list<mutation-entry>`.
       const handler = guest?.onMutate ?? guest?.on_mutation;
       if (handler) {
-        handler(
-          callbackId,
-          records.map((record) =>
-            mutationEntryValue(record, {
-              store: (handle, value) =>
-                globalThis.__mutationRecordHandles.set(handle, value as never),
-            }),
-          ),
-        );
+        // Same guard as the resize bridge and `mediaQueryList.ts`: a guest that
+        // throws must not escape into the MutationObserver callback.
+        try {
+          handler(
+            callbackId,
+            records.map((record) =>
+              mutationEntryValue(record, {
+                store: (handle, value) =>
+                  globalThis.__mutationRecordHandles.set(handle, value as never),
+              }),
+            ),
+          );
+        } catch (error) {
+          console.error("[tairitsu-glue] mutation-observer dispatch error:", error);
+        }
       }
     });
     // W4: owned by the instance, disconnected on dispose.
