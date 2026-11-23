@@ -37,6 +37,28 @@ matched), so the parse is `--prefix none` plus a path-component-independent toke
 scan, `--selftest` pins it against captured shapes, and a tree that parses to
 almost nothing is reported as "could not run" rather than "clean".
 
+Threat model — what this gate is for, and what it is not
+-------------------------------------------------------
+In scope: **dependency regression.** Someone adds `wasm-bindgen` / `chrono` (or
+any of the family) back to a manifest, or a transitive edge creeps in, and the
+wasip2 delivery closure goes dirty without anything else noticing.
+
+Out of scope: **rewriting this script.** Five review rounds attacked the parser
+and every round narrowed the surface (count guard -> line-for-line identity ->
+inline expectation -> count derived from blank/annotation lines -> two independent
+`cargo tree` runs plus a raw-text scan). The conclusion of those rounds is not
+that another layer of in-script paranoia is needed: a machine-readable anchor
+checked out *inside the same repository* can be edited by exactly the same
+process that edits the parser, so it is theatre. The real anchor is outside the
+repository — review, git history, and the fact that disabling a gate is visible
+and attributable. This is the same property `comment-gate`, `artifact-drift` and
+`pr_merge_gate` have; none of them is expected to defend against their own
+rewriting either.
+
+What the double run and the raw-text scan buy, then, is not "cannot be
+defeated" but "no *single* edit to the parsing path yields a green verdict while
+a forbidden package is present".
+
 Usage:
     python3 scripts/check_wasip2_closure.py --check
     python3 scripts/check_wasip2_closure.py --selftest
