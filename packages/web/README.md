@@ -4,7 +4,9 @@ Web platform implementations and browser integration for Tairitsu.
 
 ## Overview
 
-`tairitsu-web` provides platform implementations for running Tairitsu applications in web browsers. It supports both WIT-backed (Component Model) and direct web-sys backends.
+`tairitsu-web` provides platform implementations for running Tairitsu applications in web browsers.
+There is one browser backend: `WitPlatform`, backed by the WebAssembly Component Model. The
+earlier wasm-bindgen/web-sys path no longer exists.
 
 ## Platform Implementations
 
@@ -30,16 +32,9 @@ platform.mount_vnode_to_app(&vnode)?;
 
 ### BrowserPlatform
 
-Direct web-sys bindings for native-feeling browser interaction.
-
-**Features:**
-
-- Direct DOM access via web-sys
-- Event handling
-- CSS manipulation
-- Canvas/WebGL support
-
-**Target:** `wasm32-unknown-unknown`
+Placeholder platform implementation, gated on the `browser` feature. It does **not** use web-sys:
+callbacks run immediately and geometry returns a default rect. It exists so non-browser code has
+something to link against, not as a second backend.
 
 ## Modules
 
