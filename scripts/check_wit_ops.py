@@ -125,6 +125,13 @@ WIT_FUNC_RE = re.compile(r"^\s+([a-z0-9][a-z0-9-]*)\s*:\s*func\s*\(", re.MULTILI
 _CALLBACK_KEYED = re.compile(
     r'__wasmExports\s*\??\.?\[\s*"(?P<key>[^"]+)"\s*\]',
 )
+# The same lookup written with a template: `__wasmExports[`<ns>/<iface>@0.2.0`]`.
+# Ignoring this form lets a bridge be rewritten into it and vanish from the
+# report entirely — the floor only measures what the scan already sees, so a
+# shrinking BASE has to be caught here, not there.
+_CALLBACK_KEYED_TEMPLATE = re.compile(
+    r"__wasmExports\s*\??\.?\[\s*`(?P<key>[^`$]+)`\s*\]",
+)
 # How far past a bound lookup the property reads may sit (lines). The bridges
 # read and call within a handful; the bound-callback scan below uses it.
 _WINDOW_LINES = 400
@@ -328,13 +335,24 @@ def snake(kebab: str) -> str:
 
     `packages/browser-glue/src/runtime/platformHelpers.ts` reads
     `guest?.onTimeout ?? guest?.on_timeout`: the first is what jco emits, the
-    second keeps a wrapper built to the WIT spelling working. Accepting both is
-    what keeps this check from forbidding a deliberate belt-and-braces read —
-    and what makes it catch the defect that motivated it, since
-    `on_mutation` is neither (`on-mutate` camelCases to `onMutate`, never to
-    `on_mutation`).
+    second keeps a wrapper built to the WIT spelling working.
+
+    Only a SINGLE-SEGMENT WIT name has an underscore spelling that could ever be
+    real (`on-timeout` → `onTimeout` / `on_timeout`); a multi-segment one never
+    does — `on-mutate` would have to be `on_muta_te` here, and no wrapper emits
+    that. So the fallback is not a promise that every WIT name HAS an underscore
+    alias: it is the one spelling a hypothetical WIT-convention wrapper would
+    pick, accepted only when the jco name is also present. That is what lets
+    this check catch the defect that motivated it: `on_mutation` is neither the
+    jco name nor the fallback of one.
     """
     return kebab.replace("-", "_")
+
+
+def _all_callback_lookups(text: str) -> list[re.Match[str]]:
+    """Every `__wasmExports[...]` lookup, string-keyed or template-keyed."""
+    found = [*_CALLBACK_KEYED.finditer(text), *_CALLBACK_KEYED_TEMPLATE.finditer(text)]
+    return sorted(found, key=lambda match: match.start())
 
 
 def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
@@ -365,7 +383,7 @@ def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
         for offset, char in enumerate(text):
             if char == "\n":
                 starts.append(offset + 1)
-        for lookup in _CALLBACK_KEYED.finditer(text):
+        for lookup in _all_callback_lookups(text):
             keyed = _CALLBACK_KEY_RE.match(lookup.group("key"))
             if keyed is None:
                 continue
@@ -419,7 +437,10 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
     # on_mutation)?.` — the shape the inline dispatch is rewritten into — out.
     bound_re = re.compile(
         r"(?<![.A-Za-z0-9_$])const\s+(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*\n?"
-        r"\s*(?:globalThis|g)\.__wasmExports\??\.?\[\s*\"(?P<key>[^\"]+)\"\s*\]"
+        # Quoted OR template-literal key: a bridge rewritten into the template
+        # form must not fall out of the scan (the "silently smaller report"
+        # failure the count floor cannot see).
+        r"\s*(?:globalThis|g)\.__wasmExports\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]\s*\]"
     )
     # `<local>?.<prop>` / `<local>.<prop>` ONLY. A looser pattern scans for a bare
     # identifier, and a preceding `??` supplies one (`?? guest?.onX`), so the
@@ -447,7 +468,16 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
             iface = keyed.group("iface")
             declared = declared_by_iface[iface] if iface in declared_by_iface else declared_funcs(iface)
             if not declared:
-                continue  # reported by the inline pass as an unknown interface
+                # The inline pass only sees the INLINE form, so a bound lookup
+                # into an undeclared interface would otherwise be lost — which
+                # is how `resize-callbacks` survived being rewired away.
+                if iface not in callback_allowances():
+                    problems.append(
+                        f"callback site {path.name}:{line_index + 1} binds a guest export of "
+                        f"`{iface}@{keyed.group('ver')}`, which the composed WIT does not "
+                        "declare — no guest can receive it"
+                    )
+                continue
             # The jco camelCase only. A snake spelling is a legitimate
             # `??` FALLBACK, never a candidate on its own — resolving it to the
             # accepted set would make a lone wrong name read green.

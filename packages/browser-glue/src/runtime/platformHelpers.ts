@@ -13,6 +13,13 @@ function rejectionText(error: unknown): string {
   return String(error ?? "rejected");
 }
 
+/** An IndexedDB request result as the `option<string>` the WIT declares. */
+function idbResultText(result: unknown): string | undefined {
+  if (typeof result === "string") return result;
+  if (result === null || result === undefined) return undefined;
+  return JSON.stringify(result);
+}
+
 export const platformHelpers_exports = {
   innerWidth() {
     return window.innerWidth;
@@ -456,10 +463,16 @@ export const platformHelpers_exports = {
     if (!g.__tairitsuResizeListeners) {
       g.__tairitsuResizeListeners = new Map();
     }
+    // `on-resize-callback` is DECLARED and IMPLEMENTED (`onResizeCallback`), so a
+    // guest can call it and expect its window-resize notification. The bridge
+    // used to read `…/resize-callbacks@0.2.0"]?.on_resize` — an interface the
+    // world does not have and a property the wrapper does not carry, so the call
+    // went nowhere. The real interface is `window-resize-callbacks` and jco
+    // emits `onWindowResize(callbackId, width, height)`.
     const handler = () => {
-      if (g.__wasmExports && g.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]) {
-        g.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]?.on_resize?.(callbackId);
-      }
+      const guest = g.__wasmExports?.["tairitsu-browser:full/window-resize-callbacks@0.2.0"];
+      const onWindowResize = guest?.onWindowResize ?? guest?.on_window_resize;
+      if (onWindowResize) onWindowResize(callbackId, window.innerWidth, window.innerHeight);
     };
     window.addEventListener("resize", handler);
     // W4: owned by the instance, removed on dispose.
@@ -701,10 +714,9 @@ export const platformHelpers_exports = {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
         const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
-        if (handler) handler(
-          callbackId,
-          globalThis.__storeElement?.(req.result) ?? 0n,
-        );
+        // `on-idb-request-success(callback-id, result: option<string>)` —
+        // the second argument is a STRING or `undefined`, never a handle.
+        if (handler) handler(callbackId, "open:" + String(req.result?.version ?? ""));
       }
     };
     req.onerror = () => {
@@ -739,9 +751,8 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
-          if (handler) handler(
-            callbackId,
-          );
+          // A `put` request carries no value: `undefined` is the honest result.
+          if (handler) handler(callbackId, undefined);
         }
       };
       req.onerror = () => {
@@ -789,10 +800,8 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
-          if (handler) handler(
-            callbackId,
-            req.result,
-          );
+          // `option<string>`: a missing key is `undefined`, not `""`.
+          if (handler) handler(callbackId, idbResultText(req.result));
         }
       };
       req.onerror = () => {
@@ -840,9 +849,7 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
-          if (handler) handler(
-            callbackId,
-          );
+          if (handler) handler(callbackId, undefined);
         }
       };
       req.onerror = () => {
@@ -890,10 +897,8 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
-          if (handler) handler(
-            callbackId,
-            req.result || [],
-          );
+          // The WIT value is ONE string; a list arrives JSON-encoded.
+          if (handler) handler(callbackId, JSON.stringify(req.result ?? []));
         }
       };
       req.onerror = () => {
@@ -941,9 +946,7 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
-          if (handler) handler(
-            callbackId,
-          );
+          if (handler) handler(callbackId, undefined);
         }
       };
       req.onerror = () => {

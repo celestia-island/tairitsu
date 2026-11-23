@@ -689,16 +689,29 @@ test("check_wit_ops.py: a callback bridge reading a property jco never emits tur
 });
 
 test("check_wit_ops.py: an unexplained dead-interface bridge turns the gate RED", () => {
-  // `resize-callbacks` is recorded in wit-callback-allow.tsv. Remove the line and
-  // the same site must be reported: an allowance is the ONLY way to say "known",
-  // so the exception is visible in review instead of implicit.
-  // MUT: callback-allow-file-dropped
+  // The allow file only says "known, not fixed" — it never makes a dead bridge
+  // pass silently. Inject one (a `resize-callbacks` dispatch, the interface the
+  // composed WIT never declared) and require the gate to name it; then add the
+  // allowance line and require green, which is what proves the allowance is the
+  // sanctioned channel rather than decoration.
+  // MUT: callback-allow-file-ignored
+  const injected = `        g.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]?.on_resize?.(0n);\n`;
   const { rc, out } = runGateAgainst((root) => {
-    const path = join(root, "packages", "browser-glue", "wit-callback-allow.tsv");
-    writeFileSync(path, "# empty on purpose\n");
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    writeFileSync(path, readFileSync(path, "utf8") + injected);
   });
   assert.equal(rc, 1, "an undeclared interface with no allowance must fail the gate");
   assert.match(out, /dispatches into `resize-callbacks@0\.2\.0`/, `got: ${out}`);
+  const allowed = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    writeFileSync(path, readFileSync(path, "utf8") + injected);
+    const allow = join(root, "packages", "browser-glue", "wit-callback-allow.tsv");
+    writeFileSync(
+      allow,
+      readFileSync(allow, "utf8") + "resize-callbacks\ttest injection\n",
+    );
+  });
+  assert.equal(allowed.rc, 0, `an allowance must make the same site acceptable; got: ${allowed.out}`);
 });
 
 test("check_wit_ops.py: a callback scan that stops matching fails on the floor", () => {

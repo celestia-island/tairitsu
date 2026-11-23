@@ -11,4 +11,3 @@
 # Kept apart from `wit-interface-allow.tsv` (wired host interfaces) and
 # `wit-op-allow.tsv` (declared-but-unimplemented host ops) because this is the
 # third direction: the host calling INTO the guest.
-resize-callbacks	`onResizeCallback` (`platformHelpers.ts`, the window-resize bridge) dispatches into `tairitsu-browser:full/resize-callbacks@0.2.0` and reads `on_resize`; the composed WIT declares no such interface (the real one is `window-resize-callbacks` / `on-window-resize`, which the glue never dispatches at all). Deliberately left alone: rewiring it ADDS a dispatch path the glue never had, which is a feature, not a rename — tracked separately from the callback-name repair

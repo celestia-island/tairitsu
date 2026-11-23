@@ -357,8 +357,21 @@ test("web socket: open, message, close and error all reach the guest (the live p
     );
     assert.equal(calls[1][2][1], "hello", "string payloads pass through");
     assert.equal(calls[2][2][1], '{"kind":"json"}', "non-string payloads are JSON encoded");
-    assert.equal(calls[3][2][1], 1000, "the close code comes from the event");
+    assert.equal(calls[3][2][1], 1000, "the close code comes from the real event");
     assert.equal(calls[3][2][2], "bye");
+    // Every event reports the callback id the bridge minted (the guest routes on
+    // it), and the four ids differ — one shared id would route every event to
+    // the same handler. MUT: ws-callback-ids-collapsed
+    const ids = calls.map(([, , args]) => args[0]);
+    assert.equal(
+      new Set(ids).size,
+      4,
+      `open/message/close/error must carry distinct callback ids: ${ids}`,
+    );
+    for (const id of ids) assert.equal(typeof id, "number", "the ids the bridge mints are numbers");
+    // …and `open` / `error` carry nothing else, so a reverted arity is visible.
+    assert.equal(calls[0][2].length, 1, "on-web-socket-open takes only the callback id");
+    assert.equal(calls[4][2].length, 1, "on-web-socket-error takes only the callback id");
     assert.equal(instance.reclaimables.sockets.size, 1, "the socket stays instance-owned");
   } finally {
     globalThis.WebSocket = originalWebSocket;
@@ -484,9 +497,13 @@ test("every promise-callback dispatch passes the arity the WIT declares", () => 
   // source and asserts the CALL SHAPE at every site.
   // MUT: promise-arm-rejects-without-error
   const source = readFileSync(join(RUNTIME, "platformHelpers.ts"), "utf8");
+  // `[^)]*` across newlines: the IndexedDB arms write `handler(\n callbackId,\n)`,
+  // and a single-line slice silently skipped them (the "seven arms" count was
+  // right by luck). MUT: arity-pin-single-line-slice
   const calls = [...source.matchAll(/if \(handler\) handler\(([^)]*)\)/gs)].map((m) =>
     m[1].replace(/\s+/g, " ").trim(),
   );
+  assert.ok(calls.length >= 30, `expected every dispatch arm, saw ${calls.length}`);
   const promiseArms = calls.filter((args) => args === "id" || args.startsWith("id,"));
   // Seven: clipboard write + clipboard read + `fetchPromise` = 3 resolve arms,
   // and 4 rejection arms (write, read, JSON-parse, fetch).
@@ -501,6 +518,106 @@ test("every promise-callback dispatch passes the arity the WIT declares", () => 
       "id",
       "a promise callback called with only the id cannot be lowered (the WIT requires a value/error string)",
     );
+  }
+});
+
+/** Commas at bracket depth 0 outside string literals. */
+function topLevelCommas(text) {
+  let depth = 0;
+  let inString = null;
+  let commas = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (inString) {
+      if (char === "\\") index += 1;
+      else if (char === inString) inString = null;
+      continue;
+    }
+    if (char === '"' || char === "'" || char === "`") inString = char;
+    else if (char === "(" || char === "[" || char === "{") depth += 1;
+    else if (char === ")" || char === "]" || char === "}") depth -= 1;
+    else if (char === "," && depth === 0) commas += 1;
+  }
+  return commas;
+}
+
+test("every idb success arm passes the `result` the WIT declares", () => {
+  // `on-idb-request-success(callback-id, result: option<string>)` — `jco types`
+  // emits `onIdbRequestSuccess(callbackId: bigint, result: string | undefined)`.
+  // Renaming the bridge from `on_idb_success` to `onIdbRequestSuccess` made
+  // these arms FIRE; two of them passed only `callbackId`, one passed a handle
+  // and one an array. A latent shape bug became a live one, so it is pinned.
+  // MUT: idb-arms-missing-result
+  const source = readFileSync(join(RUNTIME, "platformHelpers.ts"), "utf8");
+  // Only the IDB arms: the file-reader arms also start with `callbackId` and do
+  // carry their result, so they are not what this pins.
+  // Parse the ARGUMENT LIST, not a `[^)]*` slice: `String(req.result?.version ??
+  // "")` contains a `)`, so a slice ends early and one argument looks like two.
+  // Parenthesis depth does the counting.
+  // `[\s\S]*?` rather than `[^]*?` — the latter is a needless super-linear
+  // backtracker that could exhaust a timeout and read as a pass.
+  const arms = [...source.matchAll(/guest\?\.onIdbRequest(?:Success|Error)[\s\S]*?if \(handler\) handler\(/g)].map((m) => {
+    let depth = 1;
+    let index = m.index + m[0].length;
+    const start = index;
+    while (index < source.length && depth > 0) {
+      if (source[index] === "(") depth += 1;
+      else if (source[index] === ")") depth -= 1;
+      if (depth === 0) break;
+      index += 1;
+    }
+    return source.slice(start, index).replace(/\s+/g, " ").trim();
+  });
+  assert.ok(arms.length >= 5, `expected the idb arms, saw ${arms.length}`);
+  for (const args of arms) {
+    // A trailing comma is part of the slice, so "how many ARGUMENTS" means "how
+    // many COMMAS" — `handler(\n callbackId,\n)` is one argument, not two.
+    // Count TOP-LEVEL COMMAS with a depth counter. A hand-rolled loop here
+    // silently under-counted (one arm with a nested `String(...)` swallowed the
+    // comma that separated the arguments), which made the pin read green on a
+    // real revert — so the counting is a small explicit helper whose behaviour
+    // is asserted by this very loop.
+    const normalised = args.replace(/[,\s]+$/, "");
+    assert.notEqual(
+      normalised,
+      "callbackId",
+      `an idb arm called with only the callback id leaves \`result\` undefined by accident, not by declaration: ${args}`,
+    );
+    assert.ok(
+      topLevelCommas(normalised) >= 1,
+      `an idb arm must pass a second argument (result): ${args}`,
+    );
+  }
+});
+
+test("window resize: onResizeCallback answers through `on-window-resize`", () => {
+  // `on-resize-callback` is DECLARED and IMPLEMENTED, so the guest can call it —
+  // and it used to dispatch into `…/resize-callbacks@0.2.0"]?.on_resize`, an
+  // interface the world does not have, while an allow-list line called it
+  // "never dispatched". The real contract is
+  // `on-window-resize(callback-id, width: s32, height: s32)`.
+  // MUT: resize-bridge-reads-resize-callbacks
+  const calls = installGuest({ "window-resize-callbacks": ["onWindowResize"] });
+  const originalWindow = globalThis.window;
+  const listeners = [];
+  try {
+    globalThis.window = {
+      addEventListener: (type, handler) => listeners.push([type, handler]),
+      removeEventListener: () => {},
+      innerWidth: 1024,
+      innerHeight: 768,
+    };
+    withInstance(() => platformHelpers.onResizeCallback(21n));
+    const resize = listeners.find(([type]) => type === "resize")[1];
+    resize();
+    assert.deepEqual(
+      calls.map(([, name, args]) => [name, Array.from(args)]),
+      [["onWindowResize", [21n, 1024, 768]]],
+      "the bridge must call on-window-resize with the callback id and the two dimensions",
+    );
+  } finally {
+    globalThis.window = originalWindow;
+    delete globalThis.__wasmExports;
   }
 });
 
