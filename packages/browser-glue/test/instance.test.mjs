@@ -67,17 +67,12 @@ test("handles are stored per instance, not per page", () => {
 test("EVERY handle counter is per instance and never collides", () => {
   const a = createInstance();
   const b = createInstance();
-  const names = [
-    "nextHandle",
-    "nextMutationRecord",
-    "nextResizeObserverEntry",
-    "nextResizeObserverSizeHandle",
-    "nextDomRectHandle",
-    "nextNodeList",
-    "nextCssStyleDeclarationHandle",
-    "nextListenerHandle",
-    "nextEventHandle",
-  ];
+  // Derived from the instance's own counter bag, not hand-listed: a hand-kept
+  // list silently missed `nextMediaQueryListHandle` when the match-media work
+  // added it, so a page-global counter (the exact bug class this pins) would
+  // have gone green. Enumerating `a.counters` makes a new counter self-covering.
+  const names = Object.keys(a.counters).filter((name) => name.startsWith("next"));
+  assert.ok(names.length >= 9, `expected the counter bag, got ${names.length}`);
   for (const name of names) {
     assert.notEqual(a.counters[name], b.counters[name], `${name} is shared across instances`);
     assert.equal(typeof a.counters[name], "bigint", `${name} is not a bigint counter`);
@@ -556,13 +551,15 @@ test("the build-time glue modules are real ESM with named exports (W5)", async (
     );
   }
   // The export count is the interface surface, not a byproduct of the scanner:
-  // 299 named functions across the 25 interfaces (a paren-scanning relapse once
-  // inflated this to 364 by recording parameter names).
+  // 306 named functions across the 26 interfaces (a paren-scanning relapse once
+  // inflated this to 364 by recording parameter names). The count moved
+  // 299 -> 306 when `media-query-list` (6 ops) and `window.match-media` (1) were
+  // wired: an interface-level gate could not see that either was missing.
   const total = files.reduce(async (sumPromise, name) => {
     const source = await readFile(join(glueDir, name), "utf8");
     return (await sumPromise) + (source.match(/^export const /gm) || []).length;
   }, Promise.resolve(0));
-  assert.equal(await total, 299, "the emitted export surface changed");
+  assert.equal(await total, 306, "the emitted export surface changed");
 
   const manifest = JSON.parse(await readFile(join(glueDir, "manifest.json"), "utf8"));
   assert.ok(manifest.interfaces.length >= 20);
@@ -602,7 +599,10 @@ test("the default capability set is data, and it matches the registry (W6)", asy
     ["cli", "clocks", "filesystem", "io", "random", "sockets"],
     "the default WASI set changed",
   );
-  assert.equal(defaults.interfaces.length, 25, "the default interface count changed");
+  // 25 -> 26 when `media-query-list` was wired (see media-query.test.mjs): the
+  // default capability set is derived from the registry, so a new interface
+  // MUST move this number rather than slip into every component silently.
+  assert.equal(defaults.interfaces.length, 26, "the default interface count changed");
   await rm(glueDir, { recursive: true, force: true });
 });
 
@@ -641,7 +641,7 @@ test("the boot filters imports by the declaration (W6 source pin)", async () => 
   assert.match(emitted, /capability denied/, "the emitted module does not check the declaration");
   const defaults = JSON.parse(await readFile(join(emitterOut, "default-capabilities.json"), "utf8"));
   assert.ok(
-    Array.isArray(defaults.interfaces) && defaults.interfaces.length === 25,
+    Array.isArray(defaults.interfaces) && defaults.interfaces.length === 26,
     "the emitted default set is not usable as data",
   );
   await rm(emitterOut, { recursive: true, force: true });

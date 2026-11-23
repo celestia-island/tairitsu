@@ -10,6 +10,7 @@ import { resizeObserverEntry_exports } from "./resizeObserverEntry";
 import { resizeObserverSize_exports } from "./resizeObserverSize";
 import { resizeObserver_exports } from "./resizeObserver";
 import { cssStyleDeclaration_exports } from "./cssStyleDeclaration";
+import { mediaQueryList_exports } from "./mediaQueryList";
 import { elementCssInlineStyle_exports } from "./elementCssInlineStyle";
 import { eventTarget_exports } from "./eventTarget";
 import { domTokenList_exports } from "./domTokenList";
@@ -41,6 +42,7 @@ export const INTERFACES = {
   "@tairitsu-glue/resize-observer-size": resizeObserverSize_exports,
   "@tairitsu-glue/resize-observer": resizeObserver_exports,
   "@tairitsu-glue/css-style-declaration": cssStyleDeclaration_exports,
+  "@tairitsu-glue/media-query-list": mediaQueryList_exports,
   "@tairitsu-glue/element-css-inline-style": elementCssInlineStyle_exports,
   "@tairitsu-glue/event-target": eventTarget_exports,
   "@tairitsu-glue/dom-token-list": domTokenList_exports,

@@ -29,6 +29,11 @@ export interface InstanceTables {
   domRectHandles: Map<bigint, unknown>;
   nodeListHandles: Map<bigint, unknown>;
   cssStyleDeclarationHandles: Map<bigint, unknown>;
+  mediaQueryListHandles: Map<bigint, unknown>;
+  // `add-listener` handlers by (list handle → callback id) and the id `onchange`
+  // is bound to, so `removeListener` / `dispose` can detach what was attached.
+  mediaQueryListListeners: Map<bigint, Map<bigint, (event: MediaQueryListEvent) => void>>;
+  mediaQueryListOnchange: Map<bigint, bigint>;
   listenerHandles: Map<bigint, unknown>;
   tairitsuScrollListeners: Map<bigint, unknown>;
   // Page-global indexes that hand handles between instances if they stay
@@ -78,6 +83,9 @@ export class TairitsuInstance {
     domRectHandles: new Map(),
     nodeListHandles: new Map(),
     cssStyleDeclarationHandles: new Map(),
+    mediaQueryListHandles: new Map(),
+    mediaQueryListListeners: new Map(),
+    mediaQueryListOnchange: new Map(),
     listenerHandles: new Map(),
     tairitsuScrollListeners: new Map(),
     elementReverseMap: undefined as unknown as Map<unknown, unknown>,
@@ -108,6 +116,7 @@ export class TairitsuInstance {
     nextDomRectHandle: this.seed,
     nextNodeList: this.seed,
     nextCssStyleDeclarationHandle: this.seed,
+    nextMediaQueryListHandle: this.seed,
     nextListenerHandle: this.seed,
     nextEventHandle: this.seed,
   };
@@ -288,6 +297,9 @@ const TABLE_NAMES = [
   "__domRectHandles",
   "__nodeListHandles",
   "__cssStyleDeclarationHandles",
+  "__mediaQueryListHandles",
+  "__mediaQueryListListeners",
+  "__mediaQueryListOnchange",
   "__listenerHandles",
   "__tairitsuScrollListeners",
   "__elementReverseMap",
@@ -307,6 +319,7 @@ const COUNTER_NAMES = [
   "__nextDomRectHandle",
   "__nextNodeList",
   "__nextCssStyleDeclarationHandle",
+  "__nextMediaQueryListHandle",
   "__nextListenerHandle",
   "__nextEventHandle",
 ] as const;

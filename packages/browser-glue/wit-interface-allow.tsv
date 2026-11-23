@@ -1,0 +1,13 @@
+# Wired interfaces whose name the composed WIT does not declare.
+#
+# One entry per line: <kebab-interface><TAB><reason>
+#
+# `scripts/check_wit_ops.py --check` fails when a registry entry names an
+# interface the composed WIT has no `interface <name> { … }` for and no entry
+# here explains it — that shape means either a typo in the registry or a stale
+# interface name, and in both cases the emitted module is unreachable.
+#
+# Separate from wit-op-allow.tsv on purpose: "the interface is not declared" and
+# "the op is not implemented" are different defects with different fixes, and
+# folding them together would hide the second inside the first.
+observers	runtime-side observer helpers (getBoundingClientRect / observe) wired under a name the composed WIT does not declare; no guest imports it, and platform-helpers serves the same functions
