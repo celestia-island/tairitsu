@@ -203,6 +203,20 @@ test("mutation observer: the record handle still resolves through the WIT getter
     const [handle, rec] = [...instance.tables.mutationRecordHandles.entries()].at(-1);
     assert.equal(mutationRecord_exports.getType(handle), "characterData");
     assert.equal(mutationRecord_exports.getType(handle), rec.type);
+    // …and the WIT getters that expose the FULL lists (the records the callback
+    // carries truncate `added-nodes` to one handle, by declaration). These were
+    // exported only by the generator's unwired `glue/dom.ts`, so the "ask the
+    // record" recovery path the bridge relies on did not exist.
+    // MUT: mutation-record-added-nodes-unwired
+    const addedList = mutationRecord_exports.getAddedNodes(handle);
+    assert.equal(typeof addedList, "bigint", "a node-list handle");
+    assert.notEqual(addedList, 0n, "the record has an addedNodes list to hand back");
+    // The fake record carries plain arrays (see `fakeMutationRecord`); a real
+    // NodeList would have `.item`, and the handle is what the guest resolves.
+    const added = globalThis.__nodeListHandles.get(addedList);
+    assert.equal(added.length, rec.addedNodes.length);
+    assert.equal(added[0], rec.addedNodes[0]);
+    assert.notEqual(mutationRecord_exports.getRemovedNodes(handle), 0n);
     assert.equal(calls.length, 1);
   } finally {
     delete globalThis.__wasmExports;
@@ -342,6 +356,14 @@ test("promise bridge binds `onPromiseResolved` / `onPromiseRejected`", async () 
     assert.equal(calls.length >= 1, true, "a settled fetch must reach the guest");
     assert.equal(calls[0][1], "onPromiseResolved");
     assert.equal(calls[0][2][0], id, "the promise id the caller received comes back");
+    // `on-promise-resolved(promise-id, value: string)` — a required string, not
+    // a `Response` object (`jco` cannot lower one into a `string`).
+    // MUT: promise-bridge-passes-response-object
+    assert.equal(
+      typeof calls[0][2][1],
+      "string",
+      "the resolved value must be a string, or the call cannot be lowered",
+    );
   } finally {
     delete globalThis.__wasmExports;
   }

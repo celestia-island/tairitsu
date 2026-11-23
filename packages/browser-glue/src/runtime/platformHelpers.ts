@@ -228,7 +228,11 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
           const handler = guest?.onPromiseResolved ?? guest?.on_promise_resolved;
-          if (handler) handler(id);
+          // `on-promise-resolved(promise-id, value: string)` — the value is
+          // REQUIRED, and `navigator.clipboard.writeText` resolves with nothing,
+          // so the honest value is the empty string (not `undefined`, which is
+          // not representable for a required `string`).
+          if (handler) handler(id, "");
         }
       })
       .catch(() => {
@@ -303,7 +307,11 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
           const handler = guest?.onPromiseResolved ?? guest?.on_promise_resolved;
-          if (handler) handler(id, resp);
+          // `value` is a required `string`; a `Response` is not one. The bridge
+          // reports what it can say synchronously — the status line — and the
+          // guest reads the body through `fetch` itself, which is where the
+          // content belongs (`_handwritten.wit` declares no response record).
+          if (handler) handler(id, resp.status + " " + resp.statusText);
         }
       })
       .catch(() => {

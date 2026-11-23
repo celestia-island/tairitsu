@@ -127,7 +127,7 @@ _CALLBACK_KEYED = re.compile(
 )
 # How far past a bound lookup the property reads may sit (lines). The bridges
 # read and call within a handful; the bound-callback scan below uses it.
-_WINDOW_LINES = 120
+_WINDOW_LINES = 400
 
 _CALLBACK_KEY_RE = re.compile(r"^(?P<ns>.*)/(?P<iface>[a-z0-9-]+)@(?P<ver>[0-9.]+)$")
 # Right after the closing `]` the inline dispatch continues with `?.<prop>(` /
@@ -459,10 +459,23 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
             # count on purpose — a dedented brace is not a reliable stop once whole
             # comment lines are removed — and an overrun can only add reads of the
             # SAME local, which are that bridge's own.
+            # The window is the ENCLOSING BLOCK, ended by the first line that
+            # closes it: the binding's own indentation minus four (`eventTarget`'s
+            # `const callbacks` sits at 10 and its `if` block closes at 8 with
+            # `}`), or a bare `};` that ends the object/module literal. A fixed
+            # line count both missed `eventTarget.ts`'s five dispatches (30–80
+            # lines below the binding) and overran into the next method.
+            head_line = lines[line_index]
+            base_indent = len(head_line) - len(head_line.lstrip())
             tail = text[binding.end() :].split("\n")
             window = tail[0] + "\n"
             for probe in tail[1 : 1 + _WINDOW_LINES]:
-                if bound_re.search(probe) or probe.rstrip() == "  },":
+                if bound_re.search(probe):
+                    break
+                indent = len(probe) - len(probe.lstrip())
+                if probe.strip() and probe.strip().startswith("}") and (
+                    indent <= base_indent - 4 or probe == "};"
+                ):
                     break
                 window += probe + "\n"
             # (local, prop) pairs this binding's window reads. A guarded read can be
