@@ -160,10 +160,17 @@ def check(cargo: str) -> int:
         members = parse_members(text)
         # A tree that parses to almost nothing means the extraction is broken,
         # not that the closure is clean — zero hits must never read as green.
-        if text.count("\n") < 5 or len(members) < 2:
+        # The ratio check is the load-bearing half: a *size-conditional* parser
+        # (correct on tiny inputs, blind on real ones) passes any absolute floor
+        # but leaves nearly every line unaccounted for. Measured blind variant on
+        # this tree: 2 of 90 names — a reviewer proved that variant once reported
+        # a clean closure while `wasm-bindgen` was actually injected.
+        lines = [ln for ln in text.splitlines() if ln.strip()]
+        if len(lines) < 5 or len(members) < max(2, len(lines) // 2):
             print(
-                "wasip2 closure gate could not run: no packages parsed from the "
-                f"tree of {crate}",
+                "wasip2 closure gate could not run: parsed "
+                f"{len(members)} of {len(lines)} lines from the tree of {crate} "
+                "(the extraction is broken, not the closure clean)",
                 file=sys.stderr,
             )
             return 2
@@ -196,40 +203,141 @@ def check(cargo: str) -> int:
 
 
 def _fixture() -> str:
-    """A captured shape, kept verbatim so the parser is pinned to real output."""
+    """A capture of a real `cargo tree --target wasm32-wasip2 --prefix none` run.
+
+    Kept at real size on purpose: an earlier, 12-line fixture let a reviewer hide
+    a size-conditional blindness in `parse_members` with `--selftest` still green.
+    A fixture smaller than real output cannot pin a parser against real output.
+    Paths are normalised to `/src/...` so the capture is portable.
+    """
     return (
-        "tairitsu-hooks v0.5.26 (/src/packages/hooks)\n"
-        "tairitsu-vdom v0.5.26 (/src/packages/vdom)\n"
-        "anyhow v1.0.100\n"
-        "adler2 v2.0.1\n"
+        "tairitsu-hooks v0.5.26 (/src/...)\n"
+        "tairitsu-vdom v0.5.26 (/src/...)\n"
         "tracing v0.1.44\n"
         "pin-project-lite v0.2.18\n"
         "tracing-attributes v0.1.31 (proc-macro)\n"
         "proc-macro2 v1.0.107\n"
         "unicode-ident v1.0.27\n"
         "quote v1.0.47\n"
+        "proc-macro2 v1.0.107 (*)\n"
         "syn v2.0.119\n"
         "proc-macro2 v1.0.107 (*)\n"
+        "quote v1.0.47 (*)\n"
+        "unicode-ident v1.0.27\n"
+        "tracing-core v0.1.36\n"
+        "once_cell v1.21.4\n"
+        "wit-bindgen v0.57.1\n"
+        "bitflags v2.13.2\n"
+        "wit-bindgen-rust-macro v0.57.1 (proc-macro)\n"
+        "anyhow v1.0.105\n"
+        "macro-string v0.2.0\n"
+        "proc-macro2 v1.0.107 (*)\n"
+        "quote v1.0.47 (*)\n"
+        "syn v2.0.119 (*)\n"
+        "prettyplease v0.2.37\n"
+        "proc-macro2 v1.0.107 (*)\n"
+        "syn v2.0.119 (*)\n"
+        "proc-macro2 v1.0.107 (*)\n"
+        "quote v1.0.47 (*)\n"
+        "syn v2.0.119 (*)\n"
+        "wit-bindgen-core v0.57.1\n"
+        "anyhow v1.0.105\n"
+        "heck v0.5.0\n"
+        "wit-parser v0.247.0\n"
+        "anyhow v1.0.105\n"
+        "hashbrown v0.17.2\n"
+        "foldhash v0.2.0\n"
+        "id-arena v2.3.0\n"
+        "indexmap v2.14.2\n"
+        "equivalent v1.0.3\n"
+        "hashbrown v0.17.2 (*)\n"
+        "serde_core v1.0.229\n"
+        "log v0.4.35\n"
+        "semver v1.0.28\n"
+        "serde v1.0.229\n"
+        "serde_core v1.0.229\n"
+        "serde_derive v1.0.229 (proc-macro)\n"
+        "proc-macro2 v1.0.107 (*)\n"
+        "quote v1.0.47 (*)\n"
+        "syn v3.0.10\n"
+        "proc-macro2 v1.0.107 (*)\n"
+        "quote v1.0.47 (*)\n"
+        "unicode-ident v1.0.27\n"
+        "serde_json v1.0.154\n"
+        "itoa v1.0.19\n"
+        "memchr v2.8.3\n"
+        "serde_core v1.0.229\n"
+        "zmij v1.0.23\n"
+        "unicode-xid v0.2.6\n"
+        "wasmparser v0.247.0\n"
+        "bitflags v2.13.2\n"
+        "hashbrown v0.17.2 (*)\n"
+        "indexmap v2.14.2 (*)\n"
+        "semver v1.0.28\n"
+        "wit-bindgen-rust v0.57.1\n"
+        "anyhow v1.0.105\n"
+        "heck v0.5.0\n"
+        "indexmap v2.14.2 (*)\n"
+        "prettyplease v0.2.37 (*)\n"
+        "syn v2.0.119 (*)\n"
+        "wasm-metadata v0.247.0\n"
+        "anyhow v1.0.105\n"
+        "indexmap v2.14.2 (*)\n"
+        "wasm-encoder v0.247.0\n"
+        "leb128fmt v0.1.0\n"
+        "wasmparser v0.247.0 (*)\n"
+        "wasmparser v0.247.0 (*)\n"
+        "wit-bindgen-core v0.57.1 (*)\n"
+        "wit-component v0.247.0\n"
+        "anyhow v1.0.105\n"
+        "bitflags v2.13.2\n"
+        "indexmap v2.14.2 (*)\n"
+        "log v0.4.35\n"
+        "serde v1.0.229 (*)\n"
+        "serde_derive v1.0.229 (proc-macro) (*)\n"
+        "serde_json v1.0.154 (*)\n"
+        "wasm-encoder v0.247.0 (*)\n"
+        "wasm-metadata v0.247.0 (*)\n"
+        "wasmparser v0.247.0 (*)\n"
+        "wit-parser v0.247.0 (*)\n"
+        "wit-bindgen v0.57.1 (*)\n"
     )
 
 
 def selftest() -> int:
     """Pin the parser in both directions against captured output shapes."""
+    fixture = _fixture()
+    fixture_lines = fixture.count("\n")
+    # The guard is the point: a fixture that is smaller than real output makes
+    # every "size-dependent" mutation invisible. Kept as a hard assertion so a
+    # future edit cannot quietly shrink it.
+    if fixture_lines < 80:
+        print(
+            f"FAIL fixture is only {fixture_lines} lines; it must be comparable to "
+            "real cargo tree output (>= 80)",
+            file=sys.stderr,
+        )
+        return 1
+    parsed = parse_members(fixture)
+    if len(parsed) < 40:
+        print(f"FAIL fixture parses to only {len(parsed)} names", file=sys.stderr)
+        return 1
+
     cases = [
-        ("clean fixture", _fixture(), []),
-        ("deep occurrence is found", _fixture() + "wasm-bindgen v0.2.130\n", ["wasm-bindgen"]),
-        ("nested occurrence is found", _fixture() + "chrono v0.4.45\n", ["chrono"]),
+        ("clean fixture", fixture, []),
+        ("deep occurrence is found", fixture + "wasm-bindgen v0.2.130\n", ["wasm-bindgen"]),
+        ("nested occurrence is found", fixture + "chrono v0.4.45\n", ["chrono"]),
         (
             "duplicate entries dedupe",
-            _fixture() + "js-sys v0.3.107\nweb-sys v0.3.107\njs-sys v0.3.107 (*)\n",
+            fixture + "js-sys v0.3.107\nweb-sys v0.3.107\njs-sys v0.3.107 (*)\n",
             ["js-sys", "web-sys"],
         ),
         (
             "prefix name does not false-positive",
-            _fixture() + "wasm-bindgen-macro-support v0.2.100\n",
+            fixture + "wasm-bindgen-macro-support v0.2.100\n",
             [],
         ),
-        ("annotation lines are not packages", _fixture() + "(proc-macro)\n", []),
+        ("annotation lines are not packages", fixture + "(proc-macro)\n", []),
     ]
     failed = 0
     for label, text, expected in cases:
