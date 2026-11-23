@@ -336,9 +336,45 @@ def declared_funcs(iface: str) -> list[str]:
 CALLBACK_SCAN_EXCLUDED = ("global.d.ts", "wasmExports.ts")
 
 
-def per_file_binding_problems(
-    counted_by_file: dict[str, int], declared_by_iface: dict[str, list[str]]
-) -> list[str]:
+def skipped_scan_files() -> list[str]:
+    """Runtime files the callback scan does not read, and why — printed by the gate.
+
+    A silent exclusion list is where a bridge gets hidden; this names every file
+    the scan skipped so the exception is visible on every run.
+    """
+    skipped = []
+    for path in sorted(RUNTIME_DIR.glob("*.ts")):
+        if path.name in CALLBACK_SCAN_EXCLUDED:
+            skipped.append(path.name)
+            continue
+        text = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
+        if "__wasmExports" not in text:
+            skipped.append(path.name)
+    return skipped
+
+
+def excluded_scan_files() -> list[str]:
+    """The exclusion list, as actually present on disk (renames cannot hide)."""
+    present = {path.name for path in RUNTIME_DIR.glob("*.ts")}
+    return [name for name in CALLBACK_SCAN_EXCLUDED if name in present]
+
+
+def callback_scan_files() -> list[Path]:
+    """The runtime sources both callback scans read — ONE list, so an exclusion
+    really takes a file out of the scan instead of only out of one of them.
+
+    (It did not, once: the per-file floor honoured the list and direction 3b did
+    not, so excluding `platformHelpers.ts` left `88 (47 bound)` untouched and the
+    gate read green while the docstring promised the opposite.)
+    """
+    return [
+        path
+        for path in sorted(RUNTIME_DIR.glob("*.ts"))
+        if path.name not in CALLBACK_SCAN_EXCLUDED
+    ]
+
+
+def per_file_binding_problems(counted_by_file: dict[str, int]) -> list[str]:
     """Every runtime file that TOUCHES `__wasmExports` must yield a binding.
 
     The scan recognises three shapes (direct, bound, helper-returned), each by
@@ -355,9 +391,7 @@ def per_file_binding_problems(
     which would drag this regex gate toward a JS parser.
     """
     problems: list[str] = []
-    for path in sorted(RUNTIME_DIR.glob("*.ts")):
-        if path.name in CALLBACK_SCAN_EXCLUDED:
-            continue
+    for path in callback_scan_files():
         text = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
         if "__wasmExports" not in text:
             continue
@@ -519,7 +553,7 @@ def bound_bridge_problems(
         r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)(?:\?\.|\.)\s*"
         r"(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)"
     )
-    for path in sorted(RUNTIME_DIR.glob("*.ts")):
+    for path in callback_scan_files():
         # Whole-line comments are dropped BEFORE the window is cut: a comment that
         # mentions a bad spelling is not a read of it.
         source = path.read_text(encoding="utf-8", errors="replace")
@@ -925,7 +959,7 @@ def findings() -> tuple[list[Finding], int, int, int, int, int]:
     declared_by_iface = {iface: declared_funcs(iface) for iface in interfaces}
     counted_by_file: dict[str, int] = {}
     bound_findings, bound_total = bound_bridge_problems(declared_by_iface, counted_by_file)
-    for problem in per_file_binding_problems(counted_by_file, declared_by_iface):
+    for problem in per_file_binding_problems(counted_by_file):
         results.append(Finding("callback-mismatch", problem, ""))
     for problem in bound_findings:
         results.append(Finding("callback-mismatch", problem, ""))
@@ -1006,8 +1040,9 @@ def main() -> int:
         f"({declared_total - unimplemented} implemented, {unimplemented} allowed), "
         f"{dispatched_total} dispatched, {invented} runtime-only exports listed, "
         f"{callback_total} guest-export lookups ({bound_total} bound) named correctly, "
-        f"callback scan skips {len(CALLBACK_SCAN_EXCLUDED)} non-bridge files "
-        f"({', '.join(CALLBACK_SCAN_EXCLUDED)})"
+        f"callback scan excluded {', '.join(excluded_scan_files()) or 'nothing'} "
+        f"(plus {len(skipped_scan_files()) - len(excluded_scan_files())} runtime files that "
+        "never touch the guest namespace)"
     )
     return 0
 

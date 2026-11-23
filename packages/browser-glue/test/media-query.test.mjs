@@ -351,10 +351,11 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   };
   mediaQueryList_exports.addListener(handle, 3n);
   media.reduce = true;
-  // Drive the DISPATCH, not the DOM event: an `EventTarget` listener that throws
-  // reports asynchronously (`uncaughtException`) and never reaches the caller of
-  // `dispatchEvent`, so `doesNotThrow(() => list.flip())` is vacuously true — a
-  // `catch` body changed to `throw` would still read green. MUT: media-bridge-rethrows
+    // Drive the DISPATCH, not the DOM event: an `EventTarget` listener that
+    // throws reports asynchronously (`uncaughtException`) and never reaches the
+    // caller of `dispatchEvent`, so `doesNotThrow(() => list.flip())` is
+    // vacuously true — a `catch` body changed to `throw` would still read green.
+    // MUT: media-bridge-rethrows
   assert.doesNotThrow(() => dispatchChange(1n, true));
   delete globalThis.__wasmExports;
 });
@@ -469,10 +470,11 @@ test("media-query-list: a throwing guest callback does not escape into the event
   console.error = () => {};
   try {
     // One component bug must not become an unhandled page error on every flip.
-    // Drive the DISPATCH, not the DOM event: an `EventTarget` listener that throws
-  // reports asynchronously (`uncaughtException`) and never reaches the caller of
-  // `dispatchEvent`, so `doesNotThrow(() => list.flip())` is vacuously true — a
-  // `catch` body changed to `throw` would still read green. MUT: media-bridge-rethrows
+      // Drive the DISPATCH, not the DOM event: an `EventTarget` listener that
+    // throws reports asynchronously (`uncaughtException`) and never reaches the
+    // caller of `dispatchEvent`, so `doesNotThrow(() => list.flip())` is
+    // vacuously true — a `catch` body changed to `throw` would still read green.
+    // MUT: media-bridge-rethrows
   assert.doesNotThrow(() => dispatchChange(1n, true));
   } finally {
     console.error = originalError;
@@ -510,6 +512,23 @@ test("match-media: handles are per instance and die with it (W4)", async () => {
 // ---------------------------------------------------------------------------
 // The gate itself: driven against fixtures, so it is pinned to be able to FAIL.
 // ---------------------------------------------------------------------------
+test("check_wit_ops.py: the scan's own base count is pinned", () => {
+  // The floor guards "the scan found nothing"; it does NOT guard "the scan found
+  // a plausible number one digit short". A character class that admits nothing —
+  // `[^"`$.]` excluded the `.` every callback key ends with (`@0.2.0`) — makes
+  // every file report 0 bindings, which the floor tests describe as a PASSING
+  // scenario (they assert that red). So the base count needs its own pin:
+  // a scanner regression that quietly shrinks the report cannot hide behind a
+  // test whose expectation is "0 bindings is an error".
+  // MUT: callback-key-character-class
+  const out = execFileSync("python3", [GATE, "--check"], { cwd: REPO, encoding: "utf8" });
+  assert.match(
+    out,
+    /88 guest-export lookups \(47 bound\) named correctly/,
+    `the scan base moved — update this pin only with a reason; got: ${out}`,
+  );
+});
+
 test("check_wit_ops.py: green on the tree as it stands", () => {
   const out = execFileSync("python3", [GATE, "--check"], { cwd: REPO, encoding: "utf8" });
   assert.match(out, /WIT host surface ops OK/);
@@ -899,6 +918,27 @@ test("check_wit_ops.py: a call to one helper is not satisfied by another's decla
   });
   assert.equal(rc, 1, "an unpaired helper call must leave the file with 0 bindings and red");
   assert.match(out, /mediaQueryList\.ts references `__wasmExports` but the scan produced 0 bindings/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: an exclusion really takes a file out of the scan", () => {
+  // The exclusion list used to gate only the per-file floor: `platformHelpers.ts`
+  // added to it left `88 (47 bound)` untouched and the gate green, while the
+  // docstring promised "a silent exclusion list is a place a bridge can be
+  // hidden". Both scans now read ONE file list, so an exclusion lowers the bound
+  // count and the global floor catches it.
+  // MUT: exclusion-not-applied-to-bound-scan
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "scripts", "check_wit_ops.py");
+    const source = readFileSync(path, "utf8");
+    const needle = 'CALLBACK_SCAN_EXCLUDED = ("global.d.ts", "wasmExports.ts")';
+    assert.ok(source.includes(needle), "the fixture must find the exclusion list");
+    writeFileSync(
+      path,
+      source.replace(needle, 'CALLBACK_SCAN_EXCLUDED = ("global.d.ts", "wasmExports.ts", "platformHelpers.ts")'),
+    );
+  });
+  assert.equal(rc, 1, "excluding a bridge file must fail the gate, not merely print");
+  assert.match(out, /bound-callback scan found only \d+ bound guest exports/, `got: ${out}`);
 });
 
 test("check_wit_ops.py: a refactor that hides a bridge turns RED (per-file floor)", () => {
