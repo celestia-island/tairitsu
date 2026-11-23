@@ -23,8 +23,11 @@ is worse than no gate.
 
 Why `cargo tree` and not `cargo metadata`: metadata resolves the feature union
 across every workspace member, so `tairitsu-web`'s *optional* `packager` / `ssr`
-edges read as enabled (`-> image -> ravif -> rav1e -> wasm-bindgen`) and the
-graph goes red for reasons that never occur in a component build.
+edges read as enabled (measured chain:
+`tairitsu-web -> tairitsu-packager -> tera -> slug -> wasm-bindgen`), and the
+graph goes red for reasons that never occur in a component build. Note `rav1e`
+and `tairitsu-web` themselves carry no bindgen edge on this target — only the
+optional `packager` subtree does.
 `cargo tree -p <crate>` resolves the default build of that one crate, which is
 the question being asked.
 
@@ -158,44 +161,50 @@ def check(cargo: str) -> int:
             print(f"wasip2 closure gate could not run: {exc}", file=sys.stderr)
             return 2
         members = parse_members(text)
-        # A tree that parses to almost nothing means the extraction is broken,
-        # not that the closure is clean — zero hits must never read as green.
-        # The ratio check is the load-bearing half: a *size-conditional* parser
-        # (correct on tiny inputs, blind on real ones) passes any absolute floor
-        # but leaves nearly every line unaccounted for. Measured blind variant on
-        # this tree: 2 of 90 names — a reviewer proved that variant once reported
-        # a clean closure while `wasm-bindgen` was actually injected.
-        # Computed inline on purpose. Every version of this gate that called a
-        # helper for the expectation could be defeated by pointing that helper at
-        # the parser (a reviewer did: `return parse_members(t)`, which made the
-        # comparison below `x != x`). Re-deriving the expectation here from the
-        # raw text, in the rejecting function itself, means no single edit to a
-        # shared helper can silence the verdict.
-        expected = [
-            ln.strip().split()[0]
-            for ln in text.splitlines()
-            if ln.strip() and ln.strip()[0] != "("
-        ]
-        if len(expected) < 5 or len(members) < max(2, len(expected) // 2):
+
+        # The expectation is derived from the *raw lines* and carries no predicate
+        # on package names whatsoever. Two review rounds proved why that matters:
+        #   - a helper-based oracle can be pointed at the parser (`x != x`);
+        #   - a name-shaped expectation can be mirrored by whatever filter the
+        #     parser grows (`not n.startswith(...)` on both sides), which let a
+        #     coordinated edit print a green banner with `chrono` really present.
+        # Counting only blank and "(annotation)" lines leaves a number that a
+        # name filter cannot shrink, so the drop shows up as a count mismatch.
+        expected_count = 0
+        for raw in text.splitlines():
+            body = raw.strip()
+            if body and body[0] != "(":
+                expected_count += 1
+
+        # Zero hits must never read as green. The ratio is the load-bearing half:
+        # a size-conditional parser (correct on tiny inputs, blind on real ones)
+        # clears any absolute floor while leaving most lines unaccounted for.
+        if expected_count < 5 or len(members) < max(2, expected_count // 2):
             print(
                 "wasip2 closure gate could not run: parsed "
-                f"{len(members)} of {len(expected)} lines from the tree of {crate} "
+                f"{len(members)} of {expected_count} lines from the tree of {crate} "
                 "(the extraction is broken, not the closure clean)",
                 file=sys.stderr,
             )
             return 2
-        # Count is not enough: a parser can drop entries by *name* and keep every
-        # count plausible (a reviewer did exactly that to hide `chrono`). Compare
-        # against the line-for-line expectation so a dropped name is a hard error.
-        if members != expected:
-            missing = [n for n in expected if n not in members]
+
+        # Count equal is not enough either: a parser can drop one name and invent
+        # another. Rebuild the expected names here, once, and compare in full.
+        expected_names = []
+        for raw in text.splitlines():
+            body = raw.strip()
+            if body and body[0] != "(":
+                expected_names.append(body.split()[0])
+        if len(members) != expected_count or members != expected_names:
+            missing = [n for n in expected_names if n not in members]
             print(
                 "wasip2 closure gate could not run: the parse of "
                 f"{crate} does not match its own input line-for-line "
-                f"({len(members)} vs {len(expected)}, missing {missing[:5]})",
+                f"({len(members)} vs {expected_count}, missing {missing[:5]})",
                 file=sys.stderr,
             )
             return 2
+
         for pkg in forbidden_in(members):
             present.append((crate, pkg))
 
