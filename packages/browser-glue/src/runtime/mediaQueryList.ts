@@ -25,8 +25,30 @@ export function requireMediaQueryList(handle: bigint): MediaQueryList {
   return list;
 }
 
-/** The guest's `media-query-list-callbacks` export, when the guest provides it. */
-function callbacks() {
+/**
+ * The guest's `media-query-list-callbacks` export, when the guest provides it.
+ *
+ * `__wasmExports` is the transpiled wrapper's export namespace, and jco turns
+ * the WIT kebab name `on-change` into the JS identifier `onChange` — NOT
+ * `on_change`. Verified with `jco types` on a two-parameter
+ * `on-change: func(callback-id: u64, matches: bool)` world:
+ * `export function onChange(callbackId: bigint, matches: boolean): void;`.
+ * (`on-resize` / `on-mutation` in the sibling bridges look snake_case and are
+ * not: those interfaces are not declared by the composed world at all, so
+ * those paths never run.)
+ *
+ * Both spellings are accepted on read, camelCase first, the way
+ * `platformHelpers.ts` reads `onTimeout || on_timeout`: a host that swaps in a
+ * wrapper with the other convention keeps working, and a rename on the jco side
+ * cannot make this bridge a silent no-op — which is the failure mode of the
+ * defect this file exists to fix.
+ */
+interface MediaQueryListCallbacks {
+  onChange?: (callbackId: bigint, matches: boolean) => void;
+  on_change?: (callbackId: bigint, matches: boolean) => void;
+}
+
+function callbacks(): MediaQueryListCallbacks | undefined {
   return globalThis.__wasmExports?.["tairitsu-browser:full/media-query-list-callbacks@0.2.0"];
 }
 
@@ -39,9 +61,10 @@ function callbacks() {
  */
 function dispatchChange(callbackId: bigint, matches: boolean): void {
   const guest = callbacks();
-  if (!guest?.on_change) return;
+  const handler = guest?.onChange ?? guest?.on_change;
+  if (!handler) return;
   try {
-    guest.on_change(callbackId, matches);
+    handler(callbackId, matches);
   } catch (error) {
     console.error("[tairitsu-glue] media-query-list change dispatch error:", error);
   }
@@ -60,6 +83,13 @@ export const mediaQueryList_exports = {
     const list = requireMediaQueryList(self);
     if (callback === undefined) return;
     const callbackId = callback;
+    // Re-adding the same id must not stack a second DOM listener: the DOM's
+    // `addListener` is set-shaped for an identical listener, and `onchange` is
+    // registered through this same path, so a stacked attachment would fire the
+    // guest twice and leak one handler past `removeListener` (which can only
+    // delete what the map still names).
+    const existing = globalThis.__mediaQueryListListeners?.get(self)?.get(callbackId);
+    if (existing) list.removeEventListener("change", existing);
     const handler = (event: MediaQueryListEvent) => {
       // The event object is the truth for THIS transition; re-reading
       // `list.matches` here could already describe a later flip.

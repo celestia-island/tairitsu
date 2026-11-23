@@ -28,7 +28,14 @@
 
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { register } from "node:module";
 import { dirname, join } from "node:path";
@@ -43,6 +50,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG = join(HERE, "..");
 const REPO = join(PKG, "..", "..");
 const WIT_DIR = join(REPO, "packages", "browser-worlds", "wit", "composed");
+const WIT_MIRROR_DIR = join(REPO, "packages", "web", "wit", "composed");
 const GATE = join(REPO, "scripts", "check_wit_ops.py");
 
 // ---------------------------------------------------------------------------
@@ -209,8 +217,14 @@ test("media-query-list: add-listener answers through the guest callback export",
   const { media } = installDom({ reduce: false });
   const calls = [];
   globalThis.__wasmExports = {
+    // The name jco actually emits. `jco types` on
+    // `on-change: func(callback-id: u64, matches: bool)` yields
+    // `export function onChange(callbackId: bigint, matches: boolean): void;`
+    // — camelCase, because the kebab name has two segments. Stubbing
+    // `on_change` here would have validated the provider's own misspelling
+    // instead of the contract.
     "tairitsu-browser:full/media-query-list-callbacks@0.2.0": {
-      on_change(callbackId, matches) {
+      onChange(callbackId, matches) {
         calls.push([callbackId, matches]);
       },
     },
@@ -246,7 +260,7 @@ test("media-query-list: onchange round-trips through the declared u64 setter", (
   const calls = [];
   globalThis.__wasmExports = {
     "tairitsu-browser:full/media-query-list-callbacks@0.2.0": {
-      on_change(callbackId, matches) {
+      onChange(callbackId, matches) {
         calls.push([callbackId, matches]);
       },
     },
@@ -273,11 +287,94 @@ test("media-query-list: onchange round-trips through the declared u64 setter", (
   delete globalThis.__wasmExports;
 });
 
+test("media-query-list: the bridge binds the name jco emits (onChange), not on_change", () => {
+  // The defect this pins: the bridge originally read `guest.on_change`, which
+  // the transpiled wrapper never defines (jco camelCases multi-segment WIT
+  // names). The result was a silent no-op — every change notification dropped
+  // with no error — which is the same failure class as the missing
+  // `match-media` op this PR fixes. A stub written to the provider's own
+  // spelling would have gone green on the bug.
+  const { media } = installDom({ reduce: false });
+  const handle = window_exports.matchMedia("(prefers-reduced-motion: reduce)");
+  const list = globalThis.__mediaQueryListHandles.get(handle);
+
+  // The contract, in order of importance:
+  // (a) the jco name MUST work — this is the one a real wrapper provides;
+  const camel = [];
+  globalThis.__wasmExports = {
+    "tairitsu-browser:full/media-query-list-callbacks@0.2.0": {
+      onChange: (id, m) => camel.push([id, m]),
+    },
+  };
+  mediaQueryList_exports.addListener(handle, 1n);
+  media.reduce = true;
+  list.flip();
+  assert.deepEqual(
+    camel,
+    [[1n, true]],
+    "the jco camelCase export must receive the change — reading only on_change " +
+      "silently drops every notification",
+  );
+  mediaQueryList_exports.removeListener(handle, 1n);
+
+  // (b) the snake_case spelling keeps working as a fallback (the sibling
+  //     bridge in platformHelpers.ts accepts `onTimeout || on_timeout`), so a
+  //     wrapper built with the other convention is not a silent no-op either.
+  const snake = [];
+  globalThis.__wasmExports = {
+    "tairitsu-browser:full/media-query-list-callbacks@0.2.0": {
+      on_change: (id, m) => snake.push([id, m]),
+    },
+  };
+  mediaQueryList_exports.addListener(handle, 2n);
+  media.reduce = false;
+  list.flip();
+  assert.deepEqual(snake, [[2n, false]], "the snake_case fallback must also deliver");
+
+  // (c) neither name present: no throw, no delivery — the bridge is inert
+  //     rather than crashing the DOM event loop.
+  globalThis.__wasmExports = {
+    "tairitsu-browser:full/media-query-list-callbacks@0.2.0": {},
+  };
+  mediaQueryList_exports.addListener(handle, 3n);
+  media.reduce = true;
+  assert.doesNotThrow(() => list.flip());
+  delete globalThis.__wasmExports;
+});
+
+test("media-query-list: re-adding a callback id does not stack DOM listeners", () => {
+  // `set-onchange` registers through `addListener`; a repeated id must REPLACE
+  // its handler, not add a second one — a stacked listener would fire the guest
+  // twice per change and leave one attachment untracked, so `removeListener`
+  // could never detach it.
+  const { media } = installDom({ reduce: false });
+  const calls = [];
+  globalThis.__wasmExports = {
+    "tairitsu-browser:full/media-query-list-callbacks@0.2.0": {
+      onChange: (id, m) => calls.push([id, m]),
+    },
+  };
+  const handle = window_exports.matchMedia("(prefers-reduced-motion: reduce)");
+  const list = globalThis.__mediaQueryListHandles.get(handle);
+  mediaQueryList_exports.addListener(handle, 5n);
+  mediaQueryList_exports.addListener(handle, 5n);
+
+  media.reduce = true;
+  list.flip();
+  assert.deepEqual(calls, [[5n, true]], "the same id must fire exactly once per change");
+
+  mediaQueryList_exports.removeListener(handle, 5n);
+  media.reduce = false;
+  list.flip();
+  assert.equal(calls.length, 1, "removing the id must detach every attachment it made");
+  delete globalThis.__wasmExports;
+});
+
 test("media-query-list: a throwing guest callback does not escape into the event loop", () => {
   installDom({ reduce: false });
   globalThis.__wasmExports = {
     "tairitsu-browser:full/media-query-list-callbacks@0.2.0": {
-      on_change() {
+      onChange() {
         throw new Error("guest bug");
       },
     },
@@ -355,10 +452,22 @@ function runGateAgainst(mutate) {
     )) {
       copy(join(runtimeDir, `${name[1]}.ts`), join(root, "packages", "browser-glue", "src", "runtime", `${name[1]}.ts`));
     }
-    const witDir = join(root, "packages", "browser-worlds", "wit", "composed");
-    mkdirSync(witDir, { recursive: true });
-    for (const file of ["_domain-css.wit", "_handwritten.wit"]) {
-      copy(join(WIT_DIR, file), join(witDir, file));
+    // ALL composed WIT files: the gate resolves a wired interface's declaration
+    // by name across the whole world, and the 26 wired interfaces are spread
+    // over ten domain files (`document` -> _domain-svg.wit, `node` ->
+    // _domain-dom.wit, …). Copying only the two files this change edits left
+    // 170 unrelated findings, so the gate exited 1 before any mutation was
+    // applied and the `rc === 1` assertions below passed without proving
+    // anything. The guard in the first test makes that impossible now.
+    // Both composed copies: the gate reads declarations from the single source
+    // and cross-checks the generated mirror byte-for-byte (a drifted mirror is
+    // its own finding). A fixture with only one copy would trip that check.
+    for (const copyRoot of [WIT_DIR, WIT_MIRROR_DIR]) {
+      const witDir = join(root, copyRoot.slice(REPO.length + 1));
+      mkdirSync(witDir, { recursive: true });
+      for (const file of readdirSync(copyRoot)) {
+        if (file.endsWith(".wit")) copy(join(copyRoot, file), join(witDir, file));
+      }
     }
     // Allowances: everything the real tree allows, so only the injected defect
     // is left for the gate to report.
@@ -380,6 +489,22 @@ function runGateAgainst(mutate) {
     rmSync(root, { recursive: true, force: true });
   }
 }
+
+test("check_wit_ops.py: the fixture is GREEN before any mutation (no vacuous pass)", () => {
+  // The two mutation tests below assert `rc === 1`. That assertion is worthless
+  // unless the same fixture is rc === 0 with NO mutation applied — otherwise a
+  // missing file, a broken scan or a stale allowance list makes the gate red for
+  // an unrelated reason and both tests pass while proving nothing. (This is
+  // exactly what happened with a 2-file WIT fixture: 170 findings, unmoved by
+  // the mutation.) MUT: fixture-baseline-green
+  const baseline = runGateAgainst(() => {});
+  assert.equal(
+    baseline.rc,
+    0,
+    `the unmutated fixture must pass, or the mutation tests below are vacuous; got: ${baseline.out}`,
+  );
+  assert.match(baseline.out, /WIT host surface ops OK/);
+});
 
 test("check_wit_ops.py: deleting the match-media export turns the gate RED", () => {
   // The negative control for this whole change: restore the exact defect the

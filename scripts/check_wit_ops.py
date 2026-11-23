@@ -23,7 +23,9 @@ interface:
    packager's `<iface>.js`) calls `glue.INTERFACES[spec][key]`. If that key is
    absent the guest gets a `TypeError` — loud. This gate requires every op the
    emitted module dispatches to exist as a runtime export.
-   (`packages/browser-glue/test/wit-ops.test.mjs` pins the same predicate.)
+   (`packages/browser-glue/test/media-query.test.mjs` drives this module
+   against fixtures, including a green-baseline guard and both mutation
+   directions.)
 2. **guest import** — a component built against `tairitsu-web` names every op of
    every interface it imports, so jco resolves all of them at instantiate. An op
    that only `src/glue/*.ts` exports (the generator output) and that the runtime
@@ -153,8 +155,9 @@ def module_exports(module: str) -> set[str]:
 
     The emitter's rule — a key is the pending text at depth 1 that ends a
     statement at paren depth 0 — handles all three, and
-    `packages/browser-glue/test/wit-ops.test.mjs` pins this function against the
-    emitter's own output so the two can only drift loudly.
+    `packages/browser-glue/test/media-query.test.mjs` runs this module over a
+    fixture copy of the whole tree, so a scan that silently stops matching
+    turns that suite red instead of shrinking the report.
     """
     path = RUNTIME_DIR / f"{module}.ts"
     if not path.is_file():
@@ -249,7 +252,14 @@ def module_exports(module: str) -> set[str]:
 
 
 def declared_funcs(iface: str) -> list[str]:
-    """The `func` names `interface <iface>` declares in the composed WIT."""
+    """The `func` names `interface <iface>` declares in the composed WIT.
+
+    The declarations come from the SINGLE SOURCE (`browser-worlds`); the copy
+    under `packages/web/wit/composed` is a generated artifact gated by
+    `sync_wit.py --check`. Reading only one side is deliberate: a union over
+    both would let an op that exists in just one copy satisfy the gate, so a
+    forgotten sync plus an op added to one side would read green.
+    """
     for path in sorted(WIT_COMPOSED.glob("*.wit")):
         text = path.read_text(encoding="utf-8", errors="replace")
         for match in WIT_INTERFACE_RE.finditer(text):
@@ -258,6 +268,32 @@ def declared_funcs(iface: str) -> list[str]:
             body = text[match.end():]
             return WIT_FUNC_RE.findall(body[: body.find("\n}")])
     return []
+
+
+def copy_problems() -> list[str]:
+    """The composed WIT copies must agree, or this gate is reading one side only.
+
+    `check_wit_ops.py` trusts the single source. If the generated copy drifted,
+    the numbers this gate prints no longer describe the world `tairitsu-web` is
+    compiled against (build.rs prefers the embedded copy), so the drift is a
+    finding here rather than somebody else's gate to catch.
+    """
+    mirror = REPO_ROOT / "packages" / "web" / "wit" / "composed"
+    if not mirror.is_dir():
+        return [f"the composed WIT mirror {mirror} is missing — cannot cross-check"]
+    problems = []
+    source_files = sorted(p.name for p in WIT_COMPOSED.glob("*.wit"))
+    mirror_files = sorted(p.name for p in mirror.glob("*.wit"))
+    for name in sorted(set(source_files) ^ set(mirror_files)):
+        problems.append(f"composed WIT copies disagree on file {name} (run sync_wit.py)")
+    for name in source_files:
+        if name not in mirror_files:
+            continue
+        a = (WIT_COMPOSED / name).read_text(encoding="utf-8", errors="replace")
+        b = (mirror / name).read_text(encoding="utf-8", errors="replace")
+        if a != b:
+            problems.append(f"composed WIT copies differ in {name} (run sync_wit.py --check)")
+    return problems
 
 
 def op_allowances() -> dict[str, str]:
@@ -444,6 +480,7 @@ def main() -> int:
 
     mismatches, interface_count, declared_total, dispatched_total = findings()
     problems = [str(f) for f in mismatches]
+    problems.extend(copy_problems())
 
     # A gate that passes on an empty set passes when it is broken.
     if interface_count < MIN_INTERFACES:
