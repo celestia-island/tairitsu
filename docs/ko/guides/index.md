@@ -32,7 +32,7 @@
 | [런타임 & 컨테이너 모델](../system/runtime.md) | Image/Container/Registry 라이프사이클, WIT 바인딩, 동적 호출 |
 | [VDOM & 렌더링](../../en/system/vdom.md) | 가상 DOM diffing, patching, 이벤트 시스템, 반응형 스케줄러 |
 | [W3C WebIDL → WIT 파이프라인](../system/wit-pipeline.md) | 50+ WebIDL 스펙이 WIT 인터페이스가 되는 과정 |
-| [듀얼 웹 백엔드](../system/web-backends.md) | WitPlatform vs WebPlatform 전략 |
+| [웹 백엔드](../system/web-backends.md) | 유일한 경로: WIT 계약 + JS 호스트 구현 |
 | [Browser Glue 아키텍처](../system/browser-glue.md) | WIT ABI와 DOM을 연결하는 TypeScript 계층 |
 | [버저닝 전략](../system/versioning.md) | 멀티 Crate 워크스페이스의 시맨틱 버저닝 |
 

@@ -754,8 +754,10 @@ mod tests {
         assert!(!boundary.has_pending());
     }
 
-    // MUT: `use_resource` is compiled out on wasm, so these executors tests are
-    // non-wasm only; removing this cfg turns the wasm build red (E0425).
+    // MUT: `use_resource` is compiled out on wasm, so these executor tests are
+    // non-wasm only; dropping this cfg makes the native test build fail with
+    // E0425 (it cannot make the wasm test build fail: that build stops earlier
+    // on the wasm-unsupported `tokio` dev-dependency).
     #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_use_resource_sync() {
@@ -772,24 +774,12 @@ mod tests {
         }
     }
 
-    // MUT: `use_resource` is compiled out on wasm, so these executors tests are
-    // non-wasm only; removing this cfg turns the wasm build red (E0425).
-    #[cfg(not(target_family = "wasm"))]
-    // MUT: pins module location of `use_resource` on non-wasm (delete the item
-    // -> E0432). The wasm half pins that it is absent: re-adding the item
-    // unconditionally -> duplicate definition -> E0428. Both directions are
-    // compile-time, so this test also runs on `cargo check --target wasm32-wasip2`.
+    // MUT: pins the module location of `use_resource` on non-wasm; renaming the
+    // item, or hiding it behind a wasm cfg, turns this into E0433.
     #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_use_resource_is_exported_on_native() {
-        // MUT: rename the item (or hide it behind a wasm cfg) -> E0433 here.
         let _ = crate::suspense::use_resource::<u8, _, _>(|| async { Ok(1u8) });
-    }
-
-    #[cfg(target_family = "wasm")]
-    #[test]
-    fn test_use_resource_absent_on_wasm() {
-        use crate::suspense::use_resource as _;
     }
 
     #[test]

@@ -45,7 +45,7 @@ graph TD
 - **Props**: Builder pattern with `#[component]` attribute
 - **Reactive**: Signal/Effect-based reactivity
 - **Platform Trait**: Abstract DOM operations
-- **Dual Backend**: `WebPlatform` (web-sys) and `WitPlatform` (WIT bindings)
+- **Single backend**: `WitPlatform` (WIT contract implemented by the JS host)
 
 ## Environment Setup
 

@@ -146,7 +146,6 @@ pub trait DomOps {
 |:--|:--|:--|
 | `WitPlatform` | wasm32-wasip2 in browser | Uses WIT bindings → browser-glue → DOM |
 | `SsrPlatform` | Native (server) | Renders to HTML string buffer |
-| `WebPlatform` | wasm32-unknown-unknown | Uses web-sys (legacy compat) |
 | `TestPlatform` | Native (tests) | Records DOM mutations for assertions |
 
 ## Event System
