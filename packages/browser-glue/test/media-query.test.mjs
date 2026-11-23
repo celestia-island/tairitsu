@@ -118,6 +118,9 @@ function installDom({ reduce = false } = {}) {
 // the same bootstrap the page runs, and it must happen BEFORE the first
 // installDom(), because the accessors are what make
 // `globalThis.__mediaQueryListHandles` resolve at all.
+// MUT: bootstrap-manual-install (re-installing by hand instead of importing
+// `handles.ts` leaves the tables undefined and every installDom() call throws,
+// which is how this ordering was found).
 await import(join(PKG, "src", "runtime", "handles.ts"));
 const { installInstanceApi } = await import(join(PKG, "src", "runtime", "instance.ts"));
 installInstanceApi();
@@ -294,6 +297,8 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   // with no error — which is the same failure class as the missing
   // `match-media` op this PR fixes. A stub written to the provider's own
   // spelling would have gone green on the bug.
+  // MUT: bridge-name-only-snake (reading only `on_change` reds this test; the
+  // snake_case arm below still passes, which is why both arms exist).
   const { media } = installDom({ reduce: false });
   const handle = window_exports.matchMedia("(prefers-reduced-motion: reduce)");
   const list = globalThis.__mediaQueryListHandles.get(handle);
@@ -347,6 +352,8 @@ test("media-query-list: re-adding a callback id does not stack DOM listeners", (
   // its handler, not add a second one — a stacked listener would fire the guest
   // twice per change and leave one attachment untracked, so `removeListener`
   // could never detach it.
+  // MUT: listener-stacking (removing the remove-then-add in `addListener`
+  // makes the first assertion see two calls for one change).
   const { media } = installDom({ reduce: false });
   const calls = [];
   globalThis.__wasmExports = {
@@ -407,6 +414,8 @@ test("media-query-list: reclaim entries are one per (list, callback id)", () => 
   // so it inspects the reclaim set directly; `R5` verified the detach count
   // independently with a throwaway instance: three ids -> three
   // removeEventListener calls, zero callbacks after dispose).
+  // MUT: reclaim-collapsed-by-list (de-duplicating on (target, type) makes the
+  // first assertion see one entry instead of three).
   const current = globalThis.__TAIRITSU_CURRENT__();
   const attachedForList = [...current.reclaimables.listeners].filter(
     (entry) => entry.target === list && entry.type === "change",
