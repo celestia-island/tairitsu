@@ -44,7 +44,7 @@ interface:
    `undefined`, so the notification is dropped silently. That is why the
    `mutation` observer never told a guest anything.
 
-   The jco camelCase is required. A snake_case fallback
+   The jco camelCase must be at least one candidate. A snake_case fallback
    (`guest?.onMutate ?? guest?.on_mutation`) is allowed only as the second
    candidate of the same `??`, so a wrapper built with the other convention (or
    a future jco that renames again) keeps working while a lone wrong name — the
@@ -72,6 +72,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import bisect
 import re
 import sys
 from dataclasses import dataclass
@@ -132,8 +133,12 @@ _CALLBACK_KEY_RE = re.compile(r"^(?P<ns>.*)/(?P<iface>[a-z0-9-]+)@(?P<ver>[0-9.]
 # Right after the closing `]` the inline dispatch continues with `?.<prop>(` /
 # `.<prop>(` — `\s*` only, never a newline: a newline means the lookup was bound
 # to a local (`const exp = …`) and the call goes through that local.
+# `\s*` may carry ONE newline: the inline form shipped at `origin/master` wraps
+# the lookup across lines (`__wasmExports[\n  "…@0.2.0"\n]?.on_mutation?.(…)`),
+# and a same-line-only scanner is blind to exactly the shape the defect shipped
+# in — measured, it read green on a restored copy of it.
 _DISPATCH_PROP_RE = re.compile(
-    r"(?:\s*(?:\?\.|\.)\s*)(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)(?:[^\n]*\()"
+    r"(?:(?:\s*\n?\s*)(?:\?\.|\.)(?:\s*\n?\s*))(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)(?:[^\n]*\()"
 )
 
 
@@ -355,24 +360,30 @@ def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
     lookups = 0
     for path in sorted(RUNTIME_DIR.glob("*.ts")):
         source = path.read_text(encoding="utf-8", errors="replace")
-        for line_number, line in enumerate(strip_comments(source).split("\n"), start=1):
-            for lookup in _CALLBACK_KEYED.finditer(line):
-                keyed = _CALLBACK_KEY_RE.match(lookup.group("key"))
-                if keyed is None:
-                    continue
-                lookups += 1
-                rest = _DISPATCH_PROP_RE.match(line, lookup.end())
-                if rest is None:
-                    continue
-                sites.append(
-                    (
-                        path.name,
-                        line_number,
-                        keyed.group("iface"),
-                        keyed.group("ver"),
-                        rest.group("prop"),
-                    )
+        text = strip_comments(source)
+        starts = [0]
+        for offset, char in enumerate(text):
+            if char == "\n":
+                starts.append(offset + 1)
+        for lookup in _CALLBACK_KEYED.finditer(text):
+            keyed = _CALLBACK_KEY_RE.match(lookup.group("key"))
+            if keyed is None:
+                continue
+            lookups += 1
+            line_number = bisect.bisect_right(starts, lookup.start())
+            bracket_end = text.find("]", lookup.end("key"))
+            rest = _DISPATCH_PROP_RE.match(text, bracket_end + 1)
+            if rest is None:
+                continue
+            sites.append(
+                (
+                    path.name,
+                    line_number,
+                    keyed.group("iface"),
+                    keyed.group("ver"),
+                    rest.group("prop"),
                 )
+            )
     return sites, lookups
 
 
@@ -488,19 +499,28 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                     continue
                 if prop in accepted:
                     continue
-                # A fallback (`a ?? b`) is allowed ONLY when one side of the pair
-                # is a name the guest really exports. For `a` the partner is
-                # whatever the `??` chain leads to; for `b` it is whatever comes
-                # before it. Both are resolved by slicing the local's own pair on
-                # `??` and comparing the member accesses — no anchored regex over a
-                # dangling prefix (that form does not behave like the same regex
-                # inside a longer text: measured, twice).
+                # A fallback (`a ?? b`) is allowed ONLY when the OTHER side of
+                # the same `??` is a name the guest really exports. Deciding that
+                # by "is any accepted name in this statement" is not enough — a
+                # chain whose wrong halves come first
+                # (`on_mutated ?? on_mutation ?? onMutate`) would read green, and
+                # that is a shape a "compat" repair actually produces. So the
+                # chain is split into operands and each wrong operand must be
+                # adjacent to a wrong/right pair that contains a declared name.
                 statement = _statement_around(window, position_of)
-                if "??" in statement:
-                    names_in_sides = {match.group("prop") for match in _MEMBER_RE.finditer(statement)}
-                    has_partner = bool(names_in_sides & accepted)
-                else:
-                    has_partner = False
+                segments = statement.split("??")
+                names = []
+                for segment in segments:
+                    found = _MEMBER_RE.findall(segment)
+                    names.append(found[-1] if found else None)
+                has_partner = False
+                for index, name in enumerate(names):
+                    if name != prop:
+                        continue
+                    neighbours = names[max(0, index - 1) : index] + names[index + 1 : index + 2]
+                    if any(neighbour in accepted for neighbour in neighbours):
+                        has_partner = True
+                        break
                 if has_partner:
                     continue
                 problems.append(

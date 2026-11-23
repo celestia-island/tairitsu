@@ -714,3 +714,48 @@ test("check_wit_ops.py: a callback scan that stops matching fails on the floor",
   assert.equal(rc, 1, "a scan that finds nothing must fail, not pass");
   assert.match(out, /callback scan found only \d+ guest-export lookups/, `got: ${out}`);
 });
+
+test("check_wit_ops.py: a fallback chain whose wrong halves come first still turns RED", () => {
+  // A "compat" repair can put the fallback spellings first and the correct name
+  // last. Every operand of a `??` chain must therefore pair with a DECLARED
+  // name — "some declared name appears in this statement" would read green.
+  // MUT: callback-partner-anywhere-in-statement
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "guest?.onMutate ?? guest?.on_mutation";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to break");
+    writeFileSync(path, source.replace(needle, "guest?.on_mutated ?? guest?.on_mutation ?? guest?.onMutate"));
+  });
+  assert.equal(rc, 1, "a chain whose wrong halves come first must fail the gate");
+  assert.match(out, /`guest\.on_mutated`/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: the WRAPPED inline shape (the form the defect shipped in) turns RED", () => {
+  // The original defect was written across lines:
+  //   __wasmExports[\n  "…@0.2.0"\n]?.on_mutation?.(…)
+  // A same-line-only scanner is blind to exactly that, which is how it read
+  // green before this test existed.
+  // MUT: callback-inline-scan-line-anchored
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = `      const guest =
+        globalThis.__wasmExports?.["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"];`;
+    assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to break");
+    const wrapped = `      if (
+        globalThis.__wasmExports &&
+        globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]
+      ) {
+        globalThis.__wasmExports[
+          "tairitsu-browser:full/mutation-observer-callbacks@0.2.0"
+        ]?.on_mutation?.(callbackId, []);`;
+    writeFileSync(path, source.replace(needle, wrapped));
+  });
+  assert.equal(rc, 1, "a wrapped inline dispatch with a wrong name must fail the gate");
+  assert.match(
+    out,
+    /reads `on_mutation` from `mutation-observer-callbacks@0\.2\.0`/,
+    `got: ${out}`,
+  );
+});

@@ -59,9 +59,10 @@ function nodeHandle(node: unknown): bigint | undefined {
  *
  * The entry is also stored under a fresh handle in the instance's
  * `resizeObserverEntryHandles` table, because `resize-observer-entry`'s WIT
- * getters read from that table and a guest may hold such a handle. The slot is
- * reclaimed with the instance exactly like every other handle table
- * (`instance.ts` dispose clears them).
+ * getters read from that table. The slot lives as long as the instance (the
+ * table is cleared on dispose, like every other per-instance handle table); for
+ * the callback itself nothing hands that handle to the guest, so it is table
+ * growth proportional to callbacks, not a per-call leak a caller can observe.
  */
 export function resizeEntryValue(entry: unknown, sink: EntrySink): Record<string, unknown> {
   const handle = globalThis.__nextResizeObserverEntry++;
