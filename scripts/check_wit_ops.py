@@ -118,9 +118,9 @@ WIT_FUNC_RE = re.compile(r"^\s+([a-z0-9][a-z0-9-]*)\s*:\s*func\s*\(", re.MULTILI
 #   const guest = globalThis.__wasmExports?.["<ns>/<iface>@<ver>"];   // bound
 #   <ns>/<iface>@<ver>"]?.<prop>(…)                                   // inline
 # The key is matched on its own and parsed in a second step (`_CALLBACK_KEY_RE`)
-# rather than with one megapattern: the single-pattern version silently dropped
-# 41 of 42 sites (its bracket class swallowed the rest of the line), and the
-# MIN_CALLBACK_SITES floor is what turned that into a red gate instead of a
+# rather than with one megapattern: the first single-pattern draft matched one
+# site and missed the rest (its bracket class swallowed the following text), and
+# the MIN_CALLBACK_SITES floor is what turned that into a red gate instead of a
 # quietly smaller report.
 _CALLBACK_KEYED = re.compile(
     r'__wasmExports\s*\??\.?\[\s*"(?P<key>[^"]+)"\s*\]',
@@ -526,13 +526,28 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                 for segment in segments:
                     found = _MEMBER_RE.findall(segment)
                     names.append(found[-1] if found else None)
+                # ORDER matters: the first operand is what actually gets used
+                # when the guest exports it, so a chain that only lands on a
+                # declared name in a LATER operand still drops the callback
+                # whenever an earlier wrong name is present. (`on_mutation ??
+                # onMutate` never reaches `onMutate` if the wrapper has
+                # `on_mutation`… which it does not; but `onMutated ?? onMutate`
+                # would silently take `onMutated`.) Only a declared name in the
+                # FIRST operand, or the wrong name being the immediate fallback
+                # of one, counts.
                 has_partner = False
                 for index, name in enumerate(names):
                     if name != prop:
                         continue
-                    neighbours = names[max(0, index - 1) : index] + names[index + 1 : index + 2]
-                    if any(neighbour in accepted for neighbour in neighbours):
+                    if index > 0 and names[index - 1] in accepted:
+                        # `declared ?? this` — this only runs when the guest
+                        # lacks the declared name, i.e. never for a real wrapper.
                         has_partner = True
+                        break
+                    if index == 0 and index + 1 < len(names) and names[index + 1] in accepted:
+                        # `this ?? declared` with `this` first: still wrong, since
+                        # `this` shadows the declared name whenever it exists.
+                        has_partner = False
                         break
                 if has_partner:
                     continue

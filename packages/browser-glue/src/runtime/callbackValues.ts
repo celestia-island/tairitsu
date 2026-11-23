@@ -49,9 +49,22 @@ function rectOf(entry: unknown): Record<string, number> {
   };
 }
 
+/**
+ * A DOM node → a handle in the NODE domain.
+ *
+ * The domain matters: `mutation-record`'s WIT getters resolve
+ * `get-previous-sibling` / `get-next-sibling` through `__storeNode`
+ * (`__nodeHandles` + `__textHandles`), while `target` and `get-target` go
+ * through `__storeElement`. A sibling minted into the element table is a handle
+ * the guest can hold and never resolve — the same class of mismatch this whole
+ * change is about, one layer down. Nothing in the test suite notices (both
+ * tables answer `bigint`), which is why `callback-bridge.test.mjs` asserts the
+ * TABLE the handle lands in, not just its type.
+ */
 function nodeHandle(node: unknown): bigint | undefined {
   if (!node) return NONE;
-  return globalThis.__storeElement(node) ?? NONE;
+  const handle = globalThis.__storeNode(node as Node) ?? NONE;
+  return handle === 0n ? NONE : handle;
 }
 
 /**
@@ -78,9 +91,16 @@ export function resizeEntryValue(entry: unknown, sink: EntrySink): Record<string
  *
  * `added-nodes` / `removed-nodes` are `option<u64>`: ONE handle or `undefined`,
  * never a list (`jco types` emits `addedNodes?: bigint`). They carry the first
- * node of each NodeList; the record handle stored in the table above still
- * exposes the full lists through `mutation-record`'s getters, so nothing is
- * lost — the guest can ask for the rest by handle.
+ * node of each NodeList. The record handle minted below is stored so that a
+ * `mutation-record` handle minted elsewhere (the `MutationObserver` op path)
+ * resolves the same object; the callback itself carries no record handle, so a
+ * guest that wants every added node asks through the handle it was given.
+ *
+ * Handle DOMAINS: `target` is minted with `__storeElement` (matches
+ * `mutation-record`'s `get-target`), while the sibling and node-list fields are
+ * minted with `__storeNode` (matches its `get-previous-sibling` /
+ * `get-next-sibling`). Mixing the two hands the guest a handle that looks fine
+ * and resolves nowhere.
  */
 export function mutationEntryValue(record: unknown, sink: RecordSink): Record<string, unknown> {
   const handle = globalThis.__nextMutationRecord++;

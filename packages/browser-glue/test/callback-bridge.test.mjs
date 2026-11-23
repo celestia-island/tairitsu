@@ -147,6 +147,8 @@ test("mutation observer: records arrive as mutation-entry values, not handle lis
   try {
     withInstance(() => platformHelpers.createMutationObserver(7n));
     const observer = globalThis.MutationObserver.instances.at(-1);
+    const previous = { nodeType: 1, childNodes: [] };
+    const next = { nodeType: 3, childNodes: [] };
     observer.callback(
       [
         fakeMutationRecord({
@@ -155,6 +157,8 @@ test("mutation observer: records arrive as mutation-entry values, not handle lis
           oldValue: "open",
           addedNodes: [],
           removedNodes: [{ nodeType: 1, childNodes: [] }],
+          previousSibling: previous,
+          nextSibling: next,
         }),
       ],
       observer,
@@ -179,9 +183,45 @@ test("mutation observer: records arrive as mutation-entry values, not handle lis
     assert.equal(entry.attributeName, "data-state");
     assert.equal(entry.oldValue, "open");
     // option<T> fields must be present as `undefined`, not omitted (jco reads them).
-    assert.ok("previousSibling" in entry && entry.previousSibling === undefined);
-    assert.ok("nextSibling" in entry && entry.nextSibling === undefined);
+    // Sibling handles live in the NODE domain — `mutation-record`'s
+    // `get-previous-sibling` / `get-next-sibling` are the readers, and they go
+    // through `__storeNode`. An element-domain sibling is a handle the guest
+    // can hold and never resolve (nothing else notices: both tables answer
+    // `bigint`). MUT: mutation-bridge-sibling-handle-in-element-table
+    assert.equal(typeof entry.previousSibling, "bigint");
+    assert.equal(typeof entry.nextSibling, "bigint");
+    assert.equal(
+      globalThis.__nodeHandles.get(entry.previousSibling),
+      previous,
+      "the previous-sibling handle must resolve in the NODE table",
+    );
+    assert.equal(
+      globalThis.__nodeHandles.get(entry.nextSibling),
+      next,
+      "a text node is still a node handle (nodeHandles or textHandles)",
+    );
+    assert.equal(
+      currentInstance().tables.elementHandles.has(entry.previousSibling),
+      false,
+      "a sibling must NOT be an element handle — that is the wrong domain",
+    );
     assert.ok("attributeNamespace" in entry && entry.attributeNamespace === undefined);
+    // Handle DOMAINS, not just types: a sibling must resolve through the NODE
+    // table (that is what `mutation-record`'s `get-previous-sibling` reads),
+    // while `target` resolves through the ELEMENT table (what `get-target`
+    // reads). Minting a sibling into the wrong table yields a bigint the guest
+    // can hold and never resolve — and both tables answer `bigint`, so nothing
+    // else in the suite notices.
+    // MUT: mutation-bridge-sibling-handle-in-element-table
+    assert.ok(
+      currentInstance().tables.elementHandles.has(entry.target),
+      "target must be an ELEMENT handle (mutation-record.get-target reads that table)",
+    );
+    assert.equal(
+      currentInstance().tables.nodeHandles.has(entry.target),
+      false,
+      "target must not be a node handle — the two tables are different domains",
+    );
   } finally {
     delete globalThis.__wasmExports;
   }
@@ -364,6 +404,16 @@ test("promise bridge binds `onPromiseResolved` / `onPromiseRejected`", async () 
       "string",
       "the resolved value must be a string, or the call cannot be lowered",
     );
+
+    // The rejection arm declares `error: string` just as firmly, and the bridge
+    // used to call `handler(id)` there — an arity the wrapper cannot satisfy.
+    // MUT: promise-bridge-rejects-without-error
+    const rejected = withInstance(() => platformHelpers.fetchPromise("http://127.0.0.1:1/", null));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const rejectCall = calls.find(([, name]) => name === "onPromiseRejected");
+    assert.ok(rejectCall, "a failed fetch must report through onPromiseRejected");
+    assert.equal(rejectCall[2][0], rejected);
+    assert.equal(typeof rejectCall[2][1], "string", "`error` is a required string");
   } finally {
     delete globalThis.__wasmExports;
   }

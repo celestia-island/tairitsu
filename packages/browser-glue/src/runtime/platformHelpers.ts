@@ -7,6 +7,12 @@ import {
   resizeEntryValue,
 } from "./callbackValues";
 
+/** A rejection value as the required `string` the promise callbacks declare. */
+function rejectionText(error: unknown): string {
+  if (error instanceof Error) return error.name + ": " + error.message;
+  return String(error ?? "rejected");
+}
+
 export const platformHelpers_exports = {
   innerWidth() {
     return window.innerWidth;
@@ -235,7 +241,7 @@ export const platformHelpers_exports = {
           if (handler) handler(id, "");
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (
           globalThis.__wasmExports &&
           globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]
@@ -243,7 +249,9 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
           const handler = guest?.onPromiseRejected ?? guest?.on_promise_rejected;
-          if (handler) handler(id);
+          // `on-promise-rejected(promise-id, error: string)` — `error` is
+          // required, so it is reported, not omitted.
+          if (handler) handler(id, rejectionText(error));
         }
       });
     return id;
@@ -265,7 +273,7 @@ export const platformHelpers_exports = {
           if (handler) handler(id, text);
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (
           globalThis.__wasmExports &&
           globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]
@@ -273,7 +281,7 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
           const handler = guest?.onPromiseRejected ?? guest?.on_promise_rejected;
-          if (handler) handler(id);
+          if (handler) handler(id, rejectionText(error));
         }
       });
     return id;
@@ -285,7 +293,7 @@ export const platformHelpers_exports = {
     if (options) {
       try {
         opts = JSON.parse(options);
-      } catch {
+      } catch (error) {
         if (
           globalThis.__wasmExports &&
           globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]
@@ -293,7 +301,7 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
           const handler = guest?.onPromiseRejected ?? guest?.on_promise_rejected;
-          if (handler) handler(id);
+          if (handler) handler(id, rejectionText(error));
         }
         return id;
       }
@@ -314,7 +322,7 @@ export const platformHelpers_exports = {
           if (handler) handler(id, resp.status + " " + resp.statusText);
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (
           globalThis.__wasmExports &&
           globalThis.__wasmExports["tairitsu-browser:full/promise-callbacks@0.2.0"]
@@ -322,7 +330,7 @@ export const platformHelpers_exports = {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
           const handler = guest?.onPromiseRejected ?? guest?.on_promise_rejected;
-          if (handler) handler(id);
+          if (handler) handler(id, rejectionText(error));
         }
       });
     return id;
