@@ -1,0 +1,14 @@
+# Guest-callback bridges that call an interface the composed WIT does not declare.
+#
+# One entry per line: <kebab-interface><TAB><reason>
+#
+# `scripts/check_wit_ops.py --check` walks every `__wasmExports["<ns>/<iface>@<ver>"]`
+# dispatch in the runtime. An interface the composed WIT never declares cannot be
+# imported by any guest, so the call is dead — that shape means a *name* defect
+# (a typo, a retired interface), and the only way to say "known, not fixed yet"
+# is a line here, which shows up in review.
+#
+# Kept apart from `wit-interface-allow.tsv` (wired host interfaces) and
+# `wit-op-allow.tsv` (declared-but-unimplemented host ops) because this is the
+# third direction: the host calling INTO the guest.
+resize-callbacks	`onResizeCallback` dispatches into `tairitsu-browser:full/resize-callbacks@0.2.0`; the composed WIT declares no such interface (the real one is `window-resize-callbacks` / `on-window-resize`, which the glue never dispatches at all). Deliberately left alone: rewiring it ADDS a dispatch path the glue never had, which is a feature, not a rename — tracked separately from the callback-name repair

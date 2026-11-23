@@ -9,9 +9,15 @@
 
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
+import { register } from "node:module";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+
+// The runtime sources import each other WITHOUT an extension (bundler style).
+// `platformHelpers.ts` gained a `./callbackValues` import, which Node's ESM
+// resolver cannot find without the hook the other two suites already register.
+register("./ts-resolve-hook.mjs", import.meta.url);
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const INSTANCE_MODULE = resolve(here, "../src/runtime/instance.ts");

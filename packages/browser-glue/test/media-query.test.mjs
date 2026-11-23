@@ -542,7 +542,11 @@ function runGateAgainst(mutate) {
     }
     // Allowances: everything the real tree allows, so only the injected defect
     // is left for the gate to report.
-    for (const file of ["wit-op-allow.tsv", "wit-interface-allow.tsv"]) {
+    // `wit-callback-allow.tsv` joined them with the guest-export direction: a
+    // fixture missing it turns the unmutated baseline RED (the recorded
+    // `resize-callbacks` line would look undeclared), which is exactly the
+    // vacuous-pass failure the first test below exists to catch.
+    for (const file of ["wit-op-allow.tsv", "wit-interface-allow.tsv", "wit-callback-allow.tsv"]) {
       copy(join(PKG, file), join(root, "packages", "browser-glue", file));
     }
     mutate(root);
@@ -660,4 +664,53 @@ test("check_wit_ops.py: wiring an op back into the allow-list turns the gate RED
     /stale allowance: media-query-list\.get-matches is allowed but the op IS implemented/,
     `the implemented-op branch must be the one that fires; got: ${out}`,
   );
+});
+
+test("check_wit_ops.py: a callback bridge reading a property jco never emits turns the gate RED", () => {
+  // Direction 3 (host→guest). Restore the exact defect this change fixes:
+  // `mutation-observer-callbacks` declares `on-mutate`, jco emits `onMutate`,
+  // and the bridge used to read `on_mutation`. The gate must name it.
+  // MUT: mutation-bridge-reads-on_mutation
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "guest?.onMutate ?? guest?.on_mutation";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to break");
+    writeFileSync(path, source.replace(needle, "guest?.on_mutation"));
+  });
+  assert.equal(rc, 1, "a callback property the guest does not export must fail the gate");
+  assert.match(
+    out,
+    /`mutation-observer-callbacks@0\.2\.0` and reads `guest\.on_mutation`/,
+    `the gate must name the interface and the property; got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: an unexplained dead-interface bridge turns the gate RED", () => {
+  // `resize-callbacks` is recorded in wit-callback-allow.tsv. Remove the line and
+  // the same site must be reported: an allowance is the ONLY way to say "known",
+  // so the exception is visible in review instead of implicit.
+  // MUT: callback-allow-file-dropped
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "wit-callback-allow.tsv");
+    writeFileSync(path, "# empty on purpose\n");
+  });
+  assert.equal(rc, 1, "an undeclared interface with no allowance must fail the gate");
+  assert.match(out, /dispatches into `resize-callbacks@0\.2\.0`/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: a callback scan that stops matching fails on the floor", () => {
+  // The scan's own negative control. Deleting every bridge would empty the site
+  // list, and an empty list would read green — the floor is what turns "the scan
+  // broke" into a red gate rather than a smaller report. This is the failure
+  // that actually happened while writing this check: a single-pattern version
+  // found 1 site of 42 and reported nothing.
+  // MUT: callback-lookups-removed
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replaceAll("__wasmExports", "__neverSet"));
+  });
+  assert.equal(rc, 1, "a scan that finds nothing must fail, not pass");
+  assert.match(out, /callback scan found only \d+ guest-export lookups/, `got: ${out}`);
 });

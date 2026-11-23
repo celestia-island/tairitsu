@@ -33,6 +33,25 @@ interface:
    and the guest's first call to it traps. Those ops are the honest remaining
    gap; they are listed with a reason in
    `packages/browser-glue/wit-op-allow.tsv`.
+3. **guest export (the callback direction)** — the runtime also calls INTO the
+   guest, through `globalThis.__wasmExports["<ns>/<iface>@<ver>"]?.<prop>(…)`.
+   That namespace is the transpiled wrapper's export object, so `<prop>` must be
+   the identifier jco generates for a WIT func — the camelCase of its kebab name
+   (`on-mutate` → `onMutate`, `on-resize` → `onResize`; verified with
+   `jco types`, and `timer-callbacks`' `onTimeout` is the precedent that shipped
+   working). Directions 1 and 2 read the INTERFACES table and are structurally
+   blind to this one: a wrong property name here does not throw, it evaluates to
+   `undefined`, so the notification is dropped silently. That is why the
+   `mutation` observer never told a guest anything.
+
+   The jco camelCase is required. A snake_case fallback
+   (`guest?.onMutate ?? guest?.on_mutation`) is allowed only as the second
+   candidate of the same `??`, so a wrapper built with the other convention (or
+   a future jco that renames again) keeps working while a lone wrong name — the
+   shape that silently drops every callback — still fails. The value shape is
+   NOT checked here (that needs the record types); the resize / mutation bridges
+   carry their own assertions in
+   `packages/browser-glue/test/callback-bridge.test.mjs`.
 
 So the gate's two directions are deliberately different, because the two
 mechanisms are:
@@ -77,6 +96,9 @@ WIT_COMPOSED = REPO_ROOT / "packages" / "browser-worlds" / "wit" / "composed"
 MIN_INTERFACES = 20
 MIN_OPS = 50
 MIN_DISPATCHED = 20
+# Direction 3 (guest exports) has its own floor: a scan that stops matching must
+# read as "the scan broke", exactly like the other two.
+MIN_CALLBACK_SITES = 10
 
 IMPORT_RE = re.compile(
     r"import\s*\{\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*\}\s*from\s*\"\./([A-Za-z0-9_$]+)\""
@@ -87,6 +109,32 @@ REGISTRY_KEY_RE = re.compile(
 EMITTER_ENTRY_RE = re.compile(r'^\s*"?([a-z0-9-]+)"?\s*:\s*"([A-Za-z0-9_$]+)"', re.MULTILINE)
 WIT_INTERFACE_RE = re.compile(r"^interface\s+([a-z0-9-]+)\s*\{", re.MULTILINE)
 WIT_FUNC_RE = re.compile(r"^\s+([a-z0-9][a-z0-9-]*)\s*:\s*func\s*\(", re.MULTILINE)
+# `__wasmExports["tairitsu-browser:full/<iface>@0.2.0"]?.<prop>` — the guest
+# export the runtime calls. Deliberately anchored on `__wasmExports` (the
+# transpiled wrapper's namespace installed by `setWasmExports`) so a lookup of
+# some other object does not count as a bridge.
+# Two notations, because the sources use both:
+#   const guest = globalThis.__wasmExports?.["<ns>/<iface>@<ver>"];   // bound
+#   <ns>/<iface>@<ver>"]?.<prop>(…)                                   // inline
+# The key is matched on its own and parsed in a second step (`_CALLBACK_KEY_RE`)
+# rather than with one megapattern: the single-pattern version silently dropped
+# 41 of 42 sites (its bracket class swallowed the rest of the line), and the
+# MIN_CALLBACK_SITES floor is what turned that into a red gate instead of a
+# quietly smaller report.
+_CALLBACK_KEYED = re.compile(
+    r'__wasmExports\s*\??\.?\[\s*"(?P<key>[^"]+)"\s*\]',
+)
+# How far past a bound lookup the property reads may sit (lines). The bridges
+# read and call within a handful; the bound-callback scan below uses it.
+_WINDOW_LINES = 120
+
+_CALLBACK_KEY_RE = re.compile(r"^(?P<ns>.*)/(?P<iface>[a-z0-9-]+)@(?P<ver>[0-9.]+)$")
+# Right after the closing `]` the inline dispatch continues with `?.<prop>(` /
+# `.<prop>(` — `\s*` only, never a newline: a newline means the lookup was bound
+# to a local (`const exp = …`) and the call goes through that local.
+_DISPATCH_PROP_RE = re.compile(
+    r"(?:\s*(?:\?\.|\.)\s*)(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)(?:[^\n]*\()"
+)
 
 
 def strip_comments(text: str) -> str:
@@ -270,6 +318,255 @@ def declared_funcs(iface: str) -> list[str]:
     return []
 
 
+def snake(kebab: str) -> str:
+    """`on-mutate` → `on_mutate`. The fallback spelling a site may use.
+
+    `packages/browser-glue/src/runtime/platformHelpers.ts` reads
+    `guest?.onTimeout ?? guest?.on_timeout`: the first is what jco emits, the
+    second keeps a wrapper built to the WIT spelling working. Accepting both is
+    what keeps this check from forbidding a deliberate belt-and-braces read —
+    and what makes it catch the defect that motivated it, since
+    `on_mutation` is neither (`on-mutate` camelCases to `onMutate`, never to
+    `on_mutation`).
+    """
+    return kebab.replace("-", "_")
+
+
+def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
+    """The guest-export dispatch sites, plus how many lookups were scanned.
+
+    Returns `([(module, line, interface, version, property), …], lookups)`.
+
+    Two notations, both real in these sources:
+
+    * **inline** — `<key>"]?.<prop>(…`, on one line. Named here;
+    * **bound** — `const guest = …["<key>"];` … `guest?.<prop> ?? guest?.<snake>`.
+      NOT named: the call goes through a local, so the property is several lines
+      away from the lookup and belongs to whichever local. Those sites are
+      covered behaviourally instead (`packages/browser-glue/test/callback-bridge.test.mjs`
+      drives every bridge through its real DOM path), which is why the count of
+      bound lookups is returned: the gate asserts the scan still SEES them, so a
+      broken scan cannot hide behind "everything is inline".
+
+    An interface whose key is not `<ns>/<iface>@<ver>` is skipped — this check is
+    about the browser world's callbacks.
+    """
+    sites: list[tuple[str, int, str, str, str]] = []
+    lookups = 0
+    for path in sorted(RUNTIME_DIR.glob("*.ts")):
+        source = path.read_text(encoding="utf-8", errors="replace")
+        for line_number, line in enumerate(strip_comments(source).split("\n"), start=1):
+            for lookup in _CALLBACK_KEYED.finditer(line):
+                keyed = _CALLBACK_KEY_RE.match(lookup.group("key"))
+                if keyed is None:
+                    continue
+                lookups += 1
+                rest = _DISPATCH_PROP_RE.match(line, lookup.end())
+                if rest is None:
+                    continue
+                sites.append(
+                    (
+                        path.name,
+                        line_number,
+                        keyed.group("iface"),
+                        keyed.group("ver"),
+                        rest.group("prop"),
+                    )
+                )
+    return sites, lookups
+
+
+def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list[str], int]:
+    """Direction 3b: a lookup bound to a local must be CALLED through that local.
+
+    The inline form is named by `callback_sites`; the bound form
+    (`const guest = …["<key>"];` … `guest?.<prop>(…)`) is not, so without this the
+    whole `platformHelpers.ts` rewrite could be reverted to `guest?.on_wrong` and
+    stay green. For every bound local: each property read off it must be an
+    accepted spelling of the interface's declared funcs, and the local (or the
+    slot it was stored into) must actually be used.
+    """
+    problems: list[str] = []
+    bindings = 0
+    # Accepts a WRAPPED binding (`const guest =\n  globalThis.__wasmExports?.[…]`),
+    # which is how the longer interface names fit the line budget.
+    # `(?<!\.)` keeps `guest?.onMutate` and, crucially, `(guest?.onMutate ?? guest?.
+    # on_mutation)?.` — the shape the inline dispatch is rewritten into — out.
+    bound_re = re.compile(
+        r"(?<![.A-Za-z0-9_$])const\s+(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*\n?"
+        r"\s*(?:globalThis|g)\.__wasmExports\??\.?\[\s*\"(?P<key>[^\"]+)\"\s*\]"
+    )
+    # `<local>?.<prop>` / `<local>.<prop>` ONLY. A looser pattern scans for a bare
+    # identifier, and a preceding `??` supplies one (`?? guest?.onX`), so the
+    # property list comes back empty and a wrong name reads green.
+    read_re = re.compile(
+        r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)(?:\?\.|\.)\s*"
+        r"(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)"
+    )
+    for path in sorted(RUNTIME_DIR.glob("*.ts")):
+        # Whole-line comments are dropped BEFORE the window is cut: a comment that
+        # mentions a bad spelling is not a read of it.
+        source = path.read_text(encoding="utf-8", errors="replace")
+        kept = [
+            line
+            for line in strip_comments(source).split("\n")
+            if line.strip() and not line.strip().startswith("//")
+        ]
+        text = "\n".join(kept)
+        lines = text.split("\n")
+        for binding in bound_re.finditer(text):
+            keyed = _CALLBACK_KEY_RE.match(binding.group("key"))
+            if keyed is None:
+                continue
+            bindings += 1
+            iface = keyed.group("iface")
+            declared = declared_by_iface[iface] if iface in declared_by_iface else declared_funcs(iface)
+            if not declared:
+                continue  # reported by the inline pass as an unknown interface
+            accepted = {camel(name) for name in declared}
+            local = binding.group("local")
+            line_index = text[: binding.start()].count("\n")
+            # The window: the rest of the binding's line plus the following lines,
+            # stopping at the next binding or at the end of the method. A bounded
+            # count on purpose — a dedented brace is not a reliable stop once whole
+            # comment lines are removed — and an overrun can only add reads of the
+            # SAME local, which are that bridge's own.
+            tail = text[binding.end() :].split("\n")
+            window = tail[0] + "\n"
+            for probe in tail[1 : 1 + _WINDOW_LINES]:
+                if bound_re.search(probe) or probe.rstrip() == "  },":
+                    break
+                window += probe + "\n"
+            # (local, prop) pairs this binding's window reads. A guarded read can be
+            # split from its local by the pre-pass, which removes whole COMMENT
+            # lines: `const guest = …;` then a five-line comment then
+            # `guest?.onScrollEvent`. A bare property on a line whose only other
+            # content is a local (or a local assigned from it) is the same read.
+            reads = [(read.group("local"), read.group("prop")) for read in read_re.finditer(window)]
+            # Where each read sits, to tell a first candidate from a guarded one.
+            spans = [(read.group("local"), read.group("prop"), read.end()) for read in read_re.finditer(window)]
+            aliases = {local} | {
+                assigned.group("name")
+                for assigned in re.finditer(
+                    r"const\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*[^;]*\b"
+                    + re.escape(local)
+                    + r"\b[^;]*;",
+                    window,
+                )
+            }
+            for probe in tail[1 : 1 + _WINDOW_LINES]:
+                stripped = strip_comments(probe).strip()
+                if not stripped or bound_re.search(probe):
+                    continue
+                for head in aliases:
+                    if head not in stripped:
+                        continue
+                    rest = stripped.replace(head, "", 1).lstrip().lstrip("?.").lstrip()
+                    if re.fullmatch(r"[A-Za-z_$][A-Za-z0-9_$]*", rest):
+                        reads.append((local, rest))
+                        spans.append((local, rest, -1))
+                        break
+            for owner, prop, position_of in spans:
+                if owner != local:
+                    continue
+                if prop in accepted:
+                    continue
+                # A FALLBACK is allowed by design (`guest?.onMutate ??
+                # guest?.on_mutation`), but only as a second candidate: what must
+                # never happen is the property being the ONLY one, because then the
+                # call silently does nothing. So a read is reported when nothing on
+                # that local carries the jco name — the snake spelling alone is NOT
+                # enough, which is why it is not part of `accepted`.
+                # A fallback only makes sense as the `??` partner of an accepted
+                # name on the SAME expression (`a ?? b`). Otherwise the unaccepted
+                # name is the only candidate and the call silently does nothing.
+                tail_text = window[position_of :]
+                has_partner = bool(
+                    re.match(
+                        r"\s*\?\?(?:\s*\n?\s*)?[A-Za-z_$][\w$]*\??\.[A-Za-z_$][\w$]*",
+                        tail_text,
+                    )
+                ) or bool(
+                    re.search(
+                        r"\?\?(?:\s*\n?\s*)[A-Za-z_$][\w$]*\??\."
+                        + re.escape(prop),
+                        window[max(0, position_of - 80) : position_of],
+                    )
+                )
+                if has_partner:
+                    continue
+                problems.append(
+                    f"callback site {path.name}:{line_index + 1} binds `{local}` to "
+                    f"`{keyed.group('iface')}@{keyed.group('ver')}` and reads `{local}.{prop}`, "
+                    f"which the guest does not export (declared: {', '.join(declared)}) and which "
+                    "no other candidate on that local repairs — the callback is dropped with no "
+                    "error"
+                )
+            # "Used" = the local (or a local assigned from it) is invoked, passed
+            # on, or read from (`callbacks.onMouseEvent(…)` is a read of
+            # `callbacks`). A binding that is stored and never mentioned stays dead.
+            names = {local}
+            for assigned in re.finditer(
+                r"const\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*[^;]*\b"
+                + re.escape(local)
+                + r"\b[^;]*;",
+                window,
+            ):
+                names.add(assigned.group("name"))
+            named = r"(?<![.A-Za-z0-9_$])(?:" + "|".join(re.escape(n) for n in sorted(names)) + r")"
+            # A binding with NOTHING after it on its line (`if (…) { if (guest) {`)
+            # has its uses inside the block, so a bare mention is enough there.
+            stored = tail[0].strip() != ""
+            used = (
+                bool(re.search(named + r"\s*(?:[,(]|\.|\?\.)", window))
+                if stored
+                else bool(re.search(named, window))
+            )
+            if not used:
+                problems.append(
+                    f"callback site {path.name}:{line_index + 1} binds `{local}` to "
+                    f"`{keyed.group('iface')}@{keyed.group('ver')}` and never uses it — the "
+                    "bridge is dead weight"
+                )
+    return problems, bindings
+
+
+def callback_problems() -> tuple[list[str], int]:
+    """Direction 3: the property a host→guest callback site reads must exist.
+
+    A site passes when the property is the jco camelCase of one of the
+    interface's declared funcs, or that func's snake spelling. An interface the
+    composed WIT does not declare at all is its own finding: it names a bridge
+    nothing on the other side can implement (the historical defect here was a
+    `resize-callbacks` namespace that does not exist, reading `on_resize`, while
+    the real interface is `window-resize-callbacks` / `on-window-resize`).
+    """
+    problems: list[str] = []
+    sites, lookups = callback_sites()
+    for module, line, iface, ver, prop in sites:
+        declared = declared_funcs(iface)
+        if not declared:
+            # Same discipline as the op allow-list: a line in
+            # `wit-interface-allow.tsv` is the only way to say "known, not fixed",
+            # so the exception is visible in review instead of implicit.
+            if iface not in callback_allowances():
+                problems.append(
+                    f"callback site {module}:{line} dispatches into `{iface}@{ver}`, which the "
+                    "composed WIT does not declare — no guest can receive it, and no "
+                    "wit-interface-allow.tsv line explains it. The real interface may have a "
+                    "different name (check `window-resize-callbacks`)"
+                )
+            continue
+        accepted = {camel(name) for name in declared}
+        if prop not in accepted:
+            problems.append(
+                f"callback site {module}:{line} reads `{prop}` from `{iface}@{ver}`, which the "
+                f"guest does not export (declared: {', '.join(declared)}; jco emits "
+                f"{camel(declared[0])}, …) — the callback is dropped with no error"
+            )
+    return problems, lookups
+
+
 def copy_problems() -> list[str]:
     """The composed WIT copies must agree, or this gate is reading one side only.
 
@@ -312,6 +609,31 @@ def op_allowances() -> dict[str, str]:
         if "." not in key:
             raise SystemExit(f"error: op allowance must be <iface>.<op>: {raw!r}")
         entries[key] = parts[1].strip()
+    return entries
+
+
+CALLBACK_ALLOW = GLUE_PKG / "wit-callback-allow.tsv"
+
+
+def callback_allowances() -> dict[str, str]:
+    """`<kebab-interface>` → reason, for guest exports the WIT does not declare.
+
+    Its own file next to the other two: "the interface is not declared",
+    "the op is not implemented for a wired interface" and "this bridge calls an
+    interface no world declares" are three different defects with three
+    different fixes, and folding any two together hides the third.
+    """
+    entries: dict[str, str] = {}
+    if not CALLBACK_ALLOW.exists():
+        return entries
+    for raw in CALLBACK_ALLOW.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = raw.split("\t")
+        if len(parts) < 2 or not parts[1].strip():
+            raise SystemExit(f"error: callback allowance line lacks a reason: {raw!r}")
+        entries[parts[0].strip()] = parts[1].strip()
     return entries
 
 
@@ -362,6 +684,10 @@ class Finding:
             )
         if self.kind == "stale-allowance":
             return f"stale allowance: {self.key} is allowed but {self.detail}"
+        if self.kind == "callback-mismatch":
+            # The detail is the whole sentence (it names the file:line and the
+            # declared set), so it is returned as-is.
+            return self.key
         if self.kind == "no-declaration":
             return (
                 f"{self.key}: wired by the registry but the composed WIT declares no such "
@@ -370,8 +696,8 @@ class Finding:
         return f"{self.kind}: {self.key} ({self.detail})"
 
 
-def findings() -> tuple[list[Finding], int, int, int]:
-    """(findings, wired interface count, declared op count, dispatched op count)."""
+def findings() -> tuple[list[Finding], int, int, int, int, int]:
+    """(findings, wired interfaces, declared ops, dispatched ops, callback lookups, bound callbacks)."""
     interfaces = wired_interfaces()
     emitters = emitted_dispatchers()
     allow = op_allowances()
@@ -428,6 +754,26 @@ def findings() -> tuple[list[Finding], int, int, int]:
                 continue
             results.append(Finding("unimplemented", op, camel(name)))
 
+    for name in sorted(callback_allowances()):
+        # The line must still describe a real bridge AND a really undeclared
+        # interface, or it has served its purpose and must shrink.
+        if declared_funcs(name):
+            results.append(
+                Finding(
+                    "stale-allowance",
+                    f"callback-allow:{name}",
+                    "the composed WIT declares this interface now — drop the line",
+                )
+            )
+        elif not any(site[2] == name for site in callback_sites()[0]):
+            results.append(
+                Finding(
+                    "stale-allowance",
+                    f"callback-allow:{name}",
+                    "no callback site dispatches into it any more",
+                )
+            )
+
     for name in sorted(struct_allow):
         if name not in interfaces:
             results.append(
@@ -462,7 +808,18 @@ def findings() -> tuple[list[Finding], int, int, int]:
                 Finding("stale-allowance", key, "the op IS implemented now — drop the line")
             )
 
-    return results, len(interfaces), declared_total, dispatched_total
+    # 3. guest exports: the host→guest callback property must be a name jco
+    #    emits. Same list, because a wrong name there is the same class of hole
+    #    (a call the page silently swallows) seen from the other side.
+    callback_findings, callback_total = callback_problems()
+    for problem in callback_findings:
+        results.append(Finding("callback-mismatch", problem, ""))
+    declared_by_iface = {iface: declared_funcs(iface) for iface in interfaces}
+    bound_findings, bound_total = bound_bridge_problems(declared_by_iface)
+    for problem in bound_findings:
+        results.append(Finding("callback-mismatch", problem, ""))
+
+    return results, len(interfaces), declared_total, dispatched_total, callback_total, bound_total
 
 
 def main() -> int:
@@ -478,7 +835,14 @@ def main() -> int:
                 print(f"{iface}\t{key}\t{module}")
         return 0
 
-    mismatches, interface_count, declared_total, dispatched_total = findings()
+    (
+        mismatches,
+        interface_count,
+        declared_total,
+        dispatched_total,
+        callback_total,
+        bound_total,
+    ) = findings()
     problems = [str(f) for f in mismatches]
     problems.extend(copy_problems())
 
@@ -497,6 +861,16 @@ def main() -> int:
         problems.append(
             f"dispatch scan found only {dispatched_total} dispatched ops "
             f"(< {MIN_DISPATCHED}); check module_exports and the INTERFACES block"
+        )
+    if callback_total < MIN_CALLBACK_SITES:
+        problems.append(
+            f"callback scan found only {callback_total} guest-export lookups "
+            f"(< {MIN_CALLBACK_SITES}); the scan stopped matching — check _CALLBACK_KEYED"
+        )
+    if bound_total < MIN_CALLBACK_SITES:
+        problems.append(
+            f"bound-callback scan found only {bound_total} bound guest exports "
+            f"(< {MIN_CALLBACK_SITES}); check bound_bridge_problems"
         )
 
     if problems:
@@ -519,7 +893,8 @@ def main() -> int:
         f"WIT host surface ops OK: {interface_count} wired interfaces, "
         f"{declared_total} declared ops "
         f"({declared_total - unimplemented} implemented, {unimplemented} allowed), "
-        f"{dispatched_total} dispatched, {invented} runtime-only exports listed"
+        f"{dispatched_total} dispatched, {invented} runtime-only exports listed, "
+        f"{callback_total} guest-export lookups ({bound_total} bound) named correctly"
     )
     return 0
 

@@ -410,6 +410,14 @@ wit-surface-check:
 # users silently lost their preference. Every declared op of a wired interface
 # must be exported by the runtime table or carry a reason in
 # packages/browser-glue/wit-op-allow.tsv.
+#
+# It also checks the OTHER direction: the runtime calls into the guest through
+# `__wasmExports["<ns>/<iface>@<ver>"]?.<prop>`, and a property jco never emits
+# evaluates to `undefined` — the notification is dropped with no error. That is
+# how a guest's MutationObserver callback never ran (the bridge read
+# `on_mutation` for a WIT func named `on-mutate`). Fifteen bridges were wrong;
+# the reasons for the one deliberately left alone live in
+# packages/browser-glue/wit-callback-allow.tsv.
 wit-ops-check:
     {{python}} scripts/check_wit_ops.py --check
 
