@@ -801,9 +801,12 @@ test("check_wit_ops.py: a fallback chain whose wrong halves come first still tur
   const { rc, out } = runGateAgainst((root) => {
     const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
     const source = readFileSync(path, "utf8");
-    const needle = "exp?.onTimeout ?? exp?.on_timeout";
+    const needle = "const onTimeout = exp?.onTimeout;";
     assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to break");
-    writeFileSync(path, source.replace(needle, "exp?.on_time_out ?? exp?.on_timeout ?? exp?.onTimeout"));
+    writeFileSync(
+      path,
+      source.replace(needle, "const onTimeout = exp?.on_time_out ?? exp?.on_timeout ?? exp?.onTimeout;"),
+    );
   });
   assert.equal(rc, 1, "a chain whose wrong halves come first must fail the gate");
   assert.match(
@@ -811,6 +814,23 @@ test("check_wit_ops.py: a fallback chain whose wrong halves come first still tur
     /platformHelpers\.ts:\d+.*`(?:exp\.)?on_time_out`/,
     `the gate must name the file, a line, and the wrong read; got: ${out}`,
   );
+});
+
+test("check_wit_ops.py: a fallback that spells a DIFFERENT func turns RED", () => {
+  // The asymmetric half: a fallback must be the snake spelling of THE SAME func
+  // as its neighbour. `onResize ?? on_resize` is such a pair; replacing the
+  // fallback with a name that is not a spelling of `on-resize` must be red —
+  // a declared name from a different interface does not rescue it.
+  // MUT: callback-fallback-cross-func
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onResize;";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch");
+    writeFileSync(path, source.replace(needle, "const handler = guest?.onResize ?? guest?.on_windows_resize;"));
+  });
+  assert.equal(rc, 1, "a fallback that is not a spelling of a declared func must fail the gate");
+  assert.match(out, /platformHelpers\.ts:\d+.*`(?:guest\.)?on_windows_resize`/, `got: ${out}`);
 });
 
 test("check_wit_ops.py: a MISSPELLED fallback next to the right name turns RED", () => {
@@ -821,14 +841,14 @@ test("check_wit_ops.py: a MISSPELLED fallback next to the right name turns RED",
   const { rc, out } = runGateAgainst((root) => {
     const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
     const source = readFileSync(path, "utf8");
-    const needle = "guest?.onWebSocketOpen ?? guest?.on_web_socket_open";
+    const needle = "const onTimeout = exp?.onTimeout;";
     assert.ok(source.includes(needle), "the fixture must find the dispatch");
-    writeFileSync(path, source.replace(needle, "guest?.onWebSocketOpen ?? guest?.on_web_socket_opn"));
+    writeFileSync(path, source.replace(needle, "const onTimeout = exp?.onTimeout ?? exp?.on_timout;"));
   });
   assert.equal(rc, 1, "a fallback that is not a spelling of a declared func must fail the gate");
   assert.match(
     out,
-    /platformHelpers\.ts:\d+.*`(?:guest\.)?on_web_socket_opn`/,
+    /platformHelpers\.ts:\d+.*`(?:exp\.)?on_timout`/,
     `got: ${out}`,
   );
 });

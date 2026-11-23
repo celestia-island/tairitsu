@@ -33,9 +33,10 @@ export function requireMediaQueryList(handle: bigint): MediaQueryList {
  * `on_change`. Verified with `jco types` on a two-parameter
  * `on-change: func(callback-id: u64, matches: bool)` world:
  * `export function onChange(callbackId: bigint, matches: boolean): void;`.
- * The sibling bridges in `platformHelpers.ts` had the same defect (sixteen
- * property names across 42 sites, `on_mutation` for the WIT func `on-mutate`
- * among them); they now read `jcoName ?? snake_name`, and
+ * The sibling bridges in `platformHelpers.ts` had the same defect: sixteen
+ * property names — the 42 reads that were wrong when this change started —
+ * `on_mutation` for the WIT func `on-mutate` among them. They now read the jco
+ * name, with the func's own snake spelling as a fallback, and
  * `scripts/check_wit_ops.py` walks every `__wasmExports[…]?.<prop>` dispatch so
  * the next wrong name fails a gate instead of quietly dropping a callback.
  *

@@ -36,7 +36,7 @@ export const platformHelpers_exports = {
         globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]
       ) {
         const exp = globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"];
-        const onTimeout = exp?.onTimeout ?? exp?.on_timeout;
+        const onTimeout = exp?.onTimeout;
         if (onTimeout) onTimeout(callbackId);
       }
     }, ms);
@@ -62,7 +62,7 @@ export const platformHelpers_exports = {
         globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]
       ) {
         const exp = globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"];
-        const onInterval = exp?.onInterval ?? exp?.on_interval;
+        const onInterval = exp?.onInterval;
         if (onInterval) onInterval(callbackId);
       }
     }, ms);
@@ -86,7 +86,7 @@ export const platformHelpers_exports = {
         globalThis.__wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"]
       ) {
         const exp = globalThis.__wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"];
-        const onFrame = exp?.onFrame ?? exp?.on_frame;
+        const onFrame = exp?.onFrame;
         if (onFrame) onFrame(callbackId, timestamp);
       }
     });
@@ -122,7 +122,7 @@ export const platformHelpers_exports = {
       // `list<resize-entry>`, which the wrapper cannot convert. Both halves are
       // fixed; the snake fallback stays for a wrapper built with that
       // convention.
-      const handler = guest?.onResize ?? guest?.on_resize;
+      const handler = guest?.onResize;
       if (handler) {
         // A throwing guest must not escape into the DOM observer loop — same
         // shape as `mediaQueryList.ts`'s `dispatchChange` (log, do not propagate):
@@ -254,7 +254,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
-          const handler = guest?.onPromiseResolved ?? guest?.on_promise_resolved;
+          const handler = guest?.onPromiseResolved;
           // `on-promise-resolved(promise-id, value: string)` — the value is
           // REQUIRED, and `navigator.clipboard.writeText` resolves with nothing,
           // so the honest value is the empty string (not `undefined`, which is
@@ -269,7 +269,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
-          const handler = guest?.onPromiseRejected ?? guest?.on_promise_rejected;
+          const handler = guest?.onPromiseRejected;
           // `on-promise-rejected(promise-id, error: string)` — `error` is
           // required, so it is reported, not omitted.
           if (handler) handler(id, rejectionText(error));
@@ -290,7 +290,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
-          const handler = guest?.onPromiseResolved ?? guest?.on_promise_resolved;
+          const handler = guest?.onPromiseResolved;
           if (handler) handler(id, text);
         }
       })
@@ -301,7 +301,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
-          const handler = guest?.onPromiseRejected ?? guest?.on_promise_rejected;
+          const handler = guest?.onPromiseRejected;
           if (handler) handler(id, rejectionText(error));
         }
       });
@@ -321,7 +321,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
-          const handler = guest?.onPromiseRejected ?? guest?.on_promise_rejected;
+          const handler = guest?.onPromiseRejected;
           if (handler) handler(id, rejectionText(error));
         }
         return id;
@@ -335,7 +335,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
-          const handler = guest?.onPromiseResolved ?? guest?.on_promise_resolved;
+          const handler = guest?.onPromiseResolved;
           // `value` is a required `string`; a `Response` is not one. The bridge
           // reports what it can say synchronously — the status line — and the
           // guest reads the body through `fetch` itself, which is where the
@@ -350,7 +350,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/promise-callbacks@0.2.0"];
-          const handler = guest?.onPromiseRejected ?? guest?.on_promise_rejected;
+          const handler = guest?.onPromiseRejected;
           if (handler) handler(id, rejectionText(error));
         }
       });
@@ -378,7 +378,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/geolocation-callbacks@0.2.0"];
-          const handler = guest?.onPositionSuccess ?? guest?.on_position_success;
+          const handler = guest?.onPositionSuccess;
           // `on-position-success(callback-id, position: geo-position)` — the
           // WHOLE record, not two loose numbers. Built inside the guard so the
           // record is only materialised when a guest is there to take it.
@@ -392,7 +392,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/geolocation-callbacks@0.2.0"];
-          const handler = guest?.onPositionError ?? guest?.on_position_error;
+          const handler = guest?.onPositionError;
           if (handler) handler(errorCallbackId, geoPositionErrorValue(err));
         }
       },
@@ -485,7 +485,7 @@ export const platformHelpers_exports = {
     // emits `onWindowResize(callbackId, width, height)`.
     const handler = () => {
       const guest = g.__wasmExports?.["tairitsu-browser:full/window-resize-callbacks@0.2.0"];
-      const onWindowResize = guest?.onWindowResize ?? guest?.on_window_resize;
+      const onWindowResize = guest?.onWindowResize;
       if (onWindowResize) onWindowResize(callbackId, window.innerWidth, window.innerHeight);
     };
     window.addEventListener("resize", handler);
@@ -604,7 +604,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/file-reader-callbacks@0.2.0"];
-        const handler = guest?.onFileReaderLoad ?? guest?.on_file_reader_load;
+        const handler = guest?.onFileReaderLoad;
         if (handler) handler(callbackId, reader.result || "");
       }
     };
@@ -615,7 +615,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/file-reader-callbacks@0.2.0"];
-        const handler = guest?.onFileReaderError ?? guest?.on_file_reader_error;
+        const handler = guest?.onFileReaderError;
         if (handler) handler(callbackId, reader.error?.message || "Read failed");
       }
     };
@@ -633,7 +633,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/file-reader-callbacks@0.2.0"];
-        const handler = guest?.onFileReaderLoad ?? guest?.on_file_reader_load;
+        const handler = guest?.onFileReaderLoad;
         if (handler) handler(
           callbackId,
           reader.result ? Array.from(new Uint8Array(reader.result as ArrayBuffer)) : [],
@@ -647,7 +647,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/file-reader-callbacks@0.2.0"];
-        const handler = guest?.onFileReaderError ?? guest?.on_file_reader_error;
+        const handler = guest?.onFileReaderError;
         if (handler) handler(callbackId, reader.error?.message || "Read failed");
       }
     };
@@ -665,7 +665,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/file-reader-callbacks@0.2.0"];
-        const handler = guest?.onFileReaderLoad ?? guest?.on_file_reader_load;
+        const handler = guest?.onFileReaderLoad;
         if (handler) handler(callbackId, reader.result || "");
       }
     };
@@ -676,7 +676,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/file-reader-callbacks@0.2.0"];
-        const handler = guest?.onFileReaderError ?? guest?.on_file_reader_error;
+        const handler = guest?.onFileReaderError;
         if (handler) handler(callbackId, reader.error?.message || "Read failed");
       }
     };
@@ -694,7 +694,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/file-reader-callbacks@0.2.0"];
-        const handler = guest?.onFileReaderLoad ?? guest?.on_file_reader_load;
+        const handler = guest?.onFileReaderLoad;
         if (handler) handler(
           callbackId,
           reader.result ? Array.from(new Uint8Array(reader.result as ArrayBuffer)) : [],
@@ -708,7 +708,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/file-reader-callbacks@0.2.0"];
-        const handler = guest?.onFileReaderError ?? guest?.on_file_reader_error;
+        const handler = guest?.onFileReaderError;
         if (handler) handler(callbackId, reader.error?.message || "Read failed");
       }
     };
@@ -727,7 +727,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-        const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
+        const handler = guest?.onIdbRequestSuccess;
         // `on-idb-request-success(callback-id, result: option<string>)` —
         // the second argument is a STRING or `undefined`, never a handle.
         if (handler) handler(callbackId, "open:" + String(req.result?.version ?? ""));
@@ -740,7 +740,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-        const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+        const handler = guest?.onIdbRequestError;
         if (handler) handler(
           callbackId,
           req.error?.message || "Open failed",
@@ -764,7 +764,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
+          const handler = guest?.onIdbRequestSuccess;
           // A `put` request carries no value: `undefined` is the honest result.
           if (handler) handler(callbackId, undefined);
         }
@@ -776,7 +776,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+          const handler = guest?.onIdbRequestError;
           if (handler) handler(
             callbackId,
             req.error?.message || "Put failed",
@@ -790,7 +790,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-        const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+        const handler = guest?.onIdbRequestError;
         if (handler) handler(
           callbackId,
           e.message,
@@ -813,7 +813,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
+          const handler = guest?.onIdbRequestSuccess;
           // `option<string>`: a missing key is `undefined`, not `""`.
           if (handler) handler(callbackId, idbResultText(req.result));
         }
@@ -825,7 +825,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+          const handler = guest?.onIdbRequestError;
           if (handler) handler(
             callbackId,
             req.error?.message || "Get failed",
@@ -839,7 +839,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-        const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+        const handler = guest?.onIdbRequestError;
         if (handler) handler(
           callbackId,
           e.message,
@@ -862,7 +862,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
+          const handler = guest?.onIdbRequestSuccess;
           if (handler) handler(callbackId, undefined);
         }
       };
@@ -873,7 +873,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+          const handler = guest?.onIdbRequestError;
           if (handler) handler(
             callbackId,
             req.error?.message || "Delete failed",
@@ -887,7 +887,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-        const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+        const handler = guest?.onIdbRequestError;
         if (handler) handler(
           callbackId,
           e.message,
@@ -910,7 +910,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
+          const handler = guest?.onIdbRequestSuccess;
           // The WIT value is ONE string; a list arrives JSON-encoded.
           if (handler) handler(callbackId, JSON.stringify(req.result ?? []));
         }
@@ -922,7 +922,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+          const handler = guest?.onIdbRequestError;
           if (handler) handler(
             callbackId,
             req.error?.message || "GetAll failed",
@@ -936,7 +936,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-        const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+        const handler = guest?.onIdbRequestError;
         if (handler) handler(
           callbackId,
           e.message,
@@ -959,7 +959,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
+          const handler = guest?.onIdbRequestSuccess;
           if (handler) handler(callbackId, undefined);
         }
       };
@@ -970,7 +970,7 @@ export const platformHelpers_exports = {
         ) {
           const guest =
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-          const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+          const handler = guest?.onIdbRequestError;
           if (handler) handler(
             callbackId,
             req.error?.message || "Clear failed",
@@ -984,7 +984,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
-        const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
+        const handler = guest?.onIdbRequestError;
         if (handler) handler(
           callbackId,
           e.message,
@@ -1018,7 +1018,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/web-socket-callbacks@0.2.0"];
-        const handler = guest?.onWebSocketOpen ?? guest?.on_web_socket_open;
+        const handler = guest?.onWebSocketOpen;
         if (handler) handler(openCbId);
       }
     };
@@ -1030,7 +1030,7 @@ export const platformHelpers_exports = {
         const data = typeof ev.data === "string" ? ev.data : JSON.stringify(ev.data);
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/web-socket-callbacks@0.2.0"];
-        const handler = guest?.onWebSocketMessage ?? guest?.on_web_socket_message;
+        const handler = guest?.onWebSocketMessage;
         if (handler) handler(msgCbId, data);
       }
     };
@@ -1041,7 +1041,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/web-socket-callbacks@0.2.0"];
-        const handler = guest?.onWebSocketClose ?? guest?.on_web_socket_close;
+        const handler = guest?.onWebSocketClose;
         if (handler) handler(closeCbId, ev.code, ev.reason || "");
       }
       if (g.__tairitsuWsCallbacks) {
@@ -1055,7 +1055,7 @@ export const platformHelpers_exports = {
       ) {
         const guest =
           globalThis.__wasmExports?.["tairitsu-browser:full/web-socket-callbacks@0.2.0"];
-        const handler = guest?.onWebSocketError ?? guest?.on_web_socket_error;
+        const handler = guest?.onWebSocketError;
         if (handler) handler(errCbId);
       }
     };

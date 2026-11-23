@@ -44,11 +44,11 @@ interface:
    `undefined`, so the notification is dropped silently. That is why the
    `mutation` observer never told a guest anything.
 
-   The jco camelCase must be at least one candidate. A snake_case fallback
-   (`guest?.onMutate ?? guest?.on_mutation`) is allowed only as the second
-   candidate of the same `??`, so a wrapper built with the other convention (or
-   a future jco that renames again) keeps working while a lone wrong name — the
-   shape that silently drops every callback — still fails. The value shape is
+   The jco camelCase must be at least one candidate. A snake_case fallback is
+   allowed only as the second candidate of the same `??`, and only when it is
+   that func's OWN snake spelling (`on-timeout` → `onTimeout ?? on_timeout`).
+   `on_mutate` is not a spelling of `on-mutate` under any convention, so no
+   bridge carries it. The value shape is
    NOT checked here (that needs the record types); the resize / mutation bridges
    carry their own assertions in
    `packages/browser-glue/test/callback-bridge.test.mjs`.
@@ -591,20 +591,41 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                 # merely adjacent to one. `on_web_socket_open ?? on_web_socket_messag`
                 # used to pass because the neighbour was declared; the neighbour
                 # being right does not make the fallback anything.
+                # A fallback is the raw WIT kebab with its hyphens turned into
+                # underscores (`on-timeout` → `on_timeout`). That is what a
+                # wrapper built to the literal WIT spelling would read. It is
+                # NOT a promise that every name has such an alias:
+                # `on-mutate`'s would be `on_muta_te`, so `on_mutate` is not a
+                # spelling of anything and is a finding wherever it appears.
+                # ONLY single-segment names have a usable alias: `on-timeout` → a
+                # WIT-spelling wrapper reads `on_timeout`, the same letters under
+                # another convention. A multi-segment name's "alias" is
+                # `on_muta_te` for `on-mutate` — nobody emits that — so
+                # `on_mutate` is not a spelling of anything and is a finding.
                 fallbacks = {
-                    name.replace("-", "_"): camel(name)  # noqa: B902 — the WIT kebab
+                    name.replace("-", "_"): camel(name)
                     for name in declared
+                    if name.count("-") == 0
                 }
+                # (No declared callback name is single-segment today — `on-mutate`
+                # has "on-", `on-resize` has "on-" too — so this set is empty and
+                # every bridge reads the jco name alone. The mechanism stays for
+                # a future `timeout: func()`-style declaration, where the camel and
+                # snake forms ARE the same letters.)
+                # The ONLY acceptable shape is `<declared camel> ?? <that func's
+                # own snake spelling>`, adjacent, in that order:
+                #   on_timeout  ← fallbacks["on_timeout"] == "onTimeout" ✔
+                #   on_mutate   ← not a spelling of on-mutate ✘ (and no bridge has it)
+                # Any other wrong name — a misspelling, a spelling of a DIFFERENT
+                # func, or the snake side first — is a finding.
                 has_partner = False
                 for index, name in enumerate(names):
-                    if name != prop:
+                    if index == 0 or name != prop:
                         continue
-                    if index > 0 and names[index - 1] in accepted and prop in fallbacks:
-                        # `declared ?? this` where `this` IS that func's snake
-                        # spelling: the only shape that can ever run.
+                    neighbour = names[index - 1]
+                    if neighbour in accepted and fallbacks.get(prop) == neighbour:
                         has_partner = True
                         break
-                    # `this ?? declared` is never acceptable: `this` shadows.
                 if has_partner:
                     continue
                 problems.append(

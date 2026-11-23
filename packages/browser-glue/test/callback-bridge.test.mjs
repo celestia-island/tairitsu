@@ -662,27 +662,17 @@ test("a throwing guest callback does not escape into the DOM observer loop", () 
   }
 });
 
-test("a snake spelling that IS a declared func keeps working (fallback kept)", async () => {
-  // The jco name is the contract, but a wrapper built with the WIT spelling (or
-  // a future jco) must keep working — the same belt-and-braces the media-query
-  // bridge uses. This drives the mutation bridge with `on_mutation` only and
-  // asserts it still fires, which is what proves the `??` fallback is wired and
-  // not dead text.
-  // MUT: timer-bridge-drops-fallback (`exp?.onTimeout` alone reds this)
-  // The mutation bridge no longer HAS a fallback: `on_mutation` is not a spelling
-  // of the WIT func `on-mutate` under any convention, so it was dead text and the
-  // gate refuses it. `on_timeout` IS the snake spelling of `on-timeout`, so the
-  // timer bridge is where the fallback is real.
-  const calls = installGuest({ "timer-callbacks": ["on_timeout"] });
-  const originalWindow = globalThis.window;
-  try {
-    globalThis.window = { setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout };
-    withInstance(() => platformHelpers.setTimeout(5n, 0));
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    assert.equal(calls.length, 1, "the snake_case fallback must still deliver");
-    assert.equal(calls[0][1], "on_timeout");
-  } finally {
-    globalThis.window = originalWindow;
-    delete globalThis.__wasmExports;
-  }
+test("every bridge reads the jco name alone (no fallback that nobody emits)", () => {
+  // The fallback rule was tightened until it matched reality: no declared
+  // callback name is single-segment, so no WIT-spelling alias exists, so a
+  // bridge carrying `?? on_timeout`-style text would be advertising a
+  // compatibility path that can never run. This asserts the tree is clean of
+  // them — the naming gate refuses such a pair anyway, and this is the
+  // behavioural side of the same statement.
+  // MUT: bridge-carries-dead-fallback
+  const source = readFileSync(join(RUNTIME, "platformHelpers.ts"), "utf8");
+  const pairs = [
+    ...source.matchAll(/(\w+)\?\.(on[A-Z][A-Za-z]*) \?\? \1\?\.(on_[a-z_]+)/g),
+  ].map((m) => `${m.group(2)} ?? ${m.group(3)}`);
+  assert.deepEqual(pairs, [], `dead fallbacks in the tree: ${pairs.join(", ")}`);
 });
