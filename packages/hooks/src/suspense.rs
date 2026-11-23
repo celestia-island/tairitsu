@@ -774,12 +774,14 @@ mod tests {
         }
     }
 
-    // MUT: pins the module location of `use_resource` on non-wasm; renaming the
-    // item, or hiding it behind a wasm cfg, turns this into E0433.
+    // MUT: pins the *crate-root re-export* (lib.rs), not just the module item:
+    // moving the `pub use suspense::use_resource` line behind a wasm cfg turns
+    // this into E0432. Resolving `crate::suspense::use_resource` would not — a
+    // reviewer proved that form stayed green with the re-export hidden.
     #[cfg(not(target_family = "wasm"))]
     #[test]
-    fn test_use_resource_is_exported_on_native() {
-        let _ = crate::suspense::use_resource::<u8, _, _>(|| async { Ok(1u8) });
+    fn test_use_resource_is_reexported_at_crate_root() {
+        let _ = crate::use_resource::<u8, _, _>(|| async { Ok(1u8) });
     }
 
     #[cfg(not(target_family = "wasm"))]

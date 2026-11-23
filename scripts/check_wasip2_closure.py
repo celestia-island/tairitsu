@@ -165,12 +165,24 @@ def check(cargo: str) -> int:
         # but leaves nearly every line unaccounted for. Measured blind variant on
         # this tree: 2 of 90 names — a reviewer proved that variant once reported
         # a clean closure while `wasm-bindgen` was actually injected.
-        lines = [ln for ln in text.splitlines() if ln.strip()]
-        if len(lines) < 5 or len(members) < max(2, len(lines) // 2):
+        expected = _expected_names(text)
+        if len(expected) < 5 or len(members) < max(2, len(expected) // 2):
             print(
                 "wasip2 closure gate could not run: parsed "
-                f"{len(members)} of {len(lines)} lines from the tree of {crate} "
+                f"{len(members)} of {len(expected)} lines from the tree of {crate} "
                 "(the extraction is broken, not the closure clean)",
+                file=sys.stderr,
+            )
+            return 2
+        # Count is not enough: a parser can drop entries by *name* and keep every
+        # count plausible (a reviewer did exactly that to hide `chrono`). Compare
+        # against the line-for-line expectation so a dropped name is a hard error.
+        if members != expected:
+            missing = [n for n in expected if n not in members]
+            print(
+                "wasip2 closure gate could not run: the parse of "
+                f"{crate} does not match its own input line-for-line "
+                f"({len(members)} vs {len(expected)}, missing {missing[:5]})",
                 file=sys.stderr,
             )
             return 2
@@ -304,8 +316,24 @@ def _fixture() -> str:
     )
 
 
+def _expected_names(tree_text: str) -> list[str]:
+    """The names a faithful parser must return, one per non-blank, non-annotation line."""
+    return [
+        line.strip().split()[0]
+        for line in tree_text.splitlines()
+        if line.strip() and not line.strip().startswith("(")
+    ]
+
+
 def selftest() -> int:
-    """Pin the parser in both directions against captured output shapes."""
+    """Pin the parser by *position*, not by count.
+
+    A count-only assertion is not enough: a reviewer wrote a parser that drops
+    `chrono` by *name* when it appears anywhere but the last line, which kept
+    every count right, kept `--selftest` green, and reported a clean closure
+    while `chrono` was really in the tree. Matching the whole parsed list against
+    the whole expected list makes "which line did you drop" the question.
+    """
     fixture = _fixture()
     fixture_lines = fixture.count("\n")
     # The guard is the point: a fixture that is smaller than real output makes
@@ -317,10 +345,6 @@ def selftest() -> int:
             "real cargo tree output (>= 80)",
             file=sys.stderr,
         )
-        return 1
-    parsed = parse_members(fixture)
-    if len(parsed) < 40:
-        print(f"FAIL fixture parses to only {len(parsed)} names", file=sys.stderr)
         return 1
 
     cases = [
@@ -339,17 +363,44 @@ def selftest() -> int:
         ),
         ("annotation lines are not packages", fixture + "(proc-macro)\n", []),
     ]
+    # Occurrence at the *head* and *middle* of the tree, not just appended: the
+    # reviewer's bypass keyed on "anything but the last line", and in a real tree
+    # a first-party crate's direct dependencies sit on line 2.
+    head_cases = [
+        ("chrono on the second line", "chrono v0.4.45\n" + fixture, ["chrono"]),
+    ]
+    lines = fixture.splitlines(keepends=True)
+    mid_wasm = (
+        "".join(lines[: len(lines) // 2])
+        + "wasm-bindgen v0.2.130\n"
+        + "".join(lines[len(lines) // 2 :])
+    )
+    head_cases.append(("wasm-bindgen in the middle", mid_wasm, ["wasm-bindgen"]))
+    mid = "".join(lines[: len(lines) // 2]) + "web-sys v0.3.107\n" + "".join(lines[len(lines) // 2 :])
+
     failed = 0
-    for label, text, expected in cases:
-        got = forbidden_in(parse_members(text))
+    all_cases = cases + head_cases + [("web-sys in the middle", mid, ["web-sys"])]
+    for label, text, expected in all_cases:
+        parsed = parse_members(text)
+        got = forbidden_in(parsed)
         if got != expected:
             print(f"FAIL {label}: expected {expected}, got {got}", file=sys.stderr)
             failed += 1
-        else:
-            print(f"ok   {label}")
+            continue
+        # Positional equality: every line accounted for, in order, nothing dropped.
+        if parsed != _expected_names(text):
+            missing = [n for n in _expected_names(text) if n not in parsed]
+            print(
+                f"FAIL {label}: parsed list does not match line-for-line "
+                f"({len(parsed)} vs {len(_expected_names(text))} lines, missing {missing[:5]})",
+                file=sys.stderr,
+            )
+            failed += 1
+            continue
+        print(f"ok   {label}")
     if failed:
         return 1
-    print(f"selftest OK: {len(cases)} cases")
+    print(f"selftest OK: {len(all_cases)} cases")
     return 0
 
 
