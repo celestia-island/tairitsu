@@ -8,8 +8,8 @@
 // guest's exports through
 // `globalThis.__wasmExports["tairitsu-browser:full/<iface>@0.2.0"]?.<prop>(…)`.
 // There, a wrong property name does not throw; it evaluates to `undefined`, so
-// the notification is silently dropped. Fifteen bridges were wrong that way
-// before this change:
+// the notification is silently dropped. Sixteen wrong property names across 42
+// dispatch sites were that way before this change:
 //
 //   * `on_mutation` for a WIT func named `on-mutate` (jco emits `onMutate`) —
 //     a name the wrapper carries under NO convention, so a guest's
@@ -23,8 +23,10 @@
 //
 // The names below were taken from `jco types` 1.42.0 run against the callback
 // interfaces of `packages/browser-worlds/wit/handwritten/callbacks.wit`, not
-// inferred from the WIT spelling (four of the fifteen disagree with a naive
-// `snake→camel` mapping).
+// inferred from the WIT spelling: thirteen of the sixteen are not the
+// `snake→camel` of the func they were meant to call (only `on_resize`,
+// `on_scroll` and the four `on_web_socket_*` map onto a declared name, and those
+// are the ones that read the wrong NAME for a real func).
 //
 // Run with: npm run test
 

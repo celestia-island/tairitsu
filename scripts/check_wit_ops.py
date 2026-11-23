@@ -360,16 +360,21 @@ def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
 
     Returns `([(module, line, interface, version, property), …], lookups)`.
 
-    Two notations, both real in these sources:
+    Two notations, and this pass names only the first:
 
-    * **inline** — `<key>"]?.<prop>(…`, on one line. Named here;
+    * **inline** — `<key>"]?.<prop>(…`, on one line (`"<key>"` or `` `<key>` ``).
+      Named here, with the property;
     * **bound** — `const guest = …["<key>"];` … `guest?.<prop> ?? guest?.<snake>`.
-      NOT named: the call goes through a local, so the property is several lines
-      away from the lookup and belongs to whichever local. Those sites are
-      covered behaviourally instead (`packages/browser-glue/test/callback-bridge.test.mjs`
-      drives every bridge through its real DOM path), which is why the count of
-      bound lookups is returned: the gate asserts the scan still SEES them, so a
-      broken scan cannot hide behind "everything is inline".
+      NOT named here: the call goes through a local, so the property sits away
+      from the lookup. `bound_bridge_problems` names those sites, which is why
+      the number of lookups (both notations) is returned: the floor guards the
+      BASE, so a rewrite that shrinks what the scan sees is red even when the
+      remaining sites are all clean.
+
+    In the tree as it stands there are **no** inline lookups and 88 bound ones, so
+    the inline branch of `callback_problems` is a guard for the shape the original
+    defect was written in rather than a live producer of findings — kept, and
+    pinned by `media-query.test.mjs`'s "WRAPPED inline shape" control.
 
     An interface whose key is not `<ns>/<iface>@<ver>` is skipped — this check is
     about the browser world's callbacks.
@@ -460,12 +465,49 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
         ]
         text = "\n".join(kept)
         lines = text.split("\n")
+        # Line numbers are reported against the FILE, not this filtered text: a
+        # reported line that drifts with every comment edit sends the reader to
+        # the wrong place (measured: 381 reported for a binding on line 473).
+        stripped_source_lines = strip_comments(source).split("\n")
+        kept_positions = [
+            index
+            for index, line in enumerate(stripped_source_lines)
+            if line.strip() and not line.strip().startswith("//")
+        ]
         for binding in bound_re.finditer(text):
             keyed = _CALLBACK_KEY_RE.match(binding.group("key"))
             if keyed is None:
                 continue
             bindings += 1
             iface = keyed.group("iface")
+            # Line numbers are settled BEFORE any branch reports. Two of them:
+            #  * the READ line (where the property is used) — property findings;
+            #  * the DECLARATION line (one up, when the lookup is wrapped as
+            #    `const guest =\n  globalThis.__wasmExports?.[…]`) — findings about
+            #    the lookup itself (an undeclared interface).
+            # Both are mapped back to FILE lines: whole comment lines are dropped
+            # before windowing, so an index into `text` is not a file line.
+            filtered_index = text[: binding.start()].count("\n")
+            previous = lines[filtered_index - 1].strip() if filtered_index > 0 else ""
+            wrapped = bool(re.fullmatch(r"const\s+[A-Za-z_$][\w$]*\s*=", previous))
+            # The property may be read several lines below a wrapped lookup (a
+            # doc comment sits between them), so the read line is the first line
+            # at or after the binding that actually mentions the local.
+            read_line_index = kept_positions[filtered_index]
+            for probe_index in range(filtered_index, min(filtered_index + 12, len(lines))):
+                if re.search(r"(?<![A-Za-z0-9_$])" + re.escape(binding.group("local")) + r"\s*\?\.", lines[probe_index]):
+                    read_line_index = kept_positions[probe_index]
+                    break
+            # For an unwrapped binding (`const guest = g.__wasmExports?.[…]` on one
+            # line) the declaration line IS the read line.
+            declaration_line_index = (
+                kept_positions[filtered_index - 1]
+                if wrapped
+                else kept_positions[filtered_index]
+            )
+            # For a wrapped lookup the property is read on the line after the
+            # declaration head; that is where the reader wants to land.
+            line_index = read_line_index
             declared = declared_by_iface[iface] if iface in declared_by_iface else declared_funcs(iface)
             if not declared:
                 # The inline pass only sees the INLINE form, so a bound lookup
@@ -473,7 +515,7 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                 # is how `resize-callbacks` survived being rewired away.
                 if iface not in callback_allowances():
                     problems.append(
-                        f"callback site {path.name}:{line_index + 1} binds a guest export of "
+                        f"callback site {path.name}:{declaration_line_index + 1} binds a guest export of "
                         f"`{iface}@{keyed.group('ver')}`, which the composed WIT does not "
                         "declare — no guest can receive it"
                     )
@@ -483,7 +525,6 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
             # accepted set would make a lone wrong name read green.
             accepted = {camel(name) for name in declared}
             local = binding.group("local")
-            line_index = text[: binding.start()].count("\n")
             # The window: the rest of the binding's line plus the following lines,
             # stopping at the next binding or at the end of the method. A bounded
             # count on purpose — a dedented brace is not a reliable stop once whole
@@ -495,7 +536,7 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
             # `}`), or a bare `};` that ends the object/module literal. A fixed
             # line count both missed `eventTarget.ts`'s five dispatches (30–80
             # lines below the binding) and overran into the next method.
-            head_line = lines[line_index]
+            head_line = lines[filtered_index]
             base_indent = len(head_line) - len(head_line.lstrip())
             tail = text[binding.end() :].split("\n")
             window = tail[0] + "\n"

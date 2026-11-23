@@ -715,6 +715,7 @@ test("check_wit_ops.py: an unexplained dead-interface bridge turns the gate RED"
 });
 
 test("check_wit_ops.py: a BOUND lookup into an undeclared interface turns the gate RED", () => {
+  const root0 = REPO;
   // The inline pass only sees `<key>"]?.<prop>`; a bound lookup
   // (`const guest = __wasmExports[...]`) into an interface the composed WIT does
   // not declare has to be reported by the BOUND pass, or the site is lost — that
@@ -740,6 +741,23 @@ test("check_wit_ops.py: a BOUND lookup into an undeclared interface turns the ga
     out,
     /binds a guest export of `resize-callbacks@0\.2\.0`/,
     `the BOUND branch must be the one that fires; got: ${out}`,
+  );
+  // …and it must point at THE binding. A `line_index` read before it was
+  // assigned quoted the previous bridge's line instead (measured: 381 for a
+  // binding on 473), which sends the reader to the wrong code.
+  // MUT: bound-pass-stale-line-index
+  const reported = /platformHelpers\.ts:(\d+) binds a guest export of `resize-callbacks/.exec(out);
+  assert.ok(reported, `no line was reported; got: ${out}`);
+  const declaration = `const guest = g.__wasmExports?.["tairitsu-browser:full/window-resize-callbacks@0.2.0"];`;
+  const liveSource = readFileSync(
+    join(root0, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts"),
+    "utf8",
+  );
+  const trueLine = liveSource.slice(0, liveSource.indexOf(declaration)).split("\n").length;
+  assert.equal(
+    Number(reported[1]),
+    trueLine,
+    `the finding must name the bridge's own line (${trueLine}), not another bridge's`,
   );
   // …and the same site is acceptable once an allowance line explains it, which
   // proves the finding is the allowance channel and not a stray error.
