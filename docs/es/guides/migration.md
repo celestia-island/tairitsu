@@ -5,7 +5,7 @@ Use this guide when switching browser integration from wasm-bindgen/web-sys to C
 ## Minimal migration
 1. Enable feature: web -> wit-bindings
 2. Target: wasm32-unknown-unknown -> wasm32-wasip2
-3. Platform: WebPlatform::new() -> WitPlatform::new()?
+3. Platform: `WebPlatform` no longer exists — construct `WitPlatform` directly
 4. Ensure host imports from tairitsu-browser:full are provided
 
 ## Check command

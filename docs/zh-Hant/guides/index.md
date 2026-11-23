@@ -32,7 +32,7 @@
 | [執行階段與容器模型](../system/runtime.md) | Image/Container/Registry 生命週期、WIT 繫結、動態呼叫 |
 | [VDOM 與渲染](../../en/system/vdom.md) | 虛擬 DOM 差分比對、修補、事件系統、響應式排程器 |
 | [W3C WebIDL → WIT 管線](../system/wit-pipeline.md) | 50+ WebIDL 規格如何轉換為 WIT 介面 |
-| [Web 雙後端](../system/web-backends.md) | WitPlatform 與 WebPlatform 策略 |
+| [Web 後端](../system/web-backends.md) | 唯一路徑：WIT 契約 + JS 宿主實作 |
 | [Browser Glue 架構](../system/browser-glue.md) | 橋接 WIT ABI 與 DOM 的 TypeScript 層 |
 | [版本策略](../system/versioning.md) | 多 Crate 工作區的語意化版本管理 |
 

@@ -32,7 +32,7 @@
 | [Среда выполнения и модель контейнера](../system/runtime.md) | Жизненный цикл Image/Container/Registry, WIT-привязки, динамический вызов |
 | [VDOM и рендеринг](../../en/system/vdom.md) | Сравнение виртуального DOM, патчинг, система событий, реактивный планировщик |
 | [Конвейер W3C WebIDL → WIT](../system/wit-pipeline.md) | Как 50+ спецификаций WebIDL становятся интерфейсами WIT |
-| [Двойные веб-бэкенды](../system/web-backends.md) | Стратегия WitPlatform vs WebPlatform |
+| [Веб-бэкенд](../system/web-backends.md) | Единственный путь: контракт WIT + JS-реализация хоста |
 | [Архитектура Browser Glue](../system/browser-glue.md) | Слой TypeScript, связывающий WIT ABI с DOM |
 | [Стратегия версионирования](../system/versioning.md) | Семантическое версионирование в мульт crate workspace |
 

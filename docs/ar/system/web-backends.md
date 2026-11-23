@@ -1,8 +1,64 @@
-# Dual Web Backends
+# الواجهة الخلفية للويب: مسار واحد — عقد WIT + تنفيذ المضيف بـ JS
 
-The web crate supports two backend strategies:
-- web: wasm-bindgen + web-sys
-- wit-bindings: wit-bindgen + tairitsu-browser:full
+يحتوي `packages/web` على مسار واحد **فقط** للواجهة الخلفية للويب. أما «الواجهتان الخلفيتان»
+اللتان وصفتها المستندات السابقة — `web` (`wasm-bindgen` / `web-sys`) إلى جانب `wit-bindings` —
+فلم تعودا موجودتين: لم يكن لجانب `web` أي مستهلك، وقد أُزيلت تبعياته وفروع `cfg` الخاصة به.
 
-Choose based on target ABI and host capability.
+## ما هو هذا المسار
 
+| العنصر | القيمة |
+| --- | --- |
+| هدف الترجمة | `wasm32-wasip2` (WASI 0.2 / 0.3، Component Model) |
+| العقد | عوالم WIT تحت `tairitsu-browser:*` (`packages/browser-worlds/wit/`) |
+| ارتباطات جانب الضيف | `wit-bindgen` (خاصية `wit-bindings`) |
+| تنفيذ جانب المتصفح | مضيف JS (`packages/browser-glue/`) |
+| قدرات المتصفح للضيف | مضيف Component Model، عبر imports يحقنها المضيف |
+
+نقطة الدخول هي `WitPlatform` (`packages/web/src/wit_platform.rs`، خاصية `wit-bindings`).
+أما `BrowserPlatform` (`packages/web/src/browser.rs`) فهي تنفيذ مؤقت — استدعاءات فورية ومستطيلات
+افتراضية — وليست واجهة خلفية على web-sys.
+
+## لماذا بقي هذا المسار وحده
+
+1. **يغيّر Component Model طريقة تسليم «القدرات».** يترجم `wasm32-unknown-unknown` + `web-sys`
+   قدرات المتصفح مباشرةً إلى قسم imports في الضيف، فلا يمكن الإعلان عن هوية المضيف ولا عن
+   القدرات الممنوحة. يعرض عقد WIT سطح القدرات كواجهات imports قابلة للمراجعة وللترقيم،
+   ويمنحها المضيف لكل نسخة على حدة.
+2. **التحويل في وقت البناء، لا الاستضافة الذاتية في وقت التشغيل.** يحوّل jco المكوّن وقت البناء
+   إلى core wasm بالإضافة إلى بيئة تشغيل JS للـ canonical ABI؛ ولا توجد في المتصفحات
+   `WebAssembly.Component` أصلية. لذلك فإن صيغة «العقد في WIT والتنفيذ في JS» هي الصيغة الوحيدة
+   القابلة للتطبيق اليوم، وليست مقايضة.
+3. **تصبح مسؤوليات المضيف صريحة.** إنشاء النسخ، وتفويض القدرات، والجدولة غير المتزامنة، ودورة
+   الحياة (بما فيها الإيقاف القسري) كلها مسؤولية مضيف tairitsu؛ والضيف يصف فقط ما يحتاجه.
+
+## مستويات العوالم
+
+تُقسَّم عوالم WIT إلى حزم باسم `tairitsu-browser:{domain}` تحت `packages/browser-worlds/wit/`
+(ملف `browser-full.wit` إضافةً إلى الحزم المولّدة لكل نطاق في `generated/`). وهذا الدليل هو
+المرجع لقائمة الحزم.
+
+## البناء والتغليف
+
+تدعم أداة `tairitsu build` في `packages/packager` **هدف `component` فقط** (مسار
+`wasm32-wasip2` + browser-glue). وأي هدف آخر يفشل بالرسالة
+`Unknown build target … Only 'component' is supported.`
+
+خطوات بناء المكوّن:
+
+1. التأكد من تثبيت سلسلة أدوات `wasm32-wasip2`
+2. `cargo build --target wasm32-wasip2 --lib`
+3. نسخ المكوّن `.wasm` إلى `output_dir`
+4. نسخ بيئة browser-glue إلى `output_dir/browser-glue/`
+5. توليد ملف `index.html` للمضيف (يحمّل المكوّن عبر browser-glue)
+
+> **شرط مسبق**: شغّل `npm run build` داخل `packages/browser-glue/` أولاً لترجمة شيفرة glue
+> المكتوبة بـ TypeScript.
+
+## توصيات
+
+- اكتب المشاريع الجديدة مباشرةً على `wit-bindings` وعوالم WIT؛ فلم يعد هناك مسار قديم يفرض
+  «البقاء على `web` أولاً ثم الترحيل لاحقاً».
+- عند الحاجة إلى قدرة متصفح جديدة، أعلن الواجهة أولاً في جانب WIT ثم نفّذها في مضيف JS —
+  ولا تُدخل مكتبة ارتباطات DOM إلى الضيف.
+- تتبع أشكال عقود الواجهات غير المتزامنة الإعلانات الحالية في `packages/browser-worlds/wit/`؛
+  وهذه الصفحة لا تعيد سرد التواقيع الفردية.

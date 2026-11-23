@@ -247,8 +247,15 @@ fmt:
     cargo fmt
     python3 scripts/enforce_use_groups.py
 
+# Gate: the wasip2 delivery closure must carry no bindgen family and no chrono.
+# `Cargo.lock` is target-independent, so a manifest that adds `web-sys` under
+# `cfg(target_os = "unknown")` is invisible in the lock and compiles fine for
+# wasm32-wasip2 — without this, re-adding the retired edge breaks nothing.
+wasip2-closure-check:
+    {{python}} scripts/check_wasip2_closure.py --check
+
 # CI checks (format check + clippy + test)
-ci: wit-sync-check wit-surface-check wit-generator-check browser-glue-test host-client-test packager-js-test fmt-check clippy test
+ci: wit-sync-check wit-surface-check wit-generator-check wasip2-closure-check browser-glue-test host-client-test packager-js-test fmt-check clippy test
     @echo "✅ CI checks passed"
 
 # ------

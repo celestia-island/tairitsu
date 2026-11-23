@@ -218,7 +218,8 @@ For browser-only execution (no server):
 tairitsu dev --target browser
 ```
 
-Your component runs entirely client-side. Uses the `WebPlatform` backend (web-sys) for DOM operations.
+Your component runs entirely client-side. Uses the `WitPlatform` backend: DOM operations reach the
+browser through the WIT contract, implemented by the JS host.
 
 ---
 
@@ -281,7 +282,7 @@ let result = container.call_guest_raw_desc(
 
 | Topic | Document |
 |:--|:--|
-| All hooks (use_memo, use_resource, Suspense) | [hooks API](../components/packages.md#tairitsu-hooks) |
+| All hooks (use_memo, use_resource on non-wasm, Suspense) | [hooks API](../components/packages.md#tairitsu-hooks) |
 | Styling with `scss!` macro | [style crate](../components/packages.md#tairitsu-style) |
 | Routing | [Router module](../components/packages.md#tairitsu-web) |
 | WIT pipeline internals | [WIT Pipeline](../system/wit-pipeline.md) |

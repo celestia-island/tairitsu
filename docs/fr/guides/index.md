@@ -32,7 +32,7 @@
 | [Runtime et modèle de conteneur](../system/runtime.md) | Cycle de vie Image/Container/Registry, liaison WIT, invocation dynamique |
 | [VDOM et rendu](../../en/system/vdom.md) | Diffing du DOM virtuel, patching, système d'événements, planificateur réactif |
 | [Pipeline W3C WebIDL → WIT](../system/wit-pipeline.md) | Comment 50+ spécifications WebIDL deviennent des interfaces WIT |
-| [Backends web doubles](../system/web-backends.md) | Stratégie WitPlatform vs WebPlatform |
+| [Backend web](../system/web-backends.md) | Un seul chemin : contrat WIT + implémentation hôte en JS |
 | [Architecture Browser Glue](../system/browser-glue.md) | Couche TypeScript connectant l'ABI WIT au DOM |
 | [Stratégie de versionnage](../system/versioning.md) | Versionnage sémantique dans le workspace multi-crate |
 

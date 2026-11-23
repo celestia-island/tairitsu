@@ -37,7 +37,7 @@ graph TD
 ```mermaid
 graph TD
     APP["Tairitsu App<br/>(WASM Component)"] --> VDOM["VDOM + Platform Abstraction"]
-    VDOM --> PLAT["Platform Layer<br/>(WebPlatform / WitPlatform)"]
+    VDOM --> PLAT["Platform Layer<br/>(WitPlatform)"]
     PLAT --> HOST["Browser Host<br/>(browser-glue)<br/>or Native Host"]
 ```
 
@@ -45,7 +45,7 @@ graph TD
 - **Props**: Builder pattern with `#[component]` attribute
 - **Reactive**: Signal/Effect-based reactivity
 - **Platform Trait**: Abstract DOM operations
-- **Dual Backend**: `WebPlatform` (web-sys) and `WitPlatform` (WIT bindings)
+- **Single backend**: `WitPlatform` (WIT contract implemented by the JS host)
 
 ## Environment Setup
 

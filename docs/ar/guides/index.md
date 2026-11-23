@@ -32,7 +32,7 @@
 | [وقت التشغيل ونموذج الحاوية](../system/runtime.md) | دورة حياة Image/Container/Registry، روابط WIT، الاستدعاء الديناميكي |
 | [VDOM والعرض](../../en/system/vdom.md) | مقارنة DOM الافتراضي، التصحيح، نظام الأحداث، المجدول التفاعلي |
 | [خط أنابيب W3C WebIDL → WIT](../system/wit-pipeline.md) | كيف تصبح 50+ مواصفة WebID واجهات WIT |
-| [الخلفيات المزدوجة للويب](../system/web-backends.md) | استراتيجية WitPlatform مقابل WebPlatform |
+| [الواجهة الخلفية للويب](../system/web-backends.md) | المسار الوحيد: عقد WIT + تنفيذ المضيف بـ JS |
 | [بنية Browser Glue](../system/browser-glue.md) | طبقة TypeScript التي تربط WIT ABI بـ DOM |
 | [استراتيجية الإصدارات](../system/versioning.md) | الإصدارات الدلالية في مساحة العمل متعددة الحزم |
 

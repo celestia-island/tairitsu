@@ -32,7 +32,7 @@
 | [ランタイムとコンテナモデル](../system/runtime.md) | Image/Container/Registry ライフサイクル、WIT バインディング、動的呼び出し |
 | [VDOM とレンダリング](../../en/system/vdom.md) | 仮想 DOM の差分、パッチ、イベントシステム、リアクティブスケジューラ |
 | [W3C WebIDL → WIT パイプライン](../system/wit-pipeline.md) | 50+ の WebIDL 仕様がどのように WIT インターフェースになるか |
-| [Web バックエンド二系統](../system/web-backends.md) | WitPlatform と WebPlatform の戦略 |
+| [Web バックエンド](../system/web-backends.md) | 唯一の経路：WIT 契約 + JS ホスト実装 |
 | [Browser Glue アーキテクチャ](../system/browser-glue.md) | WIT ABI と DOM を繋ぐ TypeScript 層 |
 | [バージョニング戦略](../system/versioning.md) | マルチ Crate ワークスペースのセマンティックバージョニング |
 

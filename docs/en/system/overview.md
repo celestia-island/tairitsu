@@ -11,7 +11,6 @@ graph TD
     end
     subgraph L3["3. Platform Layer"]
         P1["WitPlatform (WIT bindings)"]
-        P2["WebPlatform (web-sys)"]
         P3["browser-glue (TypeScript ↔ WIT bridging)"]
     end
     subgraph L2["2. Runtime Layer"]
@@ -81,5 +80,5 @@ This model enables:
 - [Runtime & Container Model](runtime.md) — deep dive into Container/Image/Registry
 - [VDOM & Rendering](vdom.md) — how the browser-side VDOM works
 - [WIT Pipeline](wit-pipeline.md) — W3C WebIDL → WIT generation
-- [Web Backends](web-backends.md) — dual WitPlatform / WebPlatform strategy
+- [Web Backends](web-backends.md) — the single path: WIT contract + JS host implementation
 - [Browser Glue](browser-glue.md) — TypeScript bridging layer

@@ -45,7 +45,7 @@ Tairitsu 应用 (WASM 组件)
 VDOM + 平台抽象
     |
     v
-平台层 (WebPlatform/WitPlatform)
+平台层 (WitPlatform)
     |
     v
 浏览器主机 (browser-glue) 或原生主机
@@ -55,7 +55,7 @@ VDOM + 平台抽象
 - **Props**: 使用 `#[component]` 属性的构建器模式
 - **Reactive**: 基于 Signal/Effect 的响应式系统
 - **Platform Trait**: 抽象 DOM 操作
-- **双后端**: `WebPlatform` (web-sys) 和 `WitPlatform` (WIT 绑定)
+- **单一后端**: `WitPlatform`（WIT 契约，由 JS 宿主实现）
 
 ## 环境设置
 

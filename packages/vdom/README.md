@@ -21,7 +21,7 @@ The virtual DOM tree is composed of `VNode` variants:
 Abstract platform interface for DOM operations. Implementations:
 
 - `WitPlatform`: WIT-backed browser platform (wasm32)
-- `BrowserPlatform`: Direct web-sys bindings
+- `BrowserPlatform`: placeholder platform (no web-sys); immediate callbacks, default geometry
 - `SsrPlatform`: Server-side rendering platform
 
 ## Usage
