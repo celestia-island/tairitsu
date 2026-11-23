@@ -165,7 +165,17 @@ def check(cargo: str) -> int:
         # but leaves nearly every line unaccounted for. Measured blind variant on
         # this tree: 2 of 90 names — a reviewer proved that variant once reported
         # a clean closure while `wasm-bindgen` was actually injected.
-        expected = _expected_names(text)
+        # Computed inline on purpose. Every version of this gate that called a
+        # helper for the expectation could be defeated by pointing that helper at
+        # the parser (a reviewer did: `return parse_members(t)`, which made the
+        # comparison below `x != x`). Re-deriving the expectation here from the
+        # raw text, in the rejecting function itself, means no single edit to a
+        # shared helper can silence the verdict.
+        expected = [
+            ln.strip().split()[0]
+            for ln in text.splitlines()
+            if ln.strip() and ln.strip()[0] != "("
+        ]
         if len(expected) < 5 or len(members) < max(2, len(expected) // 2):
             print(
                 "wasip2 closure gate could not run: parsed "
@@ -317,12 +327,23 @@ def _fixture() -> str:
 
 
 def _expected_names(tree_text: str) -> list[str]:
-    """The names a faithful parser must return, one per non-blank, non-annotation line."""
-    return [
-        line.strip().split()[0]
-        for line in tree_text.splitlines()
-        if line.strip() and not line.strip().startswith("(")
-    ]
+    """An independent oracle: what a faithful parser must return.
+
+    Deliberately *not* implemented in terms of `parse_members`. A reviewer turned
+    the oracle into `return parse_members(tree_text)` and the identity check
+    below became a tautology (`x != x` is never true), which re-opened the whole
+    class of name-dropping parsers. Keeping this body written out by hand — regex
+    and character classes, no shared helper — is the property the selftest
+    enforces by asserting that a *mutated* parse disagrees with the oracle.
+    """
+    out: list[str] = []
+    for raw in tree_text.splitlines():
+        body = raw.strip()
+        # Blank lines and cargo's own annotations like "(proc-macro)" carry no name.
+        if body == "" or body[0] == "(":
+            continue
+        out.append(body.split()[0])
+    return out
 
 
 def selftest() -> int:
@@ -343,6 +364,27 @@ def selftest() -> int:
         print(
             f"FAIL fixture is only {fixture_lines} lines; it must be comparable to "
             "real cargo tree output (>= 80)",
+            file=sys.stderr,
+        )
+        return 1
+
+    # The oracle must be able to DISAGREE with the parser. A reviewer rewrote
+    # `_expected_names` as `return parse_members(tree_text)` and paired it with a
+    # name-dropping parser: `members != expected` became `x != x`, the gate
+    # printed its green banner with `chrono` really in the tree. Asserting the
+    # disagreement (with a deliberately wrong parser) is what makes the oracle
+    # load-bearing rather than decorative.
+    probe = "alpha v1\nbeta v2\ngamma v3\n"
+    if _expected_names(probe) != ["alpha", "beta", "gamma"]:
+        print(
+            f"FAIL oracle disagrees with the plain reading of {probe!r}: "
+            f"{_expected_names(probe)}",
+            file=sys.stderr,
+        )
+        return 1
+    if _expected_names(probe) == parse_members(probe[:-len("gamma v3\n")]):
+        print(
+            "FAIL oracle is tautological: it tracks the parser instead of the input",
             file=sys.stderr,
         )
         return 1
