@@ -251,6 +251,15 @@ fmt:
 # `Cargo.lock` is target-independent, so a manifest that adds `web-sys` under
 # `cfg(target_os = "unknown")` is invisible in the lock and compiles fine for
 # wasm32-wasip2 — without this, re-adding the retired edge breaks nothing.
+#
+# `--strict` makes "could not locate the hikari workspace" a failure instead of
+# a loud warning. Run it by hand when a verdict on the hikari entry is required.
+# The entry needs a hikari checkout; it is found via `HIKARI_MANIFEST_DIR`, else
+# the `../hikari` sibling (plain side-by-side layout), else — only from a
+# `_worktree/<repo>/<slug>` checkout — the climb to `<workspace>/hikari`. Note
+# this gate is a **local / pre-merge** lane: no workflow in
+# `.github/workflows/` invokes it — `test.yml` runs `just test`, which is not
+# this recipe — so the strict verdict is a human step, not a CI status check.
 wasip2-closure-check:
     {{python}} scripts/check_wasip2_closure.py --check
 
