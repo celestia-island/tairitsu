@@ -798,10 +798,11 @@ test("check_wit_ops.py: a callback scan that stops matching fails on the floor",
   assert.match(out, /callback scan found only \d+ guest-export lookups/, `got: ${out}`);
 });
 
-test("check_wit_ops.py: a fallback chain whose wrong halves come first still turns RED", () => {
-  // A "compat" repair can put the fallback spellings first and the correct name
-  // last. Every operand of a `??` chain must therefore pair with a DECLARED
-  // name — "some declared name appears in this statement" would read green.
+test("check_wit_ops.py: any non-exported read is RED regardless of its neighbours", () => {
+  // The rule is now "one candidate": jco emits exactly one identifier per func,
+  // so a `??` chain offering a second spelling is not repaired by the presence of
+  // a good name beside it. This control asserts the wrong operand is named even
+  // when a correct one sits in the same chain.
   // MUT: callback-partner-anywhere-in-statement
   const { rc, out } = runGateAgainst((root) => {
     const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
@@ -821,12 +822,11 @@ test("check_wit_ops.py: a fallback chain whose wrong halves come first still tur
   );
 });
 
-test("check_wit_ops.py: a fallback that spells a DIFFERENT func turns RED", () => {
-  // The asymmetric half: a fallback must be the snake spelling of THE SAME func
-  // as its neighbour. `onResize ?? on_resize` is such a pair; replacing the
-  // fallback with a name that is not a spelling of `on-resize` must be red —
-  // a declared name from a different interface does not rescue it.
-  // MUT: callback-fallback-cross-func
+test("check_wit_ops.py: a second candidate spelling something else is RED", () => {
+  // There is no alias table any more: `onResize ?? on_windows_resize` and
+  // `onResize ?? on_resize` are BOTH findings, because jco emits only
+  // `onResize`. A declared name from another interface does not rescue the read.
+  // MUT: callback-second-candidate-accepted
   const { rc, out } = runGateAgainst((root) => {
     const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
     const source = readFileSync(path, "utf8");
@@ -838,10 +838,9 @@ test("check_wit_ops.py: a fallback that spells a DIFFERENT func turns RED", () =
   assert.match(out, /platformHelpers\.ts:\d+.*`(?:guest\.)?on_windows_resize`/, `got: ${out}`);
 });
 
-test("check_wit_ops.py: a MISSPELLED fallback next to the right name turns RED", () => {
-  // `onWebSocketOpen ?? on_web_socket_open` is a legitimate pair; the fallback is
-  // the snake spelling of the WIT func. `?? on_web_socket_opn` is not — and it
-  // used to pass, because the rule only asked whether the NEIGHBOUR was declared.
+test("check_wit_ops.py: a misspelled second candidate is RED", () => {
+  // `onTimeout ?? on_timout`: the near-miss spelling must be named, not absorbed
+  // by the correct name in front of it.
   // MUT: callback-fallback-spelling-unchecked
   const { rc, out } = runGateAgainst((root) => {
     const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
@@ -872,6 +871,39 @@ test("check_wit_ops.py: an INDIRECT bridge (`const guest = callbacks()`) is in r
   });
   assert.equal(rc, 1, "a wrong read behind a helper must fail the gate");
   assert.match(out, /mediaQueryList\.ts:\d+.*`(?:guest\.)?on_chang`/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: a refactor that hides a bridge turns RED (per-file floor)", () => {
+  // The scan recognises three shapes, each by regex. A plain refactor — turn the
+  // helper into an arrow function, or guard its body — makes `mediaQueryList.ts`
+  // produce ZERO bindings while the global floor stays green at 47, and a wrong
+  // read inside it reads clean. The per-file floor notices that the SHAPE
+  // CHANGED without trying to parse it.
+  // MUT: per-file-floor-missing
+  for (const [label, from, to] of [
+    [
+      "arrow function",
+      "function callbacks(): MediaQueryListCallbacks | undefined {",
+      "const callbacks = (): MediaQueryListCallbacks | undefined => {",
+    ],
+    [
+      "guarded body",
+      'return globalThis.__wasmExports?.["tairitsu-browser:full/media-query-list-callbacks@0.2.0"];',
+      'if (!globalThis.__wasmExports) {\n    return undefined;\n  }\n  return globalThis.__wasmExports["tairitsu-browser:full/media-query-list-callbacks@0.2.0"];',
+    ],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "mediaQueryList.ts");
+      const source = readFileSync(path, "utf8");
+      assert.ok(source.includes(from), `the fixture must find the helper (${label})`);
+      writeFileSync(
+        path,
+        source.replace(from, to).replace("const handler = guest?.onChange;", "const handler = guest?.on_change;"),
+      );
+    });
+    assert.equal(rc, 1, `a ${label} refactor that hides the bridge must fail the gate`);
+    assert.match(out, /mediaQueryList\.ts references `__wasmExports` but the scan produced 0 bindings/, `got: ${out}`);
+  }
 });
 
 test("check_wit_ops.py: the WRAPPED inline shape (the form the defect shipped in) turns RED", () => {

@@ -330,6 +330,79 @@ def declared_funcs(iface: str) -> list[str]:
     return []
 
 
+def per_file_binding_problems(declared_by_iface: dict[str, list[str]]) -> list[str]:
+    """Every runtime file that TOUCHES `__wasmExports` must yield a binding.
+
+    The scan recognises three shapes (inline, bound, helper-returned). Each is a
+    regex, so a refactor — `const callbacks = () => …`, or a guard with its own
+    braces inside the helper body — can make a whole file produce ZERO bindings
+    while the global floor stays green at 47 (measured: `mediaQueryList.ts` drops
+    out and `onChange ?? on_chang` reads clean again).
+
+    This does not try to parse those shapes; it notices that the SHAPE CHANGED.
+    A file that mentions `__wasmExports` and contributes no binding is a red gate
+    with a message that names the file and the scan to look at.
+    """
+    problems: list[str] = []
+    contributing: set[str] = set()
+    sites, _ = callback_sites()
+    for site in sites:
+        contributing.add(site[0])
+    for binding in bound_binding_files(declared_by_iface):
+        contributing.add(binding)
+    for binding in helper_binding_files():
+        contributing.add(binding)
+    for path in sorted(RUNTIME_DIR.glob("*.ts")):
+        # Declarations only (`global.d.ts`) and the installer itself are not
+        # bridges — they mention the namespace without reading from it.
+        if path.name.endswith(".d.ts") or path.name == "wasmExports.ts":
+            continue
+        text = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
+        if "__wasmExports" not in text:
+            continue
+        if path.name in contributing:
+            continue
+        problems.append(
+            f"{path.name} references `__wasmExports` but the scan produced 0 bindings — "
+            "the bridge shape changed (an arrow-function helper, a guarded helper body, a "
+            "renamed local) or the scanner broke; check `helper_re` and `bound_re`"
+        )
+    return problems
+
+
+def bound_binding_files(declared_by_iface: dict[str, list[str]]) -> set[str]:
+    """Files the BOUND scan found at least one guest-object binding in."""
+    bound_re = re.compile(
+        r"(?<![.A-Za-z0-9_$])const\s+(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*\n?"
+        r"\s*(?:globalThis|g)\.__wasmExports\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]\s*\]"
+    )
+    found: set[str] = set()
+    for path in sorted(RUNTIME_DIR.glob("*.ts")):
+        text = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
+        if bound_re.search(text):
+            found.add(path.name)
+    return found
+
+
+def helper_binding_files() -> set[str]:
+    """Files whose guest object reaches a local through a helper."""
+    helper_re = re.compile(
+        r"function\s+(?P<name>[A-Za-z_$][\w$]*)\s*\([^)]*\)[^{]*\{[^}]{0,400}?"
+        r"__wasmExports\s*\??\.?\[\s*[\"`](?P<key>[^\"`$]+)[\"`]",
+        re.DOTALL,
+    )
+    call_re = re.compile(
+        r"const\s+[A-Za-z_$][\w$]*\s*=\s*(?P<helper>[A-Za-z_$][\w$]*)\(\)"
+    )
+    found: set[str] = set()
+    for path in sorted(RUNTIME_DIR.glob("*.ts")):
+        text = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
+        helpers = {match.group("name") for match in helper_re.finditer(text)}
+        if any(call.group("helper") in helpers for call in call_re.finditer(text)):
+            found.add(path.name)
+    return found
+
+
 def _all_callback_lookups(text: str) -> list[re.Match[str]]:
     """Every `__wasmExports[...]` lookup, string-keyed or template-keyed."""
     found = [*_CALLBACK_KEYED.finditer(text), *_CALLBACK_KEYED_TEMPLATE.finditer(text)]
@@ -927,6 +1000,8 @@ def findings() -> tuple[list[Finding], int, int, int, int, int]:
         results.append(Finding("callback-mismatch", problem, ""))
     declared_by_iface = {iface: declared_funcs(iface) for iface in interfaces}
     bound_findings, bound_total = bound_bridge_problems(declared_by_iface)
+    for problem in per_file_binding_problems(declared_by_iface):
+        results.append(Finding("callback-mismatch", problem, ""))
     for problem in bound_findings:
         results.append(Finding("callback-mismatch", problem, ""))
 

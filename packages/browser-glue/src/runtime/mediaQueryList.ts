@@ -38,8 +38,9 @@ export function requireMediaQueryList(handle: bigint): MediaQueryList {
  * among them. They now read the jco name and nothing else — a snake fallback was
  * removed tree-wide because jco never emits one, so every `?? on_snake` arm was
  * text that could not run. `scripts/check_wit_ops.py` walks every
- * `__wasmExports[…]?.<prop>` dispatch so the next wrong name fails a gate
- * instead of quietly dropping a callback.
+ * `__wasmExports[…]?.<prop>` dispatch — including one reached through a helper
+ * like `callbacks()` above — so the next wrong name fails a gate instead of
+ * quietly dropping a callback.
  */
 interface MediaQueryListCallbacks {
   onChange?: (callbackId: bigint, matches: boolean) => void;
