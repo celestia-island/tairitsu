@@ -679,10 +679,12 @@ test("check_wit_ops.py: a callback bridge reading a property jco never emits tur
     writeFileSync(path, source.replace(needle, "guest?.on_mutation"));
   });
   assert.equal(rc, 1, "a callback property the guest does not export must fail the gate");
+  // File + line + the offending read: a reworded finding must not turn this
+  // into a silent pass (the failure mode this anchoring exists for).
   assert.match(
     out,
-    /`mutation-observer-callbacks@0\.2\.0` and reads `guest\.on_mutation`/,
-    `the gate must name the interface and the property; got: ${out}`,
+    /platformHelpers\.ts:\d+.*`(?:guest\.)?on_mutation`/,
+    `the gate must name the file, a line, and the wrong read; got: ${out}`,
   );
 });
 
@@ -728,7 +730,11 @@ test("check_wit_ops.py: a fallback chain whose wrong halves come first still tur
     writeFileSync(path, source.replace(needle, "guest?.on_mutated ?? guest?.on_mutation ?? guest?.onMutate"));
   });
   assert.equal(rc, 1, "a chain whose wrong halves come first must fail the gate");
-  assert.match(out, /`guest\.on_mutated`/, `got: ${out}`);
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+.*`(?:guest\.)?on_mutated`/,
+    `the gate must name the file, a line, and the wrong read; got: ${out}`,
+  );
 });
 
 test("check_wit_ops.py: the WRAPPED inline shape (the form the defect shipped in) turns RED", () => {
@@ -753,9 +759,12 @@ test("check_wit_ops.py: the WRAPPED inline shape (the form the defect shipped in
     writeFileSync(path, source.replace(needle, wrapped));
   });
   assert.equal(rc, 1, "a wrapped inline dispatch with a wrong name must fail the gate");
+  // Anchored on the DEFECT LINE, not on the message wording: the line number is
+  // a `\d+` (the line moves with the file), but the file name and the offending
+  // read must both be there, or a reworded message could let this go quiet.
   assert.match(
     out,
-    /reads `on_mutation` from `mutation-observer-callbacks@0\.2\.0`/,
-    `got: ${out}`,
+    /platformHelpers\.ts:\d+.*`(?:guest\.)?on_mutation`/,
+    `the gate must name the file, a line, and the wrong read; got: ${out}`,
   );
 });
