@@ -9,14 +9,16 @@
 //   export interface ResizeEntry { target: bigint, contentRect: DomRect }   // (see below)
 //   export function onMutate(callbackId: bigint, entries: Array<MutationEntry>): void;
 //   export interface MutationEntry {
-//     mutationType: string, target: bigint, addedNodes: Array<bigint>,
-//     removedNodes: Array<bigint>, previousSibling: bigint | undefined,
-//     nextSibling: bigint | undefined, attributeName: string | undefined,
-//     attributeNamespace: string | undefined, oldValue: string | undefined,
+//     mutationType: string, target: bigint, addedNodes?: bigint,
+//     removedNodes?: bigint, previousSibling?: bigint, nextSibling?: bigint,
+//     attributeName?: string, attributeNamespace?: string, oldValue?: string,
 //   }
 //
-// (kebab `content-rect` → `contentRect`; every option<T> becomes `T | undefined`;
-// `list<T>` becomes a plain `Array<T>`; a `u64` handle stays a `bigint`.)
+// (kebab fields camelCase; `list<T>` becomes a plain `Array<T>`; a `u64` handle
+// stays a `bigint`. An `option<T>` becomes an OPTIONAL PROPERTY — a single `T`,
+// present-or-`undefined` — which is why `added-nodes: option<u64>` is ONE handle
+// and not a list: measured with `jco types` 1.42.0 on the verbatim records, and
+// the reason this file's first draft (which marshalled `bigint[]`) was wrong.)
 //
 // Why one module: the two call sites are the resize and mutation observer
 // bridges in `platformHelpers.ts`, which previously forwarded raw DOM entries
@@ -47,12 +49,6 @@ function rectOf(entry: unknown): Record<string, number> {
   };
 }
 
-function nodeList(nodes: unknown): bigint[] {
-  if (!nodes) return [];
-  const list = Array.from(nodes as ArrayLike<unknown>);
-  return list.map((node) => globalThis.__storeElement(node) ?? 0n);
-}
-
 function nodeHandle(node: unknown): bigint | undefined {
   if (!node) return NONE;
   return globalThis.__storeElement(node) ?? NONE;
@@ -61,10 +57,11 @@ function nodeHandle(node: unknown): bigint | undefined {
 /**
  * One DOM `ResizeObserverEntry` → the `resize-entry` record jco expects.
  *
- * `target` is a fresh element handle rather than the entry's own handle: the
- * record is consumed by the guest synchronously, and handing out the entry
- * handle too would leak one table slot per callback for a value nobody can
- * look up (the WIT declares no op that takes a resize-entry handle).
+ * The entry is also stored under a fresh handle in the instance's
+ * `resizeObserverEntryHandles` table, because `resize-observer-entry`'s WIT
+ * getters read from that table and a guest may hold such a handle. The slot is
+ * reclaimed with the instance exactly like every other handle table
+ * (`instance.ts` dispose clears them).
  */
 export function resizeEntryValue(entry: unknown, sink: EntrySink): Record<string, unknown> {
   const handle = globalThis.__nextResizeObserverEntry++;
@@ -78,22 +75,25 @@ export function resizeEntryValue(entry: unknown, sink: EntrySink): Record<string
 /**
  * One DOM `MutationRecord` → the `mutation-entry` record jco expects.
  *
- * `added-nodes` / `removed-nodes` are `option<u64>` in the WIT — a single
- * handle, not a list — so they carry the FIRST node of each NodeList (the
- * record's own handle list still exposes every node through
- * `mutation-record`, which is why those two getters stay wired).
+ * `added-nodes` / `removed-nodes` are `option<u64>`: ONE handle or `undefined`,
+ * never a list (`jco types` emits `addedNodes?: bigint`). They carry the first
+ * node of each NodeList; the record handle stored in the table above still
+ * exposes the full lists through `mutation-record`'s getters, so nothing is
+ * lost — the guest can ask for the rest by handle.
  */
 export function mutationEntryValue(record: unknown, sink: RecordSink): Record<string, unknown> {
   const handle = globalThis.__nextMutationRecord++;
   sink.store(handle, record);
   const typed = record as Partial<MutationRecord>;
-  const added = typed.addedNodes ? Array.from(typed.addedNodes) : [];
-  const removed = typed.removedNodes ? Array.from(typed.removedNodes) : [];
+  const first = (nodes: NodeList | undefined): bigint | undefined => {
+    const node = nodes && nodes.length ? nodes[0] : undefined;
+    return nodeHandle(node);
+  };
   return {
     mutationType: String(typed.type ?? ""),
     target: globalThis.__storeElement(typed.target) ?? 0n,
-    addedNodes: nodeList(added),
-    removedNodes: nodeList(removed),
+    addedNodes: first(typed.addedNodes),
+    removedNodes: first(typed.removedNodes),
     previousSibling: nodeHandle(typed.previousSibling),
     nextSibling: nodeHandle(typed.nextSibling),
     attributeName: typed.attributeName ?? NONE,

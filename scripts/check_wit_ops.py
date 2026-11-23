@@ -376,6 +376,20 @@ def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
     return sites, lookups
 
 
+_MEMBER_RE = re.compile(
+    r"(?<![A-Za-z0-9_$])[A-Za-z_$][\w$]*\??\.(?P<prop>[A-Za-z_$][\w$]*)"
+)
+
+
+def _statement_around(text: str, position: int) -> str:
+    """The `;`-delimited statement containing `position` (bounded to 400 chars)."""
+    start = max(text.rfind(";", max(0, position - 400), position), text.rfind("\n", max(0, position - 400), position))
+    end = text.find(";", position)
+    if end < 0:
+        end = min(len(text), position + 200)
+    return text[start + 1 : end]
+
+
 def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list[str], int]:
     """Direction 3b: a lookup bound to a local must be CALLED through that local.
 
@@ -423,6 +437,9 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
             declared = declared_by_iface[iface] if iface in declared_by_iface else declared_funcs(iface)
             if not declared:
                 continue  # reported by the inline pass as an unknown interface
+            # The jco camelCase only. A snake spelling is a legitimate
+            # `??` FALLBACK, never a candidate on its own — resolving it to the
+            # accepted set would make a lone wrong name read green.
             accepted = {camel(name) for name in declared}
             local = binding.group("local")
             line_index = text[: binding.start()].count("\n")
@@ -471,28 +488,19 @@ def bound_bridge_problems(declared_by_iface: dict[str, list[str]]) -> tuple[list
                     continue
                 if prop in accepted:
                     continue
-                # A FALLBACK is allowed by design (`guest?.onMutate ??
-                # guest?.on_mutation`), but only as a second candidate: what must
-                # never happen is the property being the ONLY one, because then the
-                # call silently does nothing. So a read is reported when nothing on
-                # that local carries the jco name — the snake spelling alone is NOT
-                # enough, which is why it is not part of `accepted`.
-                # A fallback only makes sense as the `??` partner of an accepted
-                # name on the SAME expression (`a ?? b`). Otherwise the unaccepted
-                # name is the only candidate and the call silently does nothing.
-                tail_text = window[position_of :]
-                has_partner = bool(
-                    re.match(
-                        r"\s*\?\?(?:\s*\n?\s*)?[A-Za-z_$][\w$]*\??\.[A-Za-z_$][\w$]*",
-                        tail_text,
-                    )
-                ) or bool(
-                    re.search(
-                        r"\?\?(?:\s*\n?\s*)[A-Za-z_$][\w$]*\??\."
-                        + re.escape(prop),
-                        window[max(0, position_of - 80) : position_of],
-                    )
-                )
+                # A fallback (`a ?? b`) is allowed ONLY when one side of the pair
+                # is a name the guest really exports. For `a` the partner is
+                # whatever the `??` chain leads to; for `b` it is whatever comes
+                # before it. Both are resolved by slicing the local's own pair on
+                # `??` and comparing the member accesses — no anchored regex over a
+                # dangling prefix (that form does not behave like the same regex
+                # inside a longer text: measured, twice).
+                statement = _statement_around(window, position_of)
+                if "??" in statement:
+                    names_in_sides = {match.group("prop") for match in _MEMBER_RE.finditer(statement)}
+                    has_partner = bool(names_in_sides & accepted)
+                else:
+                    has_partner = False
                 if has_partner:
                     continue
                 problems.append(

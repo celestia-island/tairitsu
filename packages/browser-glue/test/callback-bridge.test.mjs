@@ -164,8 +164,18 @@ test("mutation observer: records arrive as mutation-entry values, not handle lis
     const entry = entries[0];
     assert.equal(entry.mutationType, "attributes", "kebab `mutation-type` → camel `mutationType`");
     assert.equal(typeof entry.target, "bigint", "a node reference is a u64 handle");
-    assert.deepEqual(entry.addedNodes, [], "an empty NodeList is an empty list");
-    assert.equal(entry.removedNodes.length, 1);
+    // `added-nodes` / `removed-nodes` are `option<u64>` — ONE handle or
+    // `undefined`, never an array. `jco types` on the verbatim record:
+    //   export interface MutationEntry { … addedNodes?: bigint, removedNodes?: bigint … }
+    // A first draft of the bridge passed `bigint[]` here, which is the same
+    // class of defect the rename repairs, so this assertion pins the arity.
+    assert.equal(entry.addedNodes, undefined, "an empty NodeList is `undefined`, not `[]`");
+    assert.equal(typeof entry.removedNodes, "bigint", "one removed node is ONE handle");
+    assert.equal(
+      Array.isArray(entry.removedNodes),
+      false,
+      "`option<u64>` is a single value — a list here is not convertible by jco",
+    );
     assert.equal(entry.attributeName, "data-state");
     assert.equal(entry.oldValue, "open");
     // option<T> fields must be present as `undefined`, not omitted (jco reads them).

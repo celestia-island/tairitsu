@@ -678,9 +678,9 @@ export const platformHelpers_exports = {
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
         const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
         if (handler) handler(
-      callbackId,
-      globalThis.__storeElement?.(req.result) ?? 0n,
-    );
+          callbackId,
+          globalThis.__storeElement?.(req.result) ?? 0n,
+        );
       }
     };
     req.onerror = () => {
@@ -692,9 +692,9 @@ export const platformHelpers_exports = {
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
         const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
         if (handler) handler(
-      callbackId,
-      req.error?.message || "Open failed",
-    );
+          callbackId,
+          req.error?.message || "Open failed",
+        );
       }
     };
     return 0n;
@@ -716,8 +716,8 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
           if (handler) handler(
-        callbackId,
-      );
+            callbackId,
+          );
         }
       };
       req.onerror = () => {
@@ -729,9 +729,9 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
           if (handler) handler(
-        callbackId,
-        req.error?.message || "Put failed",
-      );
+            callbackId,
+            req.error?.message || "Put failed",
+          );
         }
       };
     } catch (e: any) { // ts-escape-ok: retires with L40
@@ -743,9 +743,9 @@ export const platformHelpers_exports = {
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
         const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
         if (handler) handler(
-      callbackId,
-      e.message,
-    );
+          callbackId,
+          e.message,
+        );
       }
     }
   },
@@ -766,9 +766,9 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
           if (handler) handler(
-        callbackId,
-        req.result,
-      );
+            callbackId,
+            req.result,
+          );
         }
       };
       req.onerror = () => {
@@ -780,9 +780,9 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
           if (handler) handler(
-        callbackId,
-        req.error?.message || "Get failed",
-      );
+            callbackId,
+            req.error?.message || "Get failed",
+          );
         }
       };
     } catch (e: any) { // ts-escape-ok: retires with L40
@@ -794,9 +794,9 @@ export const platformHelpers_exports = {
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
         const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
         if (handler) handler(
-      callbackId,
-      e.message,
-    );
+          callbackId,
+          e.message,
+        );
       }
     }
   },
@@ -817,8 +817,8 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
           if (handler) handler(
-        callbackId,
-      );
+            callbackId,
+          );
         }
       };
       req.onerror = () => {
@@ -830,9 +830,9 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
           if (handler) handler(
-        callbackId,
-        req.error?.message || "Delete failed",
-      );
+            callbackId,
+            req.error?.message || "Delete failed",
+          );
         }
       };
     } catch (e: any) { // ts-escape-ok: retires with L40
@@ -844,9 +844,9 @@ export const platformHelpers_exports = {
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
         const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
         if (handler) handler(
-      callbackId,
-      e.message,
-    );
+          callbackId,
+          e.message,
+        );
       }
     }
   },
@@ -867,9 +867,9 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
           if (handler) handler(
-        callbackId,
-        req.result || [],
-      );
+            callbackId,
+            req.result || [],
+          );
         }
       };
       req.onerror = () => {
@@ -881,9 +881,9 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
           if (handler) handler(
-        callbackId,
-        req.error?.message || "GetAll failed",
-      );
+            callbackId,
+            req.error?.message || "GetAll failed",
+          );
         }
       };
     } catch (e: any) { // ts-escape-ok: retires with L40
@@ -895,9 +895,9 @@ export const platformHelpers_exports = {
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
         const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
         if (handler) handler(
-      callbackId,
-      e.message,
-    );
+          callbackId,
+          e.message,
+        );
       }
     }
   },
@@ -918,8 +918,8 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestSuccess ?? guest?.on_idb_request_success;
           if (handler) handler(
-        callbackId,
-      );
+            callbackId,
+          );
         }
       };
       req.onerror = () => {
@@ -931,9 +931,9 @@ export const platformHelpers_exports = {
             globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
           const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
           if (handler) handler(
-        callbackId,
-        req.error?.message || "Clear failed",
-      );
+            callbackId,
+            req.error?.message || "Clear failed",
+          );
         }
       };
     } catch (e: any) { // ts-escape-ok: retires with L40
@@ -945,9 +945,9 @@ export const platformHelpers_exports = {
           globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];
         const handler = guest?.onIdbRequestError ?? guest?.on_idb_request_error;
         if (handler) handler(
-      callbackId,
-      e.message,
-    );
+          callbackId,
+          e.message,
+        );
       }
     }
   },
