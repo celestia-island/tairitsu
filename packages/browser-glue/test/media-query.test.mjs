@@ -370,6 +370,34 @@ test("media-query-list: re-adding a callback id does not stack DOM listeners", (
   delete globalThis.__wasmExports;
 });
 
+test("media-query-list: re-registering an id does not grow the reclaim set", () => {
+  // `reclaimables.listeners` is walked on EVERY dispose, so an entry per
+  // add-listener call would grow unbounded for a long-lived component and hold
+  // stale handlers alive. One list owns at most one reclaim entry. MUT: reclaim-per-add
+  installDom({ reduce: false });
+  const handle = window_exports.matchMedia("(prefers-reduced-motion: reduce)");
+  const before = countChangeReclaimables();
+  for (let i = 0; i < 5; i += 1) mediaQueryList_exports.addListener(handle, 3n);
+  mediaQueryList_exports.setOnchange(handle, 4n);
+  mediaQueryList_exports.setOnchange(handle, 5n);
+  const after = countChangeReclaimables();
+  assert.equal(
+    after - before,
+    1,
+    `re-registering listeners must keep one reclaim entry per list, not ${after - before}`,
+  );
+});
+
+/** How many `change` listeners of a MediaQueryList are waiting on dispose. */
+function countChangeReclaimables() {
+  const reclaimables = globalThis.__TAIRITSU_CURRENT__().reclaimables.listeners;
+  let count = 0;
+  for (const entry of reclaimables) {
+    if (entry.type === "change") count += 1;
+  }
+  return count;
+}
+
 test("media-query-list: a throwing guest callback does not escape into the event loop", () => {
   installDom({ reduce: false });
   globalThis.__wasmExports = {
@@ -527,6 +555,46 @@ test("check_wit_ops.py: deleting the match-media export turns the gate RED", () 
   assert.match(out, /window\.match-media/, `the gate must name the op; got: ${out}`);
 });
 
+test("check_wit_ops.py: an INVENTED export (runtime key the WIT lacks) turns the gate RED", () => {
+  // The gate has two directions and both must be proven. This is the negative
+  // control for the second one: a runtime op that the WIT does not declare is
+  // dead weight at best and a capability the guest never asked for at worst.
+  // Without this test, deleting the `invented` branch is a silent survivor —
+  // the gate would then green-light exactly the class of drift it exists to
+  // name. MUT: invented-export-injected
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "mediaQueryList.ts");
+    const source = readFileSync(path, "utf8");
+    const marker = "export const mediaQueryList_exports = {";
+    assert.ok(source.includes(marker), "the fixture must find the exports object");
+    writeFileSync(
+      path,
+      source.replace(
+        marker,
+        `${marker}\n  getBogusOp(self: bigint): boolean {\n    return false;\n  },`,
+      ),
+    );
+  });
+  assert.equal(rc, 1, "an export the WIT does not declare must fail the gate");
+  assert.match(
+    out,
+    /media-query-list\.getBogusOp/,
+    `the gate must name the invented op; got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: a drifted WIT mirror turns the gate RED", () => {
+  // The gate reads declarations from the single source and cross-checks the
+  // generated copy. A union over both copies would let an op that exists in
+  // only one satisfy the check, so a forgotten `sync_wit.py` would read green.
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "web", "wit", "composed", "_domain-css.wit");
+    writeFileSync(path, readFileSync(path, "utf8") + "\n// drifted\n");
+  });
+  assert.equal(rc, 1, "a mirror that differs from the single source must fail the gate");
+  assert.match(out, /composed WIT copies differ/, `got: ${out}`);
+});
+
 test("check_wit_ops.py: wiring an op back into the allow-list turns the gate RED", () => {
   // The inverse direction: an allowance for an op that IS implemented is stale
   // and must fail, so the inventory can only shrink.
@@ -539,5 +607,14 @@ test("check_wit_ops.py: wiring an op back into the allow-list turns the gate RED
     );
   });
   assert.equal(rc, 1, "an allowance for an implemented op must fail the gate");
-  assert.match(out, /stale allowance: media-query-list\.get-matches/, `got: ${out}`);
+  // Name the EXACT branch. A bare `/stale allowance: <key>/` also matches the
+  // "interface is not wired at all" and "the WIT declares no such func"
+  // branches, so a mutation that broke the real path could still pass on an
+  // unreachable sibling. The implemented-op branch is the only one whose text
+  // says the op IS implemented. MUT: stale-allowance-branch
+  assert.match(
+    out,
+    /stale allowance: media-query-list\.get-matches is allowed but the op IS implemented/,
+    `the implemented-op branch must be the one that fires; got: ${out}`,
+  );
 });

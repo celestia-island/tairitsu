@@ -67,17 +67,12 @@ test("handles are stored per instance, not per page", () => {
 test("EVERY handle counter is per instance and never collides", () => {
   const a = createInstance();
   const b = createInstance();
-  const names = [
-    "nextHandle",
-    "nextMutationRecord",
-    "nextResizeObserverEntry",
-    "nextResizeObserverSizeHandle",
-    "nextDomRectHandle",
-    "nextNodeList",
-    "nextCssStyleDeclarationHandle",
-    "nextListenerHandle",
-    "nextEventHandle",
-  ];
+  // Derived from the instance's own counter bag, not hand-listed: a hand-kept
+  // list silently missed `nextMediaQueryListHandle` when the match-media work
+  // added it, so a page-global counter (the exact bug class this pins) would
+  // have gone green. Enumerating `a.counters` makes a new counter self-covering.
+  const names = Object.keys(a.counters).filter((name) => name.startsWith("next"));
+  assert.ok(names.length >= 9, `expected the counter bag, got ${names.length}`);
   for (const name of names) {
     assert.notEqual(a.counters[name], b.counters[name], `${name} is shared across instances`);
     assert.equal(typeof a.counters[name], "bigint", `${name} is not a bigint counter`);

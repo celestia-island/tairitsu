@@ -102,14 +102,26 @@ export const mediaQueryList_exports = {
       globalThis.__mediaQueryListListeners?.set(self, listeners);
     }
     listeners.set(callbackId, handler);
-    // W4: owned by the instance, removed on dispose (instance.ts reclaims
-    // `listeners` by walking this table too — see `dispose`).
-    globalThis.__TAIRITSU_CURRENT__?.().reclaimables.listeners.add({
-      target: list,
-      type: "change",
-      handler: handler as unknown as EventListener,
-      options: undefined,
-    });
+    // W4: owned by the instance, removed on dispose. The reclaim entry is keyed
+    // by (list, id) through the map above, so re-registering an id REPLACES its
+    // entry instead of appending another: the set is walked on every dispose,
+    // and an unbounded set would both slow that walk and hold a stale handler
+    // alive for the instance's whole lifetime.
+    const reclaimables = globalThis.__TAIRITSU_CURRENT__?.().reclaimables.listeners;
+    if (reclaimables) {
+      const entry = {
+        target: list,
+        type: "change",
+        handler: handler as unknown as EventListener,
+        options: undefined,
+      };
+      for (const existingEntry of reclaimables) {
+        if (existingEntry.target === list && existingEntry.type === "change") {
+          reclaimables.delete(existingEntry);
+        }
+      }
+      reclaimables.add(entry);
+    }
   },
 
   removeListener(self: bigint, callback?: bigint): void {
