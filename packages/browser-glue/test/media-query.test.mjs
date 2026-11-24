@@ -1679,6 +1679,18 @@ test("check_wit_ops.py: an ALIAS of the guest is reported, a property read is no
     ["fallback the other way", "{} ?? guest"],
     ["spread copy", "{ ...guest }"],
     ["spread copy with extra fields", "{ ...guest, extra: 1 }"],
+    // The operand/branch forms: a short-circuit and a conditional both RETURN one
+    // of their arms, so the namespace is carried rather than computed — the same
+    // family as the fallback above. Each leaf is also stripped of outer parens, so
+    // a parenthesised arm works too, and the arrow body goes through the same
+    // reduction (`() => ({ ...guest })`).
+    // MUT: logical-or-conditional-arms-missed
+    ["logical AND", "verbose && guest"],
+    ["parenthesised leaf", "(verbose && guest) || fallback"],
+    ["conditional, guest in the then-arm", "cond ? guest : legacy"],
+    ["conditional, guest in the else-arm", "cond ? legacy : guest"],
+    ["parenthesised conditional", "(cond ? guest : legacy)"],
+    ["arrow with a parenthesised spread body", "() => ({ ...guest })"],
   ]) {
     const { rc, out } = runGateAgainst((root) => {
       const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
@@ -1698,6 +1710,15 @@ test("check_wit_ops.py: an ALIAS of the guest is reported, a property read is no
     ["arrow returning something else", "() => other"],
     ["fallback over something else", "other || {}"],
     ["spread of something else", "{ ...other }"],
+    ["arrow with a parenthesised spread of something else", "() => ({ ...other })"],
+    ["logical AND over something else", "verbose && other"],
+    ["conditional with something else in both arms", "flag ? other : legacy"],
+    ["parenthesised leaf over something else", "(verbose && other) || fallback"],
+    // NOT in the closed set, on purpose: a prototype link computes the object, and
+    // no lexical rule can decide it. Pinned GREEN so the boundary is visible in the
+    // lane rather than only in prose.
+    // MUT: object-create-silently-reported (it must stay silent)
+    ["prototype link (known-silent by design)", "Object.create(guest)"],
   ]) {
     const { rc, out } = runGateAgainst((root) => {
       const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");

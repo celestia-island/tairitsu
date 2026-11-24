@@ -114,9 +114,24 @@ Lexical blind spots, and what actually closes each:
         the nastier `(guest.onMutate as any)?.onWrong`, where the member is
         declared and the read after the cast would otherwise red nothing);
       - and a RE-EXPORT of the guest is reported at the declaration, because every
-        read written through it is invisible to the read scan: a plain copy, an
-        arrow that returns it (`() => guest`), a fallback whose operand can be it
-        (`guest || {}`), or a spread copy (`{ ...guest }`).
+        read written through it is invisible to the read scan. That rule is a
+        CLOSED SET, not "every spelling" — see `_guest_source` for the boundary and
+        the reason it is closed. Recognised: a plain copy; an arrow that returns it
+        (`() => guest`, `() => ({ ...guest })`); either arm of `||`, `&&`, `??`
+        (`guest || {}`, `verbose && guest`, `(verbose && guest) || fallback`);
+        either branch of a conditional (`cond ? guest : legacy`); a spread copy
+        (`{ ...guest }`); and any of those with outer parentheses, after the
+        assertion spellings (`as` / `satisfies` / `!`) are stripped. NOT
+        recognised, because they COMPUTE the object and no lexical rule can decide
+        them: `Object.create(guest)`, `new Proxy(guest, …)`, a named function that
+        returns it (`function getGuest() { return guest; }`), and a guest arriving
+        as a parameter.
+    The load-bearing layers of this gate are unchanged and are NOT this rule:
+    `EXPECTED_BINDINGS_BY_FILE` guards that a bridge EXISTS, the read scan guards
+    that a read is SEEN. The re-export and shape rules are a third, assistive
+    layer — they turn the commonest ways of hiding a read into findings, and a
+    spelling they do not model is a residual, not a hole in the two pins.
+
     Three residuals inside this class: a destructuring pattern nested more than
     one level (`const { a: { onX } } = guest`) is not matched — 0 occurrences, and
     a second level on a flat object of functions is not a shape a bridge can
@@ -1023,30 +1038,61 @@ def _bare_guest_source(reduced: str, sources: list[str]) -> str | None:
     return None
 
 
+# A CLOSED SET of re-export spellings, not "every spelling". Each is a form whose
+# value is, syntactically, one of its operands or branches — the guest namespace is
+# carried, not computed. Anything that COMPUTES the object (a prototype link, a
+# factory, a merge that rebuilds it) is out: no lexical scan can decide those, and
+# pretending otherwise is how this rule was rewritten three times.
+#
+# The boundary, stated so a future round does not have to rediscover it:
+#   IN  — a bare proved source; an assertion (`as` / `satisfies` / `!`); a leaf
+#         wrapped in parentheses; a short-circuit or nullish fallback (`||`, `&&`,
+#         `??`) on either side; a conditional's either branch (`c ? a : b`); an
+#         arrow's body; an object literal's spread item.
+#   OUT — anything that calls, constructs or mutates (`Object.create(guest)`,
+#         `new Proxy(guest, …)`, `{ ...guest, onX: wrap(guest.onX) }` is IN on the
+#         spread item and the wrapped property is a different question entirely),
+#         a named function's RETURN (`function getGuest() { return guest; }`), and
+#         a guest that arrives as a parameter.
+# The gate's load-bearing layers are `EXPECTED_BINDINGS_BY_FILE` (a bridge EXISTS)
+# and the read scan (a read is SEEN); this rule is the third, assistive layer that
+# turns the commonest way of hiding a read into a finding.
+_LOGICAL_SPLIT_RE = re.compile(r"\s*(?:\|\||&&|\?\?)\s*")
+
+
+def _strip_outer_parens(text: str) -> str:
+    """Drop `( … )` pairs that wrap the WHOLE expression (not a call's parens)."""
+    while True:
+        stripped = text.strip()
+        if not stripped.startswith("("):
+            return stripped
+        # The pair has to OPEN at 0 and CLOSE at the last character. Checking only
+        # the closing side was wrong and destructive: `() => ({ ...guest })` also
+        # ends on a `)`, so the string was cut to `) => ({ ...guest ` — the arrow
+        # body, the spread and the source all disappeared and the rule went silent
+        # (measured). `_group_spans` returns every balanced pair, so the question
+        # is exact: is (0, last) one of them?
+        if (0, len(stripped) - 1) not in _group_spans(stripped):
+            return stripped
+        text = stripped[1:-1]
+
+
 def _guest_source(rhs: str, sources: list[str], _depth: int = 0) -> str | None:
-    """The guest source an initialiser hands over, or None.
+    """The guest source an initialiser hands over, or None — the CLOSED set above.
 
-    Six forms, and they all end up holding the guest namespace at run time — so
-    all six have to be recognised or an alias written any of those ways slips
-    past the alias rule entirely (measured: the last three read rc 0 while the
-    plain copy was reported):
+    Recognised: a proved source (`guest`, `callbacks()`, the direct lookup); an
+    assertion (`as` / `satisfies` / `!`); a parenthesised wrapper; either side of
+    `||`, `&&` or `??`; either branch of `cond ? a : b`; an arrow's body; an object
+    literal's `...` spread item.
 
-    * `= guest`, `= guest ?? {}`, `= callbacks()` — a proved source;
-    * `= globalThis.__wasmExports?.["<key>"]` — the direct lookup;
-    * `= guest as any` / `satisfies T` / `guest!` — assertions, stripped first;
-    * `= guest || {}` / `= {} || guest` — a fallback whose operand can be it;
-    * `= () => guest` — an arrow that returns it;
-    * `= { ...guest }` — a spread copy carrying every op it spreads.
-
-    `sources` (built in `unparseable_read_problems`) holds the locals
-    `guest_bindings` resolved plus the helper functions whose key is a CALLBACK
-    interface the composed WIT declares, so a helper returning a WASI namespace
-    is not a source. A NAMED function that returns the guest
-    (`function getGuest() { return guest; }`) is not a source either: its call
-    looks exactly like any other call, and resolving that needs a call graph —
-    listed as a residual instead.
+    NOT recognised, on purpose — these compute the value instead of carrying it,
+    which no lexical rule can decide: `Object.create(guest)` (a prototype link, so
+    every property read through the result is resolved at RUN time), `new
+    Proxy(guest, …)`, a named function that returns it, a guest arriving as a
+    parameter. Listed as residuals in the module docstring and in the PR body, not
+    guessed at here.
     """
-    if _depth > 3:
+    if _depth > 4:
         return None
     reduced = normalise_casts(rhs).strip()
     # The assertion spellings sit between the source and the end of the
@@ -1055,17 +1101,28 @@ def _guest_source(rhs: str, sources: list[str], _depth: int = 0) -> str | None:
     #   const { onX } = guest!;
     reduced = re.sub(r"\s+(?:as|satisfies)\s+.*$", "", reduced).strip()
     reduced = re.sub(r"!\s*$", "", reduced).strip()
+    reduced = _strip_outer_parens(reduced)
     bare = _bare_guest_source(reduced, sources)
     if bare is not None:
         return bare
-    # `() => guest` — the arrow's body is the value.
-    arrow = re.match(r"(?:async\s+)?(?:\([^()]*\)|[A-Za-z_$][\w$]*)\s*=>\s*(?P<body>.+)$", reduced, re.S)
+    # `() => guest` — the arrow's body is the value. The body is reduced the same
+    # way, so `() => ({ ...guest })` and `() => (cond ? a : b)` land here too.
+    arrow = re.match(
+        r"(?:async\s+)?(?:\([^()]*\)|[A-Za-z_$][\w$]*)\s*=>\s*(?P<body>.+)$", reduced, re.S
+    )
     if arrow:
         found = _guest_source(arrow.group("body"), sources, _depth + 1)
         if found is not None:
             return found
-    # `guest || {}` — either operand can be the guest at run time.
-    operands = re.split(r"\s*(?:\|\||\?\?)\s*", reduced)
+    # `c ? a : b` — either branch can be the value at run time.
+    question = re.match(r"^(?P<cond>.+?)\?(?P<then>.+?):(?P<else>.+)$", reduced, re.S)
+    if question:
+        for branch in (question.group("then"), question.group("else")):
+            found = _guest_source(branch, sources, _depth + 1)
+            if found is not None:
+                return found
+    # `a || b`, `a && b`, `a ?? b` — a short-circuit returns one of its operands.
+    operands = _LOGICAL_SPLIT_RE.split(reduced)
     if len(operands) > 1:
         for operand in operands:
             found = _guest_source(operand, sources, _depth + 1)
@@ -1109,7 +1166,7 @@ def _casts_before_a_read(line: str, cast_start: int, cast_end: int) -> bool:
 def unparseable_read_problems() -> tuple[list[str], int]:
     """Direction 3c: guest reads written in a shape the member-access scan cannot see.
 
-    Five shapes, each hiding a read behind syntax instead of a name:
+    Six shapes, each hiding a read behind syntax instead of a name:
 
     * DESTRUCTURING from a guest source — `const { onX } = guest` binds a property
       KEY, with or without a type annotation (`: any`), an assertion
@@ -1129,12 +1186,27 @@ def unparseable_read_problems() -> tuple[list[str], int]:
       `item` is a `dom-token-list` op — measured, and exactly the false positive
       this narrowing removes.
     * a TEMPLATE-LITERAL subscript — `guest[`${k}`]`: the key is run-time text.
-    * a bare-IDENTIFIER subscript — `guest[key]`: a quoted key (`guest["onX"]`) is
-      judged by `_ACCESS_RE` and is NOT this shape.
+    * ANY COMPUTED subscript — `guest[key]`, `guest[keys.pop()]`, `guest[k[0]]`,
+      `guest["on" + dyn]`. One quoted identifier (`guest["onX"]`) is judged by
+      `_ACCESS_RE` and is NOT this shape; a backtick key is the rule above.
     * a CAST whose core is a member of the guest — `(guest.sub as any)?.onX`.
       `normalise_casts` cannot reduce it (there is no single local to put back),
       and if the member happens to be a declared export (`(guest.onMutate as
       any)?.onWrong`) nothing else reds at all.
+    * a RE-EXPORT of the namespace — `const g = guest` and the other spellings of
+      the CLOSED set documented on `_guest_source` (`||`/`&&`/`??` arms, `?:`
+      branches, an arrow body, a spread copy, with outer parentheses stripped).
+      Reported at the declaration, because every read written through that local is
+      invisible to the read scan. The set is closed on purpose: a spelling that
+      COMPUTES the object (`Object.create(guest)`, `new Proxy(…, …)`) is not
+      decidable from source text and is a named residual instead.
+
+    The incident of a name→op mismatch inside an interface that DOES declare both
+    names is not this rule's business: the gate judges NAMES (does the guest export
+    it), not the MAPPING (which event reaches which op). A rename between two
+    declared ops therefore stays green, and the value-shape half lives in
+    `callback-bridge.test.mjs`. Same for every residual listed in the module
+    docstring.
 
     The template key, the variable key and the member cast are per line, with the
     same cast reduction the member scan uses:
@@ -2002,10 +2074,38 @@ def selftest() -> int:
     )
     # The six spellings that hand the namespace over at run time. Each one read
     # rc 0 while the plain copy was reported, so they are pinned together.
-    for form in ("guest || {}", "{} ?? guest", "() => guest", "async () => guest", "{ ...guest }", "{ ...guest, x: 1 }"):
-        expect(f"an alias written as {form}", _guest_source(form, ["guest"]), "guest")
-    for form in ("() => other", "other || {}", "{ ...other }"):
-        expect(f"a NON-alias written as {form}", _guest_source(form, ["guest"]), None)
+    for form in (
+        "guest || {}",
+        "{} ?? guest",
+        "() => guest",
+        "async () => guest",
+        "{ ...guest }",
+        "{ ...guest, x: 1 }",
+        # the operand / branch / paren spellings — one family, all carried
+        "verbose && guest",
+        "verbose && guest",
+        "(verbose && guest) || fallback",
+        "cond ? guest : legacy",
+        "cond ? legacy : guest",
+        "(cond ? guest : legacy)",
+        "() => ({ ...guest })",
+        "(guest)",
+        "((guest))",
+    ):
+        expect(f"a re-export written as {form}", _guest_source(form, ["guest"]), "guest")
+    for form in (
+        "() => other",
+        "other || {}",
+        "{ ...other }",
+        "() => ({ ...other })",
+        "verbose && other",
+        "flag ? other : legacy",
+        "(verbose && other) || fallback",
+        # OUT of the closed set by decision, not by accident
+        "Object.create(guest)",
+        "new Proxy(guest, {})",
+    ):
+        expect(f"a NON-re-export written as {form}", _guest_source(form, ["guest"]), None)
     expect(
         "an optional call keeps its arguments",
         normalise_casts("identity?.(guest)?.onMutato"),
