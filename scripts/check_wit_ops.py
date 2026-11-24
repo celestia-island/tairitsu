@@ -96,22 +96,33 @@ Lexical blind spots, and what actually closes each:
   * a backtick nested in a template's `${ … }` — NOT a bypass: the scanner
     handles it byte-for-byte (the template branch re-syncs), so it is not listed
     as a risk any more;
-  * a property name the source does not spell as a name — destructured
-    (`const { onX } = guest`, `({ onX }) => …`), subscripted with a template
-    (`` guest[`${k}`] ``) or with a variable (`guest[key]`), or read behind a cast
-    whose core is a member (`(guest.sub as any)?.onX`, and the nastier
-    `(guest.onMutate as any)?.onWrong`, where the member is declared and nothing
-    else reds) — closed fail-closed: `unparseable_read_problems` reports the
-    SHAPE, because the declared set cannot supply a verdict about a name the
-    source never spells as a name. Measured at zero occurrences before the rule
-    landed, so it closes a class rather than repairing a live site. Two residuals
-    inside this class: a pattern nested more than one level
-    (`const { a: { onX } } = guest`) is not matched — 0 occurrences, and a second
-    level on a flat object of functions is not a shape a bridge can produce — and
-    the PARAMETER form is anchored on the interfaces the file binds, so
+  * a property name the source does not spell as a name — CLOSED fail-closed,
+    five spellings, all reported by `unparseable_read_problems` (the declared set
+    cannot supply a verdict about a name the source never spells as a name, so the
+    SHAPE is the finding):
+      - destructured: `const { onX } = guest` in any of its ordinary TS spellings
+        (plain, `: any` / `: Record<string, () => void>` annotation, `= guest as
+        any` / `satisfies T`, `= guest!`), and `({ onX }) => …` in a file that
+        binds the interface;
+      - subscripted with a template (`` guest[`${k}`] ``);
+      - subscripted with any computed key — variable, call, index, or a
+        concatenation that starts with a quote (`guest["on" + dyn]`);
+      - read off a parenthesised EXPRESSION receiver (`(0, guest)?.onX`,
+        `(flag || guest)?.onX`);
+      - read behind a cast whose core is a member (`(guest.sub as any)?.onX`, and
+        the nastier `(guest.onMutate as any)?.onWrong`, where the member is
+        declared and the read after the cast would otherwise red nothing);
+      - and an ALIAS of the guest (`const g = guest;`) is reported at the alias,
+        because every read written through it is invisible to the read scan.
+    Three residuals inside this class: a destructuring pattern nested more than
+    one level (`const { a: { onX } } = guest`) is not matched — 0 occurrences, and
+    a second level on a flat object of functions is not a shape a bridge can
+    produce; the PARAMETER form is anchored on the interfaces the file binds, so
     `({ onX }) => …` naming an op of an interface this file does not bridge is not
-    reported. Anchoring the parameter form on the whole world instead reded on
-    unrelated code (`item` is a `dom-token-list` op), which is why it is per-file.
+    reported (anchoring it on the whole world reded on unrelated code — `item` is
+    a `dom-token-list` op); and a guest object handed in as a function PARAMETER
+    (`function f(cb) { cb?.onX }`) or reached through a member is not a source,
+    because only file-level bindings can be proven — 0 occurrences.
 
 Read that split as the rule for this gate: the binding pin guards that a bridge
 EXISTS, the lexical scan guards that a READ is SEEN, and a shape neither can see
@@ -687,7 +698,51 @@ def guest_bindings(text: str) -> list[tuple[str, str, int]]:
 # `(local as T)` — and `((local as any))`, which leaves `(local)` behind: strip
 # plain wrapping parentheses too, or a double cast reduces to `(local)` and the
 # access pattern (which starts at the local) never sees it.
-_WRAPPED_RE = re.compile(r"\(\s*(?P<core>[A-Za-z_$][\w$]*)\s*\)")
+_WRAPPED_RE = re.compile(r"[(]\s*(?P<core>[A-Za-z_$][\w$]*)\s*[)]")
+
+
+# Keywords that take a parenthesised OPERAND rather than being called.
+_OPERAND_KEYWORDS = frozenset(
+    {
+        "if", "for", "while", "switch", "catch", "with", "return", "typeof",
+        "void", "delete", "new", "in", "of", "instanceof", "await", "yield",
+        "throw", "case", "do", "else", "function", "as", "satisfies",
+    }
+)
+
+
+def _in_call_position(line: str, start: int) -> bool:
+    """Is the `(` at `start` a CALL's argument list rather than a wrapper?
+
+    Decided by the previous non-space character: an identifier, `)` or `]` means
+    "call of the thing before it". Both users of this test — the cast reducer and
+    the wrapper stripper — REPLACE the group with its core, and doing that in call
+    position fuses the argument into whatever follows:
+    `callbacks.onGenericEvent(evtType)` became `callbacks.onGenericEventevtType`
+    and the gate reported a property that exists nowhere in the source (measured,
+    a false rejection of correct code). A cast wrapper always follows `=`, `(`,
+    `,`, an operator, a keyword or a line start, so nothing legitimate is lost.
+    """
+    head = line[:start].rstrip()
+    if not head:
+        return False
+    if head[-1] in ")]":
+        return True
+    if not (head[-1].isalnum() or head[-1] in "_$"):
+        return False
+    # A KEYWORD before the `(` is an operand slot, not a callee: `void (0, guest)`,
+    # `return (guest as any)`, `if (x)`. Missing that made `void (…)` count as a
+    # call, so the expression-receiver rule skipped the very shape it exists for
+    # (measured) — and it also left `return (guest as any)?.onX` unreduced.
+    word = re.search(r"([A-Za-z_$][\w$]*)$", head)
+    return word is not None and word.group(1) not in _OPERAND_KEYWORDS
+
+
+def _strip_wrapper(match: re.Match[str]) -> str:
+    """Drop one wrapping paren pair, unless it is a call's argument list."""
+    if _in_call_position(match.string, match.start()):
+        return match.group(0)
+    return match.group("core")
 # A read of the guest object, in the two spellings the sources use and the one
 # they would get if somebody edited the bridge by hand:
 #
@@ -762,6 +817,10 @@ def normalise_casts(line: str) -> str:
         # has no depth-1 group that starts with the cast, so an outer-first loop
         # would never see it.
         for start, index in _group_spans(line):
+            if _in_call_position(line, start):
+                # A cast ARGUMENT (`f(guest as any)`): reducing it would fuse the
+                # argument into the callee's name exactly like the wrapper case.
+                continue
             inner = line[start + 1 : index]
             # `as T` and `satisfies T` are both type-level operators that sit
             # between the local and its access. Reducing only `as` leaves
@@ -777,7 +836,7 @@ def normalise_casts(line: str) -> str:
             if core:
                 line = line[:start] + core.group("core") + line[index + 1 :]
                 break
-        line = _WRAPPED_RE.sub(lambda match: match.group("core"), line)
+        line = _WRAPPED_RE.sub(_strip_wrapper, line)
     return line
 
 
@@ -853,18 +912,41 @@ _TEMPLATE_KEY_READ_RE = re.compile(
 # The same read written with a variable key: `guest[key]`. A QUOTED key
 # (`guest["onMutate"]`) is not this shape — `_ACCESS_RE` judges it — and a numeric
 # index is not a guest export, so only an identifier subscript lands here.
-# The key is "anything that is not a quote": `guest[key]`, `guest[keys.pop()]`,
-# `guest[k[0]]`. A quoted key is excluded (that is `_ACCESS_RE`'s judged form) and
-# so is a template (its own rule above, so the two cannot both report one read).
-_IDENT_KEY_READ_RE = re.compile(
+# A subscript whose key is NOT one quoted identifier: `guest[key]`,
+# `guest[keys.pop()]`, `guest[k[0]]`, `guest["on" + dyn]`. The last one is why the
+# rule keys on "not a simple quoted identifier" instead of "unquoted": a
+# concatenation that STARTS with a quote fell between the quoted-key scan (which
+# wants the whole bracket to be one literal) and this rule (which wanted no quote
+# at all), so it was judged by neither and reported by neither — measured silent.
+# A backtick key is excluded: the template rule above reports it, and one read
+# must not produce two findings.
+_BRACKET_KEY_READ_RE = re.compile(
     r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*\??\.?\s*\[\s*"
-    r"(?P<key>(?![\`\"'])[^\]\n]+?)\s*\]"
+    r"(?P<key>(?![\`])[^\]\n]+?)\s*\]"
 )
+# The one bracket form `_ACCESS_RE` JUDGES (and therefore must not be reported
+# here): `local["onMutate"]`.
+_JUDGED_BRACKET_KEY = re.compile(r"[\"']([A-Za-z_$][A-Za-z0-9_$]*)[\"']")
 # A cast whose CORE is a member of the guest: `(guest.sub as any)`,
 # `(guest["onMutate"] as any)`, `(guest.sub as Fn<(a: T) => U>)`. `normalise_casts`
 # reduces only a single-identifier core, so the cast stays and whatever is read
 # after it (`?.onX`) is invisible — including the case where the member itself IS
 # a declared export, where nothing else reds. Reported like the other two shapes.
+# A receiver that is a PARENTHESISED EXPRESSION ending in the guest local:
+# `(0, guest)?.onX`, `(flag || guest)?.onX`, `(a ?? guest)?.onX`. `_ACCESS_RE` needs
+# the local immediately followed by `?.`/`.`/`[`, so the `)` in between makes the
+# read invisible; and it is not a cast wrapper, so nothing reduces it. Reported,
+# not collapsed: collapsing the group to its tail identifier would claim the value
+# IS the guest, which `a || guest` does not promise.
+_EXPR_RECEIVER_RE = re.compile(
+    r"\((?P<inner>[^()\n]*?)(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)\s*(?:\?\.|\.|\[)"
+)
+# `const g = guest;` — an alias of a guest local. Reads through the alias are
+# invisible to the read scan (that scan keys on the locals `guest_bindings`
+# proves), and nothing else notices, so the ALIAS ITSELF is the finding.
+_ALIAS_RE = re.compile(
+    r"(?:const|let|var)\s+(?P<name>[A-Za-z_$][\w$]*)\s*(?::[^=]*)?=\s*(?P<rhs>[^\n;]*)"
+)
 # `[^\n(]` (not `[^\n()]`): one redundant pair of parentheses around the member
 # (`((guest.onX) as any)?.onY`) is ordinary formatting, and refusing to cross the
 # `)` made the whole shape invisible again. The read-after requirement is applied
@@ -1034,6 +1116,24 @@ def unparseable_read_problems() -> tuple[list[str], int]:
             for name in declarations.get(_CALLBACK_KEY_RE.match(key).group("iface"), [])
         }
 
+        binding_locals = {local for local, _key, _offset in bindings}
+        for match in _ALIAS_RE.finditer(text):
+            name = match.group("name")
+            if name in binding_locals:
+                # The binding itself (`const guest = …__wasmExports[…]`) — every
+                # bridge has one, and they are not aliases of anything.
+                continue
+            if _guest_source(match.group("rhs"), sources) is None:
+                continue
+            reported += 1
+            problems.append(
+                f"callback site {path.name}:{bisect.bisect_right(starts, match.start())} "
+                f"aliases the guest into `{name}` — every read written through that local is "
+                "invisible to this gate (the read scan keys on the locals it can prove are the "
+                f"guest namespace), so the alias itself is reported; read `{name}`'s source "
+                "directly instead of copying it"
+            )
+
         for match in _DESTRUCTURE_DECL_RE.finditer(text):
             source = _guest_source(match.group("rhs"), sources)
             if source is None:
@@ -1045,7 +1145,8 @@ def unparseable_read_problems() -> tuple[list[str], int]:
                 f"destructures `{names}` out of `{source}` — a destructured guest export is a "
                 "read this gate cannot check (the property is a key, not a member access), so "
                 f"it is reported instead of skipped; read `{source}.<name>` and let the scan "
-                "judge the name"
+                "judge the name (if a local object merely shares this name, rename that local — "
+                "scope analysis is out of reach here, so the shape is reported either way)"
             )
 
         for match in _DESTRUCTURE_PARAM_RE.finditer(text):
@@ -1078,16 +1179,36 @@ def unparseable_read_problems() -> tuple[list[str], int]:
                     "name is run-time text, not an identifier, so the read cannot be judged; it "
                     "is reported instead of skipped. Spell the property as a member access"
                 )
-            for match in _IDENT_KEY_READ_RE.finditer(reduced):
+            for match in _BRACKET_KEY_READ_RE.finditer(reduced):
                 local = match.group("local")
                 if local not in sources:
+                    continue
+                key = match.group("key").strip()
+                if _JUDGED_BRACKET_KEY.fullmatch(key):
+                    # `local["onMutate"]`: `_ACCESS_RE` judges it, and this rule
+                    # must not report what another rule already judged.
                     continue
                 reported += 1
                 problems.append(
                     f"callback site {path.name}:{index + 1} reads "
-                    f"`{local}[{match.group('key')}]` with a computed key — the property name is "
-                    "a variable, not an identifier the declaration can be compared against, so "
-                    "the read cannot be judged; it is reported instead of skipped"
+                    f"`{local}[{key}]` with a computed key — the property name is computed "
+                    "(a variable, a call, an index or a concatenation), not an identifier the "
+                    "declaration can be compared against, so the read cannot be judged; it is "
+                    "reported instead of skipped"
+                )
+            for match in _EXPR_RECEIVER_RE.finditer(reduced):
+                local = match.group("local")
+                if local not in sources:
+                    continue
+                if _in_call_position(reduced, match.start()):
+                    # `f(guest)?.onX` reads a property of the CALL's result.
+                    continue
+                reported += 1
+                problems.append(
+                    f"callback site {path.name}:{index + 1} reads a property of an expression "
+                    f"that ends in `{local}` — the receiver is an expression, not the guest "
+                    "object itself, so the property cannot be attributed to the declaration; "
+                    f"put the guest in its own local and read `{local}.<name>`"
                 )
             for match in _MEMBER_CAST_RE.finditer(reduced):
                 local = match.group("local")
@@ -1757,11 +1878,41 @@ def selftest() -> int:
         _destructured_names(" onMutato = pick(a, b) "),
         ["onMutato"],
     )
-    expect("a variable subscript is a shape", bool(_IDENT_KEY_READ_RE.search("guest[key]")), True)
+    expect("a variable subscript is a shape", bool(_BRACKET_KEY_READ_RE.search("guest[key]")), True)
     expect(
-        "a quoted subscript is NOT a variable subscript",
-        bool(_IDENT_KEY_READ_RE.search('guest["onMutate"]')),
-        False,
+        "a quote-starting concatenation is a shape",
+        bool(_BRACKET_KEY_READ_RE.search('guest["on" + dyn]')),
+        True,
+    )
+    expect(
+        "a simple quoted subscript is NOT this shape (it is judged)",
+        _JUDGED_BRACKET_KEY.fullmatch('"onMutate"') is not None,
+        True,
+    )
+    expect(
+        "an expression receiver is a shape",
+        bool(_EXPR_RECEIVER_RE.search("(0, guest)?.onX")),
+        True,
+    )
+    # Call position: `f(guest)` is a CALL's argument list, `void (guest)` is an
+    # operand slot. Getting this wrong fused the argument into the property name
+    # and rejected correct code.
+    expect("a call's parens are call position", _in_call_position("f(guest)", 1), True)
+    expect("a keyword's parens are not", _in_call_position("void (guest)", 5), False)
+    expect(
+        "a call keeps its argument",
+        normalise_casts("callbacks.onGenericEvent(evtType)"),
+        "callbacks.onGenericEvent(evtType)",
+    )
+    expect(
+        "an alias RHS is a guest source",
+        _guest_source("guest", ["guest"]),
+        "guest",
+    )
+    expect(
+        "a property read is NOT an alias RHS",
+        _guest_source("guest?.onMutate", ["guest"]),
+        None,
     )
     expect(
         "a member-core cast is a shape",

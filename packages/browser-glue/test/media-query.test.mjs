@@ -1221,6 +1221,12 @@ test("check_wit_ops.py: a COMPUTED-KEY guest read is reported, cast or not", () 
     // MUT: computed-key-identifier-only
     ["method-call key", "const bad = guest[keys.pop()];"],
     ["indexed key", "const bad = guest[k[0]];"],
+    // A concatenation that STARTS with a quote fell between the two rules — the
+    // quoted-key scan wants the whole bracket to be one literal, the computed-key
+    // rule wanted no quote at all — so it was neither judged nor reported
+    // (measured rc 0).
+    // MUT: concat-key-falls-between-rules
+    ["quote-starting concatenation", 'const bad = guest?.["on" + dyn];'],
   ]) {
     const { rc, out } = runGateAgainst((root) => {
       const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
@@ -1571,4 +1577,109 @@ test("check_wit_ops.py: a wrong name on a FAR read names the read's line, not th
       `the finding for ${name} must name its own line (${trueLine}), not the binding's`,
     );
   }
+});
+
+test("check_wit_ops.py: a single-argument CALL of a declared op stays green", () => {
+  // The regression round 2 found: reducing `(…)` to its core without asking
+  // whether the parens belong to a CALL turned `callbacks.onGenericEvent(evtType)`
+  // into `callbacks.onGenericEventevtType` and rejected correct code with a
+  // property that appears nowhere in the source. It surfaced only after the read
+  // scan started judging the plain dot — before that the whole line was invisible.
+  // Both directions here: the call keeps its name (rc 0) and a renamed call still
+  // reds, so "stop reporting calls" cannot be satisfied by "stop reporting".
+  // MUT: call-position-parens-stripped
+  const needle = "callbacks.onGenericEvent(listenerId, eventHandle, evtType);";
+  const run = (replacement) =>
+    runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "eventTarget.ts");
+      const source = readFileSync(path, "utf8");
+      assert.ok(source.includes(needle), "the fixture must find the dispatch");
+      writeFileSync(path, source.replace(needle, replacement));
+    });
+  const green = run("callbacks.onGenericEvent(evtType);");
+  assert.equal(green.rc, 0, `a correct single-argument call must stay green; got: ${green.out}`);
+  const red = run("callbacks.onGenericEventx(evtType);");
+  assert.equal(red.rc, 1, "a renamed single-argument call must still red");
+  assert.match(red.out, /callbacks\.onGenericEventx`/, `got: ${red.out}`);
+});
+
+test("check_wit_ops.py: a property read off an EXPRESSION receiver is reported", () => {
+  // `_ACCESS_RE` needs the local immediately followed by `?.`/`.`/`[`, so a `)`
+  // in between hides the read: `(0, guest)?.onX`, `(flag || guest)?.onX`. Neither
+  // is a cast wrapper (nothing reduces them), so they were silent until this rule.
+  // Reported rather than collapsed: collapsing the group to its tail identifier
+  // would claim the value IS the guest, which `flag || guest` does not promise.
+  // The call form is NOT this shape — `identity(guest)?.onX` reads a property of
+  // the call's result — and must stay green, or the rule becomes a call detector.
+  // MUT: expression-receiver-invisible
+  const needle = "const handler = guest?.onMutate;";
+  for (const [label, line] of [
+    ["comma", "void (0, guest)?.onMutato;"],
+    ["logical or", "void (flag || guest)?.onMutato;"],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(path, source.replace(needle, `${needle}\n      ${line}`));
+    });
+    assert.equal(rc, 1, `a ${label} receiver must fail the gate`);
+    assert.match(out, /reads a property of an expression that ends in `guest`/, `got: ${out}`);
+  }
+  // The cast-loop half of the same rule: a cast ARGUMENT of a call
+  // (`foo(guest as any)?.onX`) reads a property of the call's result, and reducing
+  // the argument fused it into the callee's name (`fooguest?.onX`) — another
+  // fabricated finding on correct code.
+  // MUT: cast-argument-reduced-in-call-position
+  const castArgument = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      void identity(guest as any)?.onMutato;`),
+    );
+  });
+  assert.equal(
+    castArgument.rc,
+    0,
+    `a cast argument of a call must not be fused into the callee; got: ${castArgument.out}`,
+  );
+  const callResult = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      void identity(guest)?.onMutato;`),
+    );
+  });
+  assert.equal(
+    callResult.rc,
+    0,
+    `a property of a CALL's result must stay green; got: ${callResult.out}`,
+  );
+});
+
+test("check_wit_ops.py: an ALIAS of the guest is reported, a property read is not", () => {
+  // `const g = guest; g?.onMutato` — the read scan keys on the locals
+  // `guest_bindings` proves belong to the guest namespace, so an alias hides every
+  // read written through it. The alias DECLARATION is therefore the finding.
+  // A property read (`const handler = guest?.onMutate`) is not an alias and must
+  // stay green, or every bridge in the tree would red.
+  // MUT: alias-hides-reads
+  const needle = "const handler = guest?.onMutate;";
+  const alias = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const g = guest;\n      void g?.onMutato;`),
+    );
+  });
+  assert.equal(alias.rc, 1, "an alias of the guest must fail the gate");
+  assert.match(alias.out, /aliases the guest into `g`/, `got: ${alias.out}`);
+  const notAlias = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replace(needle, `${needle}\n      const h2 = guest?.onMutate;`));
+  });
+  assert.equal(notAlias.rc, 0, `a property read is not an alias; got: ${notAlias.out}`);
 });
