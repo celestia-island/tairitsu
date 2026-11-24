@@ -68,13 +68,14 @@ browser-glue test suite run the same logic instead of two drifting copies.
 THIS GATE'S SAFETY IS NOT LEXICAL COMPLETENESS
 ==============================================
 Everything below reads source with regular expressions and one scanner state
-machine; every shape they do not model is a blind spot (three of them are listed
-just below, plus one shape that is not). What keeps the gate honest is
-`EXPECTED_BINDINGS_BY_FILE` plus the base counts: a bridge the scan stops
-recognising shows up as a drop in that table. So a NEW bridge must edit the
-table, and the residual risk is a bridge that lands in a blind spot AND is
-hand-added to the table in the same change. That risk is one commit wide and
-visible in review; a silent one is not.
+machine; every shape they do not model is a blind spot. What keeps the gate
+honest is three layers, not one: `EXPECTED_BINDINGS_BY_FILE` plus the base counts
+(a bridge the scan stops recognising shows up as a drop in that table), the
+per-file floor, and — for the shapes that keep the binding and hide the read —
+`unparseable_read_problems`, which reports the SHAPE instead of judging a name it
+cannot see. So a NEW bridge must edit the table, and the residual risk is a
+bridge that lands in a blind spot AND is hand-added to the table in the same
+change. That risk is one commit wide and visible in review; a silent one is not.
 
 Lexical blind spots, and what actually closes each:
   * a RECEIVER other than `globalThis`/`g` (`w.__wasmExports[...]`) — the binding
@@ -86,12 +87,18 @@ Lexical blind spots, and what actually closes each:
     a read the scan does not see, and nothing reds;
   * a backtick nested in a template's `${ … }` — NOT a bypass: the scanner
     handles it byte-for-byte (the template branch re-syncs), so it is not listed
-    as a risk any more.
+    as a risk any more;
+  * a DESTRUCTURED or TEMPLATE-KEYED property name (`const { onX } = guest`,
+    `({ onX }) => …`, `` guest[`${k}`] ``) — closed fail-closed:
+    `unparseable_read_problems` reports the shape, because the declared set
+    cannot supply a verdict about a name the source never spells as a name.
+    Measured at zero occurrences before the rule landed, so it closes a class
+    rather than repairing a live site.
 
 Read that split as the rule for this gate: the binding pin guards that a bridge
-EXISTS, the lexical scan guards that a READ is SEEN. Neither substitutes for the
-other, so a shape that keeps the binding and hides the read is a finding even
-when every count looks right.
+EXISTS, the lexical scan guards that a READ is SEEN, and a shape neither can see
+is a finding. Neither substitutes for the other, so a shape that keeps the
+binding and hides the read is a finding even when every count looks right.
 
 Usage:
     python3 scripts/check_wit_ops.py --check   # the gate
@@ -105,6 +112,7 @@ import os
 import re
 import sys
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -394,23 +402,32 @@ def module_exports(module: str) -> set[str]:
     return keys
 
 
-def declared_funcs(iface: str) -> list[str]:
-    """The `func` names `interface <iface>` declares in the composed WIT.
+@lru_cache(maxsize=1)
+def world_declarations() -> dict[str, list[str]]:
+    """Every `interface → declared funcs` pair in the composed WIT.
 
-    The declarations come from the SINGLE SOURCE (`browser-worlds`); the copy
-    under `packages/web/wit/composed` is a generated artifact gated by
-    `sync_wit.py --check`. Reading only one side is deliberate: a union over
-    both would let an op that exists in just one copy satisfy the gate, so a
-    forgotten sync plus an op added to one side would read green.
+    One reader for the whole world, so `declared_funcs` (one interface) and the
+    guest-export scans (all of them) cannot drift into two parsers. The
+    declarations come from the SINGLE SOURCE (`browser-worlds`); the copy under
+    `packages/web/wit/composed` is a generated artifact gated by
+    `sync_wit.py --check`. Reading only one side is deliberate: a union over both
+    would let an op that exists in just one copy satisfy the gate, so a forgotten
+    sync plus an op added to one side would read green.
     """
+    declarations: dict[str, list[str]] = {}
     for path in sorted(WIT_COMPOSED.glob("*.wit")):
         text = path.read_text(encoding="utf-8", errors="replace")
         for match in WIT_INTERFACE_RE.finditer(text):
-            if match.group(1) != iface:
-                continue
             body = text[match.end():]
-            return WIT_FUNC_RE.findall(body[: body.find("\n}")])
-    return []
+            declarations.setdefault(
+                match.group(1), WIT_FUNC_RE.findall(body[: body.find("\n}")])
+            )
+    return declarations
+
+
+def declared_funcs(iface: str) -> list[str]:
+    """The `func` names `interface <iface>` declares (see `world_declarations`)."""
+    return world_declarations().get(iface, [])
 
 
 # Files that mention the namespace without reading a guest export: the ambient
@@ -758,6 +775,153 @@ def _group_spans(line: str) -> list[tuple[int, int]]:
     return spans
 
 
+# Reads whose property name is NOT an identifier in the source, so `_ACCESS_RE`
+# has nothing to compare against the declared set:
+#
+#   const { onMutate } = guest;        // destructured: a property KEY
+#   guest?.[`${name}`]                 // computed: run-time TEXT
+#
+# Both keep the binding (so the per-file pin is satisfied) and hide the read (so
+# the lexical scan sees nothing): measured on the tree as it stood, the two
+# shapes occur ZERO times across the 33 scanned files, and a wrong read written
+# in either form read green. They are therefore reported, not judged — the
+# declared set cannot supply a verdict about a name that is not written as a
+# name. That is the fail-closed half of this gate: `EXPECTED_BINDINGS_BY_FILE`
+# guards that a bridge EXISTS, the scan guards that a read is SEEN, and a shape
+# neither can see is a finding rather than a smaller report.
+_DESTRUCTURE_DECL_RE = re.compile(
+    r"(?:const|let|var)\s*\{(?P<names>[^{}]*)\}\s*=\s*(?P<rhs>[^\n;]*)"
+)
+# `(obj) => …` / `({ onMutate }) => …` — the guest object is the CALLER's
+# argument, so there is no initialiser to anchor on and the declared set is the
+# only handle: a parameter pattern that names a declared op is reported.
+_DESTRUCTURE_PARAM_RE = re.compile(r"\(\s*\{(?P<names>[^{}]*)\}\s*(?::[^)]*)?\)\s*=>")
+_TEMPLATE_KEY_READ_RE = re.compile(
+    r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*\??\.?\s*\[\s*`"
+)
+
+
+def _destructured_names(pattern: str) -> list[str]:
+    """The property names a pattern binds: `{a, b: c, ...rest} → [a, b, ...rest]`."""
+    names: list[str] = []
+    for part in pattern.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        match = re.match(r"(?P<rest>\.\.\.)?\s*(?P<name>[A-Za-z_$][\w$]*|\d+)", part)
+        names.append(f"{match.group('rest') or ''}{match.group('name')}" if match else part)
+    return names
+
+
+def _guest_source(rhs: str, sources: list[str]) -> str | None:
+    """The guest source a destructuring initialiser starts from, or None.
+
+    `= guest`, `= guest ?? {}`, `= callbacks()` and the direct
+    `= globalThis.__wasmExports?.["<key>"]` are the shapes that hand over the
+    guest namespace. `sources` holds the locals `guest_bindings` resolved plus the
+    helper names that return them, so an alias this file does not know about
+    (`const g2 = guest`) is not a source — the scan stays with what it can prove.
+    """
+    reduced = normalise_casts(rhs).strip()
+    if re.match(r"(?:globalThis\s*\.\s*|g\s*\.\s*)?__wasmExports\b", reduced):
+        return "__wasmExports"
+    for source in sources:
+        if re.match(
+            re.escape(source) + r"\s*\(\s*\)\s*(?=$|[;,)]|\?\?)", reduced
+        ) or re.match(re.escape(source) + r"\s*(?=$|[;,)]|\?\?)", reduced):
+            return source
+    return None
+
+
+def unparseable_read_problems(declared_camel: set[str]) -> tuple[list[str], int]:
+    """Direction 3c: guest reads written in a shape the member-access scan cannot see.
+
+    Two shapes, because both hide a read behind syntax instead of a name:
+
+    * destructuring — `const { onMutate } = guest` binds a property KEY, and
+      `({ onMutate }) => …` takes the guest as a parameter. The first form is
+      anchored on the guest SOURCE (every name is reported, right or wrong: a
+      misspelled key is exactly the defect this gate exists for and is not in the
+      declared set); the second has no initialiser to anchor on, so it is
+      anchored on the declared set and only names that ARE declared ops report.
+    * a template-literal subscript — `guest?.[\`${name}\`]` computes the property
+      at run time. Anchored on a guest source; the key is never compared to the
+      declaration because there is no identifier to compare.
+
+    Returns the findings and how many shapes were reported. Zero findings on a
+    tree that is otherwise clean is the normal state, so this has no floor: the
+    report is what closes the hole, and `media-query.test.mjs` pins both shapes
+    by injecting one and requiring this gate to exit 1.
+    """
+    problems: list[str] = []
+    reported = 0
+    for path in callback_scan_files():
+        text = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
+        bindings = guest_bindings(text)
+        if not bindings:
+            continue
+        starts = [0]
+        for offset, char in enumerate(text):
+            if char == "\n":
+                starts.append(offset + 1)
+        sources = sorted(
+            {local for local, _key, _offset in bindings}
+            | {match.group("name") for match in _HELPER_DECL_RE.finditer(text)},
+            key=len,
+            reverse=True,
+        )
+
+        for match in _DESTRUCTURE_DECL_RE.finditer(text):
+            source = _guest_source(match.group("rhs"), sources)
+            if source is None:
+                continue
+            names = ", ".join(_destructured_names(match.group("names"))) or "(empty)"
+            reported += 1
+            problems.append(
+                f"callback site {path.name}:{bisect.bisect_right(starts, match.start())} "
+                f"destructures `{names}` out of `{source}` — a destructured guest export is a "
+                "read this gate cannot check (the property is a key, not a member access), so "
+                f"it is reported instead of skipped; read `{source}.<name>` and let the scan "
+                "judge the name"
+            )
+
+        for match in _DESTRUCTURE_PARAM_RE.finditer(text):
+            named = [
+                name
+                for name in _destructured_names(match.group("names"))
+                if name in declared_camel
+            ]
+            if not named:
+                continue
+            reported += 1
+            problems.append(
+                f"callback site {path.name}:{bisect.bisect_right(starts, match.start())} "
+                f"destructures `{', '.join(named)}` in a parameter list — a guest export taken "
+                "as a destructured parameter is a read this gate cannot check (no initialiser "
+                "names the guest object), so it is reported instead of skipped"
+            )
+
+        # Per LINE, with the same cast reduction the member scan uses: the
+        # "quick fix" shape is `(guest as any)?.[\`on_mutate\`]`, and without
+        # reducing it the local is separated from its subscript by the cast and
+        # the read is invisible again. Reducing a single line cannot move a line
+        # number, so the reported line stays the real one.
+        for index, line in enumerate(text.split("\n")):
+            for match in _TEMPLATE_KEY_READ_RE.finditer(normalise_casts(line)):
+                local = match.group("local")
+                if local not in sources:
+                    continue
+                reported += 1
+                problems.append(
+                    f"callback site {path.name}:{index + 1} reads "
+                    f"`{local}[\u0060\u2026\u0060]` with a template-literal key — a computed key "
+                    "is a read this gate cannot check (the property name is run-time text, not "
+                    "an identifier), so it is reported instead of skipped; spell the property "
+                    "as a member access"
+                )
+    return problems, reported
+
+
 def bound_bridge_problems(
     declared_by_iface: dict[str, list[str]], counted_by_file: dict[str, int] | None = None
 ) -> tuple[list[str], int]:
@@ -782,8 +946,11 @@ def bound_bridge_problems(
     #                                    fix would put a wrong name back without
     #                                    tripping anything else. Both are checked
     #                                    against the same declared set.
-    # Not covered (a JS tokenizer, not this gate): destructuring
-    # (`const { onX } = guest`) and template-literal prop names.
+    # Not covered HERE (a JS tokenizer, not this gate): destructuring
+    # (`const { onX } = guest`) and template-literal prop names. Both are the
+    # property of `unparseable_read_problems`, which reports the shape instead of
+    # letting it read green — this scan is the one that JUDGES a name, so a name
+    # the source does not spell as a name is somebody else's question.
     # `(guest as any)?.["on_mutate"]` is the shape a "quick" fix produces: a cast
     # sits between the local and the access, so the optional `as <Type>` group is
     # not decoration — without it the bracket branch never matches this form.
@@ -1222,8 +1389,25 @@ def findings() -> tuple[list[Finding], int, int, int, int, int]:
                 print(f"BINDINGS {name}:{counted_by_file[name]}")
     for problem in bound_findings:
         results.append(Finding("callback-mismatch", problem, ""))
+    # 3c: reads the two scripts above CANNOT see (a destructured key, a computed
+    #     key). Reported, never judged: they keep the binding and hide the read,
+    #     which is the one combination the pin plus the scan cannot catch.
+    declared_camel_names = {
+        camel(name) for funcs in world_declarations().values() for name in funcs
+    }
+    unparseable_findings, unparseable_total = unparseable_read_problems(declared_camel_names)
+    for problem in unparseable_findings:
+        results.append(Finding("callback-mismatch", problem, ""))
 
-    return results, len(interfaces), declared_total, dispatched_total, callback_total, bound_total
+    return (
+        results,
+        len(interfaces),
+        declared_total,
+        dispatched_total,
+        callback_total,
+        bound_total,
+        unparseable_total,
+    )
 
 
 def main() -> int:
@@ -1246,6 +1430,7 @@ def main() -> int:
         dispatched_total,
         callback_total,
         bound_total,
+        unparseable_total,
     ) = findings()
     problems = [str(f) for f in mismatches]
     problems.extend(copy_problems())
@@ -1299,6 +1484,8 @@ def main() -> int:
         f"({declared_total - unimplemented} implemented, {unimplemented} allowed), "
         f"{dispatched_total} dispatched, {invented} runtime-only exports listed, "
         f"{callback_total} guest-export lookups ({bound_total} bound) named correctly, "
+        f"{unparseable_total} guest reads in a shape the scan cannot judge "
+        "(destructuring / computed key), "
         f"callback scan excluded {', '.join(excluded_scan_files()) or 'nothing'} "
         f"(plus {len(skipped_scan_files()) - len(excluded_scan_files())} runtime files that "
         "never touch the guest namespace)"

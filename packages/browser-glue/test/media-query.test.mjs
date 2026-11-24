@@ -1108,3 +1108,135 @@ test("check_wit_ops.py: the WRAPPED inline shape (the form the defect shipped in
     `the gate must name the file, a line, and the wrong read; got: ${out}`,
   );
 });
+
+test("check_wit_ops.py: a DESTRUCTURED guest read is reported, not skipped", () => {
+  // `const { onMutate } = guest` keeps the binding (so `EXPECTED_BINDINGS_BY_FILE`
+  // is satisfied) and hides the read (`_ACCESS_RE` wants a member access; a
+  // destructuring binds a property KEY). Measured before direction 3c: rc 0 — the
+  // wrong spelling read green, which is the exact defect class this gate exists
+  // for. The declared set cannot supply a verdict about a name the source does
+  // not spell as a name, so the SHAPE is the finding.
+  // MUT: destructured-read-invisible
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onMutate;";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to extend");
+    writeFileSync(path, source.replace(needle, `${needle}\n      const { onMutato } = guest;`));
+  });
+  assert.equal(rc, 1, "a destructured guest read must fail the gate");
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+ destructures `onMutato` out of `guest`/,
+    `the gate must name the file, a line and the destructured key; got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: a destructured read is RED even when the KEY is correct", () => {
+  // The rule reports the shape, not the spelling. A `{ onMutate }` that happens to
+  // be right today is still a read the scan cannot check, and the next rename
+  // flips it silently — which is why the finding is not "this name is wrong" but
+  // "this shape is not judged". A pin that only covered the wrong name would let
+  // a "fix" that keeps the destructuring and repairs the spelling read green.
+  // MUT: destructured-read-judged-by-name
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onMutate;";
+    writeFileSync(path, source.replace(needle, `${needle}\n      const { onMutate } = guest;`));
+  });
+  assert.equal(rc, 1, "a destructured read must fail the gate even with the right key");
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+ destructures `onMutate` out of `guest`/,
+    `got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: a guest export taken as a DESTRUCTURED PARAMETER is reported", () => {
+  // `({ onMutate }) => …` has no initialiser to anchor on, so the declared set is
+  // the only handle: a parameter pattern that names a declared op is reported.
+  // (A misspelled parameter pattern — `({ onMutato }) => …` — names no declared
+  // op and is therefore NOT reported; that residual is stated in the module
+  // docstring rather than guessed at with an edit-distance rule.)
+  // MUT: arrow-param-destructure-invisible
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onMutate;";
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const rename = ({ onMutate: fn }) => fn;`),
+    );
+  });
+  assert.equal(rc, 1, "a destructured guest parameter must fail the gate");
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+ destructures `onMutate` in a parameter list/,
+    `got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: a TEMPLATE-KEYED guest read is reported, cast or not", () => {
+  // `` guest?.[`${name}`] `` computes the property at run time; the cast form is
+  // the "quick fix" shape and needs the same cast reduction the member scan uses,
+  // or the local and its subscript are separated by the cast and the read is
+  // invisible again. Both are reported.
+  // MUT: template-key-read-invisible
+  for (const [label, read] of [
+    ["plain", "const bad = guest?.[`${name}`];"],
+    ["cast", "const bad = (guest as any)?.[`onMutato`];"],
+    ["static key", "const bad = guest[`onMutato`];"],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      const needle = "const handler = guest?.onMutate;";
+      writeFileSync(path, source.replace(needle, `${needle}\n      ${read}`));
+    });
+    assert.equal(rc, 1, `a template-keyed read (${label}) must fail the gate`);
+    assert.match(
+      out,
+      /platformHelpers\.ts:\d+ reads `guest\[`…`\]` with a template-literal key/,
+      `got: ${out}`,
+    );
+  }
+});
+
+test("check_wit_ops.py: the fail-closed read detector has a GREEN side too", () => {
+  // The three tests above assert rc === 1. That assertion proves nothing unless
+  // the same fixture is green without the shape, and unless the shapes it is NOT
+  // about stay green: a member access of the same name, and a destructuring or
+  // template subscript of something that is not the guest. Otherwise the rule is
+  // "any destructuring anywhere reds" and every ordinary line of code trips it.
+  // MUT: fail-closed-read-rule-overbroad
+  const baseline = runGateAgainst(() => {});
+  assert.equal(baseline.rc, 0, `the unmutated fixture must pass; got: ${baseline.out}`);
+  assert.match(
+    baseline.out,
+    /0 guest reads in a shape the scan cannot judge \(destructuring \/ computed key\)/,
+    `the detector must report its own count on every run; got: ${baseline.out}`,
+  );
+  const green = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onMutate;";
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        [
+          needle,
+          "      const rename = guest?.onMutate;",
+          "      const { width, height } = globalThis.__elementHandles.get(observer) ?? {};",
+          "      const label = `${width}x${height}`;",
+        ].join("\n"),
+      ),
+    );
+  });
+  assert.equal(
+    green.rc,
+    0,
+    `member access, a non-guest destructuring and a non-guest template must stay green; got: ${green.out}`,
+  );
+});
