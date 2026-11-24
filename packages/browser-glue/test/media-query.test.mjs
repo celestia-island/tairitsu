@@ -1402,3 +1402,15 @@ test("check_wit_ops.py: a member-core cast is judged through the member, not ski
   });
   assert.equal(plainRight.rc, 0, `a correct plain-dot read must stay green; got: ${plainRight.out}`);
 });
+
+test("check_wit_ops.py: the lexical layer carries its own selftest, and it is green", () => {
+  // `just wit-ops-check` runs `--check` alone, and the rules that REPORT a shape
+  // (instead of judging a name) can only ever print 0 on a clean tree — a
+  // detector that stopped matching looks exactly like a tree that has no such
+  // shape. The captured shapes and their verdicts live in the gate
+  // (`--selftest`), the same way `check_wasip2_closure.py` pins its parser; this
+  // runs them in the suite lane so the pin is executed, not shipped.
+  // MUT: lexical-selftest-not-run
+  const out = execFileSync("python3", [GATE, "--selftest"], { cwd: REPO, encoding: "utf8" });
+  assert.match(out, /selftest ok: the lexical layer still produces every captured verdict/);
+});

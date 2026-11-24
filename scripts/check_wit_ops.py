@@ -115,8 +115,9 @@ is a finding. Neither substitutes for the other, so a shape that keeps the
 binding and hides the read is a finding even when every count looks right.
 
 Usage:
-    python3 scripts/check_wit_ops.py --check   # the gate
-    python3 scripts/check_wit_ops.py --list    # dispatch pairs, for diffing
+    python3 scripts/check_wit_ops.py --check      # the gate
+    python3 scripts/check_wit_ops.py --list       # dispatch pairs, for diffing
+    python3 scripts/check_wit_ops.py --selftest   # the lexical layer, on shapes
 """
 from __future__ import annotations
 
@@ -1449,12 +1450,139 @@ def findings() -> tuple[list[Finding], int, int, int, int, int]:
     )
 
 
+def selftest() -> int:
+    """Pin the LEXICAL layer against captured shapes; reads no repo file.
+
+    Why this exists next to the suite pins: the rules that JUDGE a name have a
+    floor (the base counts) and a set pin (`EXPECTED_BINDINGS_BY_FILE`), but the
+    rule that REPORTS a shape can only ever print 0 on a clean tree — a detector
+    that stopped matching reads exactly like a tree with no such shape. So the
+    shapes and their current verdicts are captured here, where `wit-ops-check`
+    runs them.
+
+    Every expectation below is a MEASURED behaviour, not a wish. Two of them pin
+    a residual: `[//]` truncating its line, and `strip_comments` eating nothing
+    else. If one flips, the module docstring's blind-spot list is where to look
+    first — that is the contract this function executes.
+    """
+    failures: list[str] = []
+
+    def expect(label: str, actual: object, wanted: object) -> None:
+        if actual != wanted:
+            failures.append(f"{label}: got {actual!r}, wanted {wanted!r}")
+
+    # strip_comments: the three `//` shapes, and one that is not a comment.
+    expect("a line comment is dropped", strip_comments("a; // gone\nb;"), "a; \nb;")
+    expect("a URL inside a string survives", strip_comments('x("ws://h");'), 'x("ws://h");')
+    expect(
+        "escaped slashes never form `//`",
+        strip_comments("const r = /a\\/\\/b/; read();"),
+        "const r = /a\\/\\/b/; read();",
+    )
+    # RESIDUAL: `[//]` swallows the rest of its line. Pinned, not wished away.
+    # (The scan copies the `/` that opens the literal and stops at the `//` inside
+    # the class, so what survives is the literal's first two characters.)
+    expect("[//] truncates its line", strip_comments("const r = /[//]/; read();"), "const r = /[")
+    # …and the truncation stops at the newline, so the next line is judged.
+    expect(
+        "[//] truncation is line-bounded",
+        strip_comments("const r = /[//]/;\nread();"),
+        "const r = /[\nread();",
+    )
+
+    # normalise_casts: the three cast shapes the docstring names, plus `satisfies`.
+    for shape in (
+        "((guest as any))",
+        "(guest as Record<string, any>)",
+        "(guest as Fn<(a: T) => U>)",
+        "(guest satisfies any)",
+    ):
+        expect(f"{shape} reduces", normalise_casts(f"{shape}?.onMutate"), "guest?.onMutate")
+    # …and a member core is deliberately NOT reduced (the read inside it is judged
+    # instead, which is what makes it fail-closed rather than silent).
+    expect(
+        "a member core is left untouched (its inner read is judged instead)",
+        normalise_casts("(guest.sub as any)?.onMutate"),
+        "(guest.sub as any)?.onMutate",
+    )
+
+    # The read scan: both dot spellings and both bracket spellings are reads.
+    def reads(text: str) -> list[tuple[str, str]]:
+        return [
+            (match.group("local"), match.group("prop") or match.group("bracket"))
+            for match in _ACCESS_RE.finditer(normalise_casts(text))
+        ]
+
+    expect("optional member read", reads("guest?.onMutate"), [("guest", "onMutate")])
+    expect("plain member read", reads("guest.onMutate"), [("guest", "onMutate")])
+    expect("quoted bracket read", reads('guest["onMutate"]'), [("guest", "onMutate")])
+    expect(
+        "cast + quoted bracket read",
+        reads('(guest as any)?.["onMutate"]'),
+        [("guest", "onMutate")],
+    )
+    expect("a template subscript is NOT a read", reads("guest[`onMutate`]"), [])
+
+    # guest_bindings: the three ways the namespace is reached.
+    direct = 'const guest = globalThis.__wasmExports?.["tairitsu-browser:full/event-callbacks@0.2.0"];'
+    indirect = (
+        "function callbacks() {\n"
+        '  return globalThis.__wasmExports?.["tairitsu-browser:full/media-query-list-callbacks@0.2.0"];\n'
+        "}\nconst guest = callbacks();"
+    )
+    key = "tairitsu-browser:full/event-callbacks@0.2.0"
+    expect("direct binding", [(local, kind) for local, kind, _o in guest_bindings(direct)], [("guest", key)])
+    expect(
+        "helper binding",
+        [(local, kind) for local, kind, _o in guest_bindings(indirect)],
+        [("guest", "tairitsu-browser:full/media-query-list-callbacks@0.2.0")],
+    )
+    expect("a non-callback key is not a binding", guest_bindings('const g = globalThis.__wasmExports?.["wasi/x"];'), [])
+
+    # The fail-closed shape rules, piece by piece (the walk over files is pinned by
+    # `media-query.test.mjs`; these are the pieces it is built from).
+    expect("destructuring from the guest", _guest_source("guest;", ["guest"]), "guest")
+    expect("destructuring from a guest-returning helper", _guest_source("callbacks()", ["callbacks"]), "callbacks")
+    expect("destructuring from a direct lookup", _guest_source('globalThis.__wasmExports["k"];', []), "__wasmExports")
+    expect("an unrelated initialiser", _guest_source("globalThis.__elementHandles.get(x)", ["guest"]), None)
+    expect(
+        "a pattern that names a declared op",
+        [name for name in _destructured_names(" onMutate: fn, ...rest ") if name == "onMutate"],
+        ["onMutate"],
+    )
+    expect("a quoted subscript is not a template shape", bool(_TEMPLATE_KEY_READ_RE.search('guest["onMutate"]')), False)
+    expect(
+        "a cast-wrapped template subscript is a shape",
+        bool(_TEMPLATE_KEY_READ_RE.search(normalise_casts("(guest as any)?.[`${k}`]"))),
+        True,
+    )
+    expect(
+        "an arrow parameter is a shape",
+        bool(_DESTRUCTURE_PARAM_RE.search("(({ onMutate }) => onMutate)")),
+        True,
+    )
+
+    if failures:
+        print(f"selftest FAILED ({len(failures)} of the captured shapes disagree):", file=sys.stderr)
+        for failure in failures:
+            print(f"  - {failure}", file=sys.stderr)
+        return 1
+    print("selftest ok: the lexical layer still produces every captured verdict")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--check", action="store_true", help="enforce")
     group.add_argument("--list", action="store_true", help="print the dispatch pairs")
+    group.add_argument(
+        "--selftest", action="store_true", help="pin the lexical layer against captured shapes"
+    )
     args = parser.parse_args()
+
+    if args.selftest:
+        return selftest()
 
     if args.list:
         for iface, module in sorted(wired_interfaces().items()):
