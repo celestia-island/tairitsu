@@ -69,11 +69,12 @@ THIS GATE'S SAFETY IS NOT LEXICAL COMPLETENESS
 ==============================================
 Everything below reads source with regular expressions and one scanner state
 machine; every shape they do not model is a blind spot (three of them are listed
-just below, plus one shape that is not). What keeps the gate honest is `EXPECTED_BINDINGS_BY_FILE` plus the
-base counts: a bridge the scan stops recognising shows up as a drop in that
-table. So a NEW bridge must edit the table, and the residual risk is a
-bridge that lands in a blind spot AND is hand-added to the table in the same
-change. That risk is one commit wide and visible in review; a silent one is not.
+just below, plus one shape that is not). What keeps the gate honest is
+`EXPECTED_BINDINGS_BY_FILE` plus the base counts: a bridge the scan stops
+recognising shows up as a drop in that table. So a NEW bridge must edit the
+table, and the residual risk is a bridge that lands in a blind spot AND is
+hand-added to the table in the same change. That risk is one commit wide and
+visible in review; a silent one is not.
 
 Lexical blind spots, and what actually closes each:
   * a RECEIVER other than `globalThis`/`g` (`w.__wasmExports[...]`) — the binding
