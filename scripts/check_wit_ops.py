@@ -2111,6 +2111,11 @@ def selftest() -> int:
         # OUT of the closed set by decision, not by accident
         "Object.create(guest)",
         "new Proxy(guest, {})",
+        # the container-rebuild family a review round found unstated: the value is
+        # reached by evaluating a container, not carried by a syntactic operand
+        "[guest][0]",
+        'new Map([["g", guest]]).get("g")',
+        "Object.assign({}, guest)",
     ):
         expect(f"a NON-re-export written as {form}", _guest_source(form, ["guest"]), None)
     expect(
