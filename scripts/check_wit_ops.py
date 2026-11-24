@@ -101,7 +101,13 @@ Lexical blind spots, and what actually closes each:
     `unparseable_read_problems` reports the shape, because the declared set
     cannot supply a verdict about a name the source never spells as a name.
     Measured at zero occurrences before the rule landed, so it closes a class
-    rather than repairing a live site.
+    rather than repairing a live site;
+  * a CAST whose core is a member expression (`(guest.sub as any)?.onX`) — not
+    reducible to one local, so the cast is left in place; the member read inside
+    it (`guest.sub`) is judged like any other read and therefore REDS as an
+    undeclared name. Fail-closed, and the finding names the member rather than
+    the property the cast guards — loud about the right line, imprecise about the
+    name, which is the trade `normalise_casts` documents.
 
 Read that split as the rule for this gate: the binding pin guards that a bridge
 EXISTS, the lexical scan guards that a READ is SEEN, and a shape neither can see
@@ -677,9 +683,22 @@ def guest_bindings(text: str) -> list[tuple[str, str, int]]:
 # plain wrapping parentheses too, or a double cast reduces to `(local)` and the
 # access pattern (which starts at the local) never sees it.
 _WRAPPED_RE = re.compile(r"\(\s*(?P<core>[A-Za-z_$][\w$]*)\s*\)")
+# A read of the guest object, in the two spellings the sources use and the one
+# they would get if somebody edited the bridge by hand:
+#
+#   guest?.onMutate        — optional member access
+#   guest.onMutate         — plain member access (NO `?`): the spelling a hurried
+#                            fix produces, and it used to be invisible — the
+#                            member branch required `?.`, so `guest.on_wrong` read
+#                            GREEN while every count stayed put. The `\??` is that
+#                            hole: both spellings are now judged against the same
+#                            declared set.
+#   guest["on_mutate"]     — computed access (both `?.[` and `[`), which is how a
+#                            "quick" fix puts a wrong name back without tripping
+#                            anything else.
 _ACCESS_RE = re.compile(
     r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)"
-    r"(?:\?\.\s*(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)"
+    r"(?:\??\.\s*(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)"
     r"|\??\.?\[\s*[\"'](?P<bracket>[A-Za-z_$][A-Za-z0-9_$]*)[\"']\s*\])"
 )
 
@@ -719,7 +738,16 @@ def normalise_casts(line: str) -> str:
     Record<string, any>)`, `((guest as any))`, `(guest as Fn<(a: T) => U>)`). What
     actually separates the cast from the access around it is PARENTHESIS DEPTH, so
     the innermost balanced group is popped while it starts with `<local> as`, and
-    plain wrapping groups are dropped as well.
+    plain wrapping groups are dropped as well. Each of those three shapes has an
+    end-to-end control in `media-query.test.mjs`: a wrong name behind it reds and
+    the right name stays green.
+
+    A cast whose core is NOT a bare identifier — `(guest.sub as any)?.onX` — is
+    deliberately NOT reduced: there is no single local to put back, and guessing
+    which identifier in the core is the receiver is how a scan starts inventing
+    reads. It is not silent either: the member read inside the cast
+    (`guest.sub`) is judged like any other read, so such a cast reds as an
+    undeclared member name. Loud and slightly misnamed beats green and wrong.
     """
     previous = None
     while previous != line:
@@ -947,9 +975,12 @@ def bound_bridge_problems(
     bindings = 0
     # `<local>?.<prop>` / `<local>.<prop>` ONLY: a looser pattern scans for a bare
     # identifier, and a preceding `??` supplies one, so the property list comes
-    # back empty and a wrong name reads green.
+    # back empty and a wrong name reads green. (Both dot spellings: `?.` is what
+    # the sources ship, `.` is what a hand edit produces, and until `_ACCESS_RE`
+    # admitted the second one the hand edit read green.)
     # Two read notations, both real in these sources:
-    #   guest?.onMutate        — member access;
+    #   guest?.onMutate        — member access (the plain-dot spelling is judged
+    #                            by the same branch);
     #   (guest as any)?.["on_mutate"] — computed access, which is how a "quick"
     #                                    fix would put a wrong name back without
     #                                    tripping anything else. Both are checked

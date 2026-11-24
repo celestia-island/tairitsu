@@ -1318,3 +1318,87 @@ test("check_wit_ops.py: the `[//]` truncation is line-bounded", () => {
   assert.equal(rc, 1, "the truncation must stop at the newline, so the next line is judged");
   assert.match(out, /platformHelpers\.ts:\d+.*`guest\.onMutato`/, `got: ${out}`);
 });
+
+test("check_wit_ops.py: the three cast shapes around the local are pinned end to end", () => {
+  // The docstring lists them as shapes the cast reducer handles: `((guest as
+  // any))` (double parens, so the inner group is the cast), `(guest as
+  // Record<string, any>)` (a comma inside the type — the reason a type-syntax
+  // white-list loses) and `(guest as Fn<(a: T) => U>)` (a function type, which
+  // nests two parenthesis groups inside the cast). Claiming it is not enough:
+  // each shape gets a wrong read that must red and the right read that must stay
+  // green, so a reducer that stops matching one of them is a failing test rather
+  // than a docstring that drifted.
+  // MUT: cast-shape-not-reduced
+  const needle = "const handler = guest?.onMutate;";
+  for (const [label, cast] of [
+    ["double parens", "((guest as any))"],
+    ["generic with a comma", "(guest as Record<string, any>)"],
+    ["function type", "(guest as Fn<(a: T) => U>)"],
+    ["satisfies", "(guest satisfies any)"],
+  ]) {
+    const wrong = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(path, source.replace(needle, `const handler = ${cast}?.onMutato;`));
+    });
+    assert.equal(wrong.rc, 1, `a wrong read behind a ${label} cast must fail the gate`);
+    assert.match(
+      wrong.out,
+      /platformHelpers\.ts:\d+.*`guest\.onMutato`/,
+      `the ${label} cast must be reduced to the local so the read is judged; got: ${wrong.out}`,
+    );
+    const right = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(path, source.replace(needle, `const handler = ${cast}?.onMutate;`));
+    });
+    assert.equal(right.rc, 0, `the same ${label} cast with the right name must stay green; got: ${right.out}`);
+  }
+});
+
+test("check_wit_ops.py: a member-core cast is judged through the member, not skipped", () => {
+  // `(guest.sub as any)?.onX` is NOT reducible — there is no single local to put
+  // back — so the cast stays and the member read inside it is judged like any
+  // other read: `guest.sub` is not a declared export, so the gate reds. MEASURED
+  // before this pin: rc 0. The member branch of `_ACCESS_RE` required `?.`, so
+  // both `(guest.sub as any)?.onX` AND the plain-dot spelling `guest.onX` were
+  // invisible, and the docstring's implicit claim that cast+read is always
+  // resolved was wrong in the one direction that matters (a wrong name reading
+  // green).
+  // MUT: member-cast-silent-before
+  const needle = "const handler = guest?.onMutate;";
+  const memberCast = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replace(needle, "const handler = (guest.sub as any)?.onMutato;"));
+  });
+  assert.equal(memberCast.rc, 1, "a cast whose core is a member must still red");
+  assert.match(
+    memberCast.out,
+    /platformHelpers\.ts:\d+.*`guest\.sub`/,
+    `the finding names the member the scan can see, not the property behind the cast; got: ${memberCast.out}`,
+  );
+  // The plain-dot spelling: same read, no cast, no `?`. It used to read green.
+  // MUT: plain-dot-read-invisible
+  const plainWrong = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replace(needle, "const handler = guest.onMutato;"));
+  });
+  assert.equal(plainWrong.rc, 1, "a plain-dot read must be judged like an optional-chained one");
+  assert.match(plainWrong.out, /platformHelpers\.ts:\d+.*`guest\.onMutato`/, `got: ${plainWrong.out}`);
+  // …and both plain-dot and cast-wrapped CORRECT reads stay green: the rule is
+  // about judging reads, not about banning the spellings.
+  const plainRight = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        "const handler = guest.onMutate;\n      const again = ((guest as any))?.onMutate;",
+      ),
+    );
+  });
+  assert.equal(plainRight.rc, 0, `a correct plain-dot read must stay green; got: ${plainRight.out}`);
+});

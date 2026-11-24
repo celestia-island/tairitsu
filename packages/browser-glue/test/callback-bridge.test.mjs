@@ -718,3 +718,53 @@ test("every bridge reads the jco name alone (no fallback that nobody emits)", ()
   }
   assert.deepEqual(offenders, [], `dead fallbacks in the tree: ${offenders.join(", ")}`);
 });
+
+test("handle DOMAIN table: every record getter mints into the table its reader uses", () => {
+  // The CALLBACK payloads are pinned above (`target` -> element, siblings -> node).
+  // The other way a guest reaches the same values was not: `mutation-record`'s
+  // `get-target` / `get-previous-sibling` / `get-next-sibling` and
+  // `resize-observer-entry`'s `get-target` each re-mint a handle on demand, and
+  // swapping `__storeElement` for `__storeNode` in any of them left this suite
+  // green (measured, one mutation at a time) - the same "both tables answer
+  // bigint" trap, one layer further out. One row per getter, so a NEW getter is
+  // one line here and the missing side cannot come back quietly.
+  // MUT: record-getter-domain-swapped
+  const instance = currentInstance();
+  const target = { nodeType: 1, childNodes: [] };
+  const record = fakeMutationRecord({
+    target,
+    previousSibling: { nodeType: 1, childNodes: [] },
+    nextSibling: { nodeType: 3, childNodes: [] },
+  });
+  const entry = fakeResizeEntry({ x: 1, y: 2, width: 3, height: 4 });
+  // Which table each getter must write, and which one it must NOT.
+  const rows = [
+    ["mutation-record", mutationRecord_exports, "getTarget", "elementHandles", "nodeHandles"],
+    ["mutation-record", mutationRecord_exports, "getPreviousSibling", "nodeHandles", "elementHandles"],
+    ["mutation-record", mutationRecord_exports, "getNextSibling", "nodeHandles", "elementHandles"],
+    ["resize-observer-entry", resizeObserverEntry_exports, "getTarget", "elementHandles", "nodeHandles"],
+  ];
+  let next = 9000n;
+  for (const [iface, exportsOf, getter, expected, forbidden] of rows) {
+    // A fresh record/entry per row, so a handle minted by the row above cannot
+    // satisfy this row's assertion.
+    const recordHandle = next++;
+    const entryHandle = next++;
+    instance.tables.mutationRecordHandles.set(recordHandle, record);
+    instance.tables.resizeObserverEntryHandles.set(entryHandle, entry);
+    const handle =
+      iface === "mutation-record"
+        ? exportsOf[getter](recordHandle)
+        : exportsOf[getter](entryHandle);
+    assert.equal(typeof handle, "bigint", `${iface}.${getter} must return a u64 handle`);
+    assert.ok(
+      instance.tables[expected].has(handle),
+      `${iface}.${getter} must mint into ${expected} - that is the table its WIT reader resolves`,
+    );
+    assert.equal(
+      instance.tables[forbidden].has(handle),
+      false,
+      `${iface}.${getter} must not mint into ${forbidden} - the two domains are different tables`,
+    );
+  }
+});
