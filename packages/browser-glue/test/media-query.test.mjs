@@ -515,8 +515,9 @@ test("match-media: handles are per instance and die with it (W4)", async () => {
 test("check_wit_ops.py: the per-file binding SET is pinned, not just its size", () => {
   // The per-file floor asked "> 0 bindings", so `platformHelpers.ts` — 45 of them
   // — could lose 37 to a refactor the scan does not understand (`Reflect.get`,
-  // a renamed local) and still read green at 88 (46). The dual with the base
-  // count (`88 (47)`) is a size; this is the identity: which files carry bridges,
+  // a renamed local) and still read green. (The `88 (46)` of that round is
+  // historical — the count is 47 bound now.) The dual with the base count is a
+  // size; this is the identity: which files carry bridges,
   // and how many each. A bridge that stops being recognised must be re-declared
   // here, on purpose.
   // MUT: per-file-binding-set-drift

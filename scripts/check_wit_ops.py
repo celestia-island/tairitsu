@@ -65,6 +65,22 @@ mechanisms are:
 Like `check_wit_surface.py`, this file is importable so the gate and the
 browser-glue test suite run the same logic instead of two drifting copies.
 
+THIS GATE'S SAFETY IS NOT LEXICAL COMPLETENESS
+==============================================
+Everything below reads source with regular expressions and one scanner state
+machine; every shape they do not model is a blind spot (four of them are listed
+just below). What keeps the gate honest is `EXPECTED_BINDINGS_BY_FILE` plus the
+base counts: a bridge the scan stops recognising shows up as a drop in that
+table. So a NEW bridge must edit the table, and the residual risk is a
+bridge that lands in a blind spot AND is hand-added to the table in the same
+change. That risk is one commit wide and visible in review; a silent one is not.
+
+Lexical blind spots that are fail-closed today (the base pin catches them):
+  * a RECEIVER other than `globalThis`/`g` (`w.__wasmExports[...]`);
+  * `//` inside a regular-expression literal (the state machine has no regex mode);
+  * a backtick nested inside a template's `${ … }`;
+  * an unterminated string literal, which swallows the rest of the file.
+
 Usage:
     python3 scripts/check_wit_ops.py --check   # the gate
     python3 scripts/check_wit_ops.py --list    # dispatch pairs, for diffing
@@ -160,8 +176,8 @@ def strip_comments(text: str) -> str:
     the line looking like code — the truncation shrinks what the scans see. A
     one-pass state machine is enough (it does not parse JS; it tracks the four
     things that change the meaning of a character: `"`, `'`, a backtick, `//`
-    and `/* */`). The output is the same length as the input and keeps every
-    literal, so indices and reported line numbers stay put.
+    and `/* */`). The output keeps every newline and never grows, and every
+    literal is copied verbatim, so indices and reported line numbers stay put.
 
     `normalise_casts` needs the same lexical boundary (`(guest as "a)b")`), which
     is why both read this one output.

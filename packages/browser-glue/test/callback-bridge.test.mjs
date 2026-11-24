@@ -8,8 +8,8 @@
 // guest's exports through
 // `globalThis.__wasmExports["tairitsu-browser:full/<iface>@0.2.0"]?.<prop>(…)`.
 // There, a wrong property name does not throw; it evaluates to `undefined`, so
-// the notification is silently dropped. Sixteen wrong property names across 42
-// dispatch sites were that way before this change:
+// the notification is silently dropped. At the start of this change sixteen
+// wrong property names sat across 42 dispatch sites:
 //
 //   * `on_mutation` for a WIT func named `on-mutate` (jco emits `onMutate`) —
 //     a name the wrapper carries under NO convention, so a guest's
