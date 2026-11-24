@@ -331,16 +331,23 @@ def declared_funcs(iface: str) -> list[str]:
 
 
 # Files that mention the namespace without reading a guest export: the ambient
-# declaration and the installer. The exclusion is PRINTED by the gate (see
-# `findings`) — a silent exclusion list is a place a bridge can be hidden.
+# declaration and the installer.
+#
+# WHAT AN EXCLUSION MEANS: the file is outside EVERY callback scan — it cannot
+# contribute a binding, and a bridge added to it would be invisible. That is why
+# the gate prints the list on every run (`excluded_scan_files`) instead of
+# trusting a reader to look here: the cost of the exception stays in view.
+# There is no third state — a file is scanned or it is excluded, and both scans
+# and the per-file floor read the same list (`callback_scan_files`).
 CALLBACK_SCAN_EXCLUDED = ("global.d.ts", "wasmExports.ts")
 
 
 def skipped_scan_files() -> list[str]:
     """Runtime files the callback scan does not read, and why — printed by the gate.
 
-    A silent exclusion list is where a bridge gets hidden; this names every file
-    the scan skipped so the exception is visible on every run.
+    The ONLY function that walks every runtime file on purpose: reporting what was
+    skipped requires seeing what was skipped. A silent exclusion list is where a
+    bridge gets hidden, so the gate names every file the scan skipped on every run.
     """
     skipped = []
     for path in sorted(RUNTIME_DIR.glob("*.ts")):
@@ -354,7 +361,13 @@ def skipped_scan_files() -> list[str]:
 
 
 def excluded_scan_files() -> list[str]:
-    """The exclusion list, as actually present on disk (renames cannot hide)."""
+    """The exclusion list, as actually present on disk.
+
+    A name that no longer exists (a rename) is dropped here — the exclusion is
+    then simply dead, which is what an exclusion of a missing file should mean.
+    The gate prints both this list and how many runtime files never touch the
+    namespace, so "excluded" never reads as "does not exist".
+    """
     present = {path.name for path in RUNTIME_DIR.glob("*.ts")}
     return [name for name in CALLBACK_SCAN_EXCLUDED if name in present]
 
@@ -437,7 +450,7 @@ def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
     """
     sites: list[tuple[str, int, str, str, str]] = []
     lookups = 0
-    for path in sorted(RUNTIME_DIR.glob("*.ts")):
+    for path in callback_scan_files():
         source = path.read_text(encoding="utf-8", errors="replace")
         text = strip_comments(source)
         starts = [0]
@@ -902,7 +915,7 @@ def findings() -> tuple[list[Finding], int, int, int, int, int]:
             # the inline form) — so the staleness test has to look at the raw
             # lookups, or a legitimate allowance for a bound site reads as stale.
             name == _CALLBACK_KEY_RE.match(lookup.group("key")).group("iface")
-            for path in RUNTIME_DIR.glob("*.ts")
+            for path in callback_scan_files()
             for lookup in _all_callback_lookups(
                 strip_comments(path.read_text(encoding="utf-8", errors="replace"))
             )

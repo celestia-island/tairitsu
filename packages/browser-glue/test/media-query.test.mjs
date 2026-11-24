@@ -920,6 +920,30 @@ test("check_wit_ops.py: a call to one helper is not satisfied by another's decla
   assert.match(out, /mediaQueryList\.ts references `__wasmExports` but the scan produced 0 bindings/, `got: ${out}`);
 });
 
+test("check_wit_ops.py: an excluded file is out of EVERY callback scan, inline included", () => {
+  // Round-17 fixed two of the three readers; the inline scan still walked every
+  // file, so a bound-shaped wrong read injected into an excluded file was
+  // COUNTED (88 → 89) and never checked — the bypass had simply moved. All three
+  // readers plus the allowance-staleness walk now share `callback_scan_files`.
+  // MUT: inline-scan-ignores-exclusions
+  const injected = [
+    '',
+    'const injected = globalThis.__wasmExports?.["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"];',
+    'const bad = injected?.on_mutation;',
+    '',
+  ].join("\n");
+  const { rc, out } = runGateAgainst((root) => {
+    // The fixture only copies the registry's runtime modules, and `wasmExports.ts`
+    // is not one of them — start from the same content the real file has.
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "wasmExports.ts");
+    writeFileSync(path, readFileSync(join(PKG, "src", "runtime", "wasmExports.ts"), "utf8") + injected);
+  });
+  // An excluded file is out of scope, so this is GREEN — but the count must not
+  // move either, which is what "out of the scan" means.
+  assert.equal(rc, 0, `an excluded file must not be scanned; got: ${out}`);
+  assert.match(out, /88 guest-export lookups \(47 bound\)/, `the excluded file must not be counted; got: ${out}`);
+});
+
 test("check_wit_ops.py: an exclusion really takes a file out of the scan", () => {
   // The exclusion list used to gate only the per-file floor: `platformHelpers.ts`
   // added to it left `88 (47 bound)` untouched and the gate green, while the
