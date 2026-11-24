@@ -1126,9 +1126,23 @@ test("check_wit_ops.py: a DESTRUCTURED guest read is reported, not skipped", () 
     // "no destructuring here" and the wrong name went green (measured).
     // MUT: destructure-typed-pattern-missed
     ["typed pattern", "guest as any"],
+    // …and the annotation may itself contain `=` (a function type), which the
+    // first draft's `[^=]*` stopped at: `const { onMutato }: Record<string, () =>
+    // void> = guest` read as "no destructuring" again.
+    // MUT: destructure-arrow-type-annotation-missed
+    ["arrow-type annotation", "guest"],
     ["satisfies", "guest satisfies Record<string, unknown>"],
     ["non-null assertion", "guest!"],
-  ].map(([label, rhs]) => [label, `const { onMutato }${label === "typed pattern" ? ": any" : ""} = ${rhs};`])) {
+  ].map(([label, rhs]) => [
+    label,
+    `const { onMutato }${
+      label === "typed pattern"
+        ? ": any"
+        : label === "arrow-type annotation"
+          ? ": Record<string, () => void>"
+          : ""
+    } = ${rhs};`,
+  ])) {
     const { rc, out } = runGateAgainst((root) => {
       const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
       const source = readFileSync(path, "utf8");
@@ -1202,6 +1216,11 @@ test("check_wit_ops.py: a COMPUTED-KEY guest read is reported, cast or not", () 
     ["template, static text", "const bad = guest[`onMutato`];"],
     ["variable key", "const bad = guest[key];"],
     ["variable key behind a cast", "const bad = (guest as any)?.[key];"],
+    // The key is "anything that is not a quote": a call or an index is the same
+    // shape, and the first version's identifier-only key let both read green.
+    // MUT: computed-key-identifier-only
+    ["method-call key", "const bad = guest[keys.pop()];"],
+    ["indexed key", "const bad = guest[k[0]];"],
   ]) {
     const { rc, out } = runGateAgainst((root) => {
       const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
@@ -1210,10 +1229,14 @@ test("check_wit_ops.py: a COMPUTED-KEY guest read is reported, cast or not", () 
       writeFileSync(path, source.replace(needle, `${needle}\n      ${read}`));
     });
     assert.equal(rc, 1, `a computed-key read (${label}) must fail the gate`);
+    // Two stable halves rather than one pattern: the reported KEY is echoed as
+    // written (`key`, `keys.pop()`, `k[0]`), so pinning the exact bracket text
+    // would pin the spelling instead of the rule.
+    assert.match(out, /platformHelpers\.ts:\d+ reads `guest\[/, `got: ${out}`);
     assert.match(
       out,
-      /platformHelpers\.ts:\d+ reads `guest\[(?:`…`|key)\]` with a (?:template-literal|computed) key/,
-      `got: ${out}`,
+      /with a (?:template-literal|computed) key/,
+      `the finding must say the key is computed; got: ${out}`,
     );
   }
 });
@@ -1261,6 +1284,13 @@ test("check_wit_ops.py: the fail-closed read detector has a GREEN side too", () 
           "      }",
           "      const { status } = wasiStatus();",
           "      void status;",
+          // A cast that IS the value hides no read: the member is judged on its
+          // own, nothing is read behind the cast, and the finding's own remedy
+          // ("read the member the guest exports") is what this line already does.
+          // Reporting it was a false positive introduced by the cast rule.
+          // MUT: cast-of-a-value-reported
+          "      const cb = (guest.onMutate as unknown as MutationCallback);",
+          "      void cb;",
         ].join("\n"),
       ),
     );
@@ -1428,6 +1458,30 @@ test("check_wit_ops.py: a member-core cast is judged through the member, not ski
     /platformHelpers\.ts:\d+ casts a member of `guest`/,
     `the gate must report the cast shape; got: ${declaredMember.out}`,
   );
+  // Two spellings that defeated the first version of the rule: one redundant pair
+  // of parentheses around the member (the rule's `[^()]` could not cross the `)`),
+  // and a non-null assertion before `as` (the reducer rejected the core).
+  // MUT: member-cast-parens-or-bang-missed
+  for (const [label, read, pattern] of [
+    [
+      "redundant parens",
+      "const handler = ((guest.onMutate) as any)?.onMutato;",
+      /platformHelpers\.ts:\d+ casts a member of `guest`/,
+    ],
+    [
+      "non-null assertion",
+      "const handler = (guest! as any)?.onMutato;",
+      /platformHelpers\.ts:\d+.*`guest\.onMutato`/,
+    ],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(path, source.replace(needle, read));
+    });
+    assert.equal(rc, 1, `a member cast with ${label} must fail the gate`);
+    assert.match(out, pattern, `got: ${out}`);
+  }
   // The plain-dot spelling: same read, no cast, no `?`. It used to read green.
   // MUT: plain-dot-read-invisible
   const plainWrong = runGateAgainst((root) => {

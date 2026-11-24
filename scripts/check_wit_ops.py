@@ -764,8 +764,11 @@ def normalise_casts(line: str) -> str:
             # `(guest satisfies any)?.on_mutate` with a type name where the
             # receiver should be — the read then vanishes and nothing notices
             # (the binding pin guards EXISTENCE, not that a read was seen).
+            # `!` (a non-null assertion) sits between the local and the cast
+            # operator and changes nothing about which local it is:
+            # `(guest! as any)?.onX` reduces like `(guest as any)?.onX`.
             core = re.fullmatch(
-                r"\s*(?P<core>[A-Za-z_$][\w$]*)\s+(?:as|satisfies)\s+.*", inner, re.S
+                r"\s*(?P<core>[A-Za-z_$][\w$]*)\s*!?\s+(?:as|satisfies)\s+.*", inner, re.S
             )
             if core:
                 line = line[:start] + core.group("core") + line[index + 1 :]
@@ -830,8 +833,11 @@ def _group_spans(line: str) -> list[tuple[int, int]]:
 # The pattern may carry a type annotation (`const { onX }: any = guest`) — a
 # destructuring declaration with an explicit type is ordinary TS, and requiring
 # `}` to be followed immediately by `=` read it as "no destructuring at all".
+# The annotation may itself contain `=` — a function type (`: Record<string, () =>
+# void>`) — so the separator is "`=` that is not part of `=>`", not "the next `=`".
 _DESTRUCTURE_DECL_RE = re.compile(
-    r"(?:const|let|var)\s*\{(?P<names>[^{}]*)\}\s*(?::[^=]*)?=\s*(?P<rhs>[^\n;]*)"
+    r"(?:const|let|var)\s*\{(?P<names>[^{}]*)\}\s*(?::(?:[^=]|=(?=>))*)?=\s*"
+    r"(?P<rhs>[^\n;]*)"
 )
 # `(obj) => …` / `({ onMutate }) => …` — the guest object is the CALLER's
 # argument, so there is no initialiser to anchor on and the declared set is the
@@ -843,17 +849,26 @@ _TEMPLATE_KEY_READ_RE = re.compile(
 # The same read written with a variable key: `guest[key]`. A QUOTED key
 # (`guest["onMutate"]`) is not this shape — `_ACCESS_RE` judges it — and a numeric
 # index is not a guest export, so only an identifier subscript lands here.
+# The key is "anything that is not a quote": `guest[key]`, `guest[keys.pop()]`,
+# `guest[k[0]]`. A quoted key is excluded (that is `_ACCESS_RE`'s judged form) and
+# so is a template (its own rule above, so the two cannot both report one read).
 _IDENT_KEY_READ_RE = re.compile(
     r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*\??\.?\s*\[\s*"
-    r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\]"
+    r"(?P<key>(?![\`\"'])[^\]\n]+?)\s*\]"
 )
 # A cast whose CORE is a member of the guest: `(guest.sub as any)`,
 # `(guest["onMutate"] as any)`, `(guest.sub as Fn<(a: T) => U>)`. `normalise_casts`
 # reduces only a single-identifier core, so the cast stays and whatever is read
 # after it (`?.onX`) is invisible — including the case where the member itself IS
 # a declared export, where nothing else reds. Reported like the other two shapes.
+# `[^\n(]` (not `[^\n()]`): one redundant pair of parentheses around the member
+# (`((guest.onX) as any)?.onY`) is ordinary formatting, and refusing to cross the
+# `)` made the whole shape invisible again. The read-after requirement is applied
+# separately (`_casts_before_a_read`) — a cast that IS the value
+# (`(guest.onX as unknown as MutationCallback)`) is not a hidden read, and
+# reporting it was a false positive on correct code.
 _MEMBER_CAST_RE = re.compile(
-    r"\(\s*(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*[.\[][^\n()]*?\s+(?:as|satisfies)\s+"
+    r"\(\s*(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*[.\[][^\n(]*?\s+(?:as|satisfies)\s+"
 )
 
 
@@ -866,13 +881,17 @@ def _destructured_names(pattern: str) -> list[str]:
     (`[expr]`) is returned as written rather than guessed at.
 
     Splitting on `,` is text, not parsing: a default value that itself contains a
-    comma (`onX = f(1, 2)`) splits too, so each part is cut at its first `:`/`=`
-    and a fragment with no leading identifier (the `2)` half) is dropped instead
-    of being reported as a key.
+    comma (`onX = pick(a, b)`) splits too, so each part is cut at its first `:`/`=`
+    and any fragment that follows an unclosed `(` is dropped instead of being
+    reported as a key.
     """
     names: list[str] = []
+    depth = 0
     for part in pattern.split(","):
-        head = re.split(r"[:=]", part.strip(), maxsplit=1)[0].strip()
+        # A `,` inside a default value's call (`onX = pick(a, b)`) is not a key
+        # separator: skip fragments while an earlier part left a paren open.
+        head = re.split(r"[:=]", part.strip(), maxsplit=1)[0].strip() if depth == 0 else ""
+        depth += part.count("(") - part.count(")")
         if not head:
             continue
         match = re.match(r"(?P<rest>\.\.\.)?\s*(?P<name>[A-Za-z_$][\w$]*)", head)
@@ -888,9 +907,11 @@ def _guest_source(rhs: str, sources: list[str]) -> str | None:
 
     `= guest`, `= guest ?? {}`, `= callbacks()` and the direct
     `= globalThis.__wasmExports?.["<key>"]` are the shapes that hand over the
-    guest namespace. `sources` holds the locals `guest_bindings` resolved plus the
-    helper names that return them, so an alias this file does not know about
-    (`const g2 = guest`) is not a source — the scan stays with what it can prove.
+    guest namespace. `sources` (built in `unparseable_read_problems`) holds the
+    locals `guest_bindings` resolved plus the helper functions whose key is a
+    CALLBACK interface the composed WIT declares, so neither an alias this file
+    does not know about (`const g2 = guest`) nor a helper returning a WASI
+    namespace is a source — the scan stays with what it can prove.
     """
     reduced = normalise_casts(rhs).strip()
     # The assertion spellings sit between the source and the end of the
@@ -909,10 +930,32 @@ def _guest_source(rhs: str, sources: list[str]) -> str | None:
     return None
 
 
+def _casts_before_a_read(line: str, cast_start: int, cast_end: int) -> bool:
+    """Is something READ after the cast that starts at `cast_start`?
+
+    A cast is only interesting to this gate when it sits BETWEEN a guest local and
+    a further access (`(guest.onX as any)?.onWrong`): that is what puts the read
+    out of the lexical scan's reach. A cast that IS the value
+    (`const cb = (guest.onMutate as unknown as MutationCallback);`) hides nothing
+    — the member read is already judged on its own — and reporting it was a false
+    positive on correct code (measured).
+    """
+    # The group that ENCLOSES the cast, not the first `(` of the match: one
+    # redundant pair around the member (`((guest.onX) as any)?.onY`) makes those
+    # two different parens, and keying on the match's own `(` found the inner one
+    # and then looked for a read in ` as any)…`.
+    for start, end in _group_spans(line):
+        if start <= cast_start and end >= cast_end:
+            return re.match(r"\s*(?:\?\.|\.|\[)", line[end + 1 :]) is not None
+    # An unbalanced line: no closing paren to inspect. Judging it is the slot the
+    # binding pin owns, so stay silent here rather than guess.
+    return False
+
+
 def unparseable_read_problems() -> tuple[list[str], int]:
     """Direction 3c: guest reads written in a shape the member-access scan cannot see.
 
-    Four shapes, each hiding a read behind syntax instead of a name:
+    Five shapes, each hiding a read behind syntax instead of a name:
 
     * DESTRUCTURING from a guest source — `const { onX } = guest` binds a property
       KEY, with or without a type annotation (`: any`), an assertion
@@ -939,7 +982,8 @@ def unparseable_read_problems() -> tuple[list[str], int]:
       and if the member happens to be a declared export (`(guest.onMutate as
       any)?.onWrong`) nothing else reds at all.
 
-    The last four are per line, with the same cast reduction the member scan uses:
+    The template key, the variable key and the member cast are per line, with the
+    same cast reduction the member scan uses:
     the "quick fix" spellings (`(guest as any)?.[`on_mutate`]`) separate the local
     from its subscript otherwise, and reducing a single line cannot move a line
     number, so the reported line stays the real one.
@@ -1045,6 +1089,8 @@ def unparseable_read_problems() -> tuple[list[str], int]:
                 local = match.group("local")
                 if local not in sources:
                     continue
+                if not _casts_before_a_read(reduced, match.start(), match.end()):
+                    continue
                 reported += 1
                 problems.append(
                     f"callback site {path.name}:{index + 1} casts a member of `{local}` with "
@@ -1136,8 +1182,13 @@ def bound_bridge_problems(
                 # Both dot spellings, or a plain-dot read is reported on the
                 # BINDING's line instead of its own (`eventTarget.ts` ships five
                 # plain-dot reads, so this is not hypothetical).
+                # The probe runs on the cast-REDUCED line, the same text the read
+                # scan judges: `(guest! as any)?.onX` is a read of `guest?.onX`,
+                # and probing the raw line found neither and fell back to the
+                # binding's line (measured: 171 for a read on 180).
                 if re.search(
-                    r"(?<![A-Za-z0-9_$])" + re.escape(local) + r"\s*\??\.", lines[probe_index]
+                    r"(?<![A-Za-z0-9_$])" + re.escape(local) + r"\s*\??\.",
+                    normalise_casts(lines[probe_index]),
                 ):
                     read_line_index = kept_positions[probe_index]
                     break
@@ -1660,6 +1711,11 @@ def selftest() -> int:
         "a default value with a comma keeps one key",
         _destructured_names(" onMutate = f(1, 2) "),
         ["onMutate"],
+    )
+    expect(
+        "a default value's call does not become a key",
+        _destructured_names(" onMutato = pick(a, b) "),
+        ["onMutato"],
     )
     expect("a variable subscript is a shape", bool(_IDENT_KEY_READ_RE.search("guest[key]")), True)
     expect(
