@@ -9,9 +9,15 @@
 
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
+import { register } from "node:module";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+
+// The runtime sources import each other WITHOUT an extension (bundler style).
+// `platformHelpers.ts` gained a `./callbackValues` import, which Node's ESM
+// resolver cannot find without the hook the other two suites already register.
+register("./ts-resolve-hook.mjs", import.meta.url);
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const INSTANCE_MODULE = resolve(here, "../src/runtime/instance.ts");
@@ -551,15 +557,18 @@ test("the build-time glue modules are real ESM with named exports (W5)", async (
     );
   }
   // The export count is the interface surface, not a byproduct of the scanner:
-  // 306 named functions across the 26 interfaces (a paren-scanning relapse once
+  // 308 named functions across the 26 interfaces (a paren-scanning relapse once
   // inflated this to 364 by recording parameter names). The count moved
   // 299 -> 306 when `media-query-list` (6 ops) and `window.match-media` (1) were
-  // wired: an interface-level gate could not see that either was missing.
+  // wired: an interface-level gate could not see that either was missing — and
+  // 306 -> 308 when `mutation-record`'s `get-added-nodes` / `get-removed-nodes`
+  // were wired into the runtime table (they had shipped only in the generator's
+  // unwired `glue/dom.ts`, so a guest calling them trapped).
   const total = files.reduce(async (sumPromise, name) => {
     const source = await readFile(join(glueDir, name), "utf8");
     return (await sumPromise) + (source.match(/^export const /gm) || []).length;
   }, Promise.resolve(0));
-  assert.equal(await total, 306, "the emitted export surface changed");
+  assert.equal(await total, 308, "the emitted export surface changed");
 
   const manifest = JSON.parse(await readFile(join(glueDir, "manifest.json"), "utf8"));
   assert.ok(manifest.interfaces.length >= 20);

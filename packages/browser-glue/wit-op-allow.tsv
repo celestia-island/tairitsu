@@ -201,8 +201,6 @@ html-input-element.get-validity	the input surface is a deliberate subset; these 
 html-input-element.set-files	the input surface is a deliberate subset; these ops need host objects the runtime has no table for (FileList: get-files/set-files, HTMLFormElement: get-form, ValidityState: get-validity, NodeList: get-labels, HTMLDataListElement: get-list)
 mouse-event.init-mouse-event	the runtime forwards the coordinate / modifier fields the vdom bridge reads; the rest of MouseEvent is not wired
 mutation-observer.take-records	the runtime drives mutation observation through platformHelpers (createMutationObserver / observeMutations), not through the WIT ops
-mutation-record.get-added-nodes	the runtime stores records for the callback bridge; the record getters are not exposed
-mutation-record.get-removed-nodes	the runtime stores records for the callback bridge; the record getters are not exposed
 node.clone-node	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
 node.compare-document-position	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired
 node.contains	the runtime `node` object implements the vdom tree operations; the remaining DOM Node surface (namespaces, node comparison, iterators) is not wired

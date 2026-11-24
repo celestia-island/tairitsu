@@ -33,24 +33,17 @@ export function requireMediaQueryList(handle: bigint): MediaQueryList {
  * `on_change`. Verified with `jco types` on a two-parameter
  * `on-change: func(callback-id: u64, matches: bool)` world:
  * `export function onChange(callbackId: bigint, matches: boolean): void;`.
- * The sibling bridges in `platformHelpers.ts` read the snake_case spelling
- * (`on_resize` at :103, `on_mutation` at :143) for interfaces the composed
- * world DOES declare (`_handwritten.wit` `resize-observer-callbacks` /
- * `mutation-observer-callbacks`, imported and exported by `browser-full.wit`),
- * so by the same argument those two reads are silent no-ops of exactly this
- * class. They are pre-existing and outside this change's scope — named here so
- * the next reader fixes them rather than concluding from the surrounding code
- * that snake_case works.
- *
- * Both spellings are accepted on read, camelCase first, the way
- * `platformHelpers.ts` reads `onTimeout || on_timeout`: a host that swaps in a
- * wrapper with the other convention keeps working, and a rename on the jco side
- * cannot make this bridge a silent no-op — which is the failure mode of the
- * defect this file exists to fix.
+ * The sibling bridges in `platformHelpers.ts` had the same defect: 42 reads were
+ * wrong when this change started, `on_mutation` for the WIT func `on-mutate`
+ * among them. They now read the jco name and nothing else — a snake fallback was
+ * removed tree-wide because jco never emits one, so every `?? on_snake` arm was
+ * text that could not run. `scripts/check_wit_ops.py` walks every
+ * `__wasmExports[…]?.<prop>` dispatch — including one reached through a helper
+ * like `callbacks()` above — so the next wrong name fails a gate instead of
+ * quietly dropping a callback.
  */
 interface MediaQueryListCallbacks {
   onChange?: (callbackId: bigint, matches: boolean) => void;
-  on_change?: (callbackId: bigint, matches: boolean) => void;
 }
 
 function callbacks(): MediaQueryListCallbacks | undefined {
@@ -64,9 +57,11 @@ function callbacks(): MediaQueryListCallbacks | undefined {
  * turn one component bug into an unhandled page error on every media flip. It
  * is logged instead, matching the event bridge in `eventTarget.ts`.
  */
-function dispatchChange(callbackId: bigint, matches: boolean): void {
+export function dispatchChange(callbackId: bigint, matches: boolean): void {
   const guest = callbacks();
-  const handler = guest?.onChange ?? guest?.on_change;
+  // `onChange` only: jco emits the camelCase of `on-change` and nothing else, so
+  // an `?? on_change` arm here would be text that can never run.
+  const handler = guest?.onChange;
   if (!handler) return;
   try {
     handler(callbackId, matches);

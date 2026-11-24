@@ -130,6 +130,9 @@ installDom();
 const { INTERFACES } = await import(join(PKG, "src", "runtime", "registry.ts"));
 const window_exports = INTERFACES["@tairitsu-glue/window"];
 const mediaQueryList_exports = INTERFACES["@tairitsu-glue/media-query-list"];
+// The bridge's dispatch entry point, exported so the "does not escape" tests can
+// drive it directly (`dispatchEvent` swallows listener throws asynchronously).
+const { dispatchChange } = await import(join(PKG, "src", "runtime", "mediaQueryList.ts"));
 
 /** The func names a WIT interface declares (single source = browser-worlds). */
 function declaredFunctions(file, interfaceName) {
@@ -297,8 +300,7 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   // with no error — which is the same failure class as the missing
   // `match-media` op this PR fixes. A stub written to the provider's own
   // spelling would have gone green on the bug.
-  // MUT: bridge-name-only-snake (reading only `on_change` reds this test; the
-  // snake_case arm below still passes, which is why both arms exist).
+  // MUT: bridge-name-only-snake (reading only `on_change` reds the first arm).
   const { media } = installDom({ reduce: false });
   const handle = window_exports.matchMedia("(prefers-reduced-motion: reduce)");
   const list = globalThis.__mediaQueryListHandles.get(handle);
@@ -322,9 +324,10 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   );
   mediaQueryList_exports.removeListener(handle, 1n);
 
-  // (b) the snake_case spelling keeps working as a fallback (the sibling
-  //     bridge in platformHelpers.ts accepts `onTimeout || on_timeout`), so a
-  //     wrapper built with the other convention is not a silent no-op either.
+  // (b) there is NO snake fallback: jco emits `onChange` and nothing else, so a
+  //     stub exposing `on_change` must receive nothing. (This used to assert the
+  //     opposite — that the fallback delivers — which was only true in a world
+  //     where a wrapper speaks snake, and none does.)
   const snake = [];
   globalThis.__wasmExports = {
     "tairitsu-browser:full/media-query-list-callbacks@0.2.0": {
@@ -334,7 +337,12 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   mediaQueryList_exports.addListener(handle, 2n);
   media.reduce = false;
   list.flip();
-  assert.deepEqual(snake, [[2n, false]], "the snake_case fallback must also deliver");
+  assert.deepEqual(
+    snake,
+    [],
+    "`on_change` is not a name the wrapper emits; dispatching to it would be a fallback that cannot run",
+  );
+  mediaQueryList_exports.removeListener(handle, 2n);
 
   // (c) neither name present: no throw, no delivery — the bridge is inert
   //     rather than crashing the DOM event loop.
@@ -343,7 +351,12 @@ test("media-query-list: the bridge binds the name jco emits (onChange), not on_c
   };
   mediaQueryList_exports.addListener(handle, 3n);
   media.reduce = true;
-  assert.doesNotThrow(() => list.flip());
+    // Drive the DISPATCH, not the DOM event: an `EventTarget` listener that
+    // throws reports asynchronously (`uncaughtException`) and never reaches the
+    // caller of `dispatchEvent`, so `doesNotThrow(() => list.flip())` is
+    // vacuously true — a `catch` body changed to `throw` would still read green.
+    // MUT: media-bridge-rethrows
+  assert.doesNotThrow(() => dispatchChange(1n, true));
   delete globalThis.__wasmExports;
 });
 
@@ -457,7 +470,12 @@ test("media-query-list: a throwing guest callback does not escape into the event
   console.error = () => {};
   try {
     // One component bug must not become an unhandled page error on every flip.
-    assert.doesNotThrow(() => list.flip());
+      // Drive the DISPATCH, not the DOM event: an `EventTarget` listener that
+    // throws reports asynchronously (`uncaughtException`) and never reaches the
+    // caller of `dispatchEvent`, so `doesNotThrow(() => list.flip())` is
+    // vacuously true — a `catch` body changed to `throw` would still read green.
+    // MUT: media-bridge-rethrows
+  assert.doesNotThrow(() => dispatchChange(1n, true));
   } finally {
     console.error = originalError;
     delete globalThis.__wasmExports;
@@ -494,6 +512,53 @@ test("match-media: handles are per instance and die with it (W4)", async () => {
 // ---------------------------------------------------------------------------
 // The gate itself: driven against fixtures, so it is pinned to be able to FAIL.
 // ---------------------------------------------------------------------------
+test("check_wit_ops.py: the per-file binding SET is pinned, not just its size", () => {
+  // The per-file floor asked "> 0 bindings", so `platformHelpers.ts` — 45 of them
+  // — could lose 37 to a refactor the scan does not understand (`Reflect.get`,
+  // a renamed local) and still read green. (The `88 (46)` of that round is
+  // historical — the count is 47 bound now.) The dual with the base count is a
+  // size; this is the identity: which files carry bridges,
+  // and how many each. A bridge that stops being recognised must be re-declared
+  // here, on purpose.
+  // MUT: per-file-binding-set-drift
+  // The pin lives IN THE GATE (`EXPECTED_BINDINGS_BY_FILE`), because `just ci`
+  // runs `wit-ops-check` alone; this test proves the gate actually holds it by
+  // losing one binding and requiring the gate to say so.
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = `        const guest =
+          globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];`;
+    assert.ok(source.includes(needle), "the fixture must find a binding to lose");
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        `        const guest = Reflect.get(globalThis.__wasmExports ?? {}, "tairitsu-browser:full/idb-callbacks@0.2.0");`,
+      ),
+    );
+  });
+  assert.equal(rc, 1, "losing one binding must fail the GATE, not only the suite");
+  assert.match(out, /platformHelpers\.ts: expected 45 guest-object bindings, the scan found 44/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: the scan's own base count is pinned", () => {
+  // The floor guards "the scan found nothing"; it does NOT guard "the scan found
+  // a plausible number one digit short". A character class that admits nothing —
+  // `[^"`$.]` excluded the `.` every callback key ends with (`@0.2.0`) — makes
+  // every file report 0 bindings, which the floor tests describe as a PASSING
+  // scenario (they assert that red). So the base count needs its own pin:
+  // a scanner regression that quietly shrinks the report cannot hide behind a
+  // test whose expectation is "0 bindings is an error".
+  // MUT: callback-key-character-class
+  const out = execFileSync("python3", [GATE, "--check"], { cwd: REPO, encoding: "utf8" });
+  assert.match(
+    out,
+    /88 guest-export lookups \(47 bound\) named correctly/,
+    `the scan base moved — update this pin only with a reason; got: ${out}`,
+  );
+});
+
 test("check_wit_ops.py: green on the tree as it stands", () => {
   const out = execFileSync("python3", [GATE, "--check"], { cwd: REPO, encoding: "utf8" });
   assert.match(out, /WIT host surface ops OK/);
@@ -542,7 +607,11 @@ function runGateAgainst(mutate) {
     }
     // Allowances: everything the real tree allows, so only the injected defect
     // is left for the gate to report.
-    for (const file of ["wit-op-allow.tsv", "wit-interface-allow.tsv"]) {
+    // `wit-callback-allow.tsv` joined them with the guest-export direction: a
+    // fixture missing it turns the unmutated baseline RED (the recorded
+    // `resize-callbacks` line would look undeclared), which is exactly the
+    // vacuous-pass failure the first test below exists to catch.
+    for (const file of ["wit-op-allow.tsv", "wit-interface-allow.tsv", "wit-callback-allow.tsv"]) {
       copy(join(PKG, file), join(root, "packages", "browser-glue", file));
     }
     mutate(root);
@@ -659,5 +728,383 @@ test("check_wit_ops.py: wiring an op back into the allow-list turns the gate RED
     out,
     /stale allowance: media-query-list\.get-matches is allowed but the op IS implemented/,
     `the implemented-op branch must be the one that fires; got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: a callback bridge reading a property jco never emits turns the gate RED", () => {
+  // Direction 3 (host→guest). Restore the exact defect this change fixes:
+  // `mutation-observer-callbacks` declares `on-mutate`, jco emits `onMutate`,
+  // and the bridge used to read `on_mutation`. The gate must name it.
+  // MUT: mutation-bridge-reads-on_mutation
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onMutate;";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to break");
+    writeFileSync(path, source.replace(needle, "const handler = guest?.on_mutation;"));
+  });
+  assert.equal(rc, 1, "a callback property the guest does not export must fail the gate");
+  // File + line + the offending read: a reworded finding must not turn this
+  // into a silent pass (the failure mode this anchoring exists for).
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+.*`(?:guest\.)?on_mutation`/,
+    `the gate must name the file, a line, and the wrong read; got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: an unexplained dead-interface bridge turns the gate RED", () => {
+  // The allow file only says "known, not fixed" — it never makes a dead bridge
+  // pass silently. Inject one (a `resize-callbacks` dispatch, the interface the
+  // composed WIT never declared) and require the gate to name it; then add the
+  // allowance line and require green, which is what proves the allowance is the
+  // sanctioned channel rather than decoration.
+  // MUT: callback-allow-file-ignored
+  const injected = `        g.__wasmExports["tairitsu-browser:full/resize-callbacks@0.2.0"]?.on_resize?.(0n);\n`;
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    writeFileSync(path, readFileSync(path, "utf8") + injected);
+  });
+  assert.equal(rc, 1, "an undeclared interface with no allowance must fail the gate");
+  assert.match(out, /dispatches into `resize-callbacks@0\.2\.0`/, `got: ${out}`);
+  const allowed = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    writeFileSync(path, readFileSync(path, "utf8") + injected);
+    const allow = join(root, "packages", "browser-glue", "wit-callback-allow.tsv");
+    writeFileSync(
+      allow,
+      readFileSync(allow, "utf8") + "resize-callbacks\ttest injection\n",
+    );
+  });
+  assert.equal(allowed.rc, 0, `an allowance must make the same site acceptable; got: ${allowed.out}`);
+});
+
+test("check_wit_ops.py: a BOUND lookup into an undeclared interface turns the gate RED", () => {
+  const root0 = REPO;
+  // The inline pass only sees `<key>"]?.<prop>`; a bound lookup
+  // (`const guest = __wasmExports[...]`) into an interface the composed WIT does
+  // not declare has to be reported by the BOUND pass, or the site is lost — that
+  // is how `resize-callbacks` survived being rewired away.
+  // This control exists because the branch was previously unpinned: reverting it
+  // to `continue` left the gate green and only the behavioural suite noticed.
+  // MUT: bound-pass-undeclared-continue
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = `      const guest = g.__wasmExports?.["tairitsu-browser:full/window-resize-callbacks@0.2.0"];`;
+    assert.ok(source.includes(needle), "the fixture must find the bound lookup");
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        `      const guest = g.__wasmExports?.["tairitsu-browser:full/resize-callbacks@0.2.0"];`,
+      ),
+    );
+  });
+  assert.equal(rc, 1, "a bound lookup into an undeclared interface must fail the gate");
+  assert.match(
+    out,
+    /binds a guest export of `resize-callbacks@0\.2\.0`/,
+    `the BOUND branch must be the one that fires; got: ${out}`,
+  );
+  // …and it must point at THE binding. A `line_index` read before it was
+  // assigned quoted the previous bridge's line instead (measured: 381 for a
+  // binding on 473), which sends the reader to the wrong code.
+  // MUT: bound-pass-stale-line-index
+  const reported = /platformHelpers\.ts:(\d+) binds a guest export of `resize-callbacks/.exec(out);
+  assert.ok(reported, `no line was reported; got: ${out}`);
+  const declaration = `const guest = g.__wasmExports?.["tairitsu-browser:full/window-resize-callbacks@0.2.0"];`;
+  const liveSource = readFileSync(
+    join(root0, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts"),
+    "utf8",
+  );
+  const trueLine = liveSource.slice(0, liveSource.indexOf(declaration)).split("\n").length;
+  assert.equal(
+    Number(reported[1]),
+    trueLine,
+    `the finding must name the bridge's own line (${trueLine}), not another bridge's`,
+  );
+  // …and the same site is acceptable once an allowance line explains it, which
+  // proves the finding is the allowance channel and not a stray error.
+  const allowed = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(
+        `      const guest = g.__wasmExports?.["tairitsu-browser:full/window-resize-callbacks@0.2.0"];`,
+        `      const guest = g.__wasmExports?.["tairitsu-browser:full/resize-callbacks@0.2.0"];`,
+      ),
+    );
+    const allow = join(root, "packages", "browser-glue", "wit-callback-allow.tsv");
+    writeFileSync(allow, readFileSync(allow, "utf8") + "resize-callbacks\ttest injection\n");
+  });
+  assert.equal(allowed.rc, 0, `an allowance must accept it; got: ${allowed.out}`);
+});
+
+test("check_wit_ops.py: a callback scan that stops matching fails on the floor", () => {
+  // The scan's own negative control. Deleting every bridge would empty the site
+  // list, and an empty list would read green — the floor is what turns "the scan
+  // broke" into a red gate rather than a smaller report. This is the failure
+  // that actually happened while writing this check: a single-pattern version
+  // found 1 site of 42 and reported nothing.
+  // MUT: callback-lookups-removed
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replaceAll("__wasmExports", "__neverSet"));
+  });
+  assert.equal(rc, 1, "a scan that finds nothing must fail, not pass");
+  assert.match(out, /callback scan found only \d+ guest-export lookups/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: any non-exported read is RED regardless of its neighbours", () => {
+  // The rule is now "one candidate": jco emits exactly one identifier per func,
+  // so a `??` chain offering a second spelling is not repaired by the presence of
+  // a good name beside it. This control asserts the wrong operand is named even
+  // when a correct one sits in the same chain.
+  // MUT: callback-partner-anywhere-in-statement
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const onTimeout = exp?.onTimeout;";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to break");
+    writeFileSync(
+      path,
+      source.replace(needle, "const onTimeout = exp?.on_time_out ?? exp?.on_timeout ?? exp?.onTimeout;"),
+    );
+  });
+  assert.equal(rc, 1, "a chain whose wrong halves come first must fail the gate");
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+.*`(?:exp\.)?on_time_out`/,
+    `the gate must name the file, a line, and the wrong read; got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: a second candidate spelling something else is RED", () => {
+  // There is no alias table any more: `onResize ?? on_windows_resize` and
+  // `onResize ?? on_resize` are BOTH findings, because jco emits only
+  // `onResize`. A declared name from another interface does not rescue the read.
+  // MUT: callback-second-candidate-accepted
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onResize;";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch");
+    writeFileSync(path, source.replace(needle, "const handler = guest?.onResize ?? guest?.on_windows_resize;"));
+  });
+  assert.equal(rc, 1, "a fallback that is not a spelling of a declared func must fail the gate");
+  assert.match(out, /platformHelpers\.ts:\d+.*`(?:guest\.)?on_windows_resize`/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: a misspelled second candidate is RED", () => {
+  // `onTimeout ?? on_timout`: the near-miss spelling must be named, not absorbed
+  // by the correct name in front of it.
+  // MUT: callback-fallback-spelling-unchecked
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const onTimeout = exp?.onTimeout;";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch");
+    writeFileSync(path, source.replace(needle, "const onTimeout = exp?.onTimeout ?? exp?.on_timout;"));
+  });
+  assert.equal(rc, 1, "a fallback that is not a spelling of a declared func must fail the gate");
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+.*`(?:exp\.)?on_timout`/,
+    `got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: an INDIRECT bridge (`const guest = callbacks()`) is in range", () => {
+  // `mediaQueryList.ts` hands the guest object back from a helper, so a scan
+  // anchored on `const x = __wasmExports…` saw ZERO bindings there and the file
+  // was outside direction 3 entirely — `onChange ?? on_chang` read green.
+  // MUT: helper-indirection-invisible
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "mediaQueryList.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onChange;";
+    assert.ok(source.includes(needle), "the fixture must find the dispatch");
+    writeFileSync(path, source.replace(needle, "const handler = guest?.onChange ?? guest?.on_chang;"));
+  });
+  assert.equal(rc, 1, "a wrong read behind a helper must fail the gate");
+  assert.match(out, /mediaQueryList\.ts:\d+.*`(?:guest\.)?on_chang`/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: a call to one helper is not satisfied by another's declaration", () => {
+  // The first version of the helper detection asked "does this file declare ANY
+  // helper?" and "does this file make ANY `const x = helper()` call?" — two
+  // questions that can be answered by different helpers. Renaming the call while
+  // the declaration keeps its old name must not count as a binding.
+  // MUT: helper-pairing-loose
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "mediaQueryList.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const guest = callbacks();";
+    assert.ok(source.includes(needle), "the fixture must find the helper call");
+    writeFileSync(path, source.replace(needle, "const guest = otherCallbacks();"));
+  });
+  assert.equal(rc, 1, "an unpaired helper call must leave the file with 0 bindings and red");
+  assert.match(out, /mediaQueryList\.ts references `__wasmExports` but the scan produced 0 bindings/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: a bracket read is checked like any other read", () => {
+  // `(guest as any)?.["on_idb_success"]` is the shape a hurried fix produces and
+  // the exact name R8 removed. It read green: the read scanner only knew member
+  // access, the per-file floor is saturated on that file, and a bracket read does
+  // not move the base count. Both notations are now checked, and the cast form
+  // (`local as T`) is recognised — without it the bracket branch matches only the
+  // bare `guest["…"]` shape.
+  // MUT: bracket-read-unchecked
+  for (const [label, replacement] of [
+    ["with a cast", '(guest as any)?.["on_idb_success"]'],
+    ["without a cast", 'guest["on_idb_success"]'],
+    // `satisfies` is the same kind of type-level operator as `as`: reducing only
+    // `as` left a type name where the receiver belongs, and the read vanished
+    // while the binding still existed — which the binding pin cannot see.
+    // MUT: satisfies-not-reduced
+    ["with satisfies", '(guest satisfies any)?.["on_idb_success"]'],
+    ["with satisfies (dot)", "(guest satisfies any)?.on_idb_success"],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      const needle = "const handler = guest?.onIdbRequestSuccess;";
+      assert.ok(source.includes(needle), `the fixture must find the dispatch (${label})`);
+      writeFileSync(path, source.replace(needle, `const handler = ${replacement};`));
+    });
+    assert.equal(rc, 1, `a wrong read (${label}) must fail the gate`);
+    assert.match(
+      out,
+      /platformHelpers\.ts:\d+.*`guest(?:\["on_idb_success"\]|\.on_idb_success)`/,
+      `got: ${out}`,
+    );
+  }
+  // …and the SAME name written as a bracket read of the jco identifier stays green.
+  const ok = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(
+        "const handler = guest?.onIdbRequestSuccess;",
+        'const handler = (guest as any)?.["onIdbRequestSuccess"];',
+      ),
+    );
+  });
+  assert.equal(ok.rc, 0, `a correct bracket read must stay green; got: ${ok.out}`);
+});
+
+test("check_wit_ops.py: an excluded file is out of EVERY callback scan, inline included", () => {
+  // Round-17 fixed two of the three readers; the inline scan still walked every
+  // file, so a bound-shaped wrong read injected into an excluded file was
+  // COUNTED (88 → 89) and never checked — the bypass had simply moved. All three
+  // readers plus the allowance-staleness walk now share `callback_scan_files`.
+  // MUT: inline-scan-ignores-exclusions
+  const injected = [
+    '',
+    'const injected = globalThis.__wasmExports?.["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"];',
+    'const bad = injected?.on_mutation;',
+    '',
+  ].join("\n");
+  const { rc, out } = runGateAgainst((root) => {
+    // The fixture only copies the registry's runtime modules, and `wasmExports.ts`
+    // is not one of them — start from the same content the real file has.
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "wasmExports.ts");
+    writeFileSync(path, readFileSync(join(PKG, "src", "runtime", "wasmExports.ts"), "utf8") + injected);
+  });
+  // An excluded file is out of scope, so this is GREEN — but the count must not
+  // move either, which is what "out of the scan" means.
+  assert.equal(rc, 0, `an excluded file must not be scanned; got: ${out}`);
+  assert.match(out, /88 guest-export lookups \(47 bound\)/, `the excluded file must not be counted; got: ${out}`);
+});
+
+test("check_wit_ops.py: an exclusion really takes a file out of the scan", () => {
+  // The exclusion list used to gate only the per-file floor: `platformHelpers.ts`
+  // added to it left `88 (47 bound)` untouched and the gate green, while the
+  // docstring promised "a silent exclusion list is a place a bridge can be
+  // hidden". Both scans now read ONE file list, so an exclusion lowers the bound
+  // count and the global floor catches it.
+  // (Reverting one reader to a bare glob WITHOUT injecting anything is green:
+  // the discriminating case is exclusion × injection, which is what this runs.)
+  // MUT: exclusion-not-applied-to-bound-scan
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "scripts", "check_wit_ops.py");
+    const source = readFileSync(path, "utf8");
+    const needle = 'CALLBACK_SCAN_EXCLUDED = ("global.d.ts", "wasmExports.ts")';
+    assert.ok(source.includes(needle), "the fixture must find the exclusion list");
+    writeFileSync(
+      path,
+      source.replace(needle, 'CALLBACK_SCAN_EXCLUDED = ("global.d.ts", "wasmExports.ts", "platformHelpers.ts")'),
+    );
+  });
+  assert.equal(rc, 1, "excluding a bridge file must fail the gate, not merely print");
+  assert.match(out, /bound-callback scan found only \d+ bound guest exports/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: a refactor that hides a bridge turns RED (per-file floor)", () => {
+  // The scan recognises three shapes, each by regex. A plain refactor — turn the
+  // helper into an arrow function, or guard its body — makes `mediaQueryList.ts`
+  // produce ZERO bindings while the global floor stays green at 47, and a wrong
+  // read inside it reads clean. The per-file floor notices that the SHAPE
+  // CHANGED without trying to parse it.
+  // MUT: per-file-floor-missing
+  for (const [label, from, to] of [
+    [
+      "arrow function",
+      "function callbacks(): MediaQueryListCallbacks | undefined {",
+      "const callbacks = (): MediaQueryListCallbacks | undefined => {",
+    ],
+    [
+      "guarded body",
+      'return globalThis.__wasmExports?.["tairitsu-browser:full/media-query-list-callbacks@0.2.0"];',
+      'if (!globalThis.__wasmExports) {\n    return undefined;\n  }\n  return globalThis.__wasmExports["tairitsu-browser:full/media-query-list-callbacks@0.2.0"];',
+    ],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "mediaQueryList.ts");
+      const source = readFileSync(path, "utf8");
+      assert.ok(source.includes(from), `the fixture must find the helper (${label})`);
+      writeFileSync(
+        path,
+        source.replace(from, to).replace("const handler = guest?.onChange;", "const handler = guest?.on_change;"),
+      );
+    });
+    assert.equal(rc, 1, `a ${label} refactor that hides the bridge must fail the gate`);
+    assert.match(out, /mediaQueryList\.ts references `__wasmExports` but the scan produced 0 bindings/, `got: ${out}`);
+  }
+});
+
+test("check_wit_ops.py: the WRAPPED inline shape (the form the defect shipped in) turns RED", () => {
+  // The original defect was written across lines:
+  //   __wasmExports[\n  "…@0.2.0"\n]?.on_mutation?.(…)
+  // A same-line-only scanner is blind to exactly that, which is how it read
+  // green before this test existed.
+  // MUT: callback-inline-scan-line-anchored
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = `      const guest =
+        globalThis.__wasmExports?.["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"];`;
+    assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to break");
+    const wrapped = `      if (
+        globalThis.__wasmExports &&
+        globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]
+      ) {
+        globalThis.__wasmExports[
+          "tairitsu-browser:full/mutation-observer-callbacks@0.2.0"
+        ]?.on_mutation?.(callbackId, []);`;
+    writeFileSync(path, source.replace(needle, wrapped));
+  });
+  assert.equal(rc, 1, "a wrapped inline dispatch with a wrong name must fail the gate");
+  // Anchored on the DEFECT LINE, not on the message wording: the line number is
+  // a `\d+` (the line moves with the file), but the file name and the offending
+  // read must both be there, or a reworded message could let this go quiet.
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+.*`(?:guest\.)?on_mutation`/,
+    `the gate must name the file, a line, and the wrong read; got: ${out}`,
   );
 });
