@@ -1108,3 +1108,733 @@ test("check_wit_ops.py: the WRAPPED inline shape (the form the defect shipped in
     `the gate must name the file, a line, and the wrong read; got: ${out}`,
   );
 });
+
+test("check_wit_ops.py: a DESTRUCTURED guest read is reported, not skipped", () => {
+  // `const { onMutate } = guest` keeps the binding (so `EXPECTED_BINDINGS_BY_FILE`
+  // is satisfied) and hides the read (`_ACCESS_RE` wants a member access; a
+  // destructuring binds a property KEY). Measured before direction 3c: rc 0 — the
+  // wrong spelling read green, which is the exact defect class this gate exists
+  // for. The declared set cannot supply a verdict about a name the source does
+  // not spell as a name, so the SHAPE is the finding.
+  // MUT: destructured-read-invisible
+  const needle = "const handler = guest?.onMutate;";
+  for (const [label, initialiser] of [
+    ["plain", "guest"],
+    // Ordinary TS: a type annotation on the pattern, an `as`/`satisfies` assertion
+    // and a non-null assertion all sit between the pattern and the object, and the
+    // first draft required `}` to be followed directly by `=`, so `: any` read as
+    // "no destructuring here" and the wrong name went green (measured).
+    // MUT: destructure-typed-pattern-missed
+    ["typed pattern", "guest as any"],
+    // …and the annotation may itself contain `=` (a function type), which the
+    // first draft's `[^=]*` stopped at: `const { onMutato }: Record<string, () =>
+    // void> = guest` read as "no destructuring" again.
+    // MUT: destructure-arrow-type-annotation-missed
+    ["arrow-type annotation", "guest"],
+    ["satisfies", "guest satisfies Record<string, unknown>"],
+    ["non-null assertion", "guest!"],
+  ].map(([label, rhs]) => [
+    label,
+    `const { onMutato }${
+      label === "typed pattern"
+        ? ": any"
+        : label === "arrow-type annotation"
+          ? ": Record<string, () => void>"
+          : ""
+    } = ${rhs};`,
+  ])) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      assert.ok(source.includes(needle), "the fixture must find the dispatch it is about to extend");
+      writeFileSync(path, source.replace(needle, `${needle}\n      ${initialiser}`));
+    });
+    assert.equal(rc, 1, `a destructured guest read (${label}) must fail the gate`);
+    assert.match(
+      out,
+      /platformHelpers\.ts:\d+ destructures `onMutato` out of `guest`/,
+      `the gate must name the file, a line and the destructured key (${label}); got: ${out}`,
+    );
+  }
+});
+
+test("check_wit_ops.py: a destructured read is RED even when the KEY is correct", () => {
+  // The rule reports the shape, not the spelling. A `{ onMutate }` that happens to
+  // be right today is still a read the scan cannot check, and the next rename
+  // flips it silently — which is why the finding is not "this name is wrong" but
+  // "this shape is not judged". A pin that only covered the wrong name would let
+  // a "fix" that keeps the destructuring and repairs the spelling read green.
+  // MUT: destructured-read-judged-by-name
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onMutate;";
+    writeFileSync(path, source.replace(needle, `${needle}\n      const { onMutate } = guest;`));
+  });
+  assert.equal(rc, 1, "a destructured read must fail the gate even with the right key");
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+ destructures `onMutate` out of `guest`/,
+    `got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: a guest export taken as a DESTRUCTURED PARAMETER is reported", () => {
+  // `({ onMutate }) => …` has no initialiser to anchor on, so the declared set is
+  // the only handle: a parameter pattern that names a declared op is reported.
+  // (A misspelled parameter pattern — `({ onMutato }) => …` — names no declared
+  // op and is therefore NOT reported; that residual is stated in the module
+  // docstring rather than guessed at with an edit-distance rule.)
+  // MUT: arrow-param-destructure-invisible
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onMutate;";
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const rename = ({ onMutate: fn }) => fn;`),
+    );
+  });
+  assert.equal(rc, 1, "a destructured guest parameter must fail the gate");
+  assert.match(
+    out,
+    /platformHelpers\.ts:\d+ destructures `onMutate` in a parameter list/,
+    `got: ${out}`,
+  );
+});
+
+test("check_wit_ops.py: a COMPUTED-KEY guest read is reported, cast or not", () => {
+  // `` guest?.[`${name}`] `` and `guest[key]` both compute the property at run
+  // time; the cast form is the "quick fix" shape and needs the same cast
+  // reduction the member scan uses, or the local and its subscript are separated
+  // by the cast and the read is invisible again. A QUOTED key is not this shape
+  // (the member scan judges it), which is why the rule keys on the quote.
+  // MUT: computed-key-read-invisible
+  for (const [label, read] of [
+    ["template", "const bad = guest?.[`${name}`];"],
+    ["template behind a cast", "const bad = (guest as any)?.[`onMutato`];"],
+    ["template, static text", "const bad = guest[`onMutato`];"],
+    ["variable key", "const bad = guest[key];"],
+    ["variable key behind a cast", "const bad = (guest as any)?.[key];"],
+    // The key is "anything that is not a quote": a call or an index is the same
+    // shape, and the first version's identifier-only key let both read green.
+    // MUT: computed-key-identifier-only
+    ["method-call key", "const bad = guest[keys.pop()];"],
+    ["indexed key", "const bad = guest[k[0]];"],
+    // A concatenation that STARTS with a quote fell between the two rules — the
+    // quoted-key scan wants the whole bracket to be one literal, the computed-key
+    // rule wanted no quote at all — so it was neither judged nor reported
+    // (measured rc 0).
+    // MUT: concat-key-falls-between-rules
+    ["quote-starting concatenation", 'const bad = guest?.["on" + dyn];'],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      const needle = "const handler = guest?.onMutate;";
+      writeFileSync(path, source.replace(needle, `${needle}\n      ${read}`));
+    });
+    assert.equal(rc, 1, `a computed-key read (${label}) must fail the gate`);
+    // Two stable halves rather than one pattern: the reported KEY is echoed as
+    // written (`key`, `keys.pop()`, `k[0]`), so pinning the exact bracket text
+    // would pin the spelling instead of the rule.
+    assert.match(out, /platformHelpers\.ts:\d+ reads `guest\[/, `got: ${out}`);
+    assert.match(
+      out,
+      /with a (?:template-literal|computed) key/,
+      `the finding must say the key is computed; got: ${out}`,
+    );
+  }
+});
+
+test("check_wit_ops.py: the fail-closed read detector has a GREEN side too", () => {
+  // The three tests above assert rc === 1. That assertion proves nothing unless
+  // the same fixture is green without the shape, and unless the shapes it is NOT
+  // about stay green: a member access of the same name, and a destructuring or
+  // template subscript of something that is not the guest. Otherwise the rule is
+  // "any destructuring anywhere reds" and every ordinary line of code trips it.
+  // MUT: fail-closed-read-rule-overbroad
+  const baseline = runGateAgainst(() => {});
+  assert.equal(baseline.rc, 0, `the unmutated fixture must pass; got: ${baseline.out}`);
+  assert.match(
+    baseline.out,
+    /0 guest reads in a shape the scan cannot judge \(destructuring \/ computed key \/ member cast\)/,
+    `the detector must report its own count on every run; got: ${baseline.out}`,
+  );
+  const green = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = "const handler = guest?.onMutate;";
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        [
+          needle,
+          "      const rename = guest?.onMutate;",
+          "      const { width, height } = globalThis.__elementHandles.get(observer) ?? {};",
+          "      const label = `${width}x${height}`;",
+          // The reviewer's counterexample to the FIRST version of the parameter
+          // rule, which anchored on the whole world's declared names: `item` is a
+          // `dom-token-list` op, so this unrelated line reded. The anchor is now
+          // the interfaces THIS file binds.
+          // MUT: arrow-param-anchored-on-whole-world
+          "      new Map().forEach(({ item }) => item);",
+          // A helper that hands back a WASI namespace matches the callback KEY
+          // SHAPE (`<ns>/<iface>@<ver>`), so shape alone made it a guest source
+          // and reported `const { status } = wasiStatus()` as a destructured guest
+          // read (measured). Only an interface the composed WIT declares counts.
+          // MUT: helper-source-shape-only
+          "      function wasiStatus() {",
+          '        return globalThis.__wasmExports?.["wasi:cli/exit@0.2.0"];',
+          "      }",
+          "      const { status } = wasiStatus();",
+          "      void status;",
+          // A cast that IS the value hides no read: the member is judged on its
+          // own, nothing is read behind the cast, and the finding's own remedy
+          // ("read the member the guest exports") is what this line already does.
+          // Reporting it was a false positive introduced by the cast rule.
+          // MUT: cast-of-a-value-reported
+          "      const cb = (guest.onMutate as unknown as MutationCallback);",
+          "      void cb;",
+        ].join("\n"),
+      ),
+    );
+  });
+  assert.equal(
+    green.rc,
+    0,
+    `member access, a non-guest destructuring and a non-guest template must stay green; got: ${green.out}`,
+  );
+});
+
+test("check_wit_ops.py: an escaped `//` in a regex literal does NOT truncate the line", () => {
+  // The docstring said "`//` inside a regular-expression literal" as if the two
+  // spellings behaved alike. They do not, and the difference is worth a pin
+  // because the safe one is what a URL-shaped pattern is written with: `/a\/\/b/`
+  // contains no `//` at all once the escapes are read, so `strip_comments` copies
+  // the line verbatim and the read after it IS seen.
+  // MUT: strip-comments-eats-escaped-slash
+  const needle = "const handler = guest?.onMutate;";
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const re = /a\\/\\/b/; guest?.onMutato;`),
+    );
+  });
+  assert.equal(rc, 1, "an escaped `//` must not swallow the read that follows it");
+  assert.match(out, /platformHelpers\.ts:\d+.*`guest\.onMutato`/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: a `[//]` character class DOES truncate — pinned as the residual it is", () => {
+  // The other half of the same conditional, measured: `strip_comments` reads the
+  // `//` inside `[//]` as a comment and drops the rest of THAT line. A read
+  // written after it is invisible, the binding survives (so the per-file pin is
+  // silent) and the gate says OK — with the wrong callback name. This test pins
+  // that behaviour on purpose: it is the recorded residual, not a repair, and it
+  // is the reason the docstring says CONDITIONAL instead of "safe".
+  // The control is the same line WITHOUT the character class: same read, rc 1.
+  // If the truncation ever gets fixed, the first assertion flips and this test
+  // becomes the "we closed it" pin — a failure here means the docstring moved.
+  // MUT: regex-charclass-truncation-silent
+  const needle = "const handler = guest?.onMutate;";
+  const swallowed = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const re = /[//]/; guest?.onMutato;`),
+    );
+  });
+  assert.equal(
+    swallowed.rc,
+    0,
+    `the pin records today's behaviour: a [//] line swallows the read that follows it; got: ${swallowed.out}`,
+  );
+  // The base count is NOT asserted here: the swallowed text contains no
+  // `__wasmExports` lookup, so no mutation of this rule can move it — the count
+  // has its own pin above, and an assertion that cannot fail is a claim, not a
+  // test. What this test proves is the rc, plus the control below.
+  const control = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replace(needle, `${needle}\n      guest?.onMutato;`));
+  });
+  assert.equal(control.rc, 1, `the SAME read without the regex must red; got: ${control.out}`);
+  assert.match(control.out, /platformHelpers\.ts:\d+.*`guest\.onMutato`/, `got: ${control.out}`);
+});
+
+test("check_wit_ops.py: the `[//]` truncation is line-bounded", () => {
+  // Third measurement of the same conditional: the comment rule stops at the
+  // newline, so a read on the NEXT line is still seen. Without this, the pinned
+  // silence above could equally be a scanner that stopped reading the file, and
+  // the pin would be recording the wrong cause.
+  // MUT: comment-rule-crosses-newline
+  const needle = "const handler = guest?.onMutate;";
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const re = /[//]/;\n      guest?.onMutato;`),
+    );
+  });
+  assert.equal(rc, 1, "the truncation must stop at the newline, so the next line is judged");
+  assert.match(out, /platformHelpers\.ts:\d+.*`guest\.onMutato`/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: the three cast shapes around the local are pinned end to end", () => {
+  // The docstring lists them as shapes the cast reducer handles: `((guest as
+  // any))` (double parens, so the inner group is the cast), `(guest as
+  // Record<string, any>)` (a comma inside the type — the reason a type-syntax
+  // white-list loses) and `(guest as Fn<(a: T) => U>)` (a function type, which
+  // nests two parenthesis groups inside the cast). Claiming it is not enough:
+  // each shape gets a wrong read that must red and the right read that must stay
+  // green, so a reducer that stops matching one of them is a failing test rather
+  // than a docstring that drifted.
+  // MUT: cast-shape-not-reduced
+  const needle = "const handler = guest?.onMutate;";
+  for (const [label, cast] of [
+    ["double parens", "((guest as any))"],
+    ["generic with a comma", "(guest as Record<string, any>)"],
+    ["function type", "(guest as Fn<(a: T) => U>)"],
+    ["satisfies", "(guest satisfies any)"],
+  ]) {
+    const wrong = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(path, source.replace(needle, `const handler = ${cast}?.onMutato;`));
+    });
+    assert.equal(wrong.rc, 1, `a wrong read behind a ${label} cast must fail the gate`);
+    assert.match(
+      wrong.out,
+      /platformHelpers\.ts:\d+.*`guest\.onMutato`/,
+      `the ${label} cast must be reduced to the local so the read is judged; got: ${wrong.out}`,
+    );
+    const right = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(path, source.replace(needle, `const handler = ${cast}?.onMutate;`));
+    });
+    assert.equal(right.rc, 0, `the same ${label} cast with the right name must stay green; got: ${right.out}`);
+  }
+});
+
+test("check_wit_ops.py: a member-core cast is judged through the member, not skipped", () => {
+  // `(guest.sub as any)?.onX` is NOT reducible — there is no single local to put
+  // back — so the cast stays and the member read inside it is judged like any
+  // other read: `guest.sub` is not a declared export, so the gate reds. MEASURED
+  // before this pin: rc 0. The member branch of `_ACCESS_RE` required `?.`, so
+  // both `(guest.sub as any)?.onX` AND the plain-dot spelling `guest.onX` were
+  // invisible, and the docstring's implicit claim that cast+read is always
+  // resolved was wrong in the one direction that matters (a wrong name reading
+  // green).
+  // MUT: member-cast-silent-before
+  const needle = "const handler = guest?.onMutate;";
+  const memberCast = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replace(needle, "const handler = (guest.sub as any)?.onMutato;"));
+  });
+  assert.equal(memberCast.rc, 1, "a cast whose core is a member must still red");
+  assert.match(
+    memberCast.out,
+    /platformHelpers\.ts:\d+.*`guest\.sub`/,
+    `the finding names the member the scan can see, not the property behind the cast; got: ${memberCast.out}`,
+  );
+  // The case the member read does NOT catch, and the reason the shape itself is
+  // reported: when the member IS a declared export (`guest.onMutate`), the member
+  // read is ACCEPTED and the property behind the cast (`?.onMutato`) is invisible
+  // — measured rc 0 before this rule, with every count intact.
+  // MUT: member-cast-declared-member-silent
+  const declaredMember = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replace(needle, "const handler = (guest.onMutate as any)?.onMutato;"));
+  });
+  assert.equal(
+    declaredMember.rc,
+    1,
+    "a cast over a DECLARED member is the worst case: the member read passes and the read behind it is invisible",
+  );
+  assert.match(
+    declaredMember.out,
+    /platformHelpers\.ts:\d+ casts a member of `guest`/,
+    `the gate must report the cast shape; got: ${declaredMember.out}`,
+  );
+  // Two spellings that defeated the first version of the rule: one redundant pair
+  // of parentheses around the member (the rule's `[^()]` could not cross the `)`),
+  // and a non-null assertion before `as` (the reducer rejected the core).
+  // MUT: member-cast-parens-or-bang-missed
+  for (const [label, read, pattern] of [
+    [
+      "redundant parens",
+      "const handler = ((guest.onMutate) as any)?.onMutato;",
+      /platformHelpers\.ts:\d+ casts a member of `guest`/,
+    ],
+    [
+      "non-null assertion",
+      "const handler = (guest! as any)?.onMutato;",
+      /platformHelpers\.ts:\d+.*`guest\.onMutato`/,
+    ],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(path, source.replace(needle, read));
+    });
+    assert.equal(rc, 1, `a member cast with ${label} must fail the gate`);
+    assert.match(out, pattern, `got: ${out}`);
+  }
+  // The plain-dot spelling: same read, no cast, no `?`. It used to read green.
+  // MUT: plain-dot-read-invisible
+  const plainWrong = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replace(needle, "const handler = guest.onMutato;"));
+  });
+  assert.equal(plainWrong.rc, 1, "a plain-dot read must be judged like an optional-chained one");
+  assert.match(plainWrong.out, /platformHelpers\.ts:\d+.*`guest\.onMutato`/, `got: ${plainWrong.out}`);
+  // …and the reported line must be the READ's line, not the binding's. The scan
+  // finds the read line with its own `\s*\?\.` probe; leaving that copy of the
+  // pattern un-widened made every plain-dot finding quote the `const guest = …`
+  // line instead (measured: 171 for a read on 180), which sends the reader to the
+  // wrong code — the same defect the bound-lookup test above pins.
+  // MUT: plain-dot-finding-points-at-binding-line
+  const liveSource = readFileSync(join(PKG, "src", "runtime", "platformHelpers.ts"), "utf8");
+  const trueLine = liveSource.slice(0, liveSource.indexOf(needle)).split("\n").length;
+  const reported = /platformHelpers\.ts:(\d+).*`guest\.onMutato`/.exec(plainWrong.out);
+  assert.ok(reported, `no line was reported; got: ${plainWrong.out}`);
+  assert.equal(
+    Number(reported[1]),
+    trueLine,
+    `the finding must name the read's line (${trueLine}), not the binding's`,
+  );
+  // …and both plain-dot and cast-wrapped CORRECT reads stay green: the rule is
+  // about judging reads, not about banning the spellings.
+  const plainRight = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        "const handler = guest.onMutate;\n      const again = ((guest as any))?.onMutate;",
+      ),
+    );
+  });
+  assert.equal(plainRight.rc, 0, `a correct plain-dot read must stay green; got: ${plainRight.out}`);
+});
+
+test("check_wit_ops.py: the lexical layer carries its own selftest, and it is green", () => {
+  // `just wit-ops-check` runs `--check` alone, and the rules that REPORT a shape
+  // (instead of judging a name) can only ever print 0 on a clean tree — a
+  // detector that stopped matching looks exactly like a tree that has no such
+  // shape. The captured shapes and their verdicts live in the gate
+  // (`--selftest`), the same way `check_wasip2_closure.py` pins its parser; this
+  // runs them in the suite lane so the pin is executed, not shipped.
+  // MUT: lexical-selftest-not-run
+  const out = execFileSync("python3", [GATE, "--selftest"], { cwd: REPO, encoding: "utf8" });
+  assert.match(out, /selftest ok: the lexical layer still produces every captured verdict/);
+});
+
+test("check_wit_ops.py: a wrong name on a FAR read names the read's line, not the binding's", () => {
+  // `eventTarget.ts` binds `callbacks` on line 26 and reads it at 68, 86, 102, 107
+  // and 112 — the five event bridges, which use the PLAIN dot the read scan only
+  // started judging in this PR. Two things therefore have to hold, and both are
+  // asserted here because nobody would notice either one failing:
+  //   1. each of those five reads is judged at all (rc 1 when a name is wrong);
+  //   2. the finding quotes THAT line. A fixed 12-line probe from the binding
+  //      found nothing at 40-86 lines and reported line 26 for every one of them
+  //      (measured), and keying on the local alone reported 68 for a defect on 86.
+  // The binding pin (`EXPECTED_BINDINGS_BY_FILE["eventTarget.ts"] = 1`) cannot
+  // see either: a renamed property leaves the binding count untouched.
+  // MUT: far-read-line-attribution
+  const liveSource = readFileSync(join(PKG, "src", "runtime", "eventTarget.ts"), "utf8");
+  for (const [name, wrong] of [
+    ["onMouseEvent", "onMouseEvento"],
+    ["onKeyboardEvent", "onKeyboardEvento"],
+    ["onFocusEvent", "onFocusEvento"],
+    ["onInputEvent", "onInputEvento"],
+    ["onGenericEvent", "onGenericEvento"],
+  ]) {
+    const trueLine = liveSource.slice(0, liveSource.indexOf(`callbacks.${name}(`)).split("\n").length;
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "eventTarget.ts");
+      const source = readFileSync(path, "utf8");
+      assert.ok(source.includes(`callbacks.${name}(`), `the fixture must find ${name}`);
+      writeFileSync(path, source.replace(`callbacks.${name}(`, `callbacks.${wrong}(`));
+    });
+    assert.equal(rc, 1, `${name} renamed must fail the gate`);
+    assert.match(out, new RegExp(`eventTarget\\.ts:\\d+ .*callbacks\\.${wrong}`), `got: ${out}`);
+    const reported = new RegExp(`eventTarget\\.ts:(\\d+) .*callbacks\\.${wrong}`).exec(out);
+    assert.ok(reported, `no line was reported for ${name}; got: ${out}`);
+    assert.equal(
+      Number(reported[1]),
+      trueLine,
+      `the finding for ${name} must name its own line (${trueLine}), not the binding's`,
+    );
+  }
+});
+
+test("check_wit_ops.py: a single-argument CALL of a declared op stays green", () => {
+  // The regression round 2 found: reducing `(…)` to its core without asking
+  // whether the parens belong to a CALL turned `callbacks.onGenericEvent(evtType)`
+  // into `callbacks.onGenericEventevtType` and rejected correct code with a
+  // property that appears nowhere in the source. It surfaced only after the read
+  // scan started judging the plain dot — before that the whole line was invisible.
+  // Both directions here: the call keeps its name (rc 0) and a renamed call still
+  // reds, so "stop reporting calls" cannot be satisfied by "stop reporting".
+  // MUT: call-position-parens-stripped
+  const needle = "callbacks.onGenericEvent(listenerId, eventHandle, evtType);";
+  const run = (replacement) =>
+    runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "eventTarget.ts");
+      const source = readFileSync(path, "utf8");
+      assert.ok(source.includes(needle), "the fixture must find the dispatch");
+      writeFileSync(path, source.replace(needle, replacement));
+    });
+  const green = run("callbacks.onGenericEvent(evtType);");
+  assert.equal(green.rc, 0, `a correct single-argument call must stay green; got: ${green.out}`);
+  const red = run("callbacks.onGenericEventx(evtType);");
+  assert.equal(red.rc, 1, "a renamed single-argument call must still red");
+  assert.match(red.out, /callbacks\.onGenericEventx`/, `got: ${red.out}`);
+});
+
+test("check_wit_ops.py: a property read off an EXPRESSION receiver is reported", () => {
+  // `_ACCESS_RE` needs the local immediately followed by `?.`/`.`/`[`, so a `)`
+  // in between hides the read: `(0, guest)?.onX`, `(flag || guest)?.onX`. Neither
+  // is a cast wrapper (nothing reduces them), so they were silent until this rule.
+  // Reported rather than collapsed: collapsing the group to its tail identifier
+  // would claim the value IS the guest, which `flag || guest` does not promise.
+  // The call form is NOT this shape — `identity(guest)?.onX` reads a property of
+  // the call's result — and must stay green, or the rule becomes a call detector.
+  // MUT: expression-receiver-invisible
+  const needle = "const handler = guest?.onMutate;";
+  for (const [label, line] of [
+    ["comma", "void (0, guest)?.onMutato;"],
+    ["logical or", "void (flag || guest)?.onMutato;"],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(path, source.replace(needle, `${needle}\n      ${line}`));
+    });
+    assert.equal(rc, 1, `a ${label} receiver must fail the gate`);
+    assert.match(out, /reads a property of an expression that ends in `guest`/, `got: ${out}`);
+  }
+  // The cast-loop half of the same rule: a cast ARGUMENT of a call
+  // (`foo(guest as any)?.onX`) reads a property of the call's result, and reducing
+  // the argument fused it into the callee's name (`fooguest?.onX`) — another
+  // fabricated finding on correct code.
+  // MUT: cast-argument-reduced-in-call-position
+  const castArgument = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      void identity(guest as any)?.onMutato;`),
+    );
+  });
+  assert.equal(
+    castArgument.rc,
+    0,
+    `a cast argument of a call must not be fused into the callee; got: ${castArgument.out}`,
+  );
+  const callResult = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      void identity(guest)?.onMutato;`),
+    );
+  });
+  assert.equal(
+    callResult.rc,
+    0,
+    `a property of a CALL's result must stay green; got: ${callResult.out}`,
+  );
+});
+
+test("check_wit_ops.py: an ALIAS of the guest is reported, a property read is not", () => {
+  // `const g = guest; g?.onMutato` — the read scan keys on the locals
+  // `guest_bindings` proves belong to the guest namespace, so an alias hides every
+  // read written through it. The alias DECLARATION is therefore the finding.
+  // A property read (`const handler = guest?.onMutate`) is not an alias and must
+  // stay green, or every bridge in the tree would red.
+  // MUT: alias-hides-reads
+  const needle = "const handler = guest?.onMutate;";
+  // Every spelling that hands the namespace on at RUN TIME, not just the plain
+  // copy: an arrow that returns it, a fallback whose operand can be it, and a
+  // spread copy that carries every op it spreads. All three read rc 0 before this
+  // widening while `const g = guest` was reported — the same hole with different
+  // syntax, which is why they are one table.
+  // MUT: alias-only-recognises-a-bare-copy
+  for (const [label, rhs] of [
+    ["plain copy", "guest"],
+    ["arrow returning it", "() => guest"],
+    ["fallback", "guest || {}"],
+    ["fallback the other way", "{} ?? guest"],
+    ["spread copy", "{ ...guest }"],
+    ["spread copy with extra fields", "{ ...guest, extra: 1 }"],
+    // The operand/branch forms: a short-circuit and a conditional both RETURN one
+    // of their arms, so the namespace is carried rather than computed — the same
+    // family as the fallback above. Each leaf is also stripped of outer parens, so
+    // a parenthesised arm works too, and the arrow body goes through the same
+    // reduction (`() => ({ ...guest })`).
+    // MUT: logical-or-conditional-arms-missed
+    ["logical AND", "verbose && guest"],
+    ["parenthesised leaf", "(verbose && guest) || fallback"],
+    ["conditional, guest in the then-arm", "cond ? guest : legacy"],
+    ["conditional, guest in the else-arm", "cond ? legacy : guest"],
+    ["parenthesised conditional", "(cond ? guest : legacy)"],
+    ["arrow with a parenthesised spread body", "() => ({ ...guest })"],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(
+        path,
+        source.replace(needle, `${needle}\n      const g = ${rhs};\n      void g?.onMutato;`),
+      );
+    });
+    assert.equal(rc, 1, `a guest re-export written as a ${label} must fail the gate`);
+    assert.match(out, /re-exports the guest as `g`/, `got: ${out}`);
+  }
+  // …and the same three forms over something that is NOT the guest stay green,
+  // or the rule is "any arrow/fallback/literal reds" rather than an alias rule.
+  // MUT: alias-rule-overbroad
+  for (const [label, rhs] of [
+    ["arrow returning something else", "() => other"],
+    ["fallback over something else", "other || {}"],
+    ["spread of something else", "{ ...other }"],
+    ["arrow with a parenthesised spread of something else", "() => ({ ...other })"],
+    ["logical AND over something else", "verbose && other"],
+    ["conditional with something else in both arms", "flag ? other : legacy"],
+    ["parenthesised leaf over something else", "(verbose && other) || fallback"],
+    // NOT in the closed set, on purpose: a prototype link computes the object, and
+    // no lexical rule can decide it. Pinned GREEN so the boundary is visible in the
+    // lane rather than only in prose.
+    // MUT: object-create-silently-reported (it must stay silent)
+    ["prototype link (known-silent by design)", "Object.create(guest)"],
+    // A LITERAL is not expression syntax. Splitting an initialiser on `?`/`:`
+    // is a plain-text operation, so a string that merely CONTAINS those characters
+    // was read as a conditional whose branch was the guest — two correct lines
+    // were rejected as guest re-exports (measured). The split now asks the mask
+    // which positions are eligible, and a literal's body never is.
+    // MUT: literal-treated-as-ternary
+    ["string containing ?guest:", '"mode?guest:none"'],
+    ["template containing a ternary over the guest", "`${flag ? guest : other}`"],
+    // …and the LOGICAL operators have the same hazard, which needs the same mask.
+    // This pair is the discriminating one: split as raw text, the literal yields an
+    // ARM THAT IS EXACTLY `guest`, so an unmasked split reports a re-export that
+    // does not exist.
+    // MUT: logical-split-treats-literal-as-arm
+    ["string whose || arms look like the guest", '"||guest||"'],
+    ["template whose || arms look like the guest", "`||guest||`"],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(
+        path,
+        source.replace(needle, `${needle}\n      const g = ${rhs};\n      void g;`),
+      );
+    });
+    assert.equal(rc, 0, `a ${label} must stay green; got: ${out}`);
+  }
+  const alias = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const g = guest;\n      void g?.onMutato;`),
+    );
+  });
+  assert.equal(alias.rc, 1, "an alias of the guest must fail the gate");
+  assert.match(alias.out, /re-exports the guest as `g`/, `got: ${alias.out}`);
+  const notAlias = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replace(needle, `${needle}\n      const h2 = guest?.onMutate;`));
+  });
+  assert.equal(notAlias.rc, 0, `a property read is not an alias; got: ${notAlias.out}`);
+});
+
+test("check_wit_ops.py: ARRAY destructuring of the guest is reported (a dead read)", () => {
+  // `const [a] = guest` binds by INDEX and the guest namespace is an object, so
+  // every binding is `undefined`: no property is read at all, no name exists to
+  // judge, and nothing else reds (measured rc 0). Same family as the object
+  // pattern, reported for the same reason — the shape, not a name.
+  // The object pattern `const { a } = guest` must keep routing to its own finding
+  // (they are different rules with different advice), and a destructuring of
+  // something that is not the guest stays green in both forms.
+  // MUT: array-destructuring-invisible
+  const needle = "const handler = guest?.onMutate;";
+  const array = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const [onMutato] = guest;\n      void onMutato;`),
+    );
+  });
+  assert.equal(array.rc, 1, "array destructuring of the guest must fail the gate");
+  assert.match(array.out, /array-destructures `onMutato` out of `guest`/, `got: ${array.out}`);
+  const object = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const { onMutato } = guest;\n      void onMutato;`),
+    );
+  });
+  assert.match(
+    object.out,
+    /destructures `onMutato` out of `guest`/,
+    `the object form must keep its own finding; got: ${object.out}`,
+  );
+  const notGuest = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const [first, second] = [1, 2];\n      void first;`),
+    );
+  });
+  assert.equal(notGuest.rc, 0, `array destructuring of a literal must stay green; got: ${notGuest.out}`);
+});
+
+test("check_wit_ops.py: an OPTIONAL CALL's arguments are not read as properties", () => {
+  // `identity?.(guest)?.onX` — the `?.` before `(` is an optional-call marker, and
+  // treating it as an access turned the argument list into a property chain
+  // (`identity?.guest?.onX`): a name the source never writes. If the callee were a
+  // guest local, the gate would report a fabricated read of a real guest.
+  // MUT: optional-call-treated-as-access
+  const needle = "const handler = guest?.onMutate;";
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        [
+          needle,
+          // The realistic shape (the callee is a helper, so a fabrication would be
+          // invisible) …
+          "      void identity?.(guest)?.onMutato;",
+          // … and the shape that makes a regression OBSERVABLE: the callee is the
+          // guest local, so if `?.(` were read as an access the fused text would be
+          // `guest?.cb?.onMutato` — a read of `guest.cb`, which is undeclared and
+          // would red the gate on line that contains no guest read at all.
+          "      void guest?.(cb)?.onMutato;",
+        ].join("\n"),
+      ),
+    );
+  });
+  assert.equal(rc, 0, `an optional call over the guest must not fabricate a read; got: ${out}`);
+  assert.doesNotMatch(out, /identity`|\.guest`/, `no fabricated member may be reported; got: ${out}`);
+});
