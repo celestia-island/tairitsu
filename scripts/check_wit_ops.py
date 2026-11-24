@@ -102,8 +102,9 @@ Lexical blind spots, and what actually closes each:
     SHAPE is the finding):
       - destructured: `const { onX } = guest` in any of its ordinary TS spellings
         (plain, `: any` / `: Record<string, () => void>` annotation, `= guest as
-        any` / `satisfies T`, `= guest!`), and `({ onX }) => …` in a file that
-        binds the interface;
+        any` / `satisfies T`, `= guest!`), `const [onX] = guest` (a dead read —
+        object destructured by index), and `({ onX }) => …` in a file that binds
+        the interface;
       - subscripted with a template (`` guest[`${k}`] ``);
       - subscripted with any computed key — variable, call, index, or a
         concatenation that starts with a quote (`guest["on" + dyn]`);
@@ -112,8 +113,10 @@ Lexical blind spots, and what actually closes each:
       - read behind a cast whose core is a member (`(guest.sub as any)?.onX`, and
         the nastier `(guest.onMutate as any)?.onWrong`, where the member is
         declared and the read after the cast would otherwise red nothing);
-      - and an ALIAS of the guest (`const g = guest;`) is reported at the alias,
-        because every read written through it is invisible to the read scan.
+      - and a RE-EXPORT of the guest is reported at the declaration, because every
+        read written through it is invisible to the read scan: a plain copy, an
+        arrow that returns it (`() => guest`), a fallback whose operand can be it
+        (`guest || {}`), or a spread copy (`{ ...guest }`).
     Three residuals inside this class: a destructuring pattern nested more than
     one level (`const { a: { onX } } = guest`) is not matched — 0 occurrences, and
     a second level on a flat object of functions is not a shape a bridge can
@@ -121,8 +124,13 @@ Lexical blind spots, and what actually closes each:
     `({ onX }) => …` naming an op of an interface this file does not bridge is not
     reported (anchoring it on the whole world reded on unrelated code — `item` is
     a `dom-token-list` op); and a guest object handed in as a function PARAMETER
-    (`function f(cb) { cb?.onX }`) or reached through a member is not a source,
-    because only file-level bindings can be proven — 0 occurrences.
+    (`function f(cb) { cb?.onX }`), returned by a NAMED function
+    (`function getGuest() { return guest; }; getGuest()?.onX`) or reached through a
+    member is not a source, because only file-level bindings and the six
+    initialiser spellings above can be proven — 0 occurrences. A read taken off a
+    CALL's result, plain or optional (`identity(guest)?.onX`,
+    `identity?.(guest)?.onX`), is deliberately not judged: it is a property of the
+    call's return value, not of the guest, and it is pinned green.
 
 Read that split as the rule for this gate: the binding pin guards that a bridge
 EXISTS, the lexical scan guards that a READ is SEEN, and a shape neither can see
@@ -726,6 +734,13 @@ def _in_call_position(line: str, start: int) -> bool:
     head = line[:start].rstrip()
     if not head:
         return False
+    if head.endswith("?.") or head.endswith("?"):
+        # OPTIONAL CALL `f?.(x)` / `o.m?.(x)`: the `?.` is the optional-call
+        # marker, not an access, and missing it turned `identity?.(guest)?.onX`
+        # into `identity?.guest?.onX` — a property the source never writes.
+        head = head.rstrip(".").rstrip("?").rstrip()
+        if not head:
+            return False
     if head[-1] in ")]":
         return True
     if not (head[-1].isalnum() or head[-1] in "_$"):
@@ -906,6 +921,14 @@ _DESTRUCTURE_DECL_RE = re.compile(
 # argument, so there is no initialiser to anchor on and the declared set is the
 # only handle: a parameter pattern that names a declared op is reported.
 _DESTRUCTURE_PARAM_RE = re.compile(r"\(\s*\{(?P<names>[^{}]*)\}\s*(?::[^)]*)?\)\s*=>")
+# `const [onX] = guest` — array destructuring of the namespace binds by INDEX, so
+# the guest, being an object, yields `undefined`: a dead read with no name to judge
+# and nothing else reds (measured rc 0). Same family as the object pattern above,
+# reported for the same reason. Separate pattern because the delimiter pair differs
+# and one regex for both would mis-match `[{a}, {b}]` shapes.
+_DESTRUCTURE_ARRAY_RE = re.compile(
+    r"(?:const|let|var)\s*\[(?P<names>[^\[\]]*)\]\s*(?::[^=]*)?=\s*(?P<rhs>[^\n;]*)"
+)
 _TEMPLATE_KEY_READ_RE = re.compile(
     r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*\??\.?\s*\[\s*`"
 )
@@ -988,24 +1011,8 @@ def _destructured_names(pattern: str) -> list[str]:
     return names
 
 
-def _guest_source(rhs: str, sources: list[str]) -> str | None:
-    """The guest source a destructuring initialiser starts from, or None.
-
-    `= guest`, `= guest ?? {}`, `= callbacks()` and the direct
-    `= globalThis.__wasmExports?.["<key>"]` are the shapes that hand over the
-    guest namespace. `sources` (built in `unparseable_read_problems`) holds the
-    locals `guest_bindings` resolved plus the helper functions whose key is a
-    CALLBACK interface the composed WIT declares, so neither an alias this file
-    does not know about (`const g2 = guest`) nor a helper returning a WASI
-    namespace is a source — the scan stays with what it can prove.
-    """
-    reduced = normalise_casts(rhs).strip()
-    # The assertion spellings sit between the source and the end of the
-    # initialiser and change nothing about WHICH object was destructured:
-    #   const { onX } = guest as any;   const { onX } = guest satisfies T;
-    #   const { onX } = guest!;
-    reduced = re.sub(r"\s+(?:as|satisfies)\s+.*$", "", reduced).strip()
-    reduced = re.sub(r"!\s*$", "", reduced).strip()
+def _bare_guest_source(reduced: str, sources: list[str]) -> str | None:
+    """The proved source a whole expression IS (or a zero-argument call of one)."""
     if re.match(r"(?:globalThis\s*\.\s*|g\s*\.\s*)?__wasmExports\b", reduced):
         return "__wasmExports"
     for source in sources:
@@ -1013,6 +1020,67 @@ def _guest_source(rhs: str, sources: list[str]) -> str | None:
             re.escape(source) + r"\s*\(\s*\)\s*(?=$|[;,)]|\?\?)", reduced
         ) or re.match(re.escape(source) + r"\s*(?=$|[;,)]|\?\?)", reduced):
             return source
+    return None
+
+
+def _guest_source(rhs: str, sources: list[str], _depth: int = 0) -> str | None:
+    """The guest source an initialiser hands over, or None.
+
+    Six forms, and they all end up holding the guest namespace at run time — so
+    all six have to be recognised or an alias written any of those ways slips
+    past the alias rule entirely (measured: the last three read rc 0 while the
+    plain copy was reported):
+
+    * `= guest`, `= guest ?? {}`, `= callbacks()` — a proved source;
+    * `= globalThis.__wasmExports?.["<key>"]` — the direct lookup;
+    * `= guest as any` / `satisfies T` / `guest!` — assertions, stripped first;
+    * `= guest || {}` / `= {} || guest` — a fallback whose operand can be it;
+    * `= () => guest` — an arrow that returns it;
+    * `= { ...guest }` — a spread copy carrying every op it spreads.
+
+    `sources` (built in `unparseable_read_problems`) holds the locals
+    `guest_bindings` resolved plus the helper functions whose key is a CALLBACK
+    interface the composed WIT declares, so a helper returning a WASI namespace
+    is not a source. A NAMED function that returns the guest
+    (`function getGuest() { return guest; }`) is not a source either: its call
+    looks exactly like any other call, and resolving that needs a call graph —
+    listed as a residual instead.
+    """
+    if _depth > 3:
+        return None
+    reduced = normalise_casts(rhs).strip()
+    # The assertion spellings sit between the source and the end of the
+    # initialiser and change nothing about WHICH object was handed over:
+    #   const { onX } = guest as any;   const { onX } = guest satisfies T;
+    #   const { onX } = guest!;
+    reduced = re.sub(r"\s+(?:as|satisfies)\s+.*$", "", reduced).strip()
+    reduced = re.sub(r"!\s*$", "", reduced).strip()
+    bare = _bare_guest_source(reduced, sources)
+    if bare is not None:
+        return bare
+    # `() => guest` — the arrow's body is the value.
+    arrow = re.match(r"(?:async\s+)?(?:\([^()]*\)|[A-Za-z_$][\w$]*)\s*=>\s*(?P<body>.+)$", reduced, re.S)
+    if arrow:
+        found = _guest_source(arrow.group("body"), sources, _depth + 1)
+        if found is not None:
+            return found
+    # `guest || {}` — either operand can be the guest at run time.
+    operands = re.split(r"\s*(?:\|\||\?\?)\s*", reduced)
+    if len(operands) > 1:
+        for operand in operands:
+            found = _guest_source(operand, sources, _depth + 1)
+            if found is not None:
+                return found
+    # `{ ...guest }` — an object literal that spreads it.
+    spread = re.fullmatch(r"\{\s*(?P<body>.*?)\s*\}", reduced, re.S)
+    if spread:
+        for piece in spread.group("body").split(","):
+            piece = piece.strip()
+            if not piece.startswith("..."):
+                continue
+            found = _guest_source(piece[3:], sources, _depth + 1)
+            if found is not None:
+                return found
     return None
 
 
@@ -1128,10 +1196,10 @@ def unparseable_read_problems() -> tuple[list[str], int]:
             reported += 1
             problems.append(
                 f"callback site {path.name}:{bisect.bisect_right(starts, match.start())} "
-                f"aliases the guest into `{name}` — every read written through that local is "
-                "invisible to this gate (the read scan keys on the locals it can prove are the "
-                f"guest namespace), so the alias itself is reported; read `{name}`'s source "
-                "directly instead of copying it"
+                f"re-exports the guest as `{name}` — every read written through that local is "
+                "invisible to this gate (the read scan keys on the locals it can prove ARE the "
+                "guest namespace), so the re-export itself is reported; read the guest local "
+                "directly instead of copying, spreading, falling back to or returning it"
             )
 
         for match in _DESTRUCTURE_DECL_RE.finditer(text):
@@ -1147,6 +1215,19 @@ def unparseable_read_problems() -> tuple[list[str], int]:
                 f"it is reported instead of skipped; read `{source}.<name>` and let the scan "
                 "judge the name (if a local object merely shares this name, rename that local — "
                 "scope analysis is out of reach here, so the shape is reported either way)"
+            )
+
+        for match in _DESTRUCTURE_ARRAY_RE.finditer(text):
+            source = _guest_source(match.group("rhs"), sources)
+            if source is None:
+                continue
+            names = ", ".join(_destructured_names(match.group("names"))) or "(empty)"
+            reported += 1
+            problems.append(
+                f"callback site {path.name}:{bisect.bisect_right(starts, match.start())} "
+                f"array-destructures `{names}` out of `{source}` — array destructuring binds by "
+                "INDEX, and the guest namespace is an object, so every binding is `undefined` and "
+                "no property is read at all; read the property you meant as a member access"
             )
 
         for match in _DESTRUCTURE_PARAM_RE.finditer(text):
@@ -1918,6 +1999,22 @@ def selftest() -> int:
         "a property read is NOT an alias RHS",
         _guest_source("guest?.onMutate", ["guest"]),
         None,
+    )
+    # The six spellings that hand the namespace over at run time. Each one read
+    # rc 0 while the plain copy was reported, so they are pinned together.
+    for form in ("guest || {}", "{} ?? guest", "() => guest", "async () => guest", "{ ...guest }", "{ ...guest, x: 1 }"):
+        expect(f"an alias written as {form}", _guest_source(form, ["guest"]), "guest")
+    for form in ("() => other", "other || {}", "{ ...other }"):
+        expect(f"a NON-alias written as {form}", _guest_source(form, ["guest"]), None)
+    expect(
+        "an optional call keeps its arguments",
+        normalise_casts("identity?.(guest)?.onMutato"),
+        "identity?.(guest)?.onMutato",
+    )
+    expect(
+        "array destructuring from the guest is a shape",
+        bool(_DESTRUCTURE_ARRAY_RE.search("const [onX] = guest;")),
+        True,
     )
     expect(
         "a member-core cast is a shape",

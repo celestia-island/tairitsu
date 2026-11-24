@@ -1666,6 +1666,49 @@ test("check_wit_ops.py: an ALIAS of the guest is reported, a property read is no
   // stay green, or every bridge in the tree would red.
   // MUT: alias-hides-reads
   const needle = "const handler = guest?.onMutate;";
+  // Every spelling that hands the namespace on at RUN TIME, not just the plain
+  // copy: an arrow that returns it, a fallback whose operand can be it, and a
+  // spread copy that carries every op it spreads. All three read rc 0 before this
+  // widening while `const g = guest` was reported — the same hole with different
+  // syntax, which is why they are one table.
+  // MUT: alias-only-recognises-a-bare-copy
+  for (const [label, rhs] of [
+    ["plain copy", "guest"],
+    ["arrow returning it", "() => guest"],
+    ["fallback", "guest || {}"],
+    ["fallback the other way", "{} ?? guest"],
+    ["spread copy", "{ ...guest }"],
+    ["spread copy with extra fields", "{ ...guest, extra: 1 }"],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(
+        path,
+        source.replace(needle, `${needle}\n      const g = ${rhs};\n      void g?.onMutato;`),
+      );
+    });
+    assert.equal(rc, 1, `a guest re-export written as a ${label} must fail the gate`);
+    assert.match(out, /re-exports the guest as `g`/, `got: ${out}`);
+  }
+  // …and the same three forms over something that is NOT the guest stay green,
+  // or the rule is "any arrow/fallback/literal reds" rather than an alias rule.
+  // MUT: alias-rule-overbroad
+  for (const [label, rhs] of [
+    ["arrow returning something else", "() => other"],
+    ["fallback over something else", "other || {}"],
+    ["spread of something else", "{ ...other }"],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      writeFileSync(
+        path,
+        source.replace(needle, `${needle}\n      const g = ${rhs};\n      void g;`),
+      );
+    });
+    assert.equal(rc, 0, `a ${label} must stay green; got: ${out}`);
+  }
   const alias = runGateAgainst((root) => {
     const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
     const source = readFileSync(path, "utf8");
@@ -1675,11 +1718,87 @@ test("check_wit_ops.py: an ALIAS of the guest is reported, a property read is no
     );
   });
   assert.equal(alias.rc, 1, "an alias of the guest must fail the gate");
-  assert.match(alias.out, /aliases the guest into `g`/, `got: ${alias.out}`);
+  assert.match(alias.out, /re-exports the guest as `g`/, `got: ${alias.out}`);
   const notAlias = runGateAgainst((root) => {
     const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
     const source = readFileSync(path, "utf8");
     writeFileSync(path, source.replace(needle, `${needle}\n      const h2 = guest?.onMutate;`));
   });
   assert.equal(notAlias.rc, 0, `a property read is not an alias; got: ${notAlias.out}`);
+});
+
+test("check_wit_ops.py: ARRAY destructuring of the guest is reported (a dead read)", () => {
+  // `const [a] = guest` binds by INDEX and the guest namespace is an object, so
+  // every binding is `undefined`: no property is read at all, no name exists to
+  // judge, and nothing else reds (measured rc 0). Same family as the object
+  // pattern, reported for the same reason — the shape, not a name.
+  // The object pattern `const { a } = guest` must keep routing to its own finding
+  // (they are different rules with different advice), and a destructuring of
+  // something that is not the guest stays green in both forms.
+  // MUT: array-destructuring-invisible
+  const needle = "const handler = guest?.onMutate;";
+  const array = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const [onMutato] = guest;\n      void onMutato;`),
+    );
+  });
+  assert.equal(array.rc, 1, "array destructuring of the guest must fail the gate");
+  assert.match(array.out, /array-destructures `onMutato` out of `guest`/, `got: ${array.out}`);
+  const object = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const { onMutato } = guest;\n      void onMutato;`),
+    );
+  });
+  assert.match(
+    object.out,
+    /destructures `onMutato` out of `guest`/,
+    `the object form must keep its own finding; got: ${object.out}`,
+  );
+  const notGuest = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const [first, second] = [1, 2];\n      void first;`),
+    );
+  });
+  assert.equal(notGuest.rc, 0, `array destructuring of a literal must stay green; got: ${notGuest.out}`);
+});
+
+test("check_wit_ops.py: an OPTIONAL CALL's arguments are not read as properties", () => {
+  // `identity?.(guest)?.onX` — the `?.` before `(` is an optional-call marker, and
+  // treating it as an access turned the argument list into a property chain
+  // (`identity?.guest?.onX`): a name the source never writes. If the callee were a
+  // guest local, the gate would report a fabricated read of a real guest.
+  // MUT: optional-call-treated-as-access
+  const needle = "const handler = guest?.onMutate;";
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        [
+          needle,
+          // The realistic shape (the callee is a helper, so a fabrication would be
+          // invisible) …
+          "      void identity?.(guest)?.onMutato;",
+          // … and the shape that makes a regression OBSERVABLE: the callee is the
+          // guest local, so if `?.(` were read as an access the fused text would be
+          // `guest?.cb?.onMutato` — a read of `guest.cb`, which is undeclared and
+          // would red the gate on line that contains no guest read at all.
+          "      void guest?.(cb)?.onMutato;",
+        ].join("\n"),
+      ),
+    );
+  });
+  assert.equal(rc, 0, `an optional call over the guest must not fabricate a read; got: ${out}`);
+  assert.doesNotMatch(out, /identity`|\.guest`/, `no fabricated member may be reported; got: ${out}`);
 });
