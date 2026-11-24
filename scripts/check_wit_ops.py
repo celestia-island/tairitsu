@@ -1067,6 +1067,64 @@ def _bare_guest_source(reduced: str, sources: list[str]) -> str | None:
 _LOGICAL_SPLIT_RE = re.compile(r"\s*(?:\|\||&&|\?\?)\s*")
 
 
+def _masked(text: str) -> str:
+    """The same string with every STRING/TEMPLATE literal's body blanked out.
+
+    Splitting an initialiser on `?`/`:`/`||`/`&&`/`??` is a plain-text operation,
+    and a literal that CONTAINS those characters is not expression syntax:
+    `` `${flag ? guest : other}` `` and `"mode?guest:none"` were both read as a
+    conditional whose then-branch was the guest, so a correct line was rejected as
+    a guest re-export (measured, twice). The fix is not a smarter regex — it is to
+    ask which positions are even eligible: the body of a literal is not.
+
+    Same lexical boundary `strip_comments` and `_group_spans` already use (quote,
+    escape, closing quote, backtick), reused rather than re-derived. Positions and
+    length survive — every masked character becomes a space — so an offset into the
+    mask is an offset into the original, and callers slice the REAL text by it.
+    """
+    out: list[str] = []
+    index = 0
+    length = len(text)
+    while index < length:
+        char = text[index]
+        if char not in STRING_QUOTES:
+            out.append(char)
+            index += 1
+            continue
+        quote = char
+        out.append(" ")
+        index += 1
+        while index < length:
+            if text[index] == "\\" and index + 1 < length:
+                out.append("  ")
+                index += 2
+                continue
+            if text[index] == quote:
+                break
+            out.append(" ")
+            index += 1
+        if index < length:
+            out.append(" ")
+            index += 1
+    return "".join(out)
+
+
+def _split_outside_literals(text: str, separators: "re.Pattern[str]") -> list[str]:
+    """Split on `separators` at positions the mask says are real syntax.
+
+    Returns the ORIGINAL slices (literals intact), so a caller that finds the guest
+    in one of them can still name the source it came from.
+    """
+    mask = _masked(text)
+    pieces: list[str] = []
+    start = 0
+    for match in separators.finditer(mask):
+        pieces.append(text[start : match.start()])
+        start = match.end()
+    pieces.append(text[start:])
+    return pieces
+
+
 def _strip_outer_parens(text: str) -> str:
     """Drop `( … )` pairs that wrap the WHOLE expression (not a call's parens)."""
     while True:
@@ -1121,15 +1179,21 @@ def _guest_source(rhs: str, sources: list[str], _depth: int = 0) -> str | None:
         found = _guest_source(arrow.group("body"), sources, _depth + 1)
         if found is not None:
             return found
-    # `c ? a : b` — either branch can be the value at run time.
-    question = re.match(r"^(?P<cond>.+?)\?(?P<then>.+?):(?P<else>.+)$", reduced, re.S)
+    # `c ? a : b` — either branch can be the value at run time. The `?` and the `:`
+    # are located on the MASK: inside a literal neither is an operator, and reading
+    # one as a conditional rejected `"mode?guest:none"` and
+    # `` `${flag ? guest : other}` `` as guest re-exports (measured, both).
+    question = re.match(r"^(?P<cond>.+?)\?(?P<then>.+?):(?P<else>.+)$", _masked(reduced), re.S)
     if question:
-        for branch in (question.group("then"), question.group("else")):
+        for span in ("then", "else"):
+            branch = reduced[question.start(span) : question.end(span)]
             found = _guest_source(branch, sources, _depth + 1)
             if found is not None:
                 return found
     # `a || b`, `a && b`, `a ?? b` — a short-circuit returns one of its operands.
-    operands = _LOGICAL_SPLIT_RE.split(reduced)
+    # Split on the MASK, so a literal containing `||`/`&&`/`??` cannot produce an
+    # arm that is really the inside of a string.
+    operands = _split_outside_literals(reduced, _LOGICAL_SPLIT_RE)
     if len(operands) > 1:
         for operand in operands:
             found = _guest_source(operand, sources, _depth + 1)
@@ -1173,9 +1237,9 @@ def _casts_before_a_read(line: str, cast_start: int, cast_end: int) -> bool:
 def unparseable_read_problems() -> tuple[list[str], int]:
     """Direction 3c: guest reads written in a shape the member-access scan cannot see.
 
-    Six shapes, each hiding a read behind syntax instead of a name:
+    Eight shapes, each hiding a read behind syntax instead of a name:
 
-    * DESTRUCTURING from a guest source — `const { onX } = guest` binds a property
+    * DESTRUCTURING from a guest source (object pattern) — `const { onX } = guest` binds a property
       KEY, with or without a type annotation (`: any`), an assertion
       (`= guest as any` / `satisfies T`) or a non-null assertion (`= guest!`). The
       initialiser is the anchor, so EVERY name is reported, right or wrong: a
@@ -1185,6 +1249,11 @@ def unparseable_read_problems() -> tuple[list[str], int]:
       namespace is a flat object of functions, so a second level is not a shape a
       bridge can produce; 0 occurrences, and the report would fire on the outer
       key anyway if the pattern were one level shallower.)
+    * ARRAY DESTRUCTURING — `const [onX] = guest` binds by INDEX, so on an object
+      namespace every binding is `undefined`: a dead read with no property name to
+      judge and nothing else reddens. Its own rule (and its own message) because
+      the advice differs: an object pattern wants a member access, this wants the
+      property the author meant.
     * DESTRUCTURING in a parameter list — `({ onX }) => …`. There is no
       initialiser, so the anchor is the guest interfaces THIS FILE binds:
       `guest_bindings` names them, their declared funcs give the camel names, and
@@ -1200,6 +1269,11 @@ def unparseable_read_problems() -> tuple[list[str], int]:
       `normalise_casts` cannot reduce it (there is no single local to put back),
       and if the member happens to be a declared export (`(guest.onMutate as
       any)?.onWrong`) nothing else reds at all.
+    * a READ OFF AN EXPRESSION RECEIVER — `(0, guest)?.onX`, `(flag || guest)?.onX`.
+      `_ACCESS_RE` wants the local immediately followed by the access operator, so
+      the `)` between them hides the read, and nothing reduces it (it is not a cast
+      wrapper). Reported rather than collapsed: `a || guest` does not promise that
+      the value IS the guest.
     * a RE-EXPORT of the namespace — `const g = guest` and the other spellings of
       the CLOSED set documented on `_guest_source` (`||`/`&&`/`??` arms, `?:`
       branches, an arrow body, a spread copy, with outer parentheses stripped).
@@ -2088,9 +2162,13 @@ def selftest() -> int:
         "async () => guest",
         "{ ...guest }",
         "{ ...guest, x: 1 }",
-        # the operand / branch / paren spellings — one family, all carried
+        # the operand / branch / paren spellings — one family, all carried. One
+        # entry per OPERATOR: `||`, `&&`, `??` (the duplicate `&&` line this list
+        # shipped with tested nothing twice and left `??` covered only by the
+        # `{} ?? guest` form below, which exercises the right operand).
         "verbose && guest",
-        "verbose && guest",
+        "guest ?? {}",
+        "{} ?? guest",
         "(verbose && guest) || fallback",
         "cond ? guest : legacy",
         "cond ? legacy : guest",

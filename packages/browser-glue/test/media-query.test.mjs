@@ -1719,6 +1719,21 @@ test("check_wit_ops.py: an ALIAS of the guest is reported, a property read is no
     // lane rather than only in prose.
     // MUT: object-create-silently-reported (it must stay silent)
     ["prototype link (known-silent by design)", "Object.create(guest)"],
+    // A LITERAL is not expression syntax. Splitting an initialiser on `?`/`:`
+    // is a plain-text operation, so a string that merely CONTAINS those characters
+    // was read as a conditional whose branch was the guest — two correct lines
+    // were rejected as guest re-exports (measured). The split now asks the mask
+    // which positions are eligible, and a literal's body never is.
+    // MUT: literal-treated-as-ternary
+    ["string containing ?guest:", '"mode?guest:none"'],
+    ["template containing a ternary over the guest", "`${flag ? guest : other}`"],
+    // …and the LOGICAL operators have the same hazard, which needs the same mask.
+    // This pair is the discriminating one: split as raw text, the literal yields an
+    // ARM THAT IS EXACTLY `guest`, so an unmasked split reports a re-export that
+    // does not exist.
+    // MUT: logical-split-treats-literal-as-arm
+    ["string whose || arms look like the guest", '"||guest||"'],
+    ["template whose || arms look like the guest", "`||guest||`"],
   ]) {
     const { rc, out } = runGateAgainst((root) => {
       const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
