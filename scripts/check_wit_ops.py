@@ -1905,6 +1905,11 @@ def selftest() -> int:
         "callbacks.onGenericEvent(evtType)",
     )
     expect(
+        "a cast ARGUMENT keeps its call too",
+        normalise_casts("foo(guest as any)?.onMutato"),
+        "foo(guest as any)?.onMutato",
+    )
+    expect(
         "an alias RHS is a guest source",
         _guest_source("guest", ["guest"]),
         "guest",
