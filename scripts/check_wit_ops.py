@@ -73,6 +73,7 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -531,6 +532,55 @@ def guest_bindings(text: str) -> list[tuple[str, str, int]]:
     ]
 
 
+# `(local as T)` — and `((local as any))`, which leaves `(local)` behind: strip
+# plain wrapping parentheses too, or a double cast reduces to `(local)` and the
+# access pattern (which starts at the local) never sees it.
+_WRAPPED_RE = re.compile(r"\(\s*(?P<core>[A-Za-z_$][\w$]*)\s*\)")
+_ACCESS_RE = re.compile(
+    r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)"
+    r"(?:\?\.\s*(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)"
+    r"|\??\.?\[\s*[\"'](?P<bracket>[A-Za-z_$][A-Za-z0-9_$]*)[\"']\s*\])"
+)
+
+
+def normalise_casts(line: str) -> str:
+    """Reduce a cast expression to the local at its core: `(local as T)` → `local`.
+
+    Rewriting every type syntax in a regex is a losing game — a white-list misses
+    `,`, nesting and function types, and each miss is a new blind spot (`(guest as
+    Record<string, any>)`, `((guest as any))`, `(guest as Fn<(a: T) => U>)`). What
+    actually separates the cast from the access around it is PARENTHESIS DEPTH, so
+    the innermost balanced group is popped while it starts with `<local> as`, and
+    plain wrapping groups are dropped as well.
+    """
+    previous = None
+    while previous != line:
+        previous = line
+        # Walk INNERMOST groups only (depth 1 → 0), then re-scan: `((guest as any))`
+        # has no depth-1 group that starts with the cast, so an outer-first loop
+        # would never see it.
+        for start, index in _group_spans(line):
+            inner = line[start + 1 : index]
+            core = re.fullmatch(r"\s*(?P<core>[A-Za-z_$][\w$]*)\s+as\s+.*", inner, re.S)
+            if core:
+                line = line[:start] + core.group("core") + line[index + 1 :]
+                break
+        line = _WRAPPED_RE.sub(lambda match: match.group("core"), line)
+    return line
+
+
+def _group_spans(line: str) -> list[tuple[int, int]]:
+    """`(start, end)` of every balanced parenthesis group, closing paren included."""
+    spans: list[tuple[int, int]] = []
+    stack: list[int] = []
+    for index, char in enumerate(line):
+        if char == "(":
+            stack.append(index)
+        elif char == ")" and stack:
+            spans.append((stack.pop(), index))
+    return spans
+
+
 def bound_bridge_problems(
     declared_by_iface: dict[str, list[str]], counted_by_file: dict[str, int] | None = None
 ) -> tuple[list[str], int]:
@@ -560,11 +610,7 @@ def bound_bridge_problems(
     # `(guest as any)?.["on_mutate"]` is the shape a "quick" fix produces: a cast
     # sits between the local and the access, so the optional `as <Type>` group is
     # not decoration — without it the bracket branch never matches this form.
-    read_re = re.compile(
-        r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)"
-        r"(?:\s+as\s+[A-Za-z_$][A-Za-z0-9_$<>.\[\]| ]*\)?\s*)?"
-        r"(?:\?\.\s*(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)|\??\.?\[\s*[\"'](?P<bracket>[A-Za-z_$][A-Za-z0-9_$]*)[\"']\s*\])"
-    )
+    read_re = _ACCESS_RE
     for path in callback_scan_files():
         # Whole-line comments are dropped BEFORE the window is cut: a comment that
         # mentions a bad spelling is not a read of it.
@@ -629,7 +675,7 @@ def bound_bridge_problems(
                 ):
                     break
                 window += probe + "\n"
-            for read in read_re.finditer(window):
+            for read in read_re.finditer(normalise_casts(window)):
                 if read.group("local") != local:
                     continue
                 prop = read.group("prop") or read.group("bracket")
@@ -975,6 +1021,13 @@ def findings() -> tuple[list[Finding], int, int, int, int, int]:
     bound_findings, bound_total = bound_bridge_problems(declared_by_iface, counted_by_file)
     for problem in per_file_binding_problems(counted_by_file):
         results.append(Finding("callback-mismatch", problem, ""))
+    # The per-file binding identity, on request: a pin compares this map, so a
+    # bridge that stops being recognised shows up as a missing entry rather than
+    # as "one fewer binding somewhere".
+    if os.environ.get("TAIRITSU_WIT_OPS_BINDINGS"):
+        for name in sorted(counted_by_file):
+            if counted_by_file[name]:
+                print(f"BINDINGS {name}:{counted_by_file[name]}")
     for problem in bound_findings:
         results.append(Finding("callback-mismatch", problem, ""))
 

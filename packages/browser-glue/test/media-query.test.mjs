@@ -512,6 +512,28 @@ test("match-media: handles are per instance and die with it (W4)", async () => {
 // ---------------------------------------------------------------------------
 // The gate itself: driven against fixtures, so it is pinned to be able to FAIL.
 // ---------------------------------------------------------------------------
+test("check_wit_ops.py: the per-file binding SET is pinned, not just its size", () => {
+  // The per-file floor asked "> 0 bindings", so `platformHelpers.ts` — 45 of them
+  // — could lose 37 to a refactor the scan does not understand (`Reflect.get`,
+  // a renamed local) and still read green at 88 (46). The dual with the base
+  // count (`88 (47)`) is a size; this is the identity: which files carry bridges,
+  // and how many each. A bridge that stops being recognised must be re-declared
+  // here, on purpose.
+  // MUT: per-file-binding-set-drift
+  const out = execFileSync("python3", [GATE, "--check"], {
+    cwd: REPO,
+    encoding: "utf8",
+    env: { ...process.env, TAIRITSU_WIT_OPS_BINDINGS: "1" },
+  });
+  const counts = {};
+  for (const [, file, n] of out.matchAll(/BINDINGS (\S+):(\d+)/g)) counts[file] = Number(n);
+  assert.deepEqual(
+    counts,
+    { "eventTarget.ts": 1, "mediaQueryList.ts": 1, "platformHelpers.ts": 45 },
+    "a bridge that stops being recognised must be re-declared here, not absorbed as one fewer",
+  );
+});
+
 test("check_wit_ops.py: the scan's own base count is pinned", () => {
   // The floor guards "the scan found nothing"; it does NOT guard "the scan found
   // a plausible number one digit short". A character class that admits nothing —
