@@ -961,6 +961,12 @@ test("check_wit_ops.py: a bracket read is checked like any other read", () => {
   for (const [label, replacement] of [
     ["with a cast", '(guest as any)?.["on_idb_success"]'],
     ["without a cast", 'guest["on_idb_success"]'],
+    // `satisfies` is the same kind of type-level operator as `as`: reducing only
+    // `as` left a type name where the receiver belongs, and the read vanished
+    // while the binding still existed — which the binding pin cannot see.
+    // MUT: satisfies-not-reduced
+    ["with satisfies", '(guest satisfies any)?.["on_idb_success"]'],
+    ["with satisfies (dot)", "(guest satisfies any)?.on_idb_success"],
   ]) {
     const { rc, out } = runGateAgainst((root) => {
       const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
@@ -969,8 +975,12 @@ test("check_wit_ops.py: a bracket read is checked like any other read", () => {
       assert.ok(source.includes(needle), `the fixture must find the dispatch (${label})`);
       writeFileSync(path, source.replace(needle, `const handler = ${replacement};`));
     });
-    assert.equal(rc, 1, `a wrong bracket read (${label}) must fail the gate`);
-    assert.match(out, /platformHelpers\.ts:\d+.*`guest\["on_idb_success"\]`/, `got: ${out}`);
+    assert.equal(rc, 1, `a wrong read (${label}) must fail the gate`);
+    assert.match(
+      out,
+      /platformHelpers\.ts:\d+.*`guest(?:\["on_idb_success"\]|\.on_idb_success)`/,
+      `got: ${out}`,
+    );
   }
   // …and the SAME name written as a bracket read of the jco identifier stays green.
   const ok = runGateAgainst((root) => {

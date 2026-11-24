@@ -75,11 +75,22 @@ table. So a NEW bridge must edit the table, and the residual risk is a
 bridge that lands in a blind spot AND is hand-added to the table in the same
 change. That risk is one commit wide and visible in review; a silent one is not.
 
-Lexical blind spots that are fail-closed today (the base pin catches them):
-  * a RECEIVER other than `globalThis`/`g` (`w.__wasmExports[...]`);
-  * `//` inside a regular-expression literal (the state machine has no regex mode);
-  * a backtick nested inside a template's `${ … }`;
-  * an unterminated string literal, which swallows the rest of the file.
+Lexical blind spots, and what actually closes each:
+  * a RECEIVER other than `globalThis`/`g` (`w.__wasmExports[...]`) — the binding
+    pin: the binding disappears, so the per-file count drops and reds;
+  * an unterminated string literal, which swallows the rest of the file — same:
+    the bindings it eats are a drop in the pin;
+  * `//` inside a regular-expression literal — CONDITIONAL: the pin only helps
+    when the truncation lands on a line that carries a binding; elsewhere this is
+    a read the scan does not see, and nothing reds;
+  * a backtick nested in a template's `${ … }` — NOT a bypass: the scanner
+    handles it byte-for-byte (the template branch re-syncs), so it is not listed
+    as a risk any more.
+
+Read that split as the rule for this gate: the binding pin guards that a bridge
+EXISTS, the lexical scan guards that a READ is SEEN. Neither substitutes for the
+other, so a shape that keeps the binding and hides the read is a finding even
+when every count looks right.
 
 Usage:
     python3 scripts/check_wit_ops.py --check   # the gate
@@ -692,7 +703,14 @@ def normalise_casts(line: str) -> str:
         # would never see it.
         for start, index in _group_spans(line):
             inner = line[start + 1 : index]
-            core = re.fullmatch(r"\s*(?P<core>[A-Za-z_$][\w$]*)\s+as\s+.*", inner, re.S)
+            # `as T` and `satisfies T` are both type-level operators that sit
+            # between the local and its access. Reducing only `as` leaves
+            # `(guest satisfies any)?.on_mutate` with a type name where the
+            # receiver should be — the read then vanishes and nothing notices
+            # (the binding pin guards EXISTENCE, not that a read was seen).
+            core = re.fullmatch(
+                r"\s*(?P<core>[A-Za-z_$][\w$]*)\s+(?:as|satisfies)\s+.*", inner, re.S
+            )
             if core:
                 line = line[:start] + core.group("core") + line[index + 1 :]
                 break
