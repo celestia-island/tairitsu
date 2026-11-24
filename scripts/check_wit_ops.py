@@ -2163,12 +2163,12 @@ def selftest() -> int:
         "{ ...guest }",
         "{ ...guest, x: 1 }",
         # the operand / branch / paren spellings — one family, all carried. One
-        # entry per OPERATOR: `||`, `&&`, `??` (the duplicate `&&` line this list
-        # shipped with tested nothing twice and left `??` covered only by the
-        # `{} ?? guest` form below, which exercises the right operand).
+        # entry per OPERATOR: `||`, `&&`, `??` (the duplicate this list once
+        # shipped was the `??` line — covered twice — and it tested nothing
+        # twice; the surviving `{} ?? guest` and `guest ?? {}` cover both
+        # operand sides).
         "verbose && guest",
         "guest ?? {}",
-        "{} ?? guest",
         "(verbose && guest) || fallback",
         "cond ? guest : legacy",
         "cond ? legacy : guest",
