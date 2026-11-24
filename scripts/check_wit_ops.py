@@ -1052,8 +1052,15 @@ def _bare_guest_source(reduced: str, sources: list[str]) -> str | None:
 #   OUT — anything that calls, constructs or mutates (`Object.create(guest)`,
 #         `new Proxy(guest, …)`, `{ ...guest, onX: wrap(guest.onX) }` is IN on the
 #         spread item and the wrapped property is a different question entirely),
-#         a named function's RETURN (`function getGuest() { return guest; }`), and
-#         a guest that arrives as a parameter.
+#         a named function's RETURN (`function getGuest() { return guest; }`),
+#         a guest that arrives as a parameter, and a REBUILD that selects it out
+#         of a fresh container (`[guest][0]`, `new Map([["g", guest]]).get("g")`).
+#         That last family is the same decision as the constructors: the value is
+#         reached by evaluating a container, not carried by a syntactic operand,
+#         so a lexical scan cannot see it. It is OUT by the same rule, and it is
+#         named here because a review round found it as an UNSTATED gap — the
+#         clause said "calls, constructs or mutates" and a container rebuild is
+#         none of those three words.
 # The gate's load-bearing layers are `EXPECTED_BINDINGS_BY_FILE` (a bridge EXISTS)
 # and the read scan (a read is SEEN); this rule is the third, assistive layer that
 # turns the commonest way of hiding a read into a finding.
