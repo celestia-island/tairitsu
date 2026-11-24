@@ -104,10 +104,14 @@ Lexical blind spots, and what actually closes each:
     else reds) — closed fail-closed: `unparseable_read_problems` reports the
     SHAPE, because the declared set cannot supply a verdict about a name the
     source never spells as a name. Measured at zero occurrences before the rule
-    landed, so it closes a class rather than repairing a live site. The residual
-    inside this class is a pattern nested more than one level
-    (`const { a: { onX } } = guest`) — 0 occurrences, and a second level on a flat
-    object of functions is not a shape a bridge can produce.
+    landed, so it closes a class rather than repairing a live site. Two residuals
+    inside this class: a pattern nested more than one level
+    (`const { a: { onX } } = guest`) is not matched — 0 occurrences, and a second
+    level on a flat object of functions is not a shape a bridge can produce — and
+    the PARAMETER form is anchored on the interfaces the file binds, so
+    `({ onX }) => …` naming an op of an interface this file does not bridge is not
+    reported. Anchoring the parameter form on the whole world instead reded on
+    unrelated code (`item` is a `dom-token-list` op), which is why it is per-file.
 
 Read that split as the rule for this gate: the binding pin guards that a bridge
 EXISTS, the lexical scan guards that a READ is SEEN, and a shape neither can see
