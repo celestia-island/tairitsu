@@ -746,8 +746,10 @@ test("handle DOMAIN table: every record getter mints into the table its reader u
   ];
   let next = 9000n;
   for (const [iface, exportsOf, getter, expected, forbidden] of rows) {
-    // A fresh record/entry per row, so a handle minted by the row above cannot
-    // satisfy this row's assertion.
+    // A fresh store handle per row. (`__storeElement` / `__storeNode` mint a new
+    // handle on every call anyway, so a shared record/entry cannot make a row
+    // pass for the previous row's reason — what is per-row is the SOURCE handle,
+    // so a getter that returned a stale handle would resolve in the wrong row.)
     const recordHandle = next++;
     const entryHandle = next++;
     instance.tables.mutationRecordHandles.set(recordHandle, record);
