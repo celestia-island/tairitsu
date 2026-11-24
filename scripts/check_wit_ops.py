@@ -440,7 +440,8 @@ def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
       BASE, so a rewrite that shrinks what the scan sees is red even when the
       remaining sites are all clean.
 
-    In the tree as it stands there are **no** inline lookups and 88 bound ones, so
+    In the tree as it stands there are no inline lookups and 88 lookups in total
+    (47 of them bound), so
     the inline branch of `callback_problems` is a guard for the shape the original
     defect was written in rather than a live producer of findings — kept, and
     pinned by `media-query.test.mjs`'s "WRAPPED inline shape" control.
@@ -530,20 +531,6 @@ def guest_bindings(text: str) -> list[tuple[str, str, int]]:
     ]
 
 
-_MEMBER_RE = re.compile(
-    r"(?<![A-Za-z0-9_$])[A-Za-z_$][\w$]*\??\.(?P<prop>[A-Za-z_$][\w$]*)"
-)
-
-
-def _statement_around(text: str, position: int) -> str:
-    """The `;`-delimited statement containing `position` (bounded to 400 chars)."""
-    start = max(text.rfind(";", max(0, position - 400), position), text.rfind("\n", max(0, position - 400), position))
-    end = text.find(";", position)
-    if end < 0:
-        end = min(len(text), position + 200)
-    return text[start + 1 : end]
-
-
 def bound_bridge_problems(
     declared_by_iface: dict[str, list[str]], counted_by_file: dict[str, int] | None = None
 ) -> tuple[list[str], int]:
@@ -562,9 +549,21 @@ def bound_bridge_problems(
     # `<local>?.<prop>` / `<local>.<prop>` ONLY: a looser pattern scans for a bare
     # identifier, and a preceding `??` supplies one, so the property list comes
     # back empty and a wrong name reads green.
+    # Two read notations, both real in these sources:
+    #   guest?.onMutate        — member access;
+    #   (guest as any)?.["on_mutate"] — computed access, which is how a "quick"
+    #                                    fix would put a wrong name back without
+    #                                    tripping anything else. Both are checked
+    #                                    against the same declared set.
+    # Not covered (a JS tokenizer, not this gate): destructuring
+    # (`const { onX } = guest`) and template-literal prop names.
+    # `(guest as any)?.["on_mutate"]` is the shape a "quick" fix produces: a cast
+    # sits between the local and the access, so the optional `as <Type>` group is
+    # not decoration — without it the bracket branch never matches this form.
     read_re = re.compile(
-        r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)(?:\?\.|\.)\s*"
-        r"(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"(?<![A-Za-z0-9_$])(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"(?:\s+as\s+[A-Za-z_$][A-Za-z0-9_$<>.\[\]| ]*\)?\s*)?"
+        r"(?:\?\.\s*(?P<prop>[A-Za-z_$][A-Za-z0-9_$]*)|\??\.?\[\s*[\"'](?P<bracket>[A-Za-z_$][A-Za-z0-9_$]*)[\"']\s*\])"
     )
     for path in callback_scan_files():
         # Whole-line comments are dropped BEFORE the window is cut: a comment that
@@ -633,7 +632,8 @@ def bound_bridge_problems(
             for read in read_re.finditer(window):
                 if read.group("local") != local:
                     continue
-                prop = read.group("prop")
+                prop = read.group("prop") or read.group("bracket")
+                bracket_read = read.group("bracket") is not None
                 if prop in accepted:
                     continue
                 # NO fallback is accepted: jco emits exactly one identifier per
@@ -641,9 +641,10 @@ def bound_bridge_problems(
                 # rule taught that the hard way — neighbour check, spelling check,
                 # alias table, chain parse — before the alias table turned out to
                 # be empty for every declared name.)
+                shown = f'{local}["{prop}"]' if bracket_read else f"{local}.{prop}"
                 problems.append(
                     f"callback site {path.name}:{read_line_index + 1} binds `{local}` to "
-                    f"`{iface}@{keyed.group('ver')}` and reads `{local}.{prop}`, which the "
+                    f"`{iface}@{keyed.group('ver')}` and reads `{shown}`, which the "
                     f"guest does not export (declared: {', '.join(declared)}) — the callback "
                     "is dropped with no error"
                 )

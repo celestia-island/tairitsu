@@ -920,6 +920,43 @@ test("check_wit_ops.py: a call to one helper is not satisfied by another's decla
   assert.match(out, /mediaQueryList\.ts references `__wasmExports` but the scan produced 0 bindings/, `got: ${out}`);
 });
 
+test("check_wit_ops.py: a bracket read is checked like any other read", () => {
+  // `(guest as any)?.["on_idb_success"]` is the shape a hurried fix produces and
+  // the exact name R8 removed. It read green: the read scanner only knew member
+  // access, the per-file floor is saturated on that file, and a bracket read does
+  // not move the base count. Both notations are now checked, and the cast form
+  // (`local as T`) is recognised — without it the bracket branch matches only the
+  // bare `guest["…"]` shape.
+  // MUT: bracket-read-unchecked
+  for (const [label, replacement] of [
+    ["with a cast", '(guest as any)?.["on_idb_success"]'],
+    ["without a cast", 'guest["on_idb_success"]'],
+  ]) {
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+      const source = readFileSync(path, "utf8");
+      const needle = "const handler = guest?.onIdbRequestSuccess;";
+      assert.ok(source.includes(needle), `the fixture must find the dispatch (${label})`);
+      writeFileSync(path, source.replace(needle, `const handler = ${replacement};`));
+    });
+    assert.equal(rc, 1, `a wrong bracket read (${label}) must fail the gate`);
+    assert.match(out, /platformHelpers\.ts:\d+.*`guest\["on_idb_success"\]`/, `got: ${out}`);
+  }
+  // …and the SAME name written as a bracket read of the jco identifier stays green.
+  const ok = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(
+        "const handler = guest?.onIdbRequestSuccess;",
+        'const handler = (guest as any)?.["onIdbRequestSuccess"];',
+      ),
+    );
+  });
+  assert.equal(ok.rc, 0, `a correct bracket read must stay green; got: ${ok.out}`);
+});
+
 test("check_wit_ops.py: an excluded file is out of EVERY callback scan, inline included", () => {
   // Round-17 fixed two of the three readers; the inline scan still walked every
   // file, so a bound-shaped wrong read injected into an excluded file was
@@ -950,6 +987,8 @@ test("check_wit_ops.py: an exclusion really takes a file out of the scan", () =>
   // docstring promised "a silent exclusion list is a place a bridge can be
   // hidden". Both scans now read ONE file list, so an exclusion lowers the bound
   // count and the global floor catches it.
+  // (Reverting one reader to a bare glob WITHOUT injecting anything is green:
+  // the discriminating case is exclusion × injection, which is what this runs.)
   // MUT: exclusion-not-applied-to-bound-scan
   const { rc, out } = runGateAgainst((root) => {
     const path = join(root, "scripts", "check_wit_ops.py");
