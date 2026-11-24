@@ -520,18 +520,25 @@ test("check_wit_ops.py: the per-file binding SET is pinned, not just its size", 
   // and how many each. A bridge that stops being recognised must be re-declared
   // here, on purpose.
   // MUT: per-file-binding-set-drift
-  const out = execFileSync("python3", [GATE, "--check"], {
-    cwd: REPO,
-    encoding: "utf8",
-    env: { ...process.env, TAIRITSU_WIT_OPS_BINDINGS: "1" },
+  // The pin lives IN THE GATE (`EXPECTED_BINDINGS_BY_FILE`), because `just ci`
+  // runs `wit-ops-check` alone; this test proves the gate actually holds it by
+  // losing one binding and requiring the gate to say so.
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    const needle = `        const guest =
+          globalThis.__wasmExports?.["tairitsu-browser:full/idb-callbacks@0.2.0"];`;
+    assert.ok(source.includes(needle), "the fixture must find a binding to lose");
+    writeFileSync(
+      path,
+      source.replace(
+        needle,
+        `        const guest = Reflect.get(globalThis.__wasmExports ?? {}, "tairitsu-browser:full/idb-callbacks@0.2.0");`,
+      ),
+    );
   });
-  const counts = {};
-  for (const [, file, n] of out.matchAll(/BINDINGS (\S+):(\d+)/g)) counts[file] = Number(n);
-  assert.deepEqual(
-    counts,
-    { "eventTarget.ts": 1, "mediaQueryList.ts": 1, "platformHelpers.ts": 45 },
-    "a bridge that stops being recognised must be re-declared here, not absorbed as one fewer",
-  );
+  assert.equal(rc, 1, "losing one binding must fail the GATE, not only the suite");
+  assert.match(out, /platformHelpers\.ts: expected 45 guest-object bindings, the scan found 44/, `got: ${out}`);
 });
 
 test("check_wit_ops.py: the scan's own base count is pinned", () => {

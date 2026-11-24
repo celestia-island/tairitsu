@@ -150,10 +150,64 @@ _DISPATCH_PROP_RE = re.compile(
 )
 
 
+STRING_QUOTES = ('"', "'", "`")
+
+
 def strip_comments(text: str) -> str:
-    """Drop `//` and `/* … */` so a commented-out wiring is not read as wired."""
-    without_block = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
-    return "\n".join(line.split("//", 1)[0] for line in without_block.splitlines())
+    """Drop comments, skipping over string literals (their contents stay intact).
+
+    Not "split on `//`": that eats a URL (`"ws://host"`) and leaves the rest of
+    the line looking like code — the truncation shrinks what the scans see. A
+    one-pass state machine is enough (it does not parse JS; it tracks the four
+    things that change the meaning of a character: `"`, `'`, a backtick, `//`
+    and `/* */`). The output is the same length as the input and keeps every
+    literal, so indices and reported line numbers stay put.
+
+    `normalise_casts` needs the same lexical boundary (`(guest as "a)b")`), which
+    is why both read this one output.
+    """
+    out: list[str] = []
+    index = 0
+    length = len(text)
+    while index < length:
+        char = text[index]
+        following = text[index + 1] if index + 1 < length else ""
+        if char == "/" and following == "/":
+            while index < length and text[index] != "\n":
+                index += 1
+            continue
+        if char == "/" and following == "*":
+            index += 2
+            while index < length and not (text[index] == "*" and text[index + 1 : index + 2] == "/"):
+                if text[index] == "\n":
+                    out.append("\n")
+                index += 1
+            index += 2
+            continue
+        if char in STRING_QUOTES:
+            # Copy the literal VERBATIM: this function's callers parse module
+            # specifiers, interface keys and registry names out of exactly these
+            # strings. Only the `//` rule was wrong (it ate `"ws://…"`); the fix
+            # is to know where a string ENDS, not to erase it.
+            quote = char
+            out.append(quote)
+            index += 1
+            while index < length:
+                if text[index] == "\\" and index + 1 < length:
+                    out.append(text[index : index + 2])
+                    index += 2
+                    continue
+                if text[index] == quote:
+                    break
+                out.append(text[index])
+                index += 1
+            if index < length:
+                out.append(quote)
+                index += 1
+            continue
+        out.append(char)
+        index += 1
+    return "".join(out)
 
 
 def camel(kebab: str) -> str:
@@ -388,6 +442,40 @@ def callback_scan_files() -> list[Path]:
     ]
 
 
+# The per-file binding IDENTITY, pinned in the gate (not only in a test): `just
+# ci` runs `wit-ops-check` on its own, so a pin that lives in the test suite does
+# not guard the gate anyone actually runs. A file losing a binding to a refactor
+# the scan does not understand (`Reflect.get`, a renamed local) must be a RED
+# GATE with a message saying which file and how many it lost — not a slightly
+# smaller report.
+EXPECTED_BINDINGS_BY_FILE = {
+    "eventTarget.ts": 1,
+    "mediaQueryList.ts": 1,
+    "platformHelpers.ts": 45,
+}
+
+
+def binding_identity_problems(counted_by_file: dict[str, int]) -> list[str]:
+    """The per-file binding counts must match `EXPECTED_BINDINGS_BY_FILE`."""
+    problems: list[str] = []
+    for name, expected in sorted(EXPECTED_BINDINGS_BY_FILE.items()):
+        actual = counted_by_file.get(name, 0)
+        if actual == expected:
+            continue
+        problems.append(
+            f"{name}: expected {expected} guest-object bindings, the scan found {actual} — a "
+            "bridge stopped being recognised (a refactor the scan does not understand) or a "
+            "new one was added; update EXPECTED_BINDINGS_BY_FILE with the reason"
+        )
+    for name, actual in sorted(counted_by_file.items()):
+        if actual and name not in EXPECTED_BINDINGS_BY_FILE:
+            problems.append(
+                f"{name}: {actual} guest-object bindings in a file this list does not cover — "
+                "add it to EXPECTED_BINDINGS_BY_FILE with the reason"
+            )
+    return problems
+
+
 def per_file_binding_problems(counted_by_file: dict[str, int]) -> list[str]:
     """Every runtime file that TOUCHES `__wasmExports` must yield a binding.
 
@@ -543,6 +631,33 @@ _ACCESS_RE = re.compile(
 )
 
 
+def parens_balanced(line: str) -> bool:
+    """`(`/`)` counts match, ignoring what is inside a string literal."""
+    depth = 0
+    quote = None
+    index = 0
+    while index < len(line):
+        char = line[index]
+        if quote:
+            if char == "\\" and index + 1 < len(line):
+                index += 2
+                continue
+            if char == quote:
+                quote = None
+            index += 1
+            continue
+        if char in STRING_QUOTES:
+            quote = char
+        elif char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if depth < 0:
+                return False
+        index += 1
+    return depth == 0 and quote is None
+
+
 def normalise_casts(line: str) -> str:
     """Reduce a cast expression to the local at its core: `(local as T)` → `local`.
 
@@ -570,14 +685,41 @@ def normalise_casts(line: str) -> str:
 
 
 def _group_spans(line: str) -> list[tuple[int, int]]:
-    """`(start, end)` of every balanced parenthesis group, closing paren included."""
+    """`(start, end)` of every balanced parenthesis group, closing paren included.
+
+    Brackets INSIDE a string literal do not count: `(guest as "a)b")` has one
+    group, not one group cut in half. The mask keeps index positions, so the
+    spans apply to the original line.
+    """
+    masked = []
+    quote = None
+    index = 0
+    while index < len(line):
+        char = line[index]
+        if quote:
+            if char == "\\" and index + 1 < len(line):
+                masked.append("  ")
+                index += 2
+                continue
+            if char == quote:
+                quote = None
+            masked.append(" ")
+            index += 1
+            continue
+        if char in STRING_QUOTES:
+            quote = char
+            masked.append(" ")
+            index += 1
+            continue
+        masked.append(char)
+        index += 1
     spans: list[tuple[int, int]] = []
     stack: list[int] = []
-    for index, char in enumerate(line):
+    for position, char in enumerate("".join(masked)):
         if char == "(":
-            stack.append(index)
+            stack.append(position)
         elif char == ")" and stack:
-            spans.append((stack.pop(), index))
+            spans.append((stack.pop(), position))
     return spans
 
 
@@ -626,6 +768,10 @@ def bound_bridge_problems(
         file_bindings = guest_bindings(text)
         if counted_by_file is not None:
             counted_by_file[path.name] = len(file_bindings)
+        # A window ends at the enclosing block, so it can end mid-nesting; balance
+        # is judged on the FILE. If a file does not balance, every binding in it
+        # is reported rather than silently judged on a broken frame.
+        file_balanced = parens_balanced(text)
         for local, key_text, offset in file_bindings:
             keyed = _CALLBACK_KEY_RE.match(key_text)
             if keyed is None:
@@ -638,6 +784,14 @@ def bound_bridge_problems(
             # The property may be read several lines below a wrapped lookup (a doc
             # comment sits between them), so the read line is the first line at or
             # after the binding that mentions the local.
+            if not file_balanced:
+                problems.append(
+                    f"callback site {path.name}:{kept_positions[filtered_index] + 1} binds "
+                    f"`{local}` to `{iface}@{keyed.group('ver')}` but the file's parentheses do "
+                    "not balance — the read scan cannot judge it, so it is reported rather "
+                    "than skipped"
+                )
+                continue
             read_line_index = kept_positions[filtered_index]
             for probe_index in range(filtered_index, min(filtered_index + 12, len(lines))):
                 if re.search(
@@ -675,6 +829,7 @@ def bound_bridge_problems(
                 ):
                     break
                 window += probe + "\n"
+
             for read in read_re.finditer(normalise_casts(window)):
                 if read.group("local") != local:
                     continue
@@ -1020,6 +1175,8 @@ def findings() -> tuple[list[Finding], int, int, int, int, int]:
     counted_by_file: dict[str, int] = {}
     bound_findings, bound_total = bound_bridge_problems(declared_by_iface, counted_by_file)
     for problem in per_file_binding_problems(counted_by_file):
+        results.append(Finding("callback-mismatch", problem, ""))
+    for problem in binding_identity_problems(counted_by_file):
         results.append(Finding("callback-mismatch", problem, ""))
     # The per-file binding identity, on request: a pin compares this map, so a
     # bridge that stops being recognised shows up as a missing entry rather than
