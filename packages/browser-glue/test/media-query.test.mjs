@@ -1240,3 +1240,81 @@ test("check_wit_ops.py: the fail-closed read detector has a GREEN side too", () 
     `member access, a non-guest destructuring and a non-guest template must stay green; got: ${green.out}`,
   );
 });
+
+test("check_wit_ops.py: an escaped `//` in a regex literal does NOT truncate the line", () => {
+  // The docstring said "`//` inside a regular-expression literal" as if the two
+  // spellings behaved alike. They do not, and the difference is worth a pin
+  // because the safe one is what a URL-shaped pattern is written with: `/a\/\/b/`
+  // contains no `//` at all once the escapes are read, so `strip_comments` copies
+  // the line verbatim and the read after it IS seen.
+  // MUT: strip-comments-eats-escaped-slash
+  const needle = "const handler = guest?.onMutate;";
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const re = /a\\/\\/b/; guest?.onMutato;`),
+    );
+  });
+  assert.equal(rc, 1, "an escaped `//` must not swallow the read that follows it");
+  assert.match(out, /platformHelpers\.ts:\d+.*`guest\.onMutato`/, `got: ${out}`);
+});
+
+test("check_wit_ops.py: a `[//]` character class DOES truncate — pinned as the residual it is", () => {
+  // The other half of the same conditional, measured: `strip_comments` reads the
+  // `//` inside `[//]` as a comment and drops the rest of THAT line. A read
+  // written after it is invisible, the binding survives (so the per-file pin is
+  // silent) and the gate says OK — with the wrong callback name. This test pins
+  // that behaviour on purpose: it is the recorded residual, not a repair, and it
+  // is the reason the docstring says CONDITIONAL instead of "safe".
+  // The control is the same line WITHOUT the character class: same read, rc 1.
+  // If the truncation ever gets fixed, the first assertion flips and this test
+  // becomes the "we closed it" pin — a failure here means the docstring moved.
+  // MUT: regex-charclass-truncation-silent
+  const needle = "const handler = guest?.onMutate;";
+  const swallowed = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const re = /[//]/; guest?.onMutato;`),
+    );
+  });
+  assert.equal(
+    swallowed.rc,
+    0,
+    `the pin records today's behaviour: a [//] line swallows the read that follows it; got: ${swallowed.out}`,
+  );
+  assert.match(
+    swallowed.out,
+    /88 guest-export lookups \(47 bound\)/,
+    `the truncation must not move the base count either; got: ${swallowed.out}`,
+  );
+  const control = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replace(needle, `${needle}\n      guest?.onMutato;`));
+  });
+  assert.equal(control.rc, 1, `the SAME read without the regex must red; got: ${control.out}`);
+  assert.match(control.out, /platformHelpers\.ts:\d+.*`guest\.onMutato`/, `got: ${control.out}`);
+});
+
+test("check_wit_ops.py: the `[//]` truncation is line-bounded", () => {
+  // Third measurement of the same conditional: the comment rule stops at the
+  // newline, so a read on the NEXT line is still seen. Without this, the pinned
+  // silence above could equally be a scanner that stopped reading the file, and
+  // the pin would be recording the wrong cause.
+  // MUT: comment-rule-crosses-newline
+  const needle = "const handler = guest?.onMutate;";
+  const { rc, out } = runGateAgainst((root) => {
+    const path = join(root, "packages", "browser-glue", "src", "runtime", "platformHelpers.ts");
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(needle, `${needle}\n      const re = /[//]/;\n      guest?.onMutato;`),
+    );
+  });
+  assert.equal(rc, 1, "the truncation must stop at the newline, so the next line is judged");
+  assert.match(out, /platformHelpers\.ts:\d+.*`guest\.onMutato`/, `got: ${out}`);
+});

@@ -82,9 +82,17 @@ Lexical blind spots, and what actually closes each:
     pin: the binding disappears, so the per-file count drops and reds;
   * an unterminated string literal, which swallows the rest of the file — same:
     the bindings it eats are a drop in the pin;
-  * `//` inside a regular-expression literal — CONDITIONAL: the pin only helps
-    when the truncation lands on a line that carries a binding; elsewhere this is
-    a read the scan does not see, and nothing reds;
+  * `//` inside a regular-expression literal — CONDITIONAL, and the condition is
+    measured rather than assumed. `/a\/\/b/` does NOT truncate: the two `\/`
+    sequences never form `//`, so a read written after it on the same line is
+    still seen (pinned in `media-query.test.mjs`). `/[//]/` DOES: `strip_comments`
+    reads the `//` inside the character class as a comment and drops the rest of
+    that line, so a read there is not seen — and the binding is untouched, so the
+    pin does not fire either. The truncation is line-bounded (a read on the next
+    line is still seen). Left as a residual rather than "fixed": deciding whether
+    a `/` opens a regex literal or divides needs expression context (`a / b / c`),
+    and any state machine that guesses would trade this silence for a different
+    one (the wrong guess eats a real comment's line instead);
   * a backtick nested in a template's `${ … }` — NOT a bypass: the scanner
     handles it byte-for-byte (the template branch re-syncs), so it is not listed
     as a risk any more;
