@@ -1533,3 +1533,42 @@ test("check_wit_ops.py: the lexical layer carries its own selftest, and it is gr
   const out = execFileSync("python3", [GATE, "--selftest"], { cwd: REPO, encoding: "utf8" });
   assert.match(out, /selftest ok: the lexical layer still produces every captured verdict/);
 });
+
+test("check_wit_ops.py: a wrong name on a FAR read names the read's line, not the binding's", () => {
+  // `eventTarget.ts` binds `callbacks` on line 26 and reads it at 68, 86, 102, 107
+  // and 112 — the five event bridges, which use the PLAIN dot the read scan only
+  // started judging in this PR. Two things therefore have to hold, and both are
+  // asserted here because nobody would notice either one failing:
+  //   1. each of those five reads is judged at all (rc 1 when a name is wrong);
+  //   2. the finding quotes THAT line. A fixed 12-line probe from the binding
+  //      found nothing at 40-86 lines and reported line 26 for every one of them
+  //      (measured), and keying on the local alone reported 68 for a defect on 86.
+  // The binding pin (`EXPECTED_BINDINGS_BY_FILE["eventTarget.ts"] = 1`) cannot
+  // see either: a renamed property leaves the binding count untouched.
+  // MUT: far-read-line-attribution
+  const liveSource = readFileSync(join(PKG, "src", "runtime", "eventTarget.ts"), "utf8");
+  for (const [name, wrong] of [
+    ["onMouseEvent", "onMouseEvento"],
+    ["onKeyboardEvent", "onKeyboardEvento"],
+    ["onFocusEvent", "onFocusEvento"],
+    ["onInputEvent", "onInputEvento"],
+    ["onGenericEvent", "onGenericEvento"],
+  ]) {
+    const trueLine = liveSource.slice(0, liveSource.indexOf(`callbacks.${name}(`)).split("\n").length;
+    const { rc, out } = runGateAgainst((root) => {
+      const path = join(root, "packages", "browser-glue", "src", "runtime", "eventTarget.ts");
+      const source = readFileSync(path, "utf8");
+      assert.ok(source.includes(`callbacks.${name}(`), `the fixture must find ${name}`);
+      writeFileSync(path, source.replace(`callbacks.${name}(`, `callbacks.${wrong}(`));
+    });
+    assert.equal(rc, 1, `${name} renamed must fail the gate`);
+    assert.match(out, new RegExp(`eventTarget\\.ts:\\d+ .*callbacks\\.${wrong}`), `got: ${out}`);
+    const reported = new RegExp(`eventTarget\\.ts:(\\d+) .*callbacks\\.${wrong}`).exec(out);
+    assert.ok(reported, `no line was reported for ${name}; got: ${out}`);
+    assert.equal(
+      Number(reported[1]),
+      trueLine,
+      `the finding for ${name} must name its own line (${trueLine}), not the binding's`,
+    );
+  }
+});

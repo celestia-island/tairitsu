@@ -1105,6 +1105,44 @@ def unparseable_read_problems() -> tuple[list[str], int]:
     return problems, reported
 
 
+def _read_line_index(
+    lines: list[str],
+    kept_positions: list[int],
+    binding_index: int,
+    window_lines: int,
+    local: str,
+    read_re: "re.Pattern[str]",
+    prop: str,
+) -> int:
+    """The raw line index of the read of `local.<prop>` inside the binding's window.
+
+    The window runs to the end of the enclosing block, which can be 80 lines past
+    the binding (`eventTarget.ts`'s five event bridges sit at 68–112 with their
+    binding on 26). A fixed 12-line probe found nothing there, so every finding
+    quoted the BINDING's line instead of the read's — a finding that sends the
+    reader to the wrong code, diagnosed by round 2 as a second un-widened copy of
+    the same rule. Scanning the window's own lines keeps the line mapping exact
+    (`normalise_casts` is applied per LINE, so a reduction can never move a line
+    number), and it runs only when a finding is being reported, so the green path
+    pays nothing. Falls back to the binding's line when the window has no read at
+    all — which is the "never uses it" finding's case.
+    """
+    for offset in range(window_lines + 1):
+        probe_index = binding_index + offset
+        if probe_index >= len(lines):
+            break
+        for match in read_re.finditer(normalise_casts(lines[probe_index])):
+            if match.group("local") != local:
+                continue
+            # The read being REPORTED, not merely the first read of the local:
+            # `eventTarget.ts` reads `callbacks` at 68, 86, 102, 107 and 112, and
+            # keying on the local alone quoted 68 for a defect on 86.
+            if (match.group("prop") or match.group("bracket")) != prop:
+                continue
+            return kept_positions[probe_index]
+    return kept_positions[binding_index]
+
+
 def bound_bridge_problems(
     declared_by_iface: dict[str, list[str]], counted_by_file: dict[str, int] | None = None
 ) -> tuple[list[str], int]:
@@ -1182,20 +1220,6 @@ def bound_bridge_problems(
                 )
                 continue
             read_line_index = kept_positions[filtered_index]
-            for probe_index in range(filtered_index, min(filtered_index + 12, len(lines))):
-                # Both dot spellings, or a plain-dot read is reported on the
-                # BINDING's line instead of its own (`eventTarget.ts` ships five
-                # plain-dot reads, so this is not hypothetical).
-                # The probe runs on the cast-REDUCED line, the same text the read
-                # scan judges: `(guest! as any)?.onX` is a read of `guest?.onX`,
-                # and probing the raw line found neither and fell back to the
-                # binding's line (measured: 171 for a read on 180).
-                if re.search(
-                    r"(?<![A-Za-z0-9_$])" + re.escape(local) + r"\s*\??\.",
-                    normalise_casts(lines[probe_index]),
-                ):
-                    read_line_index = kept_positions[probe_index]
-                    break
             declaration_line_index = (
                 kept_positions[filtered_index - 1] if wrapped else kept_positions[filtered_index]
             )
@@ -1240,6 +1264,18 @@ def bound_bridge_problems(
                 # alias table, chain parse — before the alias table turned out to
                 # be empty for every declared name.)
                 shown = f'{local}["{prop}"]' if bracket_read else f"{local}.{prop}"
+                # Lazily, and only on a finding: the line of the first read of this
+                # local inside the window, which for `eventTarget.ts` is 40-86 lines
+                # below the binding.
+                read_line_index = _read_line_index(
+                    lines,
+                    kept_positions,
+                    filtered_index,
+                    window.count("\n"),
+                    local,
+                    read_re,
+                    prop,
+                )
                 problems.append(
                     f"callback site {path.name}:{read_line_index + 1} binds `{local}` to "
                     f"`{iface}@{keyed.group('ver')}` and reads `{shown}`, which the "
