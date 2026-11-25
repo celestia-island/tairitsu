@@ -22,6 +22,14 @@
 // node's type stripping (`--experimental-strip-types`), so it must stay
 // erasable — no enums, no namespaces, no parameter properties. The ARTIFACT it
 // emits is JavaScript.
+//
+// MUT:ts-sourcing-load-gate — the load gate at the end of main() is the
+// anchor for the header's claim above: re-injecting a `declare global` block
+// into any emitted module fails the build with "does not load as JavaScript
+// (node never strips types from .js)" (negative control measured twice —
+// PR #161 rounds 3 and 5). TypeScript syntax in a `.js` artifact is a hard
+// SyntaxError, which is why the type-only declarations ship as companion
+// `<name>.d.ts` files instead of riding the emitted bytes.
 
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
