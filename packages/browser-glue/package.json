@@ -99,7 +99,7 @@
     "build:watch": "swc src -d dist --strip-leading-paths --watch",
     "build:glue": "python3 ../../scripts/generate_browser_glue.py",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test \"test/**/*.test.mjs\"",
+    "test": "node --experimental-strip-types --test \"test/**/*.test.ts\"",
     "lint": "eslint \"src/runtime/**/*.ts\" \"src/async.ts\" \"src/handles.ts\" \"src/index.ts\"",
     "lint:fix": "eslint --fix \"src/runtime/**/*.ts\" \"src/async.ts\" \"src/handles.ts\" \"src/index.ts\"",
     "format": "prettier --write \"src/runtime/**/*.ts\" \"src/async.ts\" \"src/handles.ts\" \"src/index.ts\"",

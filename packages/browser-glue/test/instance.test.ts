@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 // The runtime sources import each other WITHOUT an extension (bundler style).
 // `platformHelpers.ts` gained a `./callbackValues` import, which Node's ESM
 // resolver cannot find without the hook the other two suites already register.
-register("./ts-resolve-hook.mjs", import.meta.url);
+register("./ts-resolve-hook.ts", import.meta.url);
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const INSTANCE_MODULE = resolve(here, "../src/runtime/instance.ts");
@@ -526,7 +526,7 @@ test("the build-time glue modules are real ESM with named exports (W5)", async (
   const { mkdtemp, rm } = await import("node:fs/promises");
   const { tmpdir } = await import("node:os");
   const packageRoot = resolve(here, "..");
-  const emitter = resolve(packageRoot, "scripts/emit-glue-esm.mjs");
+  const emitter = resolve(packageRoot, "scripts/emit-glue-esm.ts");
   // Emit into a FRESH directory: stale artifacts in `dist/glue` would otherwise
   // satisfy the assertions even when the emitter emits nothing.
   const glueDir = await mkdtemp(join(tmpdir(), "w5-glue-"));
@@ -586,7 +586,7 @@ test("the default capability set is data, and it matches the registry (W6)", asy
   const { tmpdir } = await import("node:os");
   const packageRoot = resolve(here, "..");
   const glueDir = await mkdtemp(join(tmpdir(), "w6-caps-"));
-  execFileSync(process.execPath, ["--experimental-strip-types", resolve(packageRoot, "scripts/emit-glue-esm.mjs")], {
+  execFileSync(process.execPath, ["--experimental-strip-types", resolve(packageRoot, "scripts/emit-glue-esm.ts")], {
     cwd: packageRoot,
     stdio: "pipe",
     env: { ...process.env, GLUE_ESM_OUT: glueDir },
@@ -608,7 +608,7 @@ test("the default capability set is data, and it matches the registry (W6)", asy
     ["cli", "clocks", "filesystem", "io", "random", "sockets"],
     "the default WASI set changed",
   );
-  // 25 -> 26 when `media-query-list` was wired (see media-query.test.mjs): the
+  // 25 -> 26 when `media-query-list` was wired (see media-query.test.ts): the
   // default capability set is derived from the registry, so a new interface
   // MUST move this number rather than slip into every component silently.
   assert.equal(defaults.interfaces.length, 26, "the default interface count changed");
@@ -625,7 +625,7 @@ test("the boot filters imports by the declaration (W6 source pin)", async () => 
   const emitterOut = await mkdtemp(join(tmpdir(), "w6-pin-"));
   execFileSync(
     process.execPath,
-    ["--experimental-strip-types", resolve(packageRoot, "scripts/emit-glue-esm.mjs")],
+    ["--experimental-strip-types", resolve(packageRoot, "scripts/emit-glue-esm.ts")],
     { cwd: packageRoot, stdio: "pipe", env: { ...process.env, GLUE_ESM_OUT: emitterOut } },
   );
   const boot = await readFile(resolve(here, "../../packager/src/wasm/boot.template.js"), "utf8");

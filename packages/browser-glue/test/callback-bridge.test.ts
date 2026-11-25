@@ -37,7 +37,7 @@ import test from "node:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-register("./ts-resolve-hook.mjs", import.meta.url);
+register("./ts-resolve-hook.ts", import.meta.url);
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG = join(HERE, "..");

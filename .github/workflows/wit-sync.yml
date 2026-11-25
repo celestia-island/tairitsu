@@ -84,7 +84,7 @@ jobs:
           # from the WIT too; this suite is the only function-level comparator
           # and needs no node_modules.
           cd packages/browser-glue
-          node --experimental-strip-types --test "test/**/*.test.mjs"
+          node --experimental-strip-types --test "test/**/*.test.ts"
 
       - name: Check for changes
         id: check_changes

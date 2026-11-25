@@ -6,7 +6,7 @@ lives in three places:
 
 | Where | What it does |
 |---|---|
-| `packages/browser-glue/scripts/emit-glue-esm.mjs` | emits the conservative **default** set (`dist/glue-esm/default-capabilities.json`) from the registry, and makes every emitted interface module check the declaration before handing out a function |
+| `packages/browser-glue/scripts/emit-glue-esm.ts` | emits the conservative **default** set (`dist/glue-esm/default-capabilities.json`) from the registry, and makes every emitted interface module check the declaration before handing out a function |
 | `packages/packager/src/wasm/mod.rs::write_capabilities` | writes `tairitsu-capabilities.json` into the dist: the component's own declaration, or the default |
 | `packages/packager/src/wasm/boot.template.js` | fetches that file, injects only the declared interfaces/shim modules, and reports a mismatch as `capability-denied` |
 
@@ -34,7 +34,7 @@ lives in three places:
 A component without a declaration gets the default set: every interface the glue
 registry provides (25 today) plus all six shim modules. The default is **emitted
 from the registry** (`registryInterfaceNames()`), and the test in
-`packages/browser-glue/test/instance.test.mjs` re-emits into a fresh directory
+`packages/browser-glue/test/instance.test.ts` re-emits into a fresh directory
 and compares the emitted list with the registry's keys, the shim list with the
 six modules, and the count with 25 — so a hand edit of the emitter's map, a
 dropped interface or a new one without a matching registry entry all fail. The

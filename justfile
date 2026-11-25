@@ -66,7 +66,7 @@ build-glue-runtime: glue-esm
 # Without them the packager refuses to build (no glue = a page that cannot
 # instantiate).
 glue-esm:
-    node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs
+    node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.ts
 
 # Install tairitsu-packager CLI binary (tairitsu)
 install-packager: (build-glue-runtime)
@@ -365,7 +365,7 @@ wit-generator-check:
 # world and the host implementation, and it needs no node_modules (node's
 # --experimental-strip-types resolves the TS sources through the repo hook).
 browser-glue-test:
-    cd packages/browser-glue && node --experimental-strip-types --test "test/**/*.test.mjs"
+    cd packages/browser-glue && node --experimental-strip-types --test "test/**/*.test.ts"
 
 # Stage 3: the library-facing host client (load a component, call it
 # synchronously). Its contract — fail-closed load, W6 capability enforcement, the

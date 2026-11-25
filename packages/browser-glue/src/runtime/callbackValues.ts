@@ -58,7 +58,7 @@ function rectOf(entry: unknown): Record<string, number> {
  * through `__storeElement`. A sibling minted into the element table is a handle
  * the guest can hold and never resolve — the same class of mismatch this whole
  * change is about, one layer down. Nothing in the test suite notices (both
- * tables answer `bigint`), which is why `callback-bridge.test.mjs` asserts the
+ * tables answer `bigint`), which is why `callback-bridge.test.ts` asserts the
  * TABLE the handle lands in, not just its type.
  */
 function nodeHandle(node: unknown): bigint | undefined {
@@ -82,7 +82,7 @@ function nodeHandle(node: unknown): bigint | undefined {
  * mutation entry makes for its `target`, and the same one `mutationRecord`
  * makes). Minting it as a node handle yields a bigint the guest can hold and
  * never resolve, and both tables answer `bigint`, so only an assertion on the
- * TABLE — not on the type — can catch it (`callback-bridge.test.mjs`).
+ * TABLE — not on the type — can catch it (`callback-bridge.test.ts`).
  */
 export function resizeEntryValue(entry: unknown, sink: EntrySink): Record<string, unknown> {
   const handle = globalThis.__nextResizeObserverEntry++;

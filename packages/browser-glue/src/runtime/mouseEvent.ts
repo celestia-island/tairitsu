@@ -88,6 +88,6 @@ export const mouseEvent_exports = {
     return Boolean(ev.getModifierState(keyArg));
   },
   // NOTE: `init-mouse-event()` is intentionally not wired — see the module
-  // header and `test/registry-completeness.test.mjs` (it needs a Window handle
+  // header and `test/registry-completeness.test.ts` (it needs a Window handle
   // for its `view` argument and is deprecated in the DOM).
 };
