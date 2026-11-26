@@ -203,7 +203,7 @@ fn app() -> VNode {
                 value: text.get().clone(),
                 oninput: move |e| {
                     if let Some(input) = e.downcast_ref::<tairitsu_vdom::InputEvent>() {
-                        text.set(input.data.clone());
+                        text.set(input.value.clone());
                     }
                 }
             }
