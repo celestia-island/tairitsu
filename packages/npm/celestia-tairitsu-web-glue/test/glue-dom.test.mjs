@@ -58,7 +58,7 @@ globalThis.__lookupElement = function (handle) {
 };
 
 const glue = await import("../src/glue-dom.ts");
-const { node_exports } = glue;
+const { document_exports, node_exports } = glue;
 
 // Minimal DOM stand-in: three-deep element chain + a root-less node.
 function makeEl(name) {
@@ -128,4 +128,38 @@ test("appendChild/getFirstChild keep the same convention as the fix", () => {
   const returned = node_exports.appendChild(parentHandle, globalThis.__storeNode(child));
   assert.equal(globalThis.__lookupNode(returned), child, "append returns the child handle");
   assert.equal(child.parentElement, parent);
+});
+
+test("createElementNs creates the element in the given namespace and stores it", () => {
+  // The runtime glue already had create-element-ns; the node glue did not, so
+  // a guest importing it failed to load ("does not provide an export named
+  // 'createElementNs'").
+  const calls = [];
+  const made = makeEl("path");
+  globalThis.document = {
+    createElement(ns, qualifiedName, options) {
+      calls.push(["html", ns, qualifiedName, options]);
+      return made;
+    },
+    createElementNS(ns, qualifiedName, options) {
+      calls.push(["ns", ns, qualifiedName, options]);
+      return made;
+    },
+  };
+  try {
+    const handle = document_exports.createElementNs(
+      "http://www.w3.org/2000/svg",
+      "path",
+      undefined,
+    );
+    assert.deepEqual(calls, [["ns", "http://www.w3.org/2000/svg", "path", undefined]]);
+    assert.equal(globalThis.__lookupElement(handle), made);
+    assert.equal(
+      handle,
+      globalThis.__storeElement(made),
+      "the created element is stored through the shared handle table",
+    );
+  } finally {
+    delete globalThis.document;
+  }
 });

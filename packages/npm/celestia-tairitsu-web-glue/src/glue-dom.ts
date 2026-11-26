@@ -12,6 +12,10 @@ export const document_exports = {
     const el = document.createElement(localName);
     return globalThis.__storeElement(el);
   },
+  createElementNs(namespace, qualifiedName, options) {
+    const el = document.createElementNS(namespace, qualifiedName, options);
+    return globalThis.__storeElement(el);
+  },
   createTextNode(data) {
     const text = document.createTextNode(data);
     return globalThis.__storeText(text);
