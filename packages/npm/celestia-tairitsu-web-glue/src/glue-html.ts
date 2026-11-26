@@ -71,17 +71,89 @@ export const mediaQueryList_exports = {
 };
 
 // === location ===
-// Location interface - provides hash and viewport info for WIT browser world
+// Location interface — `window.location` for the WIT browser world: the nine
+// IDL attributes with their setters, the three navigation methods, and
+// `ancestorOrigins`.
+//
+// The setters and `assign` / `replace` are what let a guest leave the page
+// (a logout link, a "back to the frontend" row, a sign-in redirect). The
+// runtime glue used to export only `getHash` and `getPathname`, so a guest
+// importing `setHref` failed at module link time ("does not provide an export
+// named 'setHref'") before a line of it ran.
+//
+// Everything is a plain read or write through to the `Location` object: a
+// setter throws exactly when the platform would (a cross-origin `href`, a
+// malformed URL), and that error is the guest's to see through its import.
 
 export const location_exports = {
-  getHash() {
+  getHref(): string {
+    return window.location.href;
+  },
+  setHref(value: string) {
+    window.location.href = value;
+  },
+  getOrigin(): string {
+    return window.location.origin;
+  },
+  getProtocol(): string {
+    return window.location.protocol;
+  },
+  setProtocol(value: string) {
+    window.location.protocol = value;
+  },
+  getHost(): string {
+    return window.location.host;
+  },
+  setHost(value: string) {
+    window.location.host = value;
+  },
+  getHostname(): string {
+    return window.location.hostname;
+  },
+  setHostname(value: string) {
+    window.location.hostname = value;
+  },
+  getPort(): string {
+    return window.location.port;
+  },
+  setPort(value: string) {
+    window.location.port = value;
+  },
+  getPathname(): string {
+    return window.location.pathname || '/';
+  },
+  setPathname(value: string) {
+    window.location.pathname = value;
+  },
+  getSearch(): string {
+    return window.location.search;
+  },
+  setSearch(value: string) {
+    window.location.search = value;
+  },
+  getHash(): string {
     return window.location.hash || '';
   },
-  getInnerWidth() {
-    return window.innerWidth;
+  setHash(value: string) {
+    window.location.hash = value;
   },
-  getPathname() {
-    return window.location.pathname || '/';
+  assign(url: string) {
+    window.location.assign(url);
+  },
+  replace(url: string) {
+    window.location.replace(url);
+  },
+  reload() {
+    window.location.reload();
+  },
+  getAncestorOrigins(): string[] {
+    return Array.from(window.location.ancestorOrigins ?? []);
+  },
+  // Not a member of the WIT `location` interface (the viewport getters live on
+  // `window`). Kept because it has shipped on this export object since the
+  // package's first release.
+  getInnerWidth(): number {
+    return window.innerWidth;
   },
 };
 
