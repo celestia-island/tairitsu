@@ -6,8 +6,8 @@
 //!
 //! # Example
 //!
-//! ```ignore
-//! use tairitsu_hooks::{store, use_store, Store};
+//! ```
+//! use tairitsu_hooks::{store, use_store};
 //!
 //! #[derive(Clone, PartialEq)]
 //! struct AppState {
@@ -15,17 +15,18 @@
 //!     user: Option<String>,
 //! }
 //!
-//! // Create a global store
-//! store!(APP_STORE, AppState {
+//! // Declare a global store. The initial value is an expression that ends
+//! // just before a `)`, so a braced struct literal goes in parentheses.
+//! store!(APP_STORE, AppState, (AppState {
 //!     count: 0,
 //!     user: None,
-//! });
+//! }));
+//!
+//! APP_STORE().update(|state| state.count += 1);
 //!
 //! // In a component
-//! fn my_component() {
-//!     let state = use_store!(&APP_STORE);
-//!     // state.count is now accessible
-//! }
+//! let state = use_store!(APP_STORE());
+//! assert_eq!(state.count, 1);
 //! ```
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
@@ -263,36 +264,56 @@ pub fn get_store<T: Clone + 'static>(id: StoreId) -> Option<Store<T>> {
     })
 }
 
-/// Macro to create and register a global store
+/// Declares a function that returns the global store for `$ty`.
+///
+/// The function creates and registers the store the first time it is called
+/// on a thread. The store lives in a thread-local, like the registry it joins:
+/// a `Store` holds `Rc`s, so it cannot sit in a plain `static`.
+///
+/// `$initial` is an expression that ends just before a `)`, so a braced struct
+/// literal has to be wrapped in parentheses.
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```
 /// use tairitsu_hooks::store;
 ///
 /// store!(COUNTER_STORE, i32, 0);
+///
+/// COUNTER_STORE().update(|count| *count += 2);
 /// ```
 #[macro_export]
 macro_rules! store {
     ($name:ident, $ty:ty, $initial:expr) => {
-        static $name: std::sync::OnceLock<$crate::Store<$ty>> = std::sync::OnceLock::new();
-
+        #[doc = "Returns the global `"]
+        #[doc = stringify!($ty)]
+        #[doc = "` store, creating and registering it on first use."]
+        #[allow(non_snake_case)]
         fn $name() -> $crate::Store<$ty> {
-            $name
-                .get_or_init(|| $crate::register_store($crate::Store::new($initial)))
-                .clone()
+            thread_local! {
+                static STORE: $crate::Store<$ty> =
+                    $crate::register_store($crate::Store::new($initial));
+            }
+            STORE.with(|store| store.clone())
         }
     };
 }
 
-/// Macro to access a store in a component
+/// Reads the current value of a store.
+///
+/// This only reads. It does not subscribe the calling component, so a later
+/// `set` or `update` does not re-render it on its own; call `subscribe` on the
+/// store and mark the component dirty from the callback for that.
 ///
 /// # Example
 ///
-/// ```ignore
-/// use tairitsu_hooks::use_store;
+/// ```
+/// use tairitsu_hooks::{store, use_store};
+///
+/// store!(COUNTER_STORE, i32, 0);
 ///
 /// let state = use_store!(COUNTER_STORE());
+/// assert_eq!(state, 0);
 /// ```
 #[macro_export]
 macro_rules! use_store {
