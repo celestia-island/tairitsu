@@ -447,6 +447,24 @@ pub(crate) mod event_callbacks {
         EVENT_LISTENER_TYPES.with(|m| m.borrow().get(&listener_id).cloned())
     }
 
+    /// Whether the value of an input-like target is meaningful for a listener
+    /// registered under `kind`.
+    ///
+    /// Both `input` and `change` carry it: `ChangeEvent.value` is the committed
+    /// value, and `InputEvent.value` is the field's whole value after the
+    /// keystroke. That second half is what makes a live filter possible —
+    /// without it an `oninput` handler only ever sees the inserted characters.
+    ///
+    /// A separate function rather than an inline condition because it is the one
+    /// part of this decision a native test can reach: the read itself is a WIT
+    /// getter call, so a test that went through `on-input-event` could not run.
+    /// The dispatch tests below exercise the forwarding and this function's test
+    /// pins which registrations the value is forwarded *for*; neither covers the
+    /// getter, which only the downstream browser run exercises.
+    pub(crate) fn kind_carries_value(kind: Option<&str>) -> bool {
+        matches!(kind, Some("input") | Some("change") | None)
+    }
+
     /// Build and dispatch the typed event for one input-family callback firing.
     ///
     /// The glue routes `input` **and** `change` into the same `on-input-event`
@@ -746,8 +764,9 @@ pub mod wasm_impl {
 
     use super::event_callbacks::{
         build_typed_event, dispatch_event, dispatch_input_event, is_pointer_event_type,
-        set_event_callback, set_event_listener_type, take_event_callback, take_event_listener_type,
-        HostEvent, MouseEventInput, PointerEventInput, WheelEventInput,
+        kind_carries_value, listener_event_type, set_event_callback, set_event_listener_type,
+        take_event_callback, take_event_listener_type, HostEvent, MouseEventInput,
+        PointerEventInput, WheelEventInput,
     };
     use super::{WitElement, WitEvent, WitPlatform};
 
@@ -1067,9 +1086,13 @@ pub mod wasm_impl {
             // field's whole value after the keystroke for `input`. The glue's
             // lenient getter reads "" for non-input targets, which is exactly the
             // honest fill.
-            let value = target.map(|target| {
-                bindings::tairitsu_browser::full::html_input_element::get_value(target)
-            });
+            let value = if kind_carries_value(listener_event_type(listener_id).as_deref()) {
+                target.map(|target| {
+                    bindings::tairitsu_browser::full::html_input_element::get_value(target)
+                })
+            } else {
+                None
+            };
             dispatch_input_event(listener_id, wit_handle, target, data.data, value);
         }
 
@@ -4261,6 +4284,33 @@ mod tests {
             .clone()
             .expect("the listener should receive an InputEvent");
         assert_eq!(event.data, "");
+    }
+
+    /// The value of an input-like target must be read for an `input` listener,
+    /// not only for `change`.
+    ///
+    /// This is the half of the change that made live filtering possible, and it
+    /// is the half the dispatch tests cannot see: they hand `value` in, so they
+    /// pass whether or not the caller ever reads one. Reverting the platform to
+    /// "only `change` gets a value" leaves the whole suite green — which is why
+    /// this function exists to be tested on its own.
+    #[test]
+    fn test_kind_carries_value_covers_input() {
+        use super::event_callbacks::kind_carries_value;
+
+        assert!(
+            kind_carries_value(Some("input")),
+            "an input listener needs the field's whole value, not just the inserted characters"
+        );
+        assert!(kind_carries_value(Some("change")));
+        assert!(
+            kind_carries_value(None),
+            "a listener with no recorded type still gets the InputEvent the record describes"
+        );
+        assert!(
+            !kind_carries_value(Some("click")),
+            "a non-input event has no value to read"
+        );
     }
 
     // -- wasm_impl module tests ---------------------------------------------
