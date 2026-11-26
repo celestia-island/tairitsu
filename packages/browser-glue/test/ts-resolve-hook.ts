@@ -10,11 +10,25 @@
  * That keeps the tests pointed at the REAL sources (they import
  * `src/runtime/registry.ts` and assert against its `INTERFACES` object) instead of
  * regex-matching the file.
+ *
+ * This file is TypeScript source run straight off the tree by node's type
+ * stripping, so it stays erasable (no enums, namespaces or parameter properties).
  */
 
-export async function resolve(specifier, context, nextResolve) {
-  const bare =
-    specifier.startsWith("./") || specifier.startsWith("../");
+import type { ResolveFnOutput, ResolveHookContext } from "node:module";
+
+/** The subset of node's resolve hook this file needs, spelled out locally. */
+type NextResolve = (
+  specifier: string,
+  context?: Partial<ResolveHookContext>,
+) => ResolveFnOutput | Promise<ResolveFnOutput>;
+
+export async function resolve(
+  specifier: string,
+  context: ResolveHookContext,
+  nextResolve: NextResolve,
+): Promise<ResolveFnOutput> {
+  const bare = specifier.startsWith("./") || specifier.startsWith("../");
   const hasExtension = /\.[a-z0-9]+$/i.test(specifier);
   if (bare && !hasExtension) {
     try {
@@ -23,5 +37,5 @@ export async function resolve(specifier, context, nextResolve) {
       // fall through to the default resolution / error
     }
   }
-  return nextResolve(specifier, context);
+  return await nextResolve(specifier, context);
 }

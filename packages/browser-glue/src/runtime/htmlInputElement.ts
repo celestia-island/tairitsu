@@ -19,7 +19,7 @@
  * therefore needs no extra handle table. The handful that do need one
  * (`get-form`, `get-files`/`set-files`, `get-list`, `get-labels`,
  * `get-validity`) are deliberately left out and pinned as the known gap by
- * `test/registry-completeness.test.mjs`, so adding one there without wiring it
+ * `test/registry-completeness.test.ts`, so adding one there without wiring it
  * here (or vice versa) fails the suite.
  */
 

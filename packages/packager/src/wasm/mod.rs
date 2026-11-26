@@ -1109,7 +1109,7 @@ fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Re
         .ok_or_else(|| {
             crate::TairitsuPackagerError::BuildError(
                 "the glue ESM modules are missing (searched for browser-glue/dist/glue-esm). Run \
-                 `node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs` \
+                 `node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.ts` \
                  (or `just build-glue-runtime`) before building, or set TAIRITSU_GLUE_ESM_DIR."
                     .to_string(),
             )
@@ -1136,7 +1136,7 @@ fn copy_glue_modules(config: &Config, output_dir: &std::path::Path) -> crate::Re
     }
     if copied == 0 {
         return Err(crate::TairitsuPackagerError::BuildError(
-            "the glue ESM directory is empty — regenerate it with scripts/emit-glue-esm.mjs".into(),
+            "the glue ESM directory is empty — regenerate it with scripts/emit-glue-esm.ts".into(),
         ));
     }
     Ok(())
@@ -3228,7 +3228,7 @@ mod w1_reproducible_tests {
         // The packager must read the directory the emitter produces; a rename on
         // either side would silently copy nothing (or stale output).
         let emitter = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../browser-glue/scripts/emit-glue-esm.mjs");
+            .join("../browser-glue/scripts/emit-glue-esm.ts");
         let source = std::fs::read_to_string(&emitter).expect("emitter source");
         assert!(
             source.contains("\"dist\", \"glue-esm\""),

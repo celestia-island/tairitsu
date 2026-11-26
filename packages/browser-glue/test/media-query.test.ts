@@ -44,7 +44,7 @@ import { fileURLToPath } from "node:url";
 
 // The runtime sources use bundler-style extensionless imports; teach the ESM
 // resolver the same trick so the tests can import the real modules.
-register("./ts-resolve-hook.mjs", import.meta.url);
+register("./ts-resolve-hook.ts", import.meta.url);
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG = join(HERE, "..");
@@ -578,8 +578,8 @@ function runGateAgainst(mutate) {
       join(root, "packages", "browser-glue", "src", "runtime", "registry.ts"),
     );
     copy(
-      join(PKG, "scripts", "emit-glue-esm.mjs"),
-      join(root, "packages", "browser-glue", "scripts", "emit-glue-esm.mjs"),
+      join(PKG, "scripts", "emit-glue-esm.ts"),
+      join(root, "packages", "browser-glue", "scripts", "emit-glue-esm.ts"),
     );
     // The runtime modules are discovered from the registry, so copy them all.
     const runtimeDir = join(PKG, "src", "runtime");

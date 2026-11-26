@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --experimental-strip-types
 // W5: emit REAL ESM modules for the glue interfaces.
 //
 // Before W5 the runtime stringified every interface's functions into blob
@@ -17,10 +17,35 @@
 // The modules delegate through `globalThis.__TAIRITSU_GLUE__.INTERFACES`, which
 // the runtime bundle installs: one copy of the implementation, and the
 // per-instance tables keep working exactly as before.
+//
+// The SOURCE of this script is TypeScript; it is run straight off the tree by
+// node's type stripping (`--experimental-strip-types`), so it must stay
+// erasable — no enums, no namespaces, no parameter properties. The ARTIFACT it
+// emits is JavaScript.
+//
+// MUT:ts-sourcing-load-gate — the load gate at the end of main() is the
+// anchor for the header's claim above: re-injecting a `declare global` block
+// into any emitted module fails the build with "does not load as JavaScript
+// (node never strips types from .js)" (negative control measured twice —
+// PR #161 rounds 3 and 5). TypeScript syntax in a `.js` artifact is a hard
+// SyntaxError, which is why the type-only declarations ship as companion
+// `<name>.d.ts` files instead of riding the emitted bytes.
 
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+/** One module's interface object, as scanned out of its source. */
+interface ModuleExports {
+  name: string;
+  keys: string[];
+}
+
+/** What the manifest records per emitted module. */
+interface WrittenModule {
+  iface: string;
+  keys: number;
+}
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = resolve(here, "..");
@@ -28,7 +53,7 @@ const RUNTIME_DIR = join(PACKAGE_ROOT, "src", "runtime");
 const OUT_DIR = process.env.GLUE_ESM_OUT || join(PACKAGE_ROOT, "dist", "glue-esm");
 
 /** Interface name (as the wrapper imports it) → the module that defines it. */
-const EXPORT_SOURCES = {
+const EXPORT_SOURCES: Record<string, string> = {
   document: "document",
   element: "element",
   node: "node",
@@ -58,7 +83,7 @@ const EXPORT_SOURCES = {
 };
 
 /** The exported object name inside a runtime module (`<x>_exports`). */
-function exportsName(moduleName) {
+function exportsName(moduleName: string): string {
   return `${moduleName}_exports`;
 }
 
@@ -72,7 +97,7 @@ function exportsName(moduleName) {
  * identifiers at brace depth 1 — the shape every interface object uses
  * (`name(...) { … },` or `name: …`).
  */
-async function moduleExports(moduleName) {
+async function moduleExports(moduleName: string): Promise<ModuleExports> {
   const path = join(RUNTIME_DIR, `${moduleName}.ts`);
   const source = await readFile(path, "utf8");
   const name = exportsName(moduleName);
@@ -82,7 +107,7 @@ async function moduleExports(moduleName) {
     throw new Error(`${moduleName}.ts does not export ${name}`);
   }
 
-  const keys = [];
+  const keys: string[] = [];
   let depth = 0;
   let parens = 0;
   let i = start + marker.length - 1;
@@ -166,17 +191,51 @@ async function moduleExports(moduleName) {
  * source keeps this script from silently emitting a differently-named file (the
  * bug that shipped once: `css-inline-style` vs `element-css-inline-style`).
  */
-async function registryInterfaceNames() {
+async function registryInterfaceNames(): Promise<Set<string>> {
   const source = await readFile(join(RUNTIME_DIR, "registry.ts"), "utf8");
-  const names = new Set();
+  const names = new Set<string>();
   const re = /"@tairitsu-glue\/([a-z0-9-]+)"\s*:/g;
-  let match;
+  let match: RegExpExecArray | null;
   while ((match = re.exec(source)) !== null) names.add(match[1]);
   if (names.size === 0) throw new Error("registry.ts declares no @tairitsu-glue interfaces");
   return names;
 }
 
-async function main() {
+/**
+ * Prove every emitted module actually LOADS as JavaScript.
+ *
+ * This is the gate that would have caught the defect this script once shipped:
+ * a `declare global { … }` block written into the emitted `.js`. Node never
+ * strips types from a `.js` file, so the module was a hard `SyntaxError` — and
+ * because the packager copies these files verbatim into every built page, the
+ * breakage was invisible to any test that imported the emitter's own `.ts`
+ * source. Twice learned, so: the emitted bytes are imported here, as `.js`,
+ * through the same resolver a browser uses.
+ *
+ * The capability guard and the "runtime not loaded" guard are both EXPECTED to
+ * throw at import time; anything else — a syntax error above all — fails.
+ */
+async function assertEveryModuleLoads(interfaces: string[]): Promise<void> {
+  const expected: RegExp[] = [
+    /capability denied: /,
+    /tairitsu glue runtime is not loaded/,
+  ];
+  for (const iface of interfaces) {
+    const url = pathToFileURL(join(OUT_DIR, `${iface}.js`)).href;
+    try {
+      await import(url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (expected.some((pattern) => pattern.test(message))) continue;
+      throw new Error(
+        `emitted module ${iface}.js does not load as JavaScript (node never strips ` +
+          `types from .js): ${message}`,
+      );
+    }
+  }
+}
+
+async function main(): Promise<void> {
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(OUT_DIR, { recursive: true });
 
@@ -192,7 +251,7 @@ async function main() {
     );
   }
 
-  const written = [];
+  const written: WrittenModule[] = [];
   for (const [iface, moduleName] of Object.entries(EXPORT_SOURCES)) {
     const { name, keys } = await moduleExports(moduleName);
     if (keys.length === 0) {
@@ -200,7 +259,7 @@ async function main() {
     }
     const spec = `@tairitsu-glue/${iface}`;
     const lines = [
-      `// Generated by scripts/emit-glue-esm.mjs — do not edit.`,
+      `// Generated by scripts/emit-glue-esm.ts — do not edit.`,
       `// Static ESM stand-in for the ${spec} interface (W5).`,
       `//`,
       `// The implementation lives in the runtime bundle, which installs`,
@@ -236,6 +295,27 @@ async function main() {
     }
     const file = join(OUT_DIR, `${iface}.js`);
     await writeFile(file, lines.join("\n") + "\n", "utf8");
+
+    // The runtime module above is plain JavaScript — it is loaded raw by the
+    // packager and by the browser, neither of which strips types, so a single
+    // TS construct in it would be a hard SyntaxError for every packed page.
+    // The ambient types therefore live in a companion declaration file that no
+    // runtime path reads.
+    const declarations = [
+      `// Generated by scripts/emit-glue-esm.ts — do not edit.`,
+      `// Type companion for ./${iface}.js. Declarations only: nothing here is`,
+      `// executed, and the runtime module this describes stays plain JavaScript.`,
+      `declare global {`,
+      `  var __TAIRITSU_GLUE__: { INTERFACES: Record<string, Record<string, (...args: any[]) => any>> } | undefined;`,
+      `  var __TAIRITSU_CAPABILITIES__: { interfaces?: unknown[] } | undefined;`,
+      `}`,
+      ``,
+    ];
+    for (const key of keys) {
+      declarations.push(`export declare const ${key}: (...args: any[]) => any;`);
+    }
+    await writeFile(join(OUT_DIR, `${iface}.d.ts`), declarations.join("\n") + "\n", "utf8");
+
     written.push({ iface, keys: keys.length });
   }
 
@@ -245,7 +325,7 @@ async function main() {
     $comment:
       "W6 default capability set for components without a declaration. " +
       "Interfaces are the glue registry's own keys; wasiModules are the bundled " +
-      "preview2 shim modules the boot injects. Emitted by scripts/emit-glue-esm.mjs.",
+      "preview2 shim modules the boot injects. Emitted by scripts/emit-glue-esm.ts.",
     interfaces: [...declared].sort(),
     wasiModules: ["cli", "clocks", "filesystem", "io", "random", "sockets"],
   };
@@ -261,7 +341,7 @@ async function main() {
     join(OUT_DIR, "manifest.json"),
     JSON.stringify(
       {
-        generatedBy: "scripts/emit-glue-esm.mjs",
+        generatedBy: "scripts/emit-glue-esm.ts",
         interfaces: written.sort((a, b) => a.iface.localeCompare(b.iface)),
       },
       null,
@@ -270,10 +350,14 @@ async function main() {
     "utf8",
   );
 
+  // Gate the emitted bytes, not the source: every module must import as .js.
+  await assertEveryModuleLoads(written.map((entry) => entry.iface));
+
   const total = written.reduce((sum, entry) => sum + entry.keys, 0);
   console.log(
     `emit-glue-esm: ${written.length} interface modules, ${total} named exports -> ${OUT_DIR}`,
   );
+  console.log(`emit-glue-esm: ${written.length}/${written.length} emitted modules import as .js`);
 }
 
 await main();

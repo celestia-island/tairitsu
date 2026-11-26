@@ -449,7 +449,7 @@ def capability_declaration(scenario):
     if not os.path.isfile(DEFAULT_CAPABILITIES):
         raise RuntimeError(
             "the default capability set is missing; run "
-            "`node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs`"
+            "`node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.ts`"
         )
     with open(DEFAULT_CAPABILITIES, encoding="utf-8") as handle:
         default = json.load(handle)
@@ -630,7 +630,7 @@ def build_dist(scenario, dest):
         if not os.path.isdir(source):
             raise RuntimeError(
                 "the glue-imports control needs the emitted glue modules; run "
-                "`node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.mjs`"
+                "`node --experimental-strip-types packages/browser-glue/scripts/emit-glue-esm.ts`"
             )
         shutil.copytree(source, os.path.join(dest, "glue"))
         # The wrapper sits in component-wrapper/, so `../glue/` resolves to the

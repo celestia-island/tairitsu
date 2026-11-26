@@ -19,11 +19,11 @@ The runtime installs one table, `globalThis.__TAIRITSU_GLUE__.INTERFACES`, built
 from `src/runtime/registry.ts`. Two mechanisms reference an op of a wired
 interface:
 
-1. **dispatch** — the emitted ESM module (`scripts/emit-glue-esm.mjs` feeds the
+1. **dispatch** — the emitted ESM module (`scripts/emit-glue-esm.ts` feeds the
    packager's `<iface>.js`) calls `glue.INTERFACES[spec][key]`. If that key is
    absent the guest gets a `TypeError` — loud. This gate requires every op the
    emitted module dispatches to exist as a runtime export.
-   (`packages/browser-glue/test/media-query.test.mjs` drives this module
+   (`packages/browser-glue/test/media-query.test.ts` drives this module
    against fixtures, including a green-baseline guard and both mutation
    directions.)
 2. **guest import** — a component built against `tairitsu-web` names every op of
@@ -51,7 +51,7 @@ interface:
    bridge carries it. The value shape is
    NOT checked here (that needs the record types); the resize / mutation bridges
    carry their own assertions in
-   `packages/browser-glue/test/callback-bridge.test.mjs`.
+   `packages/browser-glue/test/callback-bridge.test.ts`.
 
 So the gate's two directions are deliberately different, because the two
 mechanisms are:
@@ -85,7 +85,7 @@ Lexical blind spots, and what actually closes each:
   * `//` inside a regular-expression literal — CONDITIONAL, and the condition is
     measured rather than assumed. `/a\/\/b/` does NOT truncate: the two `\/`
     sequences never form `//`, so a read written after it on the same line is
-    still seen (pinned in `media-query.test.mjs`). `/[//]/` DOES: `strip_comments`
+    still seen (pinned in `media-query.test.ts`). `/[//]/` DOES: `strip_comments`
     reads the `//` inside the character class as a comment and drops the rest of
     that line, so a read there is not seen — and the binding is untouched, so the
     pin does not fire either. The truncation is line-bounded (a read on the next
@@ -172,7 +172,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 GLUE_PKG = REPO_ROOT / "packages" / "browser-glue"
 REGISTRY = GLUE_PKG / "src" / "runtime" / "registry.ts"
 RUNTIME_DIR = REGISTRY.parent
-EMITTER = GLUE_PKG / "scripts" / "emit-glue-esm.mjs"
+EMITTER = GLUE_PKG / "scripts" / "emit-glue-esm.ts"
 OP_ALLOW = GLUE_PKG / "wit-op-allow.tsv"
 # `observers` is wired by the registry yet declared by no interface: not an op
 # gap, a name gap between the runtime and the WIT. It gets its own inventory so
@@ -302,7 +302,7 @@ def strip_comments(text: str) -> str:
 def camel(kebab: str) -> str:
     """`match-media` → `matchMedia`; `get-onchange` → `getOnchange`.
 
-    This is the exact mapping `emit-glue-esm.mjs` produces (named export names
+    This is the exact mapping `emit-glue-esm.ts` produces (named export names
     must be valid ESM identifiers) and the one the guest generator uses.
     """
     head, *rest = kebab.split("-")
@@ -334,9 +334,12 @@ def wired_interfaces() -> dict[str, str]:
 def emitted_dispatchers() -> dict[str, str]:
     """The emitter's interface → runtime module map (what gets emitted as ESM)."""
     text = EMITTER.read_text(encoding="utf-8", errors="replace")
-    start = text.find("const EXPORT_SOURCES = {")
+    # The source is TypeScript, so the map may carry a type annotation
+    # (`const EXPORT_SOURCES: Record<string, string> = {`); match both.
+    match = re.search(r"const EXPORT_SOURCES\s*(?::[^=]+)?=\s*\{", text)
+    start = match.start() if match else -1
     if start < 0:
-        raise SystemExit("error: could not locate EXPORT_SOURCES in emit-glue-esm.mjs")
+        raise SystemExit("error: could not locate EXPORT_SOURCES in emit-glue-esm.ts")
     body, sep, _rest = text[start:].partition("\n};")
     if not sep:
         raise SystemExit("error: could not find the end of EXPORT_SOURCES")
@@ -346,7 +349,7 @@ def emitted_dispatchers() -> dict[str, str]:
 def module_exports(module: str) -> set[str]:
     """Top-level keys of `export const <module>_exports = { … }`, read from source.
 
-    Ported from `packages/browser-glue/scripts/emit-glue-esm.mjs::moduleExports`
+    Ported from `packages/browser-glue/scripts/emit-glue-esm.ts::moduleExports`
     (the emitter is what actually ships these keys as named exports), and kept
     deliberately line-for-line equivalent because three cheaper rules were
     tried first and each leaked parameter names into the key set:
@@ -359,7 +362,7 @@ def module_exports(module: str) -> set[str]:
 
     The emitter's rule — a key is the pending text at depth 1 that ends a
     statement at paren depth 0 — handles all three, and
-    `packages/browser-glue/test/media-query.test.mjs` runs this module over a
+    `packages/browser-glue/test/media-query.test.ts` runs this module over a
     fixture copy of the whole tree, so a scan that silently stops matching
     turns that suite red instead of shrinking the report.
     """
@@ -631,7 +634,7 @@ def callback_sites() -> tuple[list[tuple[str, int, str, str, str]], int]:
     (47 of them bound), so
     the inline branch of `callback_problems` is a guard for the shape the original
     defect was written in rather than a live producer of findings — kept, and
-    pinned by `media-query.test.mjs`'s "WRAPPED inline shape" control.
+    pinned by `media-query.test.ts`'s "WRAPPED inline shape" control.
 
     An interface whose key is not `<ns>/<iface>@<ver>` is skipped — this check is
     about the browser world's callbacks.
@@ -830,7 +833,7 @@ def normalise_casts(line: str) -> str:
     actually separates the cast from the access around it is PARENTHESIS DEPTH, so
     the innermost balanced group is popped while it starts with `<local> as`, and
     plain wrapping groups are dropped as well. Each of those three shapes has an
-    end-to-end control in `media-query.test.mjs`: a wrong name behind it reds and
+    end-to-end control in `media-query.test.ts`: a wrong name behind it reds and
     the right name stays green.
 
     A cast whose core is NOT a bare identifier — `(guest.sub as any)?.onX` — is
@@ -1286,7 +1289,7 @@ def unparseable_read_problems() -> tuple[list[str], int]:
     names is not this rule's business: the gate judges NAMES (does the guest export
     it), not the MAPPING (which event reaches which op). A rename between two
     declared ops therefore stays green, and the value-shape half lives in
-    `callback-bridge.test.mjs`. Same for every residual listed in the module
+    `callback-bridge.test.ts`. Same for every residual listed in the module
     docstring.
 
     The template key, the variable key and the member cast are per line, with the
@@ -1297,7 +1300,7 @@ def unparseable_read_problems() -> tuple[list[str], int]:
 
     Returns the findings and how many shapes were reported. Zero findings on a
     tree that is otherwise clean is the normal state, so this has no floor: the
-    report is what closes the hole, and `media-query.test.mjs` pins every shape by
+    report is what closes the hole, and `media-query.test.ts` pins every shape by
     injecting one and requiring this gate to exit 1.
     """
     problems: list[str] = []
@@ -2003,7 +2006,7 @@ def selftest() -> int:
     that stopped matching reads exactly like a tree with no such shape. So the
     shapes and their current verdicts are captured here; `wit-ops-check` runs
     `--check` alone, so the lane that executes this is the suite
-    (`media-query.test.mjs` spawns it) — say so rather than implying the recipe
+    (`media-query.test.ts` spawns it) — say so rather than implying the recipe
     runs it.
 
     Every expectation below is a MEASURED behaviour, not a wish. Two of them pin
@@ -2086,7 +2089,7 @@ def selftest() -> int:
     expect("a non-callback key is not a binding", guest_bindings('const g = globalThis.__wasmExports?.["wasi/x"];'), [])
 
     # The fail-closed shape rules, piece by piece (the walk over files is pinned by
-    # `media-query.test.mjs`; these are the pieces it is built from).
+    # `media-query.test.ts`; these are the pieces it is built from).
     expect("destructuring from the guest", _guest_source("guest;", ["guest"]), "guest")
     expect("destructuring from a guest-returning helper", _guest_source("callbacks()", ["callbacks"]), "callbacks")
     expect("destructuring from a direct lookup", _guest_source('globalThis.__wasmExports["k"];', []), "__wasmExports")

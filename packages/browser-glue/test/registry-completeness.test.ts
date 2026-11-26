@@ -27,7 +27,7 @@
  *   3. the functions behave like the DOM (fake event/element objects, no browser).
  *
  * Run with: npm run test
- *       or: node --experimental-strip-types --test test/<glob>.test.mjs
+ *       or: node --experimental-strip-types --test test/<glob>.test.ts
  */
 
 import assert from "node:assert/strict";
@@ -39,7 +39,7 @@ import { fileURLToPath } from "node:url";
 
 // The runtime sources use bundler-style extensionless imports; teach the ESM
 // resolver the same trick so the tests can import the real modules.
-register("./ts-resolve-hook.mjs", import.meta.url);
+register("./ts-resolve-hook.ts", import.meta.url);
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG = join(HERE, "..");

@@ -59,7 +59,7 @@ export const INTERFACES = {
 };
 
 // W5: the import map and the stringified module code are gone. The interfaces
-// are emitted as REAL ESM files at build time (`scripts/emit-glue-esm.mjs`), the
+// are emitted as REAL ESM files at build time (`scripts/emit-glue-esm.ts`), the
 // packager copies them beside the page and rewrites the jco wrapper's
 // `@tairitsu-glue/<name>` specifiers to those files. Nothing is stringified at
 // runtime, no blob URL is created and no inline import map is injected — which
