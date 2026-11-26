@@ -746,6 +746,52 @@ pub(crate) mod event_callbacks {
     }
 }
 
+/// The order to apply a sibling batch in, as indices into `patches`.
+///
+/// Two diff writers share this applier, and they index removals differently:
+///
+/// * The positional diff never mixes inserts with removals (the child count
+///   moves one way) and emits its trailing removals in ASCENDING old-frame
+///   order. Applied as written, the second `RemoveChild` addresses a slot the
+///   first one shifted and the node it meant survives (observed as a modal
+///   that never closes). So in a batch with no insert the removals go last,
+///   in descending index order: every index stays exact.
+///
+/// * The keyed diff emits removals and inserts in ONE sequence whose indices
+///   assume in-order application: drop the unmatched old children first, then
+///   insert at an index that already counts those drops. A key swap —
+///   `[RemoveChild(0), InsertChild(0, new)]` — is the smallest case. Deferring
+///   that removal past the insert deletes the node that was just inserted and
+///   leaves the old one on stage, while the vnode baseline already holds the
+///   new one, so every later patch lands on the wrong node (observed as a
+///   list that never leaves its loading state).
+///
+/// A batch that inserts therefore applies strictly in the written order; only
+/// a batch without inserts may defer its removals.
+#[cfg(any(target_family = "wasm", test))]
+fn patch_apply_order(patches: &[tairitsu_vdom::Patch]) -> Vec<usize> {
+    use tairitsu_vdom::Patch;
+    let is_removal = |patch: &Patch| matches!(patch, Patch::RemoveChild { .. });
+    let defer_removals = !patches
+        .iter()
+        .any(|patch| matches!(patch, Patch::InsertChild { .. } | Patch::CreateNode { .. }));
+    let mut order: Vec<usize> = (0..patches.len())
+        .filter(|&i| !(defer_removals && is_removal(&patches[i])))
+        .collect();
+    if defer_removals {
+        let mut removals: Vec<(usize, usize)> = (0..patches.len())
+            .filter(|&i| is_removal(&patches[i]))
+            .map(|i| match &patches[i] {
+                Patch::RemoveChild { index } => (i, *index),
+                _ => (i, 0),
+            })
+            .collect();
+        removals.sort_by(|a, b| b.1.cmp(&a.1));
+        order.extend(removals.into_iter().map(|(position, _)| position));
+    }
+    order
+}
+
 // -- wasm32 Platform implementation ----------------------------------------
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
@@ -2814,39 +2860,16 @@ pub mod wasm_impl {
         apply_patch_list(platform, parent, patches)
     }
 
-    /// Apply a list of sibling patches with old-frame index discipline.
-    ///
-    /// Every op index in a positional diff batch refers to positions in the
-    /// OLD child list. Replace/Update ops are count-neutral, so applying them
-    /// in order keeps the old frame valid; but each executed RemoveChild
-    /// shifts every later index down by one, so a second removal (or any
-    /// index-addressed op) after a first one addresses the wrong slot and
-    /// nodes the diff removed survive in the DOM (observed as a modal that
-    /// never closes). A positional batch never mixes inserts and removals
-    /// (the child count moves one way), so deferring removals to a
-    /// descending-index second pass keeps every index exact: non-removals run
-    /// against the untouched old frame, then removals peel off slots from the
-    /// tail down.
+    /// Apply a list of sibling patches in the order [`super::patch_apply_order`]
+    /// gives (the index discipline, and why it differs between batches that
+    /// insert and batches that only remove, is documented there).
     fn apply_patch_list(
         platform: &WitPlatform,
         parent: &WitElement,
         patches: &[tairitsu_vdom::Patch],
     ) -> Result<()> {
-        let mut removals: Vec<usize> = Vec::new();
-        for patch in patches {
-            if let tairitsu_vdom::Patch::RemoveChild { index } = patch {
-                removals.push(*index);
-                continue;
-            }
-            apply_patch(platform, parent, patch)?;
-        }
-        removals.sort_unstable_by(|a, b| b.cmp(a));
-        for index in removals {
-            apply_patch(
-                platform,
-                parent,
-                &tairitsu_vdom::Patch::RemoveChild { index },
-            )?;
+        for position in super::patch_apply_order(patches) {
+            apply_patch(platform, parent, &patches[position])?;
         }
         Ok(())
     }
@@ -3452,6 +3475,116 @@ pub fn fetch_text_with_options(
 #[cfg(test)]
 mod tests {
     use tairitsu_vdom::{Classes, Patch, Style, VElement, VNode, VText};
+
+    /// Run a sibling batch against a list of labels, in the order the applier
+    /// would use. Only the two structural ops move nodes; every other patch is
+    /// count-neutral, so it is a no-op on the model.
+    fn apply_to_model(list: &[&str], patches: &[Patch]) -> Vec<String> {
+        let mut list: Vec<String> = list.iter().map(|label| label.to_string()).collect();
+        for position in super::patch_apply_order(patches) {
+            match &patches[position] {
+                Patch::InsertChild { index, node } => {
+                    let label = match node {
+                        VNode::Text(text) => text.text.clone(),
+                        _ => String::from("node"),
+                    };
+                    let at = (*index).min(list.len());
+                    list.insert(at, label);
+                }
+                Patch::RemoveChild { index } => {
+                    if *index < list.len() {
+                        list.remove(*index);
+                    }
+                }
+                _ => {}
+            }
+        }
+        list
+    }
+
+    fn insert(index: usize, label: &str) -> Patch {
+        Patch::InsertChild {
+            index,
+            node: VNode::Text(VText::new(label)),
+        }
+    }
+
+    fn remove(index: usize) -> Patch {
+        Patch::RemoveChild { index }
+    }
+
+    /// The keyed diff on a key swap: drop the old generation, then put the new
+    /// one in the slot it left. Deferred, the removal deletes the node that
+    /// was just inserted and the old generation stays on stage.
+    #[test]
+    fn keyed_swap_removes_before_it_inserts_at_the_same_index() {
+        let batch = [remove(0), insert(0, "table")];
+        assert_eq!(
+            super::patch_apply_order(&batch),
+            vec![0, 1],
+            "the removal must run before the insert"
+        );
+        assert_eq!(apply_to_model(&["spinner"], &batch), vec!["table"]);
+    }
+
+    /// A keyed swap that also keeps the outgoing generation: one removal, then
+    /// two inserts at indices that already count that removal.
+    #[test]
+    fn keyed_swap_with_a_retained_generation_lands_both_items() {
+        let batch = [remove(0), insert(0, "a:leave"), insert(1, "b")];
+        assert_eq!(apply_to_model(&["a"], &batch), vec!["a:leave", "b"]);
+    }
+
+    /// A keyed move is written as remove-then-insert and means exactly that.
+    #[test]
+    fn keyed_move_runs_as_written() {
+        let batch = [remove(2), insert(0, "c")];
+        assert_eq!(
+            apply_to_model(&["a", "b", "c"], &batch),
+            vec!["c", "a", "b"]
+        );
+    }
+
+    /// The positional diff's trailing removals are ascending old-frame indices;
+    /// with no insert in the batch they still peel off from the tail down.
+    #[test]
+    fn positional_trailing_removals_still_peel_from_the_tail() {
+        let batch = [
+            Patch::UpdateText {
+                text: String::from("x"),
+            },
+            remove(2),
+            remove(3),
+        ];
+        assert_eq!(
+            super::patch_apply_order(&batch),
+            vec![0, 2, 1],
+            "updates first, then the removals in descending index order"
+        );
+        assert_eq!(
+            apply_to_model(&["a", "b", "c", "d"], &batch),
+            vec!["a", "b"]
+        );
+    }
+
+    /// The keyed diff's leading removals are descending old-frame indices; in a
+    /// batch without inserts they keep working after the count-neutral ops.
+    #[test]
+    fn keyed_leading_removals_descend_after_the_updates() {
+        let batch = [
+            remove(2),
+            remove(0),
+            Patch::UpdateText {
+                text: String::from("x"),
+            },
+        ];
+        assert_eq!(
+            super::patch_apply_order(&batch),
+            vec![2, 0, 1],
+            "the update runs against the old frame, then index 2, then index 0"
+        );
+        assert_eq!(apply_to_model(&["a", "b", "c"], &batch), vec!["b"]);
+    }
 
     /// Test that apply_patches handles an empty patch list correctly.
     #[test]
