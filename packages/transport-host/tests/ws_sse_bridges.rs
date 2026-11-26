@@ -84,7 +84,7 @@ fn websocket_bridge_round_trips_and_closes() {
     let url = spawn_ws_echo_server();
     let mut host = TransportHostState::new();
     let handle = host
-        .connect(url, vec![])
+        .connect(url, vec![], None)
         .expect("connect to the echo server");
 
     host.send(handle, WsFrame::Text("ping".into()))
@@ -145,7 +145,7 @@ fn websocket_bridge_records_server_initiated_close() {
         .expect("addr");
     let mut host = TransportHostState::new();
     let handle = host
-        .connect(format!("ws://127.0.0.1:{}/rpc", addr.port()), vec![])
+        .connect(format!("ws://127.0.0.1:{}/rpc", addr.port()), vec![], None)
         .expect("connect");
     host.send(handle, WsFrame::Text("hi".into())).expect("send");
     let info = wait_for(|| host.close_info(handle), 5_000).expect("server close recorded");
@@ -162,7 +162,7 @@ fn websocket_bridge_refuses_unreachable() {
     drop(listener);
     let mut host = TransportHostState::new();
     let err = host
-        .connect(format!("ws://127.0.0.1:{port}/x"), vec![])
+        .connect(format!("ws://127.0.0.1:{port}/x"), vec![], None)
         .expect_err("connection refused must surface");
     assert!(!err.is_empty());
 }
@@ -173,7 +173,9 @@ fn sse_bridge_parses_events_and_ids() {
         "event: tick\ndata: one\nid: 7\n\ndata: plain\n\nevent: drop\ndata: x\n\n",
     );
     let mut host = TransportHostState::new();
-    let handle = host.subscribe(url, vec![], vec![]).expect("subscribe");
+    let handle = host
+        .subscribe(url, vec![], vec![], None)
+        .expect("subscribe");
 
     let first = wait_for(|| host.next(handle), 5_000).expect("first event");
     assert_eq!(first.event.as_deref(), Some("tick"));
@@ -196,7 +198,7 @@ fn sse_bridge_filters_named_events() {
     let url = spawn_sse_server("event: keep\ndata: k\n\nevent: skip\ndata: s\n\n");
     let mut host = TransportHostState::new();
     let handle = host
-        .subscribe(url, vec![], vec!["keep".to_string()])
+        .subscribe(url, vec![], vec!["keep".to_string()], None)
         .expect("subscribe");
     let event = wait_for(|| host.next(handle), 5_000).expect("kept event");
     assert_eq!(event.event.as_deref(), Some("keep"));
@@ -233,6 +235,7 @@ fn sse_bridge_survives_long_silence() {
             format!("http://127.0.0.1:{}/events", addr.port()),
             vec![],
             vec![],
+            None,
         )
         .expect("subscribe");
     let first = wait_for(|| host.next(handle), 5_000).expect("first event");
@@ -259,6 +262,7 @@ fn sse_bridge_refuses_non_event_stream() {
             format!("http://127.0.0.1:{}/x", addr.port()),
             vec![],
             vec![],
+            None,
         )
         .expect_err("non-stream content type must refuse");
     assert!(err.contains("text/event-stream"), "{err}");

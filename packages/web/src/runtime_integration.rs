@@ -76,12 +76,16 @@ pub fn init_runtime(root_element: WitElement) {
     // the root and re-rendering the vnode in place (root identity is kept,
     // so embedder-captured roots stay valid).
     tairitsu_vdom::runtime::set_reconcile_callback({
-        let root_ref_reconcile: Rc<RefCell<WitElement>> = Rc::clone(&root_ref);
-        move |component_id: tairitsu_vdom::ComponentId, expected: usize, vnode: tairitsu_vdom::VNode| {
+        // Only the wasm body reads this; on a native target the binding is
+        // unused, so it carries the underscore.
+        let _root_ref_reconcile: Rc<RefCell<WitElement>> = Rc::clone(&root_ref);
+        move |component_id: tairitsu_vdom::ComponentId,
+              expected: usize,
+              vnode: tairitsu_vdom::VNode| {
             #[cfg(target_family = "wasm")]
             {
                 use tairitsu_vdom::platform::DomOps;
-                let root = root_ref_reconcile.borrow();
+                let root = _root_ref_reconcile.borrow();
                 let Ok(platform) = crate::WitPlatform::new() else {
                     return;
                 };
@@ -101,9 +105,7 @@ pub fn init_runtime(root_element: WitElement) {
                 crate::wit_platform::wasm_impl::with_render_component(component_id, || {
                     crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::node::set_text_content(root.as_raw(), Some(""));
                     if let Err(e) = crate::wit_platform::wasm_impl::replace_element_content(
-                        &platform,
-                        &root,
-                        &vnode,
+                        &platform, &root, &vnode,
                     ) {
                         tracing::error!("reconcile guard repair failed: {:?}", e);
                     }

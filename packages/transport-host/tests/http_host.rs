@@ -39,6 +39,9 @@ fn opts(method: &str, headers: Vec<(String, String)>, body: Option<Vec<u8>>) -> 
         credentials: Some(CredentialsMode::SameOrigin),
         redirect: Some(RedirectMode::Follow),
         timeout_ms: Some(5_000),
+        // No session credential store yet: the host rides the unauthenticated
+        // path on both faces (see the ws `connect` note in src/lib.rs).
+        auth: None,
     }
 }
 

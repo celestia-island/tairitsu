@@ -521,7 +521,9 @@ fn render_component(id: ComponentId) {
         }
     } else {
         trace!("Initial render for component {}", id);
-        let patches = vec![Patch::CreateNode { node: new_vnode.clone() }];
+        let patches = vec![Patch::CreateNode {
+            node: new_vnode.clone(),
+        }];
         if let Some(cb) = &ext.apply_patches_cb {
             let mut guard = cb.borrow_mut();
             guard(id, patches);

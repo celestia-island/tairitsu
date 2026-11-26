@@ -786,10 +786,93 @@ fn patch_apply_order(patches: &[tairitsu_vdom::Patch]) -> Vec<usize> {
                 _ => (i, 0),
             })
             .collect();
-        removals.sort_by(|a, b| b.1.cmp(&a.1));
+        removals.sort_by_key(|(_, index)| std::cmp::Reverse(*index));
         order.extend(removals.into_iter().map(|(position, _)| position));
     }
     order
+}
+
+/// The live state a form control keeps for one attribute besides the
+/// attribute itself.
+///
+/// HTML stores `value` and `checked` on form controls as *defaults*: once the
+/// user has typed in the field or clicked the checkbox, the element is
+/// "dirty" and `setAttribute` no longer reaches what is on screen. A virtual
+/// DOM writes the attribute on every render, so a controlled field that the
+/// model moves back — a "reset" button, a cleared form, an editor opened on a
+/// second row — keeps showing what the user typed. `<textarea>` and `<select>`
+/// never showed the model's value at all: they have no `value` attribute. The
+/// write has to land on the live property as well, which is where Vue and
+/// React put it too.
+#[cfg(any(target_family = "wasm", test))]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum LiveWrite {
+    /// The attribute is the whole story.
+    Nothing,
+    /// Assign the element's `value`.
+    Value(String),
+    /// Assign the element's checkedness.
+    Checked(bool),
+}
+
+/// The live write that goes with `attribute` being written (`Some(text)`) or
+/// removed (`None`) on a `tag` element; `input_type` is an `input`'s type.
+#[cfg(any(target_family = "wasm", test))]
+pub(crate) fn live_write(
+    tag: &str,
+    attribute: &str,
+    input_type: &str,
+    written: Option<&str>,
+) -> LiveWrite {
+    let is = |name: &str| tag.eq_ignore_ascii_case(name);
+    match attribute {
+        // A boolean attribute: there means checked, gone means not.
+        "checked" if is("input") => LiveWrite::Checked(written.is_some()),
+        // Only the types in the standard's *value mode* keep a value apart
+        // from the attribute. The rest reflect it (`checkbox`, `radio`,
+        // `hidden`, `submit`, `reset`, `button`, `image`), so `set-attribute`
+        // already reached what they report, and assigning after a removal
+        // would write the attribute back. A file input's value cannot be
+        // assigned at all: anything but the empty string throws.
+        "value" if is("input") && carries_live_value(input_type) => {
+            LiveWrite::Value(written.unwrap_or("").to_string())
+        }
+        "value" if is("textarea") => LiveWrite::Value(written.unwrap_or("").to_string()),
+        // With the attribute gone the browser picks the option to show, and
+        // nothing can ask it to: assigning a value selects a *matching* option.
+        "value" if is("select") => written.map_or(LiveWrite::Nothing, |text| {
+            LiveWrite::Value(text.to_string())
+        }),
+        _ => LiveWrite::Nothing,
+    }
+}
+
+/// Whether an `input` type keeps its value apart from the `value` attribute.
+///
+/// These are the standard's value-mode types. Everything they hold is what the
+/// user typed (or the sanitised form of it), and the attribute is only its
+/// default. The rest — `checkbox`, `radio`, `hidden`, `submit`, `reset`,
+/// `button`, `image` — report the attribute itself, and `file` has files
+/// instead; none of them needs a live write.
+#[cfg(any(target_family = "wasm", test))]
+fn carries_live_value(input_type: &str) -> bool {
+    matches!(
+        input_type.to_ascii_lowercase().as_str(),
+        "text"
+            | "search"
+            | "tel"
+            | "url"
+            | "email"
+            | "password"
+            | "date"
+            | "month"
+            | "week"
+            | "time"
+            | "datetime-local"
+            | "number"
+            | "range"
+            | "color"
+    )
 }
 
 // -- wasm32 Platform implementation ----------------------------------------
@@ -814,7 +897,7 @@ pub mod wasm_impl {
         take_event_callback, take_event_listener_type, HostEvent, MouseEventInput,
         PointerEventInput, WheelEventInput,
     };
-    use super::{WitElement, WitEvent, WitPlatform};
+    use super::{live_write, LiveWrite, WitElement, WitEvent, WitPlatform};
 
     thread_local! {
         static CURRENT_RENDER_COMPONENT: RefCell<Option<tairitsu_vdom::ComponentId>> = RefCell::new(None);
@@ -1275,19 +1358,19 @@ pub mod wasm_impl {
         ) {
             // take-run-put-back：RefMut 不跨用户回调持有（见 on_timeout 注释）。
             let converted_entries: Vec<tairitsu_vdom::ResizeObserverEntry> = entries
-                        .into_iter()
-                        .map(|entry| tairitsu_vdom::ResizeObserverEntry {
-                            target: entry.target,
-                            content_rect: tairitsu_vdom::DomRect {
-                                x: entry.content_rect.x,
-                                y: entry.content_rect.y,
-                                width: entry.content_rect.width,
-                                height: entry.content_rect.height,
-                            },
-                            border_box_size: vec![],
-                            content_box_size: vec![],
-                        })
-                        .collect();
+                .into_iter()
+                .map(|entry| tairitsu_vdom::ResizeObserverEntry {
+                    target: entry.target,
+                    content_rect: tairitsu_vdom::DomRect {
+                        x: entry.content_rect.x,
+                        y: entry.content_rect.y,
+                        width: entry.content_rect.width,
+                        height: entry.content_rect.height,
+                    },
+                    border_box_size: vec![],
+                    content_box_size: vec![],
+                })
+                .collect();
             let mut taken = RESIZE_OBSERVER_CALLBACKS
                 .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
             if let Some(handler) = taken.as_mut() {
@@ -1310,19 +1393,19 @@ pub mod wasm_impl {
         ) {
             // take-run-put-back：RefMut 不跨用户回调持有（见 on_timeout 注释）。
             let converted_records: Vec<tairitsu_vdom::MutationRecord> = entries
-                        .into_iter()
-                        .map(|entry| tairitsu_vdom::MutationRecord {
-                            record_type: entry.mutation_type,
-                            target: entry.target,
-                            added_nodes: vec![],
-                            removed_nodes: vec![],
-                            previous_sibling: entry.previous_sibling,
-                            next_sibling: entry.next_sibling,
-                            attribute_name: entry.attribute_name,
-                            attribute_namespace: entry.attribute_namespace,
-                            old_value: entry.old_value,
-                        })
-                        .collect();
+                .into_iter()
+                .map(|entry| tairitsu_vdom::MutationRecord {
+                    record_type: entry.mutation_type,
+                    target: entry.target,
+                    added_nodes: vec![],
+                    removed_nodes: vec![],
+                    previous_sibling: entry.previous_sibling,
+                    next_sibling: entry.next_sibling,
+                    attribute_name: entry.attribute_name,
+                    attribute_namespace: entry.attribute_namespace,
+                    old_value: entry.old_value,
+                })
+                .collect();
             let mut taken = MUTATION_OBSERVER_CALLBACKS
                 .with(|m| m.borrow_mut().get_mut(&callback_id).and_then(|c| c.take()));
             if let Some(handler) = taken.as_mut() {
@@ -1587,7 +1670,7 @@ pub mod wasm_impl {
                     }
                 },
                 |element, name, value| {
-                    bindings::tairitsu_browser::full::element::set_attribute(element, name, value);
+                    write_attribute(&WitElement::from_raw(element), name, value);
                 },
             );
         }
@@ -1724,6 +1807,97 @@ pub mod wasm_impl {
         }
     }
 
+    // -- Attributes on form controls ---------------------------------------
+    //
+    // Every attribute write goes through `write_attribute` / `erase_attribute`,
+    // so the live state a form control keeps never lags behind its attribute.
+
+    /// Whether `name` is an attribute a form control keeps live state for. The
+    /// check is a plain comparison, so the common attribute pays nothing more.
+    fn has_live_state(name: &str) -> bool {
+        matches!(name, "value" | "checked")
+    }
+
+    /// The live write that goes with `name` being written (`Some(text)`) or
+    /// removed (`None`) on `element`. The tag and type are read off the
+    /// element itself: a patch carries neither. At creation the attributes
+    /// land in no particular order, so `type` may not be there yet; it then
+    /// reads as `text`, which is harmless — the write lands on a text field
+    /// and setting `type` after it starts the value over.
+    fn live_write_for(element: &WitElement, name: &str, written: Option<&str>) -> LiveWrite {
+        let raw = element.as_raw();
+        live_write(
+            &bindings::tairitsu_browser::full::element::get_tag_name(raw),
+            name,
+            &bindings::tairitsu_browser::full::html_input_element::get_type(raw),
+            written,
+        )
+    }
+
+    /// Assign the live state on `element`. The writes go through the
+    /// `html-input-element` interface: its glue assigns the property of
+    /// whatever element it is given, the route `ChangeEvent.value` takes on
+    /// the way in.
+    fn apply_live_write(element: &WitElement, write: LiveWrite) {
+        use bindings::tairitsu_browser::full::html_input_element;
+        match write {
+            LiveWrite::Nothing => {}
+            LiveWrite::Value(value) => html_input_element::set_value(element.as_raw(), &value),
+            LiveWrite::Checked(checked) => {
+                html_input_element::set_checked(element.as_raw(), checked);
+            }
+        }
+    }
+
+    /// `set-attribute`, with the live write that goes with it.
+    fn write_attribute(element: &WitElement, name: &str, value: &str) {
+        bindings::tairitsu_browser::full::element::set_attribute(element.as_raw(), name, value);
+        if has_live_state(name) {
+            apply_live_write(element, live_write_for(element, name, Some(value)));
+        }
+    }
+
+    /// `remove-attribute`, with the live reset that goes with it.
+    fn erase_attribute(element: &WitElement, name: &str) {
+        bindings::tairitsu_browser::full::element::remove_attribute(element.as_raw(), name);
+        if has_live_state(name) {
+            apply_live_write(element, live_write_for(element, name, None));
+        }
+    }
+
+    /// Give a `<select>` the live value `value` names.
+    ///
+    /// A select has no `value` attribute to fall back on: its live value is
+    /// whichever option matches, so the write that went with the attribute
+    /// found nothing to select as long as the options were not there. It has
+    /// to be repeated once they are.
+    fn settle_select_value(select: &WitElement, value: &str) {
+        apply_live_write(select, live_write_for(select, "value", Some(value)));
+    }
+
+    /// Settle an element once its children are in the tree. `tag` and `value`
+    /// are the element's own, read off its vnode.
+    fn settle_children(element: &WitElement, tag: &str, value: Option<&str>) {
+        if tag.eq_ignore_ascii_case("select") {
+            if let Some(value) = value {
+                settle_select_value(element, value);
+            }
+        }
+    }
+
+    /// Settle `element` after its child list changed, when it is a select: an
+    /// option that just arrived may be the one its `value` names. The value
+    /// is read back off the element, the vnode being out of reach here.
+    fn settle_changed_children(platform: &WitPlatform, element: &WitElement) {
+        if bindings::tairitsu_browser::full::element::get_tag_name(element.as_raw())
+            .eq_ignore_ascii_case("select")
+        {
+            if let Some(value) = platform.get_attribute(element, "value") {
+                settle_select_value(element, &value);
+            }
+        }
+    }
+
     // -- Platform trait implementation ------------------------------------
 
     impl DomOps for WitPlatform {
@@ -1774,12 +1948,11 @@ pub mod wasm_impl {
         }
 
         fn set_attribute(&self, element: &Self::Element, name: &str, value: &str) {
-            // New WIT: set-attribute returns void
-            bindings::tairitsu_browser::full::element::set_attribute(element.as_raw(), name, value);
+            write_attribute(element, name, value);
         }
 
         fn remove_attribute(&self, element: &Self::Element, name: &str) {
-            bindings::tairitsu_browser::full::element::remove_attribute(element.as_raw(), name);
+            erase_attribute(element, name);
         }
 
         fn set_style(&self, element: &Self::Element, name: &str, value: &str) {
@@ -2101,7 +2274,8 @@ pub mod wasm_impl {
             callback: Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>,
         ) -> u64 {
             let callback_id = next_callback_id();
-            MUTATION_OBSERVER_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
+            MUTATION_OBSERVER_CALLBACKS
+                .with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
             bindings::tairitsu_browser::full::platform_helpers::create_mutation_observer(
                 callback_id,
             )
@@ -2774,6 +2948,11 @@ pub mod wasm_impl {
                         render_vnode(platform, child, &element)?;
                     }
                 }
+                settle_children(
+                    &element,
+                    &velement.tag,
+                    velement.attributes.get("value").map(String::as_str),
+                );
 
                 for (name, compute) in &velement.dynamic_attributes {
                     let raw = element.as_raw();
@@ -2781,9 +2960,7 @@ pub mod wasm_impl {
                     let compute = compute.clone();
                     create_tracked_effect(move || {
                         let value = (compute.borrow_mut())();
-                        bindings::tairitsu_browser::full::element::set_attribute(
-                            raw, &name, &value,
-                        );
+                        write_attribute(&WitElement::from_raw(raw), &name, &value);
                     });
                 }
 
@@ -2936,6 +3113,11 @@ pub mod wasm_impl {
                         for child in &boxed.children {
                             render_vnode(platform, child, &new_element)?;
                         }
+                        settle_children(
+                            &new_element,
+                            &boxed.tag,
+                            boxed.attributes.get("value").map(String::as_str),
+                        );
                     }
                     let _ = bindings::tairitsu_browser::full::node::replace_child(
                         parent.as_raw(),
@@ -2943,6 +3125,7 @@ pub mod wasm_impl {
                         element.as_raw(),
                     );
                     tairitsu_vdom::runtime::on_element_removed(element.as_raw());
+                    settle_changed_children(platform, &parent);
                     return Ok(());
                 }
                 // Detached slot (no parent): nothing to swap against, fall
@@ -2982,10 +3165,12 @@ pub mod wasm_impl {
 
             Patch::InsertChild { index, node } => {
                 insert_child_at(platform, element, *index, node)?;
+                settle_changed_children(platform, element);
             }
 
             Patch::RemoveChild { index } => {
                 remove_child_at(platform, element, *index)?;
+                settle_changed_children(platform, element);
             }
 
             Patch::UpdateChild {
@@ -3080,9 +3265,7 @@ pub mod wasm_impl {
                     let compute = compute.clone();
                     create_tracked_effect(move || {
                         let value = (compute.borrow_mut())();
-                        bindings::tairitsu_browser::full::element::set_attribute(
-                            raw, &name, &value,
-                        );
+                        write_attribute(&WitElement::from_raw(raw), &name, &value);
                     });
                 }
 
@@ -3175,6 +3358,11 @@ pub mod wasm_impl {
                 for child in &velement.children {
                     render_vnode(platform, child, element)?;
                 }
+                settle_children(
+                    element,
+                    &velement.tag,
+                    velement.attributes.get("value").map(String::as_str),
+                );
             }
             VNode::Text(vtext) => {
                 bindings::tairitsu_browser::full::node::set_text_content(
@@ -3273,6 +3461,11 @@ pub mod wasm_impl {
             for child in &velement.children {
                 render_vnode(platform, child, &new_element)?;
             }
+            settle_children(
+                &new_element,
+                &velement.tag,
+                velement.attributes.get("value").map(String::as_str),
+            );
         }
 
         Ok(())
@@ -3491,10 +3684,8 @@ mod tests {
                     let at = (*index).min(list.len());
                     list.insert(at, label);
                 }
-                Patch::RemoveChild { index } => {
-                    if *index < list.len() {
-                        list.remove(*index);
-                    }
+                Patch::RemoveChild { index } if *index < list.len() => {
+                    list.remove(*index);
                 }
                 _ => {}
             }
@@ -3584,6 +3775,160 @@ mod tests {
             "the update runs against the old frame, then index 2, then index 0"
         );
         assert_eq!(apply_to_model(&["a", "b", "c"], &batch), vec!["b"]);
+    }
+
+    /// A `value` written on a field is assigned as the field's live value.
+    #[test]
+    fn a_written_value_lands_as_the_live_value() {
+        use super::{live_write, LiveWrite};
+        fn written(tag: &str, input_type: &str) -> LiveWrite {
+            live_write(tag, "value", input_type, Some("typed"))
+        }
+        let typed = LiveWrite::Value(String::from("typed"));
+        for input_type in [
+            "text",
+            "search",
+            "tel",
+            "url",
+            "email",
+            "password",
+            "number",
+            "range",
+            "color",
+            "date",
+            "month",
+            "week",
+            "time",
+            "datetime-local",
+        ] {
+            assert_eq!(written("input", input_type), typed, "{input_type}");
+        }
+        assert_eq!(written("INPUT", "TEXT"), typed);
+        assert_eq!(written("textarea", "textarea"), typed);
+        assert_eq!(written("select", "select-one"), typed);
+    }
+
+    /// The input types that report the attribute itself are the attribute's
+    /// alone: a live write after a removal would put the attribute back.
+    #[test]
+    fn attribute_mode_inputs_are_left_to_the_attribute() {
+        use super::{live_write, LiveWrite};
+        for input_type in [
+            "checkbox", "radio", "hidden", "submit", "reset", "button", "image", "file",
+        ] {
+            assert_eq!(
+                live_write("input", "value", input_type, Some("x")),
+                LiveWrite::Nothing,
+                "{input_type}"
+            );
+            assert_eq!(
+                live_write("input", "value", input_type, None),
+                LiveWrite::Nothing,
+                "{input_type}"
+            );
+        }
+    }
+
+    /// `checked` is a boolean attribute: there means checked, gone means not,
+    /// and only on an input.
+    #[test]
+    fn checked_follows_the_attribute_on_inputs() {
+        use super::{live_write, LiveWrite};
+        assert_eq!(
+            live_write("input", "checked", "checkbox", None),
+            LiveWrite::Checked(false)
+        );
+        assert_eq!(
+            live_write("input", "checked", "checkbox", Some("checked")),
+            LiveWrite::Checked(true)
+        );
+        assert_eq!(
+            live_write("option", "checked", "", Some("checked")),
+            LiveWrite::Nothing
+        );
+        // An option's selectedness needs the option interface, which the glue
+        // does not ship; the attribute stays the default it always was.
+        assert_eq!(
+            live_write("option", "selected", "", Some("selected")),
+            LiveWrite::Nothing
+        );
+    }
+
+    /// A `value` removed leaves nothing behind on the fields that keep a live
+    /// value, except on a select, whose default choice is the browser's.
+    #[test]
+    fn a_removed_value_resets_to_the_default() {
+        use super::{live_write, LiveWrite};
+        fn removed(tag: &str, input_type: &str) -> LiveWrite {
+            live_write(tag, "value", input_type, None)
+        }
+        let empty = LiveWrite::Value(String::new());
+        assert_eq!(removed("input", "text"), empty);
+        assert_eq!(removed("input", "number"), empty);
+        assert_eq!(removed("textarea", "textarea"), empty);
+        assert_eq!(
+            removed("select", "select-one"),
+            LiveWrite::Nothing,
+            "assigning a value selects a matching option; nothing selects the default one"
+        );
+    }
+
+    /// Elements and attributes outside the table are the attribute's alone.
+    #[test]
+    fn everything_else_is_the_attribute_alone() {
+        use super::{live_write, LiveWrite};
+        // `value` on these reflects the attribute, or is no form value at all.
+        for tag in ["div", "li", "progress", "meter", "output", "option", "data"] {
+            assert_eq!(live_write(tag, "value", "", Some("1")), LiveWrite::Nothing);
+        }
+        for attribute in ["class", "disabled", "type", "placeholder", "selected"] {
+            assert_eq!(
+                live_write("input", attribute, "text", Some("x")),
+                LiveWrite::Nothing
+            );
+        }
+        assert_eq!(
+            live_write("textarea", "checked", "textarea", Some("checked")),
+            LiveWrite::Nothing
+        );
+    }
+
+    #[test]
+    fn the_value_modes_are_the_ones_that_keep_a_value() {
+        use super::carries_live_value;
+        for input_type in [
+            "text",
+            "search",
+            "tel",
+            "url",
+            "email",
+            "password",
+            "date",
+            "month",
+            "week",
+            "time",
+            "datetime-local",
+            "number",
+            "range",
+            "color",
+            "TEXT",
+        ] {
+            assert!(carries_live_value(input_type), "{input_type}");
+        }
+        for input_type in [
+            "checkbox",
+            "radio",
+            "file",
+            "hidden",
+            "submit",
+            "reset",
+            "button",
+            "image",
+            "",
+            "select-one",
+        ] {
+            assert!(!carries_live_value(input_type), "{input_type}");
+        }
     }
 
     /// Test that apply_patches handles an empty patch list correctly.
