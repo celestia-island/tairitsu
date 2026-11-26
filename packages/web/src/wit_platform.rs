@@ -457,9 +457,12 @@ pub(crate) mod event_callbacks {
     /// and a wrongly-typed event is silently skipped by the dispatch — while
     /// every other registration keeps the [`InputEvent`] the record describes.
     ///
-    /// `target` is read off the live event handle by the `wasm32` caller (a WIT
-    /// getter call the native tests cannot make); `data` is the callback record's
-    /// payload. A listener id with no recorded type — a dispatch for a listener
+    /// `target` and `value` are read off the live event handle by the
+    /// `wasm32` caller (WIT getter calls the native tests cannot make); `data`
+    /// is the callback record's payload. Both listener kinds get `value`: it
+    /// is `ChangeEvent.value`, and it is `InputEvent.value`, the field's whole
+    /// value as it stands after the keystroke — what a controlled input
+    /// stores. A listener id with no recorded type — a dispatch for a listener
     /// that was already removed — falls back to `InputEvent`, the type the
     /// callback record was designed for.
     pub(crate) fn dispatch_input_event(
@@ -484,6 +487,7 @@ pub(crate) mod event_callbacks {
             Box::new(
                 InputEvent::new()
                     .data(data.unwrap_or_default())
+                    .value(value.unwrap_or_default())
                     .event_handle(wit_handle),
             )
         };
@@ -742,8 +746,8 @@ pub mod wasm_impl {
 
     use super::event_callbacks::{
         build_typed_event, dispatch_event, dispatch_input_event, is_pointer_event_type,
-        listener_event_type, set_event_callback, set_event_listener_type, take_event_callback,
-        take_event_listener_type, HostEvent, MouseEventInput, PointerEventInput, WheelEventInput,
+        set_event_callback, set_event_listener_type, take_event_callback, take_event_listener_type,
+        HostEvent, MouseEventInput, PointerEventInput, WheelEventInput,
     };
     use super::{WitElement, WitEvent, WitPlatform};
 
@@ -1053,30 +1057,19 @@ pub mod wasm_impl {
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
             // The glue sends `input` and `change` down this one callback, so the
-            // listener's registered type decides what it receives. Only a `change`
-            // dispatch needs the target, and `ChangeEvent.target` is the only field
-            // it can take from the handle — read the getter just for that case.
-            let registered = listener_event_type(listener_id);
-            let target = if registered.as_deref() == Some("change") {
-                bindings::tairitsu_browser::full::event::get_target(event_handle)
-            } else {
-                None
-            };
-            // A `change` on an input-like target carries the committed value:
-            // read it through the `html-input-element` getter so the delivered
-            // `ChangeEvent.value` is the real value, not an invented empty.
-            // The glue's lenient getter reads "" for non-input targets, which
-            // is exactly the honest fill.
-            let value = if registered.as_deref() == Some("change") {
-                match target {
-                    Some(target) => Some(
-                        bindings::tairitsu_browser::full::html_input_element::get_value(target),
-                    ),
-                    None => None,
-                }
-            } else {
-                None
-            };
+            // listener's registered type decides what it receives. Both need the
+            // target: `ChangeEvent.target` is the only field it can take from the
+            // handle, and `InputEvent.value` is read off the target as well.
+            let target = bindings::tairitsu_browser::full::event::get_target(event_handle);
+            // The value of an input-like target, read through the
+            // `html-input-element` getter so what the handler sees is the real
+            // value, not an invented empty: the committed value for `change`, the
+            // field's whole value after the keystroke for `input`. The glue's
+            // lenient getter reads "" for non-input targets, which is exactly the
+            // honest fill.
+            let value = target.map(|target| {
+                bindings::tairitsu_browser::full::html_input_element::get_value(target)
+            });
             dispatch_input_event(listener_id, wit_handle, target, data.data, value);
         }
 
@@ -4160,9 +4153,9 @@ mod tests {
         dispatch_input_event(
             LISTENER_ID,
             EventWitHandle::from_wit(10),
-            None,
-            Some(String::from("typed x")),
-            None,
+            Some(77),
+            Some(String::from("y")),
+            Some(String::from("typed xy")),
         );
         take_event_callback(LISTENER_ID);
         take_event_listener_type(LISTENER_ID);
@@ -4176,7 +4169,55 @@ mod tests {
             .borrow()
             .clone()
             .expect("the listener should receive an InputEvent");
-        assert_eq!(event.data, "typed x");
+        assert_eq!(event.data, "y");
+        // `data` is only what this keystroke inserted. A controlled input
+        // stores the field's whole value, so that has to travel with the
+        // event too — storing `data` leaves the signal holding "y".
+        assert_eq!(event.value, "typed xy");
+    }
+
+    /// An `input` listener whose target carries no value gets an empty
+    /// `InputEvent.value`, not the inserted characters and not a panic.
+    #[test]
+    fn test_input_event_dispatch_without_a_value_is_empty() {
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
+        use tairitsu_vdom::{EventData, EventWitHandle, InputEvent};
+
+        use super::event_callbacks::{
+            dispatch_input_event, set_event_callback, set_event_listener_type, take_event_callback,
+            take_event_listener_type,
+        };
+
+        const LISTENER_ID: u64 = 9_014;
+
+        let received: Rc<RefCell<Option<InputEvent>>> = Rc::new(RefCell::new(None));
+        let received_sink = Rc::clone(&received);
+        set_event_callback(
+            LISTENER_ID,
+            Box::new(move |event: Box<dyn EventData>| {
+                *received_sink.borrow_mut() = event.as_any().downcast_ref::<InputEvent>().cloned();
+            }),
+        );
+        set_event_listener_type(LISTENER_ID, "input");
+
+        dispatch_input_event(
+            LISTENER_ID,
+            EventWitHandle::from_wit(11),
+            None,
+            Some(String::from("z")),
+            None,
+        );
+        take_event_callback(LISTENER_ID);
+        take_event_listener_type(LISTENER_ID);
+
+        let event = received
+            .borrow()
+            .clone()
+            .expect("the listener should receive an InputEvent");
+        assert_eq!(event.data, "z");
+        assert_eq!(event.value, "");
     }
 
     /// A dispatch for a listener id with no recorded type falls back to the

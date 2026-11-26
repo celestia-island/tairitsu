@@ -372,7 +372,13 @@ impl Default for FocusEvent {
 
 #[derive(Debug, Clone)]
 pub struct InputEvent {
+    /// The characters this one event inserted (the DOM `InputEvent.data`).
     pub data: String,
+    /// The target field's whole value as it stands after the event — what a
+    /// controlled input stores. Empty when the target carries no value (a
+    /// contenteditable host, say): the host reads this off the target, and
+    /// there is nothing there to read.
+    pub value: String,
     pub input_type: String,
     event_handle: EventWitHandle,
 }
@@ -387,6 +393,7 @@ impl InputEvent {
     pub fn new() -> Self {
         Self {
             data: String::new(),
+            value: String::new(),
             input_type: String::new(),
             event_handle: EventWitHandle::placeholder(),
         }
@@ -394,6 +401,11 @@ impl InputEvent {
 
     pub fn data(mut self, data: impl Into<String>) -> Self {
         self.data = data.into();
+        self
+    }
+
+    pub fn value(mut self, value: impl Into<String>) -> Self {
+        self.value = value.into();
         self
     }
 
