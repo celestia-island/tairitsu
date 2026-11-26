@@ -786,7 +786,7 @@ fn patch_apply_order(patches: &[tairitsu_vdom::Patch]) -> Vec<usize> {
                 _ => (i, 0),
             })
             .collect();
-        removals.sort_by(|a, b| b.1.cmp(&a.1));
+        removals.sort_by_key(|(_, index)| std::cmp::Reverse(*index));
         order.extend(removals.into_iter().map(|(position, _)| position));
     }
     order
@@ -3684,10 +3684,8 @@ mod tests {
                     let at = (*index).min(list.len());
                     list.insert(at, label);
                 }
-                Patch::RemoveChild { index } => {
-                    if *index < list.len() {
-                        list.remove(*index);
-                    }
+                Patch::RemoveChild { index } if *index < list.len() => {
+                    list.remove(*index);
                 }
                 _ => {}
             }
