@@ -65,6 +65,118 @@ impl ElementHandle for WitElement {
     }
 }
 
+// -- Element namespaces -----------------------------------------------------
+
+/// The SVG namespace URI.
+///
+/// A plain `const` with no dependency on the WIT imports, so the classifier
+/// below is testable on a native host with `--features wit-bindings` enabled,
+/// where the module compiles but the WIT host calls cannot run.
+pub const SVG_NAMESPACE: &str = "http://www.w3.org/2000/svg";
+
+/// Element names that only ever mean SVG.
+///
+/// The browser decides an element's namespace from *context*: inside `<svg>` the
+/// parser switches to the SVG namespace. `createElement` has no such context, so
+/// the runtime has to decide from the name alone. That is only sound for names
+/// which are SVG-exclusive, so this is exactly that set: every name the SVG
+/// specifications define which has no HTML element of the same name, plus `svg`
+/// itself as the root of an SVG subtree.
+///
+/// Names shared with HTML are deliberately absent: `title`, `style`, `script`,
+/// `a`, `canvas`, `iframe`, `video`, `audio`, `input`, `button`, `form`,
+/// `label`, `select`, `textarea` and `option`. Inside `<svg>` the parser puts
+/// those in the SVG namespace, but the same names are ordinary HTML everywhere
+/// else and rsx uses them as HTML constantly; classifying them by name would
+/// create every `<button>` and `<form>` in the page as an SVG element. Custom
+/// element names (with a hyphen) are absent for the same reason.
+///
+/// Matching is case-insensitive, exactly like the parser: it adjusts `clipPath`
+/// to the canonical casing but accepts `clippath` as well.
+const SVG_ELEMENT_NAMES: &[&str] = &[
+    "svg",
+    "path",
+    "g",
+    "defs",
+    "symbol",
+    "use",
+    "circle",
+    "ellipse",
+    "line",
+    "rect",
+    "polyline",
+    "polygon",
+    "text",
+    "tspan",
+    "textpath",
+    "desc",
+    "metadata",
+    "lineargradient",
+    "radialgradient",
+    "stop",
+    "pattern",
+    "marker",
+    "mask",
+    "clippath",
+    "filter",
+    "fegaussianblur",
+    "feoffset",
+    "feblend",
+    "fecolormatrix",
+    "fecomponenttransfer",
+    "fecomposite",
+    "feconvolvematrix",
+    "fediffuselighting",
+    "fedisplacementmap",
+    "fedistantlight",
+    "fedropshadow",
+    "feflood",
+    "fefunca",
+    "fefuncb",
+    "fefuncg",
+    "fefuncr",
+    "feimage",
+    "femerge",
+    "femergenode",
+    "femorphology",
+    "fepointlight",
+    "fespecularlighting",
+    "fespotlight",
+    "fetile",
+    "feturbulence",
+    "image",
+    "foreignobject",
+    "switch",
+    "view",
+    "animate",
+    "animatemotion",
+    "animatetransform",
+    "set",
+    "mpath",
+    "hatch",
+    "hatchpath",
+    "solidcolor",
+    "lighting-color",
+];
+
+/// The namespace a newly created element belongs in, or `None` for HTML.
+///
+/// Elements created in the SVG namespace get SVG semantics for `width`,
+/// `height`, `stroke` and `viewBox`. Without it an `<svg>` is an unknown HTML
+/// element that lays out at 0x0 with no stroke, so every icon drawn with rsx
+/// renders invisible no matter how its attributes are spelled.
+///
+/// The decision is by name alone and therefore cannot follow the parser into
+/// and back out of context-dependent namespaces: an `<a>` inside `<svg>` stays
+/// HTML here, and so does a `<div>` inside `<foreignObject>`. Modelling that
+/// would need the virtual DOM to carry a namespace, which it does not today.
+pub fn svg_namespace_for(tag: &str) -> Option<&'static str> {
+    SVG_ELEMENT_NAMES
+        .iter()
+        .any(|name| name.eq_ignore_ascii_case(tag))
+        .then_some(SVG_NAMESPACE)
+}
+
 /// Opaque handle to a DOM event dispatched by the browser-glue host.
 #[cfg(feature = "wit-bindings")]
 #[derive(Clone)]
@@ -1447,7 +1559,20 @@ pub mod wasm_impl {
                     bindings::tairitsu_browser::full::parent_node::query_selector(el, sel)
                 },
                 create_element: |tag| {
-                    bindings::tairitsu_browser::full::document::create_element(tag, None)
+                    // Event-handler context: give SVG-only names their namespace,
+                    // otherwise icons built here render invisible.
+                    match super::svg_namespace_for(tag) {
+                        Some(namespace) => {
+                            bindings::tairitsu_browser::full::document::create_element_ns(
+                                Some(namespace),
+                                tag,
+                                None,
+                            )
+                        }
+                        None => {
+                            bindings::tairitsu_browser::full::document::create_element(tag, None)
+                        }
+                    }
                 },
                 append_child: |parent, child| {
                     bindings::tairitsu_browser::full::node::append_child(parent, child)
@@ -1544,8 +1669,18 @@ pub mod wasm_impl {
         type Event = WitEvent;
 
         fn create_element(&self, tag: &str) -> Self::Element {
-            // New WIT: create-element returns u64 directly, takes optional options
-            let handle = bindings::tairitsu_browser::full::document::create_element(tag, None);
+            // New WIT: create-element returns u64 directly, takes optional options.
+            // SVG-only names go through create-element-ns: created with plain
+            // create-element they are unknown HTML elements, which lay out at
+            // 0x0 and ignore stroke, so every rsx-drawn icon is invisible.
+            let handle = match super::svg_namespace_for(tag) {
+                Some(namespace) => bindings::tairitsu_browser::full::document::create_element_ns(
+                    Some(namespace),
+                    tag,
+                    None,
+                ),
+                None => bindings::tairitsu_browser::full::document::create_element(tag, None),
+            };
             WitElement::from_raw(handle)
         }
 
@@ -4173,5 +4308,159 @@ mod tests {
         assert!(any_ref.is::<super::WitElement>());
         assert!(!any_ref.is::<String>());
         assert!(!any_ref.is::<i32>());
+    }
+
+    // -- Element namespace classifier ---------------------------------------
+    //
+    // The classifier is plain string logic with no WIT calls, so these run on a
+    // native host together with the rest of this module's tests under
+    // `--features wit-bindings`.
+
+    /// An `<svg>` is the root of an SVG subtree and must carry the namespace.
+    #[test]
+    fn svg_root_takes_the_svg_namespace() {
+        assert_eq!(super::svg_namespace_for("svg"), Some(super::SVG_NAMESPACE));
+    }
+
+    /// SVG shapes and gradient parts only exist in SVG.
+    #[test]
+    fn svg_only_names_take_the_svg_namespace() {
+        for tag in [
+            "path",
+            "g",
+            "defs",
+            "circle",
+            "ellipse",
+            "line",
+            "rect",
+            "polygon",
+            "polyline",
+            "tspan",
+            "textPath",
+            "linearGradient",
+            "radialGradient",
+            "stop",
+            "clipPath",
+            "mask",
+            "pattern",
+            "marker",
+            "filter",
+            "feGaussianBlur",
+            "feFuncB",
+            "feMergeNode",
+            "foreignObject",
+            "animate",
+            "animateTransform",
+            "use",
+            "symbol",
+            "switch",
+        ] {
+            assert_eq!(
+                super::svg_namespace_for(tag),
+                Some(super::SVG_NAMESPACE),
+                "{tag} is an SVG-only name"
+            );
+        }
+    }
+
+    /// The parser matches SVG element names case-insensitively, so do we.
+    #[test]
+    fn svg_names_match_case_insensitively() {
+        assert_eq!(
+            super::svg_namespace_for("CLIPPATH"),
+            Some(super::SVG_NAMESPACE)
+        );
+        assert_eq!(
+            super::svg_namespace_for("clippath"),
+            Some(super::SVG_NAMESPACE)
+        );
+        assert_eq!(
+            super::svg_namespace_for("FEFUNCB"),
+            Some(super::SVG_NAMESPACE)
+        );
+        assert_eq!(super::svg_namespace_for("Svg"), Some(super::SVG_NAMESPACE));
+        assert_eq!(super::svg_namespace_for("LINE"), Some(super::SVG_NAMESPACE));
+    }
+
+    /// Ordinary HTML stays HTML. This is the regression that matters most: the
+    /// page creates these constantly, and putting any of them in the SVG
+    /// namespace would break every button, input and section on the page.
+    #[test]
+    fn html_elements_keep_the_html_namespace() {
+        for tag in [
+            "div", "span", "p", "a", "ul", "li", "table", "img", "br", "h1", "h2", "form", "label",
+            "select", "textarea", "option", "section", "article", "nav", "header", "footer",
+            "aside", "main", "dialog", "details", "summary", "template", "iframe", "video",
+            "audio", "picture", "source", "fieldset", "legend",
+        ] {
+            assert_eq!(super::svg_namespace_for(tag), None, "{tag} must stay HTML");
+        }
+    }
+
+    /// Names the HTML parser resolves to SVG only *inside* `<svg>` are context
+    /// dependent, so by name alone they must stay HTML.
+    #[test]
+    fn names_shared_with_html_stay_html() {
+        for tag in [
+            "title", "style", "script", "a", "canvas", "iframe", "video", "audio", "input",
+            "button", "form", "label", "select", "textarea", "option",
+        ] {
+            assert_eq!(
+                super::svg_namespace_for(tag),
+                None,
+                "{tag} is shared with HTML and must not be classified as SVG by name"
+            );
+        }
+    }
+
+    /// Custom elements are HTML regardless of their name.
+    #[test]
+    fn custom_element_names_stay_html() {
+        for tag in ["x-foo", "my-widget", "tsdm-pet-card", "a-b", "x-foo-bar"] {
+            assert_eq!(
+                super::svg_namespace_for(tag),
+                None,
+                "{tag} is a custom element"
+            );
+        }
+    }
+
+    /// Empty and unknown names are not SVG.
+    #[test]
+    fn unknown_names_are_not_svg() {
+        assert_eq!(super::svg_namespace_for(""), None);
+        assert_eq!(super::svg_namespace_for("not-a-real-element"), None);
+        assert_eq!(super::svg_namespace_for("pat"), None);
+        assert_eq!(super::svg_namespace_for("paths"), None);
+    }
+
+    /// The table is what the classifier matches against, so it has to be
+    /// canonical: lower-case and free of duplicates, or a look-alike entry
+    /// could shadow a real one.
+    #[test]
+    fn svg_element_table_is_canonical() {
+        let mut seen = std::collections::HashSet::new();
+        for name in super::SVG_ELEMENT_NAMES {
+            assert_eq!(*name, name.to_ascii_lowercase(), "{name} is not lower-case");
+            assert!(seen.insert(*name), "{name} is listed twice");
+            assert!(!name.contains(' '), "{name} contains a space");
+        }
+    }
+
+    /// Every entry has to classify, so the table and the classifier cannot drift
+    /// apart. Names outside the table are covered by the HTML and custom-element
+    /// tests above: those are what must keep returning `None`.
+    #[test]
+    fn classifier_agrees_with_the_table() {
+        for name in super::SVG_ELEMENT_NAMES {
+            assert_eq!(super::svg_namespace_for(name), Some(super::SVG_NAMESPACE));
+        }
+        // A mixed-case spelling of a listed name resolves through folding, and a
+        // hyphenated look-alike is not a listed name.
+        assert_eq!(
+            super::svg_namespace_for("fePointLight"),
+            Some(super::SVG_NAMESPACE)
+        );
+        assert_eq!(super::svg_namespace_for("fe-point-light"), None);
     }
 }
