@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::{
     patch::Patch,
@@ -183,115 +183,95 @@ fn diff_children_indexed(old_children: &[VNode], new_children: &[VNode], patches
     }
 }
 
+/// Diff children when any of them carries a key.
+///
+/// A keyed new child continues the old child with the same key. A new child
+/// without a key continues the old child at the same rank among the unkeyed
+/// children — the first with the first, the second with the second — so a
+/// static sibling next to a keyed list keeps its node instead of being
+/// re-created on every render.
+///
+/// Of the continued children, the longest run that is already in order stays
+/// where it is; every other child is removed and the new one inserted at its
+/// final index. Re-inserting builds a fresh DOM node, so a moved child does
+/// not carry focus or selection over.
+///
+/// The patches are laid out to be correct in the order they are written:
+///
+/// 1. updates to the children that stay, against the old list, by old index;
+/// 2. removals, highest old index first;
+/// 3. inserts, lowest new index first.
+///
+/// After the removals the list holds exactly the children that stay, already
+/// in their new relative order, so each insert lands at its own new index.
+/// A batch without inserts also survives the applier's "updates first, then
+/// removals from the top" order, which is the same sequence.
 fn diff_children_keyed(old_children: &[VNode], new_children: &[VNode], patches: &mut Vec<Patch>) {
-    let old_len = old_children.len();
-    let new_len = new_children.len();
-
-    // Build a map from old key -> old index
+    // Old key -> old index.
     let mut old_key_map: HashMap<&str, usize> = HashMap::new();
-    for (i, child) in old_children.iter().enumerate() {
-        if let Some(key) = extract_key(child) {
-            old_key_map.insert(key, i);
+    // Old indices of the children without a key, in order.
+    let mut unkeyed_old: Vec<usize> = Vec::new();
+    for (old_idx, child) in old_children.iter().enumerate() {
+        match extract_key(child) {
+            Some(key) => {
+                old_key_map.insert(key, old_idx);
+            }
+            None => unkeyed_old.push(old_idx),
         }
     }
 
-    // For each new child, find matching old child by key
-    // new_match[i] = index in old_children, or None
-    let mut new_match: Vec<Option<usize>> = Vec::with_capacity(new_len);
-    for new_child in new_children.iter() {
-        let matched = extract_key(new_child).and_then(|k| old_key_map.get(k).copied());
+    // new_match[new_idx] = the old child the new child continues, if any.
+    let mut new_match: Vec<Option<usize>> = Vec::with_capacity(new_children.len());
+    let mut unkeyed_rank = 0usize;
+    for new_child in new_children {
+        let matched = match extract_key(new_child) {
+            Some(key) => old_key_map.get(key).copied(),
+            None => {
+                unkeyed_rank += 1;
+                unkeyed_old.get(unkeyed_rank - 1).copied()
+            }
+        };
         new_match.push(matched);
     }
 
-    // Build a set of old indices that are matched by key
-    let mut matched_old_set: HashMap<usize, usize> = HashMap::new();
-    for (new_idx, &old_idx_opt) in new_match.iter().enumerate() {
-        if let Some(old_idx) = old_idx_opt {
-            matched_old_set.insert(old_idx, new_idx);
-        }
+    // The continued children, in new order: the longest run whose old indices
+    // increase is the run that stays.
+    let continued: Vec<usize> = new_match.iter().copied().flatten().collect();
+    let mut stays: HashSet<usize> = HashSet::new();
+    for &position in &longest_increasing_subsequence_set(&continued) {
+        stays.insert(continued[position]);
     }
 
-    // Find LIS of matched old indices in new order
-    // Collect matched old indices in the order they appear in new_children
-    let matched_old_indices: Vec<usize> = new_match.iter().filter_map(|&opt| opt).collect();
-
-    let lis_set = longest_increasing_subsequence_set(&matched_old_indices);
-
-    // Determine which matched old indices are "stable" (part of LIS)
-    // lis_set contains indices into matched_old_indices
-    let mut stable_old: std::collections::HashSet<usize> = std::collections::HashSet::new();
-    for &lis_idx in &lis_set {
-        stable_old.insert(matched_old_indices[lis_idx]);
-    }
-
-    // Phase 1: Remove old keyed children that are not matched in new.
-    // Unkeyed children are matched positionally and are NOT removed here.
-    let mut to_remove: Vec<usize> = Vec::new();
-    for (i, child) in old_children.iter().enumerate() {
-        if extract_key(child).is_some() && !matched_old_set.contains_key(&i) {
-            to_remove.push(i);
-        }
-    }
-
-    // Phase 2: For each new child, generate patches
-    // We track the "effective insertion index" as we go
-    let mut removal_offset: isize = 0;
-
-    // Generate removals first (in reverse order to maintain indices)
-    if !to_remove.is_empty() {
-        for &idx in to_remove.iter().rev() {
-            patches.push(Patch::RemoveChild { index: idx });
-        }
-        removal_offset = to_remove.len() as isize;
-    }
-
-    // Now process new children in order
-    let mut current_insert_index = old_len as isize - removal_offset;
     for (new_idx, new_child) in new_children.iter().enumerate() {
-        let matched_old_idx = new_match[new_idx];
-
-        match matched_old_idx {
-            Some(old_idx) => {
-                // This new child matches an old child by key
-                let old_child = &old_children[old_idx];
-
-                if stable_old.contains(&old_idx) {
-                    // Stable - just update in place (adjust for removals)
-                    let adjusted = old_idx as isize - count_removed_before(&to_remove, old_idx);
-                    let child_patches = diff(Some(old_child), new_child);
-                    if !child_patches.is_empty() {
-                        patches.push(Patch::UpdateChild {
-                            index: adjusted as usize,
-                            patches: child_patches,
-                        });
-                    }
-                } else {
-                    // Needs to move: remove from old position, insert at new position
-                    let adjusted_old = old_idx as isize - count_removed_before(&to_remove, old_idx);
-                    patches.push(Patch::RemoveChild {
-                        index: adjusted_old as usize,
-                    });
-                    patches.push(Patch::InsertChild {
-                        index: current_insert_index as usize,
-                        node: new_child.clone(),
+        if let Some(old_idx) = new_match[new_idx] {
+            if stays.contains(&old_idx) {
+                let child_patches = diff(Some(&old_children[old_idx]), new_child);
+                if !child_patches.is_empty() {
+                    patches.push(Patch::UpdateChild {
+                        index: old_idx,
+                        patches: child_patches,
                     });
                 }
-                current_insert_index += 1;
-            }
-            None => {
-                // No match - insert new child
-                patches.push(Patch::InsertChild {
-                    index: current_insert_index as usize,
-                    node: new_child.clone(),
-                });
-                current_insert_index += 1;
             }
         }
     }
-}
 
-fn count_removed_before(removals: &[usize], idx: usize) -> isize {
-    removals.iter().filter(|&&r| r < idx).count() as isize
+    for old_idx in (0..old_children.len()).rev() {
+        if !stays.contains(&old_idx) {
+            patches.push(Patch::RemoveChild { index: old_idx });
+        }
+    }
+
+    for (new_idx, new_child) in new_children.iter().enumerate() {
+        let continues_and_stays =
+            new_match[new_idx].is_some_and(|old_idx| stays.contains(&old_idx));
+        if !continues_and_stays {
+            patches.push(Patch::InsertChild {
+                index: new_idx,
+                node: new_child.clone(),
+            });
+        }
+    }
 }
 
 fn longest_increasing_subsequence_set(arr: &[usize]) -> Vec<usize> {
@@ -461,6 +441,260 @@ mod tests {
             Patch::UpdateChild { index, .. } => assert_eq!(*index, 1),
             _ => panic!("Expected UpdateChild at index 1"),
         }
+    }
+
+    // -- Keyed children, checked by the order the patches leave behind --------
+    //
+    // The tests above only look at which kinds of patch come out. These run
+    // the patches, in the order they are written, against a list of labels
+    // and compare the result with the new order — which is the only thing
+    // the DOM will see.
+
+    /// What a child is called in the model: its key, or its text.
+    fn label(node: &VNode) -> String {
+        match node {
+            VNode::Element(elem) => elem.key.clone().unwrap_or_else(|| "li".to_string()),
+            VNode::Text(text) => text.text.clone(),
+            _ => String::from("node"),
+        }
+    }
+
+    /// Apply a sibling batch to a list of labels, in the order it is written.
+    /// An insert past the end lands at the end, as the DOM applier does.
+    fn apply_in_written_order(list: &mut Vec<String>, patches: &[Patch]) {
+        for patch in patches {
+            match patch {
+                Patch::InsertChild { index, node } => {
+                    let at = (*index).min(list.len());
+                    list.insert(at, label(node));
+                }
+                Patch::RemoveChild { index } => {
+                    if *index < list.len() {
+                        list.remove(*index);
+                    }
+                }
+                Patch::UpdateChild { index, patches } => {
+                    for nested in patches {
+                        match nested {
+                            Patch::UpdateText { text } => list[*index] = text.clone(),
+                            Patch::ReplaceNode { node } => list[*index] = label(node),
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    /// A keyed `<li>` whose text is its own key.
+    fn keyed(keys: &[&str]) -> Vec<VNode> {
+        keys.iter()
+            .map(|key| {
+                VNode::Element(Box::new(
+                    VElement::new("li")
+                        .key(key)
+                        .child(VNode::Text(VText::new(key))),
+                ))
+            })
+            .collect()
+    }
+
+    fn unkeyed(text: &str) -> VNode {
+        VNode::Text(VText::new(text))
+    }
+
+    /// Diff `old` into `new` and return the list the written patches leave.
+    fn rewritten(old: Vec<VNode>, new: &[VNode]) -> Vec<String> {
+        let mut list: Vec<String> = old.iter().map(label).collect();
+        let mut patches = Vec::new();
+        diff_children(&old, new, &mut patches);
+        apply_in_written_order(&mut list, &patches);
+        list
+    }
+
+    fn rewritten_keys(old: &[&str], new: &[&str]) -> Vec<String> {
+        rewritten(keyed(old), &keyed(new))
+    }
+
+    fn expected(keys: &[&str]) -> Vec<String> {
+        keys.iter().map(|key| key.to_string()).collect()
+    }
+
+    #[test]
+    fn keyed_children_insert_anywhere() {
+        for new in [["x", "a", "b"], ["a", "x", "b"], ["a", "b", "x"]] {
+            assert_eq!(
+                rewritten_keys(&["a", "b"], &new),
+                expected(&new),
+                "inserted as {new:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn keyed_children_remove_any_where() {
+        // Every subset of [a, b, c, d], the empty one included.
+        for mask in 0..16u32 {
+            let keep: Vec<&str> = ["a", "b", "c", "d"]
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| mask & (1 << i) != 0)
+                .map(|(_, key)| *key)
+                .collect();
+            assert_eq!(
+                rewritten_keys(&["a", "b", "c", "d"], &keep),
+                expected(&keep),
+                "keeping {keep:?}"
+            );
+        }
+    }
+
+    fn permutations(keys: &[&'static str]) -> Vec<Vec<&'static str>> {
+        if keys.len() <= 1 {
+            return vec![keys.to_vec()];
+        }
+        let mut out = Vec::new();
+        for (i, first) in keys.iter().enumerate() {
+            let mut rest = keys.to_vec();
+            rest.remove(i);
+            for tail in permutations(&rest) {
+                out.push(vec![*first].into_iter().chain(tail).collect());
+            }
+        }
+        out
+    }
+
+    #[test]
+    fn keyed_children_every_order_lands_in_the_new_order() {
+        let all = permutations(&["a", "b", "c", "d"]);
+        assert_eq!(all.len(), 24);
+        for new in all {
+            assert_eq!(
+                rewritten_keys(&["a", "b", "c", "d"], &new),
+                expected(&new),
+                "reordered as {new:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn keyed_children_remove_insert_and_move_in_one_batch() {
+        assert_eq!(
+            rewritten_keys(&["a", "b", "c", "d"], &["d", "x", "b"]),
+            expected(&["d", "x", "b"])
+        );
+        assert_eq!(
+            rewritten_keys(&["a", "b", "c"], &["c", "y", "a", "z"]),
+            expected(&["c", "y", "a", "z"])
+        );
+    }
+
+    #[test]
+    fn keyed_children_grow_from_and_shrink_to_nothing() {
+        assert_eq!(rewritten_keys(&[], &["a", "b"]), expected(&["a", "b"]));
+        assert_eq!(rewritten_keys(&["a", "b"], &[]), Vec::<String>::new());
+        assert_eq!(
+            rewritten_keys(&["a", "b"], &["x", "y"]),
+            expected(&["x", "y"])
+        );
+    }
+
+    #[test]
+    fn keyed_children_update_the_ones_that_stay() {
+        let old = vec![
+            VNode::Element(Box::new(
+                VElement::new("li")
+                    .key("a")
+                    .child(VNode::Text(VText::new("A"))),
+            )),
+            VNode::Element(Box::new(
+                VElement::new("li")
+                    .key("b")
+                    .child(VNode::Text(VText::new("B"))),
+            )),
+        ];
+        // `a` changes, and `x` arrives in front of it: the update must still
+        // find `a`, and `a` must end up second.
+        let new = vec![
+            VNode::Element(Box::new(VElement::new("li").key("x").child(unkeyed("X")))),
+            VNode::Element(Box::new(
+                VElement::new("li")
+                    .key("a")
+                    .child(VNode::Text(VText::new("A2"))),
+            )),
+            VNode::Element(Box::new(
+                VElement::new("li")
+                    .key("b")
+                    .child(VNode::Text(VText::new("B"))),
+            )),
+        ];
+        let mut list: Vec<String> = old.iter().map(label).collect();
+        let mut patches = Vec::new();
+        diff_children(&old, &new, &mut patches);
+        apply_in_written_order(&mut list, &patches);
+        assert_eq!(list, vec!["x", "a", "b"]);
+
+        // The text change rides an UpdateChild addressed at `a`'s old index,
+        // and `b`, which did not change, gets no update at all.
+        let updated: Vec<usize> = patches
+            .iter()
+            .filter_map(|patch| match patch {
+                Patch::UpdateChild { index, .. } => Some(*index),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            updated,
+            vec![0],
+            "a sits at index 0 until the batch moves it: {:?}",
+            patches
+        );
+    }
+
+    #[test]
+    fn unkeyed_siblings_keep_their_node_beside_keyed_children() {
+        let mut old = vec![unkeyed("Title")];
+        old.extend(keyed(&["a", "b"]));
+        let mut new = vec![unkeyed("Title")];
+        new.extend(keyed(&["b", "a"]));
+        assert_eq!(rewritten(old, &new), vec!["Title", "b", "a"]);
+
+        // A changed static sibling is updated in place, not duplicated.
+        let mut old = vec![unkeyed("Title")];
+        old.extend(keyed(&["a"]));
+        let mut new = vec![unkeyed("TITLE!")];
+        new.extend(keyed(&["a"]));
+        assert_eq!(rewritten(old, &new), vec!["TITLE!", "a"]);
+
+        let mut old = keyed(&["a"]);
+        old.push(unkeyed("sep"));
+        old.extend(keyed(&["b"]));
+        let mut new = keyed(&["b"]);
+        new.push(unkeyed("sep"));
+        new.extend(keyed(&["a"]));
+        assert_eq!(rewritten(old, &new), vec!["b", "sep", "a"]);
+    }
+
+    #[test]
+    fn unkeyed_siblings_match_by_rank() {
+        // Old unkeyed children are [x]; new ones are [y, z]. The first new one
+        // continues x's node wherever it now sits, the second is new.
+        let mut old = keyed(&["a"]);
+        old.push(unkeyed("x"));
+        let mut new = vec![unkeyed("y")];
+        new.extend(keyed(&["a"]));
+        new.push(unkeyed("z"));
+        assert_eq!(rewritten(old, &new), vec!["y", "a", "z"]);
+
+        // Both unkeyed children keep their node and take the new text.
+        let mut old = vec![unkeyed("p")];
+        old.extend(keyed(&["a"]));
+        old.push(unkeyed("q"));
+        let mut new = vec![unkeyed("p2")];
+        new.extend(keyed(&["a"]));
+        new.push(unkeyed("q2"));
+        assert_eq!(rewritten(old, &new), vec!["p2", "a", "q2"]);
     }
 
     #[test]
@@ -1162,16 +1396,26 @@ mod tests {
             &VNode::Fragment(new_children),
         );
 
-        // Should NOT remove the unkeyed children (A and C)
-        let removes: Vec<&Patch> = patches
+        // Neither unkeyed child is destroyed: the only child taken out is the
+        // keyed one, which moved from index 1 to index 0 and is re-inserted
+        // there. The old run left the unkeyed children alone by never
+        // removing anything, and inserted a second copy of each instead.
+        let removes: Vec<usize> = patches
             .iter()
-            .filter(|p| matches!(p, Patch::RemoveChild { .. }))
+            .filter_map(|p| match p {
+                Patch::RemoveChild { index } => Some(*index),
+                _ => None,
+            })
             .collect();
-        assert!(
-            removes.is_empty(),
-            "Should not remove unkeyed children: {:?}",
+        assert_eq!(
+            removes,
+            vec![1],
+            "only the keyed child moves: {:?}",
             patches
         );
+        let mut list = vec!["A".to_string(), "b".to_string(), "C".to_string()];
+        apply_in_written_order(&mut list, &patches);
+        assert_eq!(list, vec!["b", "A", "C"]);
     }
 
     #[test]

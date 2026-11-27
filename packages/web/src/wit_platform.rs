@@ -3679,6 +3679,10 @@ mod tests {
                 Patch::InsertChild { index, node } => {
                     let label = match node {
                         VNode::Text(text) => text.text.clone(),
+                        // A keyed element goes by its key; anything else is "node".
+                        VNode::Element(element) => {
+                            element.key.clone().unwrap_or_else(|| String::from("node"))
+                        }
                         _ => String::from("node"),
                     };
                     let at = (*index).min(list.len());
@@ -3734,6 +3738,50 @@ mod tests {
             apply_to_model(&["a", "b", "c"], &batch),
             vec!["c", "a", "b"]
         );
+    }
+
+    /// A keyed `<li>` whose label is its own key.
+    fn keyed_row(key: &'static str) -> VNode {
+        VNode::Element(Box::new(
+            VElement::new("li")
+                .key(key)
+                .child(VNode::Text(VText::new(key))),
+        ))
+    }
+
+    /// Diff one keyed list into another and run the batch in the order the
+    /// applier would.
+    fn keyed_result(old: &[&'static str], new: &[&'static str]) -> Vec<String> {
+        let old_nodes: Vec<VNode> = old.iter().map(|key| keyed_row(key)).collect();
+        let new_nodes: Vec<VNode> = new.iter().map(|key| keyed_row(key)).collect();
+        let patches = tairitsu_vdom::diff::diff(
+            Some(&VNode::Fragment(old_nodes)),
+            &VNode::Fragment(new_nodes),
+        );
+        apply_to_model(old, &patches)
+    }
+
+    /// The keyed diff's batches come out right under the applier's own
+    /// ordering, with and without inserts in the batch.
+    #[test]
+    fn keyed_lists_land_in_the_new_order_under_the_applier() {
+        let old = ["a", "b", "c", "d"];
+        for new in [
+            vec!["x", "a", "b", "c", "d"],
+            vec!["a", "b", "x", "c", "d"],
+            vec!["a", "b", "c", "d", "x"],
+            vec!["b", "c", "d"],
+            vec!["a", "d"],
+            vec!["d", "a", "b"],
+            vec!["b", "d", "a", "c"],
+            vec!["d", "c", "b", "a"],
+            vec!["d", "x", "b"],
+            vec!["c", "y", "a", "z"],
+            vec!["b"],
+            vec![],
+        ] {
+            assert_eq!(keyed_result(&old, &new), new, "rewritten as {new:?}");
+        }
     }
 
     /// The positional diff's trailing removals are ascending old-frame indices;
