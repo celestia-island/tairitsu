@@ -431,7 +431,7 @@ pub fn check_process_exists(pid: u32) -> bool {
     {
         // On Windows, use tasklist to check if process exists
         Command::new("tasklist")
-            .args(&["/FI", &format!("PID eq {}", pid)])
+            .args(["/FI", &format!("PID eq {}", pid)])
             .output()
             .map(|output| {
                 let output = String::from_utf8_lossy(&output.stdout);
@@ -452,7 +452,7 @@ fn find_pid_on_port(port: u16) -> Option<u32> {
     #[cfg(windows)]
     {
         let output = Command::new("netstat")
-            .args(&["-ano", "-p", "TCP"])
+            .args(["-ano", "-p", "TCP"])
             .output()
             .ok()?;
         let text = String::from_utf8_lossy(&output.stdout);
@@ -488,7 +488,7 @@ fn get_process_exe(pid: u32) -> Option<PathBuf> {
     #[cfg(windows)]
     {
         let output = Command::new("wmic")
-            .args(&[
+            .args([
                 "process",
                 &format!("where ProcessId={}", pid),
                 "get",
@@ -669,7 +669,7 @@ fn spawn_daemon_process_windows(
     impl OwnedHandle {
         fn nul(desired_access: u32) -> io::Result<Self> {
             let nul = to_wide_null(std::ffi::OsStr::new("NUL"));
-            let mut security_attributes = SECURITY_ATTRIBUTES {
+            let security_attributes = SECURITY_ATTRIBUTES {
                 nLength: mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
                 lpSecurityDescriptor: ptr::null_mut(),
                 bInheritHandle: 1,
@@ -680,7 +680,7 @@ fn spawn_daemon_process_windows(
                     nul.as_ptr(),
                     desired_access,
                     FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    &mut security_attributes,
+                    &security_attributes,
                     OPEN_EXISTING,
                     FILE_ATTRIBUTE_NORMAL,
                     ptr::null_mut(),

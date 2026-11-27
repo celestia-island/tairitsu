@@ -542,8 +542,8 @@ mod tests {
             .collect();
 
         assert_eq!(removed.len(), 2);
-        assert!(removed.contains(&"data-x".to_string()));
-        assert!(removed.contains(&"role".to_string()));
+        assert!(removed.iter().any(|name| name == "data-x"));
+        assert!(removed.iter().any(|name| name == "role"));
     }
 
     #[test]

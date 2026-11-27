@@ -12,7 +12,7 @@ use std::{
 use portable_pty::{native_pty_system, Child, ChildKiller, CommandBuilder, MasterPty, PtySize};
 
 fn to_io(e: impl std::fmt::Display) -> io::Error {
-    io::Error::new(io::ErrorKind::Other, e.to_string())
+    io::Error::other(e.to_string())
 }
 
 /// A cross-platform PTY session.

@@ -188,7 +188,7 @@ impl ResourceIndexer {
             if path.is_dir() {
                 // Check if directory should be excluded
                 if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if self.exclude_dirs.contains(&name.to_string()) {
+                    if self.exclude_dirs.iter().any(|dir| dir == name) {
                         continue;
                     }
                 }
@@ -422,10 +422,10 @@ mod tests {
 
         assert_eq!(indexer.root, temp_dir.path());
         assert_eq!(indexer.exclude_dirs.len(), 4);
-        assert!(indexer.exclude_dirs.contains(&"target".to_string()));
-        assert!(indexer.exclude_dirs.contains(&"node_modules".to_string()));
-        assert!(indexer.exclude_dirs.contains(&".git".to_string()));
-        assert!(indexer.exclude_dirs.contains(&"dist".to_string()));
+        assert!(indexer.exclude_dirs.iter().any(|dir| dir == "target"));
+        assert!(indexer.exclude_dirs.iter().any(|dir| dir == "node_modules"));
+        assert!(indexer.exclude_dirs.iter().any(|dir| dir == ".git"));
+        assert!(indexer.exclude_dirs.iter().any(|dir| dir == "dist"));
         assert!(!indexer.include_hidden);
     }
 
@@ -434,7 +434,10 @@ mod tests {
         let temp_dir = tempfile::tempdir().unwrap();
         let indexer = ResourceIndexer::new(temp_dir.path()).exclude("custom_exclude");
 
-        assert!(indexer.exclude_dirs.contains(&"custom_exclude".to_string()));
+        assert!(indexer
+            .exclude_dirs
+            .iter()
+            .any(|dir| dir == "custom_exclude"));
     }
 
     #[test]
