@@ -594,11 +594,71 @@ export const htmlInputElement_exports = {
   },
 };
 
+// === html-option-element ===
+// Declared in the composed WIT with 14 members and, like the input above,
+// implemented by nobody: `selected` on an `<option>` could be written as an
+// attribute and never as the live selectedness (#170 left it out for that
+// reason). Same handle, same helpers and the same lenient resolution: an
+// unknown handle reads the DOM-absent default (`""`, `false`, `-1`, none) and
+// leaves a setter alone.
+//
+// The properties are the option's own IDL attributes. `selected` is the live
+// selectedness and `defaultSelected` the `selected` attribute, which is why
+// a live write goes through `setSelected`. `getForm` hands back the element
+// handle the owner form is already stored under, or none. `index` is `-1` for
+// an element that is not an option; a real one outside a select reads `0`,
+// the DOM's own answer.
+export const htmlOptionElement_exports = {
+  getDisabled(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "disabled");
+  },
+  setDisabled(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.disabled = value));
+  },
+  getForm(h: bigint): bigint | undefined {
+    return elementHandleOfNode(inputElementOf(h)?.form);
+  },
+  getLabel(h: bigint): string {
+    return inputString(inputElementOf(h), "label");
+  },
+  setLabel(h: bigint, value: string): void {
+    setInput(h, (el) => (el.label = value));
+  },
+  getDefaultSelected(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "defaultSelected");
+  },
+  setDefaultSelected(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.defaultSelected = value));
+  },
+  getSelected(h: bigint): boolean {
+    return inputBool(inputElementOf(h), "selected");
+  },
+  setSelected(h: bigint, value: boolean): void {
+    setInput(h, (el) => (el.selected = value));
+  },
+  getValue(h: bigint): string {
+    return inputString(inputElementOf(h), "value");
+  },
+  setValue(h: bigint, value: string): void {
+    setInput(h, (el) => (el.value = value));
+  },
+  getText(h: bigint): string {
+    return inputString(inputElementOf(h), "text");
+  },
+  setText(h: bigint, value: string): void {
+    setInput(h, (el) => (el.text = value));
+  },
+  getIndex(h: bigint): number {
+    return inputNumber(inputElementOf(h), "index", -1);
+  },
+};
+
 // === Registry ===
 export const INTERFACES = {
   "@tairitsu-glue/window": window_exports,
   "@tairitsu-glue/location": location_exports,
   "@tairitsu-glue/history": history_exports,
   "@tairitsu-glue/html-input-element": htmlInputElement_exports,
+  "@tairitsu-glue/html-option-element": htmlOptionElement_exports,
   "@tairitsu-glue/media-query-list": mediaQueryList_exports,
 };

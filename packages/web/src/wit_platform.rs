@@ -813,6 +813,8 @@ pub(crate) enum LiveWrite {
     Value(String),
     /// Assign the element's checkedness.
     Checked(bool),
+    /// Assign an option's selectedness.
+    Selected(bool),
 }
 
 /// The live write that goes with `attribute` being written (`Some(text)`) or
@@ -828,6 +830,8 @@ pub(crate) fn live_write(
     match attribute {
         // A boolean attribute: there means checked, gone means not.
         "checked" if is("input") => LiveWrite::Checked(written.is_some()),
+        // The same for an option: there means selected, gone means not.
+        "selected" if is("option") => LiveWrite::Selected(written.is_some()),
         // Only the types in the standard's *value mode* keep a value apart
         // from the attribute. The rest reflect it (`checkbox`, `radio`,
         // `hidden`, `submit`, `reset`, `button`, `image`), so `set-attribute`
@@ -875,6 +879,13 @@ fn carries_live_value(input_type: &str) -> bool {
     )
 }
 
+/// Whether `name` is an attribute a form control keeps live state for. The
+/// check is a plain comparison, so the common attribute pays nothing more.
+#[cfg(any(target_family = "wasm", test))]
+pub(crate) fn has_live_state(name: &str) -> bool {
+    matches!(name, "value" | "checked" | "selected")
+}
+
 // -- wasm32 Platform implementation ----------------------------------------
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
@@ -897,7 +908,7 @@ pub mod wasm_impl {
         take_event_callback, take_event_listener_type, HostEvent, MouseEventInput,
         PointerEventInput, WheelEventInput,
     };
-    use super::{live_write, LiveWrite, WitElement, WitEvent, WitPlatform};
+    use super::{has_live_state, live_write, LiveWrite, WitElement, WitEvent, WitPlatform};
 
     thread_local! {
         static CURRENT_RENDER_COMPONENT: RefCell<Option<tairitsu_vdom::ComponentId>> = RefCell::new(None);
@@ -1812,12 +1823,6 @@ pub mod wasm_impl {
     // Every attribute write goes through `write_attribute` / `erase_attribute`,
     // so the live state a form control keeps never lags behind its attribute.
 
-    /// Whether `name` is an attribute a form control keeps live state for. The
-    /// check is a plain comparison, so the common attribute pays nothing more.
-    fn has_live_state(name: &str) -> bool {
-        matches!(name, "value" | "checked")
-    }
-
     /// The live write that goes with `name` being written (`Some(text)`) or
     /// removed (`None`) on `element`. The tag and type are read off the
     /// element itself: a patch carries neither. At creation the attributes
@@ -1834,17 +1839,21 @@ pub mod wasm_impl {
         )
     }
 
-    /// Assign the live state on `element`. The writes go through the
-    /// `html-input-element` interface: its glue assigns the property of
-    /// whatever element it is given, the route `ChangeEvent.value` takes on
+    /// Assign the live state on `element`. The writes go through the typed
+    /// element interfaces — `html-input-element` for a value and a check,
+    /// `html-option-element` for a selection: their glue assigns the property
+    /// of whatever element it is given, the route `ChangeEvent.value` takes on
     /// the way in.
     fn apply_live_write(element: &WitElement, write: LiveWrite) {
-        use bindings::tairitsu_browser::full::html_input_element;
+        use bindings::tairitsu_browser::full::{html_input_element, html_option_element};
         match write {
             LiveWrite::Nothing => {}
             LiveWrite::Value(value) => html_input_element::set_value(element.as_raw(), &value),
             LiveWrite::Checked(checked) => {
                 html_input_element::set_checked(element.as_raw(), checked);
+            }
+            LiveWrite::Selected(selected) => {
+                html_option_element::set_selected(element.as_raw(), selected);
             }
         }
     }
@@ -2435,6 +2444,12 @@ pub mod wasm_impl {
                 element.as_raw(),
                 None,
             );
+        }
+
+        fn exit_fullscreen(&self) {
+            // Like `request_fullscreen`, the host answers with a request id
+            // for a promise nothing here waits on.
+            let _ = bindings::tairitsu_browser::full::document::exit_fullscreen();
         }
 
         fn get_scroll_top_from_point(&self, x: i32, y: i32) -> f64 {
@@ -3894,12 +3909,56 @@ mod tests {
             live_write("option", "checked", "", Some("checked")),
             LiveWrite::Nothing
         );
-        // An option's selectedness needs the option interface, which the glue
-        // does not ship; the attribute stays the default it always was.
+    }
+
+    /// `selected` is the same kind of attribute on an option, and only there.
+    #[test]
+    fn selected_follows_the_attribute_on_options() {
+        use super::{live_write, LiveWrite};
+        assert_eq!(
+            live_write("option", "selected", "", None),
+            LiveWrite::Selected(false)
+        );
         assert_eq!(
             live_write("option", "selected", "", Some("selected")),
-            LiveWrite::Nothing
+            LiveWrite::Selected(true)
         );
+        assert_eq!(
+            live_write("OPTION", "selected", "", Some("selected")),
+            LiveWrite::Selected(true)
+        );
+        for tag in ["select", "optgroup", "li"] {
+            assert_eq!(
+                live_write(tag, "selected", "", Some("selected")),
+                LiveWrite::Nothing,
+                "{tag}"
+            );
+        }
+    }
+
+    /// An attribute only gets its live write through the gate that says which
+    /// attributes have one, so the gate and the table have to agree.
+    #[test]
+    fn every_live_attribute_passes_the_gate() {
+        use super::{has_live_state, live_write, LiveWrite};
+        let live = [
+            ("input", "value", "text"),
+            ("textarea", "value", "textarea"),
+            ("select", "value", "select-one"),
+            ("input", "checked", "checkbox"),
+            ("option", "selected", "option"),
+        ];
+        for (tag, attribute, input_type) in live {
+            assert!(has_live_state(attribute), "{attribute}");
+            assert_ne!(
+                live_write(tag, attribute, input_type, Some("x")),
+                LiveWrite::Nothing,
+                "{attribute} on {tag}"
+            );
+        }
+        for attribute in ["class", "disabled", "type", "placeholder"] {
+            assert!(!has_live_state(attribute), "{attribute}");
+        }
     }
 
     /// A `value` removed leaves nothing behind on the fields that keep a live

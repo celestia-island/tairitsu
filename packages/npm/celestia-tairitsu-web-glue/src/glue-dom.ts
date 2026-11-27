@@ -36,6 +36,14 @@ export const document_exports = {
       return false;
     }
   },
+  exitFullscreen() {
+    // WIT exit-fullscreen 返回 u64（promise 句柄）：与 element.requestFullscreen
+    // 同一约定，返回 0 表示未保留句柄。不在全屏时文档会拒绝，吞掉即可。
+    if (typeof document.exitFullscreen === "function") {
+      document.exitFullscreen().catch(() => {});
+    }
+    return 0;
+  },
 };
 
 // === element ===
