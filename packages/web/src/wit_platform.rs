@@ -3172,6 +3172,13 @@ pub mod wasm_impl {
                 apply_style(platform, element, style)?;
             }
 
+            Patch::RemoveStyleProperties { names } => {
+                // CSSOM: setting a property to the empty string removes it.
+                for name in names {
+                    platform.set_style(element, name, "");
+                }
+            }
+
             Patch::UpdateClass { class } => {
                 if !class.static_classes.is_empty() {
                     platform.set_class(element, &class.static_classes);

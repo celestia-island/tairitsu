@@ -79,6 +79,10 @@ fn diff_element(old: &VElement, new: &VElement, patches: &mut Vec<Patch>) {
     }
 
     if old.style != new.style {
+        let stale = stale_style_properties(&old.style, &new.style);
+        if !stale.is_empty() {
+            patches.push(Patch::RemoveStyleProperties { names: stale });
+        }
         patches.push(Patch::UpdateStyle {
             style: new.style.clone(),
         });
@@ -122,6 +126,33 @@ fn extract_key(node: &VNode) -> Option<&str> {
         VNode::Element(elem) => elem.key.as_deref(),
         _ => None,
     }
+}
+
+/// Property names declared on `old` but absent from `new`. A DOM node reused
+/// across renders keeps its inline declarations, so the applier has to clear
+/// these explicitly (`setProperty(name, "")`).
+fn stale_style_properties(old: &crate::vnode::Style, new: &crate::vnode::Style) -> Vec<String> {
+    let parse_names = |styles: &str| -> Vec<String> {
+        styles
+            .split(';')
+            .filter_map(|part| part.split_once(':').map(|(name, _)| name.trim().to_string()))
+            .filter(|name| !name.is_empty())
+            .collect()
+    };
+    let new_names = parse_names(&new.static_styles);
+    let new_static: HashSet<&str> = new_names.iter().map(String::as_str).collect();
+    let new_vars: HashSet<&str> = new.css_variables.iter().map(|(n, _)| n.as_str()).collect();
+    let mut stale: Vec<String> = parse_names(&old.static_styles)
+        .into_iter()
+        .filter(|name| !new_static.contains(name.as_str()))
+        .collect();
+    stale.extend(
+        old.css_variables
+            .iter()
+            .map(|(n, _)| n.clone())
+            .filter(|n| !new_vars.contains(n.as_str())),
+    );
+    stale
 }
 
 fn has_any_key(children: &[VNode]) -> bool {
@@ -350,6 +381,54 @@ mod tests {
         let patches = diff(Some(&old), &new);
 
         assert!(!patches.is_empty());
+    }
+
+    #[test]
+    fn test_dropped_style_properties_are_removed() {
+        // A reused DOM node keeps its inline declarations, so properties that
+        // disappear from the new vnode must be removed explicitly.
+        let old = VNode::Element(Box::new(
+            VElement::new("div")
+                .style(Style::new().add("left", "50%").add("top", "20%")),
+        ));
+        let new = VNode::Element(Box::new(
+            VElement::new("div")
+                .style(Style::new().add("background-position", "50% 20%")),
+        ));
+
+        let patches = diff(Some(&old), &new);
+
+        let removed = patches.iter().find_map(|p| match p {
+            Patch::RemoveStyleProperties { names } => Some(names.clone()),
+            _ => None,
+        });
+        assert_eq!(
+            removed,
+            Some(vec!["left".to_string(), "top".to_string()]),
+            "stale properties must be removed before the new style is applied"
+        );
+        // The kept property (unchanged value) is not part of the removal.
+        let old_keep = VNode::Element(Box::new(
+            VElement::new("div").style(Style::new().add("color", "red").add("left", "50%")),
+        ));
+        let new_keep = VNode::Element(Box::new(
+            VElement::new("div").style(Style::new().add("color", "red")),
+        ));
+        let patches = diff(Some(&old_keep), &new_keep);
+        assert!(!patches.iter().any(|p| matches!(p, Patch::RemoveStyleProperties { names } if names.iter().any(|n| n == "color"))));
+    }
+
+    #[test]
+    fn test_removed_css_variables_are_stale() {
+        let old = VNode::Element(Box::new(
+            VElement::new("div")
+                .style(Style::new().add_custom("--bg-x", "50%")),
+        ));
+        let new = VNode::Element(Box::new(VElement::new("div")));
+
+        let patches = diff(Some(&old), &new);
+
+        assert!(patches.iter().any(|p| matches!(p, Patch::RemoveStyleProperties { names } if names.as_slice() == ["--bg-x"])));
     }
 
     #[test]
