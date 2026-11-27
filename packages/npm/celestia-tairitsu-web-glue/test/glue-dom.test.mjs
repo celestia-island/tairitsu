@@ -163,3 +163,35 @@ test("createElementNs creates the element in the given namespace and stores it",
     delete globalThis.document;
   }
 });
+
+test("exitFullscreen asks the document to leave fullscreen and keeps no handle", () => {
+  let asked = 0;
+  globalThis.document = {
+    exitFullscreen() {
+      asked += 1;
+      return Promise.resolve(undefined);
+    },
+  };
+  try {
+    assert.strictEqual(document_exports.exitFullscreen(), 0);
+    assert.equal(asked, 1);
+  } finally {
+    delete globalThis.document;
+  }
+});
+
+test("exitFullscreen swallows the refusal of a document that is not in fullscreen", async () => {
+  // A rejected promise nobody handles fails the Node process, so the answer
+  // has to come back the same way whoever refuses.
+  globalThis.document = {
+    exitFullscreen() {
+      return Promise.reject(new TypeError("not in fullscreen"));
+    },
+  };
+  try {
+    assert.strictEqual(document_exports.exitFullscreen(), 0);
+  } finally {
+    delete globalThis.document;
+  }
+  await new Promise((resolve) => setTimeout(resolve, 0));
+});

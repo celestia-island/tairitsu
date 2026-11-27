@@ -7,6 +7,10 @@ pub trait ScrollOps: DomOps {
     fn on_resize(&self, callback: Box<dyn FnMut(i32, i32)>);
     fn prefers_dark_mode(&self) -> bool;
     fn request_fullscreen(&self, element: &Self::Element);
+    /// Leave fullscreen, whichever element is in it. The counterpart of
+    /// `request_fullscreen`: a platform that has no fullscreen has nothing to
+    /// leave, so the default does nothing.
+    fn exit_fullscreen(&self) {}
     fn get_scroll_top_from_point(&self, x: i32, y: i32) -> f64;
     fn get_scroll_top_by_selector(&self, selector: &str) -> f64;
     fn get_target_element_from_event(&self, client_x: i32, client_y: i32) -> Option<Self::Element>;
