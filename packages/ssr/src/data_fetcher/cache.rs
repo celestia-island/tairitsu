@@ -224,12 +224,15 @@ mod tests {
 
     #[test]
     fn test_cache_expiration() {
+        // The default TTL expires too. The entry just inserted is not asserted
+        // present: under load the 100 ms TTL can pass between the insert and
+        // the read, which is how the same line used to fail in
+        // `test_cache_custom_ttl` on a loaded runner. "Present right after the
+        // insert" is covered by `test_cache_insert_get` with its 60 s default.
         let cache = Cache::new(Duration::from_millis(100));
 
         cache.insert("key1", b"data1".to_vec());
-        assert_eq!(cache.get("key1"), Some(b"data1".to_vec()));
 
-        // Wait for expiration
         std::thread::sleep(Duration::from_millis(150));
         assert!(cache.get("key1").is_none());
     }
@@ -263,12 +266,20 @@ mod tests {
     fn test_cache_custom_ttl() {
         let cache = Cache::new(Duration::from_secs(60));
 
-        // Custom TTL of 50ms
-        cache.insert_with_ttl("key1", b"data1".to_vec(), Duration::from_millis(50));
+        // The "still there" half gets a TTL far longer than any scheduling
+        // hiccup, so the assertion does not depend on the process being back
+        // on the CPU within tens of milliseconds.
+        cache.insert_with_ttl("key1", b"data1".to_vec(), Duration::from_secs(30));
         assert_eq!(cache.get("key1"), Some(b"data1".to_vec()));
 
+        // The "gone" half can only move one way: the longer the wait, the more
+        // certain the expiry. The 50 ms entry is gone while the 30 s one is
+        // still there, so each entry expires by its own TTL, not by the 60 s
+        // default.
+        cache.insert_with_ttl("key2", b"data2".to_vec(), Duration::from_millis(50));
         std::thread::sleep(Duration::from_millis(75));
-        assert!(cache.get("key1").is_none());
+        assert!(cache.get("key2").is_none());
+        assert_eq!(cache.get("key1"), Some(b"data1".to_vec()));
     }
 
     #[test]
