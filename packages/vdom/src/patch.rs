@@ -11,6 +11,10 @@ pub enum Patch {
     AddAttribute { name: String, value: String },
     RemoveAttribute { name: String },
     UpdateStyle { style: Style },
+    /// Style properties that were declared on the old node but are absent
+    /// from the new one. The applier must clear them (a reused DOM node
+    /// keeps its inline declarations otherwise).
+    RemoveStyleProperties { names: Vec<String> },
     UpdateClass { class: Classes },
     InsertChild { index: usize, node: VNode },
     RemoveChild { index: usize },
@@ -46,6 +50,10 @@ impl std::fmt::Debug for Patch {
             Patch::UpdateStyle { style } => {
                 f.debug_struct("UpdateStyle").field("style", style).finish()
             }
+            Patch::RemoveStyleProperties { names } => f
+                .debug_struct("RemoveStyleProperties")
+                .field("names", names)
+                .finish(),
             Patch::UpdateClass { class } => {
                 f.debug_struct("UpdateClass").field("class", class).finish()
             }
