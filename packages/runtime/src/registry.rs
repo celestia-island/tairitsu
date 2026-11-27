@@ -195,8 +195,8 @@ mod tests {
         if registered == 2 {
             let images = reg.list_images();
             assert_eq!(images.len(), 2);
-            assert!(images.contains(&"alpha".to_string()));
-            assert!(images.contains(&"beta".to_string()));
+            assert!(images.iter().any(|image| image == "alpha"));
+            assert!(images.iter().any(|image| image == "beta"));
         }
     }
 

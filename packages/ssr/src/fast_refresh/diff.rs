@@ -605,7 +605,7 @@ mod tests {
         if let DiffResult::Compatible { changes } = result {
             assert!(changes.iter().any(|c| matches!(
                 c,
-                ComponentChange::ImportsChanged { added, .. } if added.contains(&"lodash".to_string())
+                ComponentChange::ImportsChanged { added, .. } if added.iter().any(|import| import == "lodash")
             )));
         }
     }

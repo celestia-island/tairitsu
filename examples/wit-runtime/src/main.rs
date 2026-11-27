@@ -78,7 +78,7 @@ fn main() -> Result<()> {
     let required_world = "tairitsu:core/tairitsu";
     let worlds = loader.list_worlds();
 
-    if worlds.contains(&required_world.to_string()) {
+    if worlds.iter().any(|world| world == required_world) {
         info!("✓ Found required world: {}", required_world);
 
         let exports = loader.list_exports(required_world);
