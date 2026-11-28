@@ -3180,9 +3180,14 @@ pub mod wasm_impl {
             }
 
             Patch::UpdateClass { class } => {
-                if !class.static_classes.is_empty() {
-                    platform.set_class(element, &class.static_classes);
-                }
+                // The diff emits this only when the class list changed, and
+                // "no class at all" is a list too: a node the diff reuses
+                // for a vnode that declares nothing must lose the classes
+                // of the one it held. (A non-empty guard used to drop that
+                // update, so a node kept its last class for good once it had
+                // it — a tab whose arrow slot was reused for its label stayed
+                // styled as the arrow.)
+                platform.set_class(element, &class.static_classes);
             }
 
             Patch::InsertChild { index, node } => {
@@ -3353,10 +3358,11 @@ pub mod wasm_impl {
                     platform.set_attribute(element, name, value);
                 }
 
-                // Update class
-                if !velement.class.static_classes.is_empty() {
-                    platform.set_class(element, &velement.class.static_classes);
-                }
+                // Update class. Written even when empty: the element is reused
+                // in place, so a vnode that declares no class has to lose the
+                // one the element still carries (the rule `Patch::UpdateClass`
+                // follows).
+                platform.set_class(element, &velement.class.static_classes);
 
                 // Update style
                 apply_style(platform, element, &velement.style)?;

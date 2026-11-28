@@ -971,6 +971,100 @@ mod tests {
         );
     }
 
+    /// Losing the last class is a class change like any other: the update
+    /// carries the empty list, and the applier has to write it.
+    #[test]
+    fn test_diff_element_class_removed_emits_an_empty_update() {
+        let old = VNode::Element(Box::new(
+            VElement::new("div").class(Classes::new().add("arrow")),
+        ));
+        let new = VNode::Element(Box::new(VElement::new("div")));
+
+        let patches = diff(Some(&old), &new);
+
+        assert_eq!(patches.len(), 1, "{patches:?}");
+        match &patches[0] {
+            Patch::UpdateClass { class } => assert_eq!(class.static_classes, ""),
+            other => panic!("expected UpdateClass, got {other:?}"),
+        }
+    }
+
+    /// A tab strip whose arrows come and goes with the active tab: once the
+    /// arrows are gone the label is the only child, and the node that held
+    /// the left arrow is what the diff reuses for it. That node has to lose
+    /// the arrow class and take the label text, and the two nodes after it
+    /// are removed.
+    #[test]
+    fn test_diff_reused_slot_loses_the_old_class() {
+        let tab = |arrows: bool| {
+            // `VElement::class` replaces the list, so the names are collected
+            // first: the arrow spans carry both `tab-arrow` and their side.
+            let span = |classes: &[&str], text: &str| {
+                let mut element = VElement::new("span");
+                if !classes.is_empty() {
+                    let all = classes
+                        .iter()
+                        .fold(Classes::new(), |all, class| all.add(class));
+                    element = element.class(all);
+                }
+                VNode::Element(Box::new(element.child(VNode::Text(VText::new(text)))))
+            };
+            let mut children = Vec::new();
+            if arrows {
+                children.push(span(&["tab-arrow", "left"], ">"));
+            }
+            children.push(span(&[], "属性"));
+            if arrows {
+                children.push(span(&["tab-arrow", "right"], "<"));
+            }
+            VNode::Element(Box::new(VElement::new("button").children(children)))
+        };
+
+        // The case rests on this shape: the first span carries both names.
+        let VNode::Element(active) = tab(true) else {
+            unreachable!("a tab is an element")
+        };
+        let VNode::Element(first) = &active.children[0] else {
+            unreachable!("the first child of an active tab is the left arrow's span")
+        };
+        assert_eq!(first.class.static_classes, "tab-arrow left");
+
+        let patches = diff(Some(&tab(true)), &tab(false));
+
+        let mut cleared = false;
+        for patch in &patches {
+            match patch {
+                Patch::RemoveChild { index } => {
+                    assert!(*index >= 1, "the label's slot stays; removed {index}");
+                }
+                Patch::UpdateChild { index, patches } => {
+                    assert_eq!(*index, 0, "the reused slot is the first");
+                    for update in patches {
+                        match update {
+                            Patch::UpdateClass { class } => {
+                                assert_eq!(class.static_classes, "", "the arrow class goes");
+                                cleared = true;
+                            }
+                            Patch::UpdateChild { index, patches } => {
+                                assert_eq!(*index, 0, "the span's own child is its text");
+                                assert!(
+                                    matches!(patches.as_slice(), [Patch::UpdateText { text }] if text == "属性"),
+                                    "the label text replaces the arrow: {patches:?}"
+                                );
+                            }
+                            other => panic!("unexpected update {other:?}"),
+                        }
+                    }
+                }
+                other => panic!("unexpected patch {other:?}"),
+            }
+        }
+        assert!(
+            cleared,
+            "the reused node is told to drop its class: {patches:?}"
+        );
+    }
+
     #[test]
     fn test_diff_children_mixed_keyed_unkeyed() {
         let old = vec![
