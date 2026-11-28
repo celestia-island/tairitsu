@@ -3,25 +3,61 @@ use crate::vnode::{Classes, EventHandler, Style, VNode};
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum Patch {
-    CreateNode { node: VNode },
+    CreateNode {
+        node: VNode,
+    },
     RemoveNode,
-    ReplaceNode { node: VNode },
-    UpdateText { text: String },
-    UpdateAttribute { name: String, value: String },
-    AddAttribute { name: String, value: String },
-    RemoveAttribute { name: String },
-    UpdateStyle { style: Style },
+    ReplaceNode {
+        node: VNode,
+    },
+    UpdateText {
+        text: String,
+    },
+    UpdateAttribute {
+        name: String,
+        value: String,
+    },
+    AddAttribute {
+        name: String,
+        value: String,
+    },
+    RemoveAttribute {
+        name: String,
+    },
+    UpdateStyle {
+        style: Style,
+    },
     /// Style properties that were declared on the old node but are absent
     /// from the new one. The applier must clear them (a reused DOM node
     /// keeps its inline declarations otherwise).
-    RemoveStyleProperties { names: Vec<String> },
-    UpdateClass { class: Classes },
-    InsertChild { index: usize, node: VNode },
-    RemoveChild { index: usize },
-    UpdateChild { index: usize, patches: Vec<Patch> },
-    AddEvent { name: String, handler: EventHandler },
-    UpdateEvent { name: String, handler: EventHandler },
-    RemoveEvent { name: String },
+    RemoveStyleProperties {
+        names: Vec<String>,
+    },
+    UpdateClass {
+        class: Classes,
+    },
+    InsertChild {
+        index: usize,
+        node: VNode,
+    },
+    RemoveChild {
+        index: usize,
+    },
+    UpdateChild {
+        index: usize,
+        patches: Vec<Patch>,
+    },
+    AddEvent {
+        name: String,
+        handler: EventHandler,
+    },
+    UpdateEvent {
+        name: String,
+        handler: EventHandler,
+    },
+    RemoveEvent {
+        name: String,
+    },
 }
 
 impl std::fmt::Debug for Patch {

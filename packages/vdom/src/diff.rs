@@ -135,7 +135,10 @@ fn stale_style_properties(old: &crate::vnode::Style, new: &crate::vnode::Style) 
     let parse_names = |styles: &str| -> Vec<String> {
         styles
             .split(';')
-            .filter_map(|part| part.split_once(':').map(|(name, _)| name.trim().to_string()))
+            .filter_map(|part| {
+                part.split_once(':')
+                    .map(|(name, _)| name.trim().to_string())
+            })
             .filter(|name| !name.is_empty())
             .collect()
     };
@@ -388,12 +391,10 @@ mod tests {
         // A reused DOM node keeps its inline declarations, so properties that
         // disappear from the new vnode must be removed explicitly.
         let old = VNode::Element(Box::new(
-            VElement::new("div")
-                .style(Style::new().add("left", "50%").add("top", "20%")),
+            VElement::new("div").style(Style::new().add("left", "50%").add("top", "20%")),
         ));
         let new = VNode::Element(Box::new(
-            VElement::new("div")
-                .style(Style::new().add("background-position", "50% 20%")),
+            VElement::new("div").style(Style::new().add("background-position", "50% 20%")),
         ));
 
         let patches = diff(Some(&old), &new);
@@ -421,8 +422,7 @@ mod tests {
     #[test]
     fn test_removed_css_variables_are_stale() {
         let old = VNode::Element(Box::new(
-            VElement::new("div")
-                .style(Style::new().add_custom("--bg-x", "50%")),
+            VElement::new("div").style(Style::new().add_custom("--bg-x", "50%")),
         ));
         let new = VNode::Element(Box::new(VElement::new("div")));
 
