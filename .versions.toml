@@ -16,11 +16,11 @@
 #           that forgets this file is exactly the drift the gate exists to
 #           catch: pin it as the npm baseline.
 #   npm     @celestia-island/tairitsu-transport  — the family transport
-#           contract, published on its own wave (0.1.0 -> 0.2.0 -> 0.3.0;
-#           roadmap 2026-10-22). `npm-release.yml` documents that each npm
-#           package "carries its own version line independent of the
-#           workspace crate tag", so treating 0.3.x as a drift against 0.5.3
-#           would invent a defect; it is exempt as an independent line.
+#           contract, published on its own wave. `npm-release.yml` documents
+#           that each npm package "carries its own version line independent
+#           of the workspace crate tag", so treating its line as a drift
+#           against the glue's would invent a defect; it is exempt as an
+#           independent line.
 #   npm     root package.json                    — private workspace holder,
 #           never published; exempt so it cannot vote on the track.
 #
