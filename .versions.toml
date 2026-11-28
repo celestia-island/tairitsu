@@ -29,8 +29,9 @@
 # among publishable packages" fallback ties and would resolve by filesystem
 # walk order (the failure mode plana's `.versions.toml` documents). A pinned
 # value fails closed on any bump that does not update this file in the same
-# commit. A release commit moves the crates line and its glue together, so it
-# moves both pins.
+# commit. A release commit moves the crates line and the glue that ships with
+# it, so it writes both pins in the same commit. They are two numbers, not one:
+# the glue's line moves on its own source change, and 0.6.0 ships with 0.6.1.
 
 [track]
 cargo = "0.6.0"
