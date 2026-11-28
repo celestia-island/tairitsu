@@ -1,10 +1,16 @@
 # Version-track configuration for `celestia-devtools verify-versions`.
 #
-# tairitsu carries three version identities and only one of them is the
-# npm baseline this gate should defend:
+# tairitsu carries three version identities and two of them are baselines
+# this gate defends:
 #
 #   cargo   [workspace.package].version          — the runtime line (0.6.x
-#           since the 0.6.0 release; 0.5.x before it).
+#           since the 0.6.0 release; 0.5.x before it). Pinned, not inferred:
+#           every member inherits the root's version through
+#           `version.workspace = true`, so an inferred cargo baseline IS the
+#           root manifest and a root-only regression stays green (measured on
+#           the 0.6.0 release tree with the pin absent: a root put back to
+#           0.5.27 reported "No version drift detected"). The tag workflow
+#           compares the tag with the root, but only once the tag exists.
 #   npm     @celestia-island/tairitsu-web-glue   — the npm face of that same
 #           runtime line. It moves when the runtime moves, so a manifest bump
 #           that forgets this file is exactly the drift the gate exists to
@@ -18,16 +24,19 @@
 #   npm     root package.json                    — private workspace holder,
 #           never published; exempt so it cannot vote on the track.
 #
-# The baseline is pinned instead of resolved: with the root manifest private
-# and the two published packages on different lines, the "majority among
-# publishable packages" fallback ties and would resolve by filesystem walk
-# order (the failure mode plana's `.versions.toml` documents). A pinned value
-# fails closed on any bump that does not update this file in the same commit.
+# The npm baseline is pinned instead of resolved: with the root manifest
+# private and the two published packages on different lines, the "majority
+# among publishable packages" fallback ties and would resolve by filesystem
+# walk order (the failure mode plana's `.versions.toml` documents). A pinned
+# value fails closed on any bump that does not update this file in the same
+# commit. A release commit moves the crates line and its glue together, so it
+# moves both pins.
 
 [track]
+cargo = "0.6.0"
 npm = "0.6.1"
 
 [exempt.npm]
 "." = "private root workspace manifest; no published line"
-"packages/npm/tairitsu-transport" = "independent transport-contract line (0.3.x, published on its own wave)"
+"packages/npm/tairitsu-transport" = "independent transport-contract line (0.4.x, published on its own wave)"
 "packages/npm/tairitsu-host-client" = "independent library-facing host client (0.1.x, published on its own wave)"
