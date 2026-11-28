@@ -639,7 +639,11 @@ fn expand_rsx_if(rsx_if: RsxIf) -> TokenStream2 {
             let inner_code = expand_rsx_if(*inner_if);
             quote! { else { #inner_code } }
         }
-        None => quote! { else { tairitsu_vdom::VNode::empty() } },
+        // No `else`: nothing at all. `VNode::empty()` is an empty TEXT node:
+        // it lands in the DOM as a child of its own and takes a slot in the
+        // parent's `children`. An empty fragment is the renderer's "no node"
+        // (see `push_flattened`), the same way Dioxus renders a false `if`.
+        None => quote! { else { tairitsu_vdom::VNode::default() } },
     };
     quote! {
         if #condition {
