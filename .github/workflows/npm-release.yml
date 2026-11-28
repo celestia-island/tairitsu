@@ -181,8 +181,9 @@ jobs:
         run: python3 scripts/publish_crates.py
 
   publish-npm:
-    # npm packages carry their own version lines (transport 0.x,
-    # web-glue 0.5.x) independent of the workspace crate tag that
+    # npm packages carry their own version lines (transport 0.x, and the
+    # web-glue at whatever version its manifest names, moved with each
+    # crates release) independent of the workspace crate tag that
     # triggers this pipeline; each package publishes its package.json
     # version and skips cleanly when that version already exists on the
     # registry, so a crate-only tag republishes nothing.

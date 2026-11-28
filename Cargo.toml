@@ -40,6 +40,14 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
+# 0.6.0: the first release after the stage-2 runtime overhaul, and a minor
+# bump because the line since 0.5.26 renamed or removed public items —
+# `VElement::inner_html` became `dangerous_inner_html`, `Memo::value` became
+# `Memo::read`, and `Container::call_guest_json` is gone (#132) — which is a
+# breaking change on 0.x too. It is also the first release whose `WitPlatform`
+# exposes `body()` and the two style getters, and whose `InputEvent` carries
+# the field's whole value (`value`). Ships with glue 0.6.1: 0.6.0 went to npm
+# before the SVG-namespace, location-interface and option-selectedness fixes.
 # 0.5.25: first release carrying the typed `change` delivery (the host
 # discriminates change from input by each listener's registered type, so
 # `ChangeEvent` handlers fire — previously they compiled but never ran).
@@ -51,7 +59,7 @@ panic = "abort"
 # immutable, so the drift needs this bump before the next publish; consumers on
 # ^0.5 pick it up semver-compatibly. Lockstep note: 0.5.25 needs NO glue publish
 # (the change fix is host-side only; glue 0.5.3 stays current).
-version = "0.5.26"
+version = "0.6.0"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -60,15 +68,15 @@ repository = "https://github.com/celestia-island/tairitsu"
 
 [workspace.dependencies]
 
-tairitsu = { version = "^0.5.14", path = "packages/runtime" }
-tairitsu-browser-wit-resolver = { version = "^0.5.14", path = "packages/browser-wit-resolver" }
-tairitsu-browser-worlds = { version = "^0.5.14", path = "packages/browser-worlds" }
-tairitsu-hooks = { version = "^0.5.14", path = "packages/hooks" }
-tairitsu-macros = { version = "^0.5.14", path = "packages/macros" }
-tairitsu-packager = { version = "^0.5.14", path = "packages/packager" }
-tairitsu-ssr = { version = "^0.5.14", path = "packages/ssr" }
-tairitsu-style = { version = "^0.5.14", path = "packages/style" }
-tairitsu-vdom = { version = "^0.5.14", path = "packages/vdom" }
+tairitsu = { version = "^0.6.0", path = "packages/runtime" }
+tairitsu-browser-wit-resolver = { version = "^0.6.0", path = "packages/browser-wit-resolver" }
+tairitsu-browser-worlds = { version = "^0.6.0", path = "packages/browser-worlds" }
+tairitsu-hooks = { version = "^0.6.0", path = "packages/hooks" }
+tairitsu-macros = { version = "^0.6.0", path = "packages/macros" }
+tairitsu-packager = { version = "^0.6.0", path = "packages/packager" }
+tairitsu-ssr = { version = "^0.6.0", path = "packages/ssr" }
+tairitsu-style = { version = "^0.6.0", path = "packages/style" }
+tairitsu-vdom = { version = "^0.6.0", path = "packages/vdom" }
 
 anyhow = "^1"
 async-trait = "^0.1"
