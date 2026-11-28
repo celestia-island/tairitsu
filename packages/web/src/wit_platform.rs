@@ -253,6 +253,59 @@ impl WitPlatform {
         }
     }
 
+    /// The `<body>` element: the root of the page's content, and the node a
+    /// host attaches a document-level capture listener to (a click anywhere
+    /// closing a popup, an Escape key closing a dialog). Every element of the
+    /// content lives under it; `<html>` and `<head>` do not.
+    ///
+    /// The world also declares `document.get-document-element`; nothing has
+    /// needed an accessor for it, so this type offers only `<body>`.
+    ///
+    /// `None` on native hosts, where the WIT imports cannot run, and when the
+    /// host has no body to hand out (the import's own `None`).
+    pub fn body(&self) -> Option<WitElement> {
+        #[cfg(target_family = "wasm")]
+        {
+            wasm_impl::body()
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            None
+        }
+    }
+
+    /// A resolved style property of `element` (`getComputedStyle(el).getPropertyValue(name)`).
+    ///
+    /// `None` on native hosts.
+    pub fn get_computed_style_value(
+        &self,
+        _element: &WitElement,
+        _property: &str,
+    ) -> Option<String> {
+        #[cfg(target_family = "wasm")]
+        {
+            wasm_impl::get_computed_style_value(_element.as_raw(), _property)
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            None
+        }
+    }
+
+    /// An inline style property of `element` (`el.style.getPropertyValue(name)`).
+    ///
+    /// `None` on native hosts.
+    pub fn get_inline_style_value(&self, _element: &WitElement, _property: &str) -> Option<String> {
+        #[cfg(target_family = "wasm")]
+        {
+            wasm_impl::get_inline_style_value(_element.as_raw(), _property)
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            None
+        }
+    }
+
     /// Render a VNode tree into `#app` for WIT-backed browser components.
     ///
     /// This replaces the bootstrap text set by `lifecycle.start` and mounts
@@ -1111,6 +1164,35 @@ pub mod wasm_impl {
     pub fn get_parent_element(_platform: &WitPlatform, element: &WitElement) -> Option<WitElement> {
         bindings::tairitsu_browser::full::node::get_parent_element(element.as_raw())
             .map(WitElement::from_raw)
+    }
+
+    /// The `<body>` element, for document-level capture listeners.
+    pub fn body() -> Option<WitElement> {
+        bindings::tairitsu_browser::full::document::get_body().map(WitElement::from_raw)
+    }
+
+    /// A resolved style property: `getComputedStyle(el).getPropertyValue(name)`.
+    ///
+    /// The returned string is the CSSOM's serialised value; an unknown property
+    /// reads as `""`, not `None` (only a native host, where the import cannot
+    /// run, answers `None`).
+    pub fn get_computed_style_value(element: u64, property: &str) -> Option<String> {
+        let style = bindings::tairitsu_browser::full::window::get_computed_style(element, None);
+        Some(
+            bindings::tairitsu_browser::full::css_style_declaration::get_property_value(
+                style, property,
+            ),
+        )
+    }
+
+    /// An inline style property: `el.style.getPropertyValue(name)` (`""` when unset).
+    pub fn get_inline_style_value(element: u64, property: &str) -> Option<String> {
+        let style = bindings::tairitsu_browser::full::element_css_inline_style::get_style(element);
+        Some(
+            bindings::tairitsu_browser::full::css_style_declaration::get_property_value(
+                style, property,
+            ),
+        )
     }
 
     /// Prevent default action on an event (via WIT event-target interface).
@@ -5145,5 +5227,19 @@ mod tests {
             Some(super::SVG_NAMESPACE)
         );
         assert_eq!(super::svg_namespace_for("fe-point-light"), None);
+    }
+
+    /// On a native host the WIT imports cannot run: the element and style
+    /// accessors answer `None` instead of trapping.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn element_accessors_answer_none_on_a_native_host() {
+        let platform = super::WitPlatform;
+        let element = super::WitElement::from_raw(7);
+        assert!(platform.body().is_none());
+        assert!(platform
+            .get_computed_style_value(&element, "color")
+            .is_none());
+        assert!(platform.get_inline_style_value(&element, "left").is_none());
     }
 }
