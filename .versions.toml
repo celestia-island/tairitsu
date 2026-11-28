@@ -3,11 +3,12 @@
 # tairitsu carries three version identities and only one of them is the
 # npm baseline this gate should defend:
 #
-#   cargo   [workspace.package].version          — the runtime line (0.5.x).
+#   cargo   [workspace.package].version          — the runtime line (0.6.x
+#           since the 0.6.0 release; 0.5.x before it).
 #   npm     @celestia-island/tairitsu-web-glue   — the npm face of that same
-#           runtime line (0.5.x). It moves when the runtime moves, so a
-#           manifest bump that forgets this file is exactly the drift the gate
-#           exists to catch: pin it as the npm baseline.
+#           runtime line. It moves when the runtime moves, so a manifest bump
+#           that forgets this file is exactly the drift the gate exists to
+#           catch: pin it as the npm baseline.
 #   npm     @celestia-island/tairitsu-transport  — the family transport
 #           contract, published on its own wave (0.1.0 -> 0.2.0 -> 0.3.0;
 #           roadmap 2026-10-22). `npm-release.yml` documents that each npm
@@ -24,7 +25,7 @@
 # fails closed on any bump that does not update this file in the same commit.
 
 [track]
-npm = "0.5.4"
+npm = "0.6.1"
 
 [exempt.npm]
 "." = "private root workspace manifest; no published line"
